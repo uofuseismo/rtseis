@@ -1,0 +1,115 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8 FATAL_ERROR)
+
+PROJECT(RTSeis)
+ENABLE_LANGUAGE(C)
+ENABLE_LANGUAGE(CXX)
+ENABLE_TESTING()
+
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+
+SET(RTSeis_VERSION_MAJOR 1)
+SET(RTSeis_VERSION_MINOR 1)
+SET(RTSeis_VERSION_PATCH 1)
+SET(RTSeis_VERSION ${RTSeis_VERSION_MAJOR}.${RTSeis_VERSION_MINOR}.${RTSeis_VERSION_PATCH})
+MESSAGE("Configuring RTSeis version: " ${RTSeis_VERSION})
+#set(CMAKE_BUILD_TYPE Release)
+# Add modules for finding requisites
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+
+INCLUDE(FindOpenMP QUIET)
+IF (OPENMP_FOUND)
+   MESSAGE("OpenMP Found")
+   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ENDIF()
+
+INCLUDE(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
+IF (COMPILER_SUPPORTS_CXX17)
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+ELSE()
+   CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+   IF (COMPILER_SUPPORTS_CXX14)
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+   ELSE()
+      CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+      IF (COMPILER_SUPPORTS_CXX11)
+         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+      ELSE()
+         MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+      ENDIF()
+   ENDIF()
+ENDIF()
+
+INCLUDE_DIRECTORIES(
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${IPP_INCLUDE_DIR}
+   ${MKL_INCLUDE_DIR}
+   ${CJSON_INCLUDE_DIR})
+
+ADD_SUBDIRECTORY(include)
+
+SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY} ${CJSON_LIBRARY})  
+
+SET(UTILS_SRCS src/utils/verbosity.c)
+SET(IPPS_SRCS
+    src/ipps/dft.c
+    src/ipps/firfilter.c)
+SET(MODULES_SRCS
+    src/modules/detrend.cpp
+    src/modules/demean.cpp)
+SET(DATA_SRCS src/data/waveform.cpp)
+SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
+
+ADD_LIBRARY(rtseis_shared SHARED ${SRCS})
+TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
+
+#------------------------------------------------------------------------------#
+#                                   CPACK Packaging                            #
+#------------------------------------------------------------------------------#
+SET(CPACK_PACKAGE_NAME "artsspl")
+SET(CPACK_PACKAGE_VENDOR "ISTI")
+SET(CPACK_PACKAGE_CONTACT "bakerb845@gmail.com")
+SET(CPACK_PACKAGE_LICENSE "MIT")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A real-time seismic signals processing library")
+SET(CPACK_PACKAGE_VERSION_MAJOR ${RTSeis_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${RTSeis_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${RTSeis_VERSION_PATCH})
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+#IF (WIN32 AND NOT UNIX)
+
+#ELSE(WIN32 AND NOT UNIX)
+  SET(CPACK_GENERATOR "TGZ")
+  SET(CPACK_SOURCE_GENERATOR TGZ)
+  SET(CPACK_SOURCE_PACKAGE_FILE_NAME "artspl-${RTSeis_VERSION}" )
+#ENDIF(WIN32 AND NOT UNIX)
+INCLUDE(CPack)
+
+#------------------------------------------------------------------------------#
+#                              Configuration Details                           #
+#------------------------------------------------------------------------------#
+SET(RTSeis_LIBRARY sspl)
+SET(INCLUDE_INSTALL_DIR include/)
+SET(LIB_INSTALL_DIR lib/)
+SET(SYSCONFIG_INSTALL_DIR etc/artspl/)
+INCLUDE(CMakePackageConfigHelpers)
+#CONFIGURE_PACKAGE_CONFIG_FILE(${CMAKE_MODULE_PATH}/FindRTSeis.cmake.in
+#                              ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
+#                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/artspl/cmake
+#                              PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR)
+#WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_LIBRARY_PATH}/lib/RTSeisConfigVersion.cmake
+#                                 VERSION ${RTSeis_VERSION}
+#                                 COMPATIBILITY SameMajorVersion)
+#INSTALL(TARGETS ${TARGET_NAMES}
+#        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ WORLD_EXECUTE WORLD_WRITE WORLD_READ
+#        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+#        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+#        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+#INSTALL(FILES
+#        ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
+#        ${LIBRARY_OUTPUT_PATH}/RTSeisConfigVersion.cmake
+#        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/artspl/cmake)
