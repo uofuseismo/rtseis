@@ -17,18 +17,36 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+/*
+#ifndef RTSEIS_PACK_ERRMSG
+#define RTSEIS_PACK_ERRMSG(fmt, ...) \
+({ \
+    char errMsg[RTSEIS_MAXMSG_LEN]; \
+    memset(errMsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char)); \
+    sprintf(errMsg, "%s[ERROR]: (%s:%s:line=%d) ", ANSI_COLOR_RED, __FILE__, __func__, __LINE__ );\
+    do \
+    {  \
+       snprintf(&errMsg[strlen(errMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
+    } while(0); \
+    sprintf(errMsg, "%s%s\n", errMsg, ANSI_COLOR_RESET); \
+    errMsg; \
+})
+#endif
+*/
+
 #ifndef RTSEIS_ERRMSG 
 #define RTSEIS_ERRMSG(fmt, ...) \
 { \
    if (rtseis_utils_verbosity_printError()) {\
-       char errmsg[RTSEIS_MAXMSG_LEN]; \
-       memset(errmsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char)); \
-       sprintf(errmsg, "[ERROR]: (%s:%s:line=%d) ", __FILE__, __func__, __LINE__ );\
+       char errMsg[RTSEIS_MAXMSG_LEN]; \
+       memset(errMsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char)); \
+       sprintf(errMsg, "%s[ERROR]: (%s:%s:line=%d) ", ANSI_COLOR_RED, __FILE__, __func__, __LINE__ );\
        do \
        {  \
-           snprintf(&errmsg[strlen(errmsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
+           snprintf(&errMsg[strlen(errMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
        } while(0); \
-       fprintf(stderr, "%s%s%s\n", ANSI_COLOR_RED, errmsg, ANSI_COLOR_RESET); \
+       sprintf(errMsg, "%s%s\n", errMsg, ANSI_COLOR_RESET); \
+       fprintf(stderr, "%s", errMsg); \
    } \
 };
 #endif
@@ -37,14 +55,15 @@
 #define RTSEIS_WARNMSG(fmt, ...) \
 { \
    if (rtseis_utils_verbosity_printErrorAndWarning()){ \
-       char warnmsg[RTSEIS_MAXMSG_LEN]; \
-       memset(warnmsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char));                           \
-       sprintf(warnmsg, "[WARNING]: (%s:%s:line=%d) ", __FILE__, __func__, __LINE__ ); \
+       char warnMsg[RTSEIS_MAXMSG_LEN]; \
+       memset(warnMsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char));                           \
+       sprintf(warnMsg, "%s[WARNING]: (%s:%s:line=%d) ", ANSI_COLOR_YELLOW, __FILE__, __func__, __LINE__ ); \
        do \
        {  \
-          snprintf(&warnmsg[strlen(warnmsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
+          snprintf(&warnMsg[strlen(warnMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
        } while(0); \
-       fprintf(stdout, "%s%s%s\n", ANSI_COLOR_YELLOW, warnmsg, ANSI_COLOR_RESET); \
+       sprintf(warnMsg, "%s%s\n", warnMsg, ANSI_COLOR_RESET); \
+       fprintf(stdout, "%s", warnMsg); \
    } \
 };
 #endif
@@ -55,12 +74,13 @@
    if (rtseis_utils_verbosity_printErrorAndWarningAndInfo()) { \
        char infoMsg[RTSEIS_MAXMSG_LEN]; \
        memset(infoMsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char));                           \
-       sprintf(infoMsg, "[INFO] (%s:line=%d) ", __func__, __LINE__); \
+       sprintf(infoMsg, "%s[INFO] (%s:line=%d) ", ANSI_COLOR_GREEN, __func__, __LINE__); \
        do \
        {  \
           snprintf(&infoMsg[strlen(infoMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
        } while(0); \
-       fprintf(stdout ,"%s%s%s\n", ANSI_COLOR_GREEN, infoMsg, ANSI_COLOR_RESET); \
+       sprintf(infoMsg, "%s%s\n", infoMsg, ANSI_COLOR_RESET); \
+       fprintf(stdout ,"%s", infoMsg); \
     } \
 };
 #endif
@@ -71,12 +91,13 @@
    if (rtseis_utils_verbosity_printAll()){ \
        char debugMsg[RTSEIS_MAXMSG_LEN]; \
        memset(debugMsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char));                           \
-       sprintf(debugMsg, "[DEBUG] (%s:line=%d) ", __func__, __LINE__); \
+       sprintf(debugMsg, "%s[DEBUG] (%s:line=%d) ", ANSI_COLOR_BLUE, __func__, __LINE__); \
        do \
        {  \
           snprintf(&debugMsg[strlen(debugMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
        } while(0); \
-       fprintf(stdout, "%s%s%s\n", ANSI_COLOR_BLUE, debugMsg, ANSI_COLOR_RESET); \
+       sprintf(debugMsg, "%s%s\n", debugMsg, ANSI_COLOR_RESET); \
+       fprintf(stdout, "%s", debugMsg); \
     } \
 };
 #endif

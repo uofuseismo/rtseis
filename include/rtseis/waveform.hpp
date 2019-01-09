@@ -100,9 +100,9 @@ class Waveform :
          * @result 0 indicates success.
          * @ingroup rtseis_data_waveform
          */
-        int setDetrendParameters(void)
+        int setDetrendParameters(const DetrendParameters &parameters)
         {
-            int ierr = RTSeis::Modules::Detrend::setParameters(precision_); 
+            int ierr = RTSeis::Modules::Detrend::setParameters(parameters);
             return ierr;
         }
     private:

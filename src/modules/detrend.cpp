@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
@@ -13,7 +14,81 @@ using namespace RTSeis::Modules;
  * @brief Removes the trend from the data.
  * @ingroup rtseis_modules
  */
+/*!
+ * @defgroup rtseis_modules_detrend_parameters Parameters
+ * @brief Defines the parameters for the detrend module.
+ * @ingroup rtseis_modules_detrend
+ */
 
+/*!
+ * @brief Default construtor.
+ * @ingroup rtseis_modules_detrend_parameters 
+ */
+DetrendParameters::DetrendParameters(void)
+{
+    setDefaults();
+    return;
+}
+/*!
+ * @brief Initializes parameters from parameters class.
+ * @param[in] parameters   Parameters class to initialize from.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+DetrendParameters::DetrendParameters(const DetrendParameters &parameters)
+{
+    *this = parameters;
+    return;
+}
+/*!
+ * @brief Destructor.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+DetrendParameters::~DetrendParameters(void)
+{
+    return;
+}
+/*!
+ * @brief Sets the default parameters.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+void DetrendParameters::setDefaults(void)
+{
+    precision_ = defaultPrecision_;
+    return;
+}
+/*!
+ * @brief Sets the precision.
+ * @param[in] precision  Precision of calculations in module.
+ * @result 0 indicates success.
+ */
+int DetrendParameters::setPrecision(
+    const enum rtseisPrecision_enum precision)
+{
+    precision_ = defaultPrecision_;
+    if (precision != RTSEIS_DOUBLE && precision != RTSEIS_FLOAT)
+    {
+        return -1;
+    }
+    precision_ = precision;
+    return 0;
+}
+/*!
+ * @brief Gets the precision of the module.
+ * @result The module precision.
+ */
+enum rtseisPrecision_enum DetrendParameters::getPrecision(void) const
+{
+    return precision_;
+}
+/*!
+ * @brief Returns whether or not the module is for real-time application.
+ * @retval A flag indicating whether or not this is for real-time use.
+ */
+bool DetrendParameters::getIsRealTime(void) const
+{
+    return lrt_;
+}
+//============================================================================//
 /*!
  * @brief Default constructor.
  * @ingroup rtseis_modules_detrend
@@ -41,6 +116,7 @@ Detrend::~Detrend(void)
  * @result 0 indicates success.
  * @ingroup rtseis_modules_detrend
  */
+/*
 int Detrend::setParameters(const enum rtseisPrecision_enum precision)
 {
     precision_ = RTSEIS_DOUBLE;
@@ -52,6 +128,7 @@ int Detrend::setParameters(const enum rtseisPrecision_enum precision)
     precision_ = precision;
     return 0;
 }
+*/
 /*!
  * @brief Removes the trend from the data by fitting a best-fitting line.
  * @param[in] nx   Number of points in x.
@@ -72,7 +149,7 @@ int Detrend::detrend(const int nx, const double x[], double y[])
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }
-    if (precision_ == RTSEIS_DOUBLE)
+    if (parms_.getPrecision() == RTSEIS_DOUBLE)
     {
         computeLinearRegressionCoeffs_(nx, x);
         removeTrend_(nx, x, y);
@@ -104,7 +181,7 @@ int Detrend::detrend(const int nx, const float x[], float y[])
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }
-    if (precision_ == RTSEIS_FLOAT)
+    if (parms_.getPrecision() == RTSEIS_FLOAT)
     {
         computeLinearRegressionCoeffs_(nx, x);
         removeTrend_(nx, x, y);
@@ -146,9 +223,14 @@ int Detrend::computeLinearRegressionCoeffs_(
     double var_x;
     // Mean of x - analytic formula for evenly spaced samples starting at indx 0
     // This is computed by simplifying Gauss's formula.
-    mean_x = 0.5*static_cast<double> (length - 1);
-    var_x = static_cast<double> ( ((length - 1)*length)*(2*(length - 1) + 1) )
-           /static_cast<double> ( 6*length ) - mean_x*mean_x;
+    uint64_t len64 = static_cast<uint64_t> (length);
+    mean_x = 0.5*static_cast<double> (len64 - 1);
+    // Note, the numerator is the sum of consecutive squared numbers.
+    // In addition we simplify.
+    //var_x = static_cast<double> ( ((len64 - 1)*len64)*(2*(len64 - 1) + 1) )
+    //       /(static_cast<double> ( 6*len64 ) ) - mean_x*mean_x;
+    var_x = static_cast<double> ( ((len64 - 1))*(2*(len64 - 1) + 1) )/6.0
+          - mean_x*mean_x;
     ippsMean_64f(pSrcY, length, &mean_y);
     cov_xy = 0;
     #pragma omp simd reduction(+:cov_xy)
@@ -177,9 +259,14 @@ int Detrend::computeLinearRegressionCoeffs_(
     float mean_y32;
     // Mean of x - analytic formula for evenly spaced samples starting at indx 0
     // This is computed by simplifying Gauss's formula.
-    mean_x = 0.5*static_cast<double> (length - 1); 
-    var_x = static_cast<double> ( ((length - 1)*length)*(2*(length - 1) + 1) )
-           /static_cast<double> ( 6*length ) - mean_x*mean_x;
+    uint64_t len64 = static_cast<uint64_t> (length);
+    mean_x = 0.5*static_cast<double> (len64 - 1); 
+    // Note, the numerator is the sum of consecutive squared numbers.
+    // In addition we simplify.
+    //var_x = static_cast<double> ( ((len64 - 1)*len64)*(2*(len64 - 1) + 1) )
+    //       /static_cast<double> ( 6*len64 ) - mean_x*mean_x;
+    var_x = static_cast<double> ( ((len64 - 1))*(2*(len64 - 1) + 1) )/6.0
+          - mean_x*mean_x;
     ippsMean_32f(pSrcY, length, &mean_y32, ippAlgHintAccurate);
     mean_y = static_cast<double> (mean_y32);
     cov_xy = 0;
@@ -229,4 +316,57 @@ int Detrend::removeTrend_(const int length, const float x[], float y[])
         y[i] = x[i] - (b0 + b1*static_cast<float> (i));
     }
     return 0;
+}
+//============================================================================//
+//                             ctypes interface                               //
+//============================================================================//
+
+void *rtseis_modules_detrend_parameters_initialize(void)
+{
+    DetrendParameters::DetrendParameters *parms = new DetrendParameters::DetrendParameters; 
+    parms->setDefaults();
+    return parms;
+}
+
+void rtseis_modules_detrend_parameters_setDefault(void *parameters)
+{
+    DetrendParameters::DetrendParameters *parms
+        = static_cast<DetrendParameters::DetrendParameters *> (parameters);
+    parms->setDefaults();
+    return;
+}
+
+void rtseis_modules_detrend_parameters_finalize(void *parameters)
+{
+    DetrendParameters::DetrendParameters *parms
+        = static_cast<DetrendParameters::DetrendParameters *> (parameters);
+    if (parms != nullptr){delete parms;}
+    parameters = nullptr;
+    return;
+}
+
+void *rtseis_modules_detrend_initialize(void *parameters)
+{
+    Detrend::Detrend *detrend = new Detrend::Detrend;
+    DetrendParameters::DetrendParameters *parms
+        = static_cast<DetrendParameters::DetrendParameters *> (parameters);
+    detrend->setParameters(*parms);
+    return static_cast<void *> (detrend);
+}
+
+int rtseis_modules_detrend_detrend(const int nx, const double x[],
+                                   double y[], 
+                                   void *detrend)
+{
+    Detrend::Detrend *module = static_cast<Detrend::Detrend *> (detrend);
+    int ierr = module->detrend(nx, x, y);
+    return ierr;
+} 
+
+void rtseis_modules_detrend_finalize(void *detrend)
+{
+    Detrend::Detrend *module = static_cast<Detrend::Detrend *> (detrend);
+    delete module;
+    detrend = nullptr;
+    return;
 }

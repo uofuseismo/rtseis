@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.2 FATAL_ERROR)
 
 PROJECT(RTSeis)
 ENABLE_LANGUAGE(C)
@@ -55,7 +55,11 @@ ADD_SUBDIRECTORY(include)
 
 SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY} ${CJSON_LIBRARY})  
 
-SET(UTILS_SRCS src/utils/verbosity.c)
+SET(UTILS_SRCS
+    src/utils/verbosity.c
+    src/utils/design/zpk.cpp
+    src/utils/design/analogProtype.cpp
+    src/utils/design/polynomial.cpp)
 SET(IPPS_SRCS
     src/ipps/dft.c
     src/ipps/firfilter.c)
@@ -67,6 +71,32 @@ SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
 
 ADD_LIBRARY(rtseis_shared SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
+
+#########################################################################################
+#                                        Unit Tests                                     #
+#########################################################################################
+
+ADD_EXECUTABLE(testUtils
+               testing/utils/utils.cpp
+               testing/utils/polynomial.cpp
+               testing/utils/design.cpp)
+ADD_EXECUTABLE(testModules
+               testing/modules/modules.cpp
+               testing/modules/detrend.cpp)
+
+TARGET_LINK_LIBRARIES(testUtils   rtseis_shared ${LIBALL})
+TARGET_LINK_LIBRARIES(testModules rtseis_shared ${LIBALL})
+ADD_TEST(NAME utils
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
+         COMMAND testUtils)
+ADD_TEST(NAME modules
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
+         COMMAND testModules)
+
+#ADD_LIBRARY(pyrtseis SHARED src/modules/boost.cpp)
+#TARGET_LINK_LIBRARIES(pyrtseis ${LIBALL} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+#SET_TARGET_PROPERTIES(pyrtseis PROPERTIES SUFFIX .so)
+#SET_TARGET_PROPERTIES(pyrtseis PROPERTIES PREFIX "")
 
 #------------------------------------------------------------------------------#
 #                                   CPACK Packaging                            #
