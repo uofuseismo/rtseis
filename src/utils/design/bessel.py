@@ -10,7 +10,7 @@ for n in range(1,26):
    i = 0
    for p in ps:
       #print "        p[%d] = %.16f + %.16f*_Complex_I;"%(i,p.real,p.imag)
-      print("        poles_[%d] = (%.18f, %.18f);"%(i,p.real,p.imag))
+      print("        poles[%d] = std::complex<double> (%.18f, %.18f);"%(i,p.real,p.imag))
       i = i + 1
 print("    }")
 
