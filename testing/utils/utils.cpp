@@ -26,5 +26,13 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed analog prototype design");
 
+    ierr = rtseis_test_utils_design_freqs();
+    if (ierr != EXIT_SUCCESS)
+    {
+         RTSEIS_ERRMSG("%s", "Failed freqs/freqz test");
+         return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed freqs/freqz test");
+
     return EXIT_SUCCESS;
 }

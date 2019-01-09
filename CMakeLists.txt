@@ -57,6 +57,8 @@ SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY} ${CJSON_LIBRARY})
 
 SET(UTILS_SRCS
     src/utils/verbosity.c
+    src/utils/design/design.cpp
+    src/utils/design/ba.cpp
     src/utils/design/zpk.cpp
     src/utils/design/analogProtype.cpp
     src/utils/design/polynomial.cpp)

@@ -47,8 +47,8 @@ class ZPK
         void setPoles(const std::vector<std::complex<double>> poles);
         void setZeros(const size_t n, std::complex<double> zeros[]);
         void setZeros(const std::vector<std::complex<double>> zeros);
-        std::vector<std::complex<double>> getPoles(void) const{return p_;}
-        std::vector<std::complex<double>> getZeros(void) const{return z_;}
+        std::vector<std::complex<double>> getPoles(void) const;
+        std::vector<std::complex<double>> getZeros(void) const;
     private:
         /*!< The zeros. */
         std::vector<std::complex<double>> z_;

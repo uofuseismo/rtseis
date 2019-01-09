@@ -1,6 +1,6 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
-#include "rtseis/utils/design.h"
+#include "rtseis/utils/zpk.h"
 #include "rtseis/log.h"
 
 /*!
@@ -8,7 +8,7 @@
  * @brief Utility functions for holding a transfer function in 
  *        zero, pole, gain format.
  * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_design_iir
+ * @ingroup rtseis_utils_design
  */
 
 /*!
@@ -38,7 +38,7 @@ ZPK::ZPK(const std::vector<std::complex<double>> zeros,
     return;
 }
 /*!
- * @brief Default cestructor.
+ * @brief Default destructor.
  * @ingroup rtseis_utils_design_iir_zpk
  */
 ZPK::~ZPK(void)
@@ -48,6 +48,9 @@ ZPK::~ZPK(void)
 }
 /*!
  * @brief Prints the ZPK structure.
+ * @param[in] fout   File handle to print to.  If fout is NULL then this
+ *                   will print to stdout.
+ * @ingroup rtseis_utils_design_iir_zpk
  */
 void ZPK::print(FILE *fout)
 {
@@ -174,4 +177,20 @@ void ZPK::setZeros(const std::vector<std::complex<double>> zeros)
 {
     z_ = zeros;
     return;
+}
+/*!
+ * @brief Gets the poles.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+std::vector<std::complex<double>> ZPK::getPoles(void) const
+{
+    return p_;
+}
+/*!
+ * @brief Gets the zeros.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+std::vector<std::complex<double>> ZPK::getZeros(void) const
+{
+    return z_;
 }
