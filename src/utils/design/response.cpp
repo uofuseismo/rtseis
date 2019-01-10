@@ -3,29 +3,24 @@
 #define RTSEIS_LOGGING 1
 #include <vector>
 #include <cmath>
-#include "rtseis/utils/design.h"
-#include "rtseis/utils/polynomial.h"
+#include "rtseis/utils/design.hpp"
+#include "rtseis/utils/polynomial.hpp"
+#include "rtseis/utils/ipps.hpp"
 #include "rtseis/log.h"
+#include <ipps.h>
 
+using namespace RTSeis::Utils::FilterDesign;
 
 /*!
- * @defgroup rtseis_utils_design Design
- * @brief Utility functions for filter design.  This code is originally
- *        from ISTI's ISCL and has been modified to conform with C++.
- *        Function names have also been changed to conform with rtseis's
- *        naming conventions.
+ * @defgroup rtseis_utils_design_response Response
+ * @brief Utility functions for looking at the response of a filter.
+ *        This code is originally from ISTI's ISCL and has been modified
+ *        to conform with C++.  Function names have also been changed to
+ *        conform with rtseis's naming conventions.
  * @copyright ISTI distributed under the Apache 2 license.
  * @ingroup rtseis_utils_design
  */
-Design::Design(void)
-{
-    return;
-}
 
-Design::~Design(void)
-{
-    return;
-}
 /*!
  * @brief Tabulates the frequency response of an analog filter.
  * @param[in] ba     The transfer function defining the analog filter.
@@ -34,10 +29,10 @@ Design::~Design(void)
  * @param[out] h     The frequency repsonse, \f$ H(i \omega) \f$, tabulated at
  *                   the angular frequencies.  This has dimension [w.size()].
  * @result 0 indicates success.
- * @ingroup rtseis_utils_design
+ * @ingroup rtseis_utils_design_response
  */
-int Design::freqs(const BA ba, const std::vector<double> w,
-                  std::vector<std::complex<double>> &h)
+int Response::freqs(const BA ba, const std::vector<double> w,
+                    std::vector<std::complex<double>> &h)
 {
     size_t nw = w.size();
     h.resize(0);
@@ -72,8 +67,7 @@ int Design::freqs(const BA ba, const std::vector<double> w,
     #pragma ivdep
     for (size_t i=0; i<b.size(); i++){bz[i] = std::complex<double> (b[i], 0);}
     std::vector<std::complex<double>> hsNum;
-    Polynomial polynomial;
-    int ierr = polynomial.polyval(bz, s, hsNum);
+    int ierr = Math::Polynomial::polyval(bz, s, hsNum);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute hsNum");
@@ -84,18 +78,18 @@ int Design::freqs(const BA ba, const std::vector<double> w,
     az.resize(a.size());
     #pragma ivdep
     for (size_t i=0; i<a.size(); i++){az[i] = std::complex<double> (a[i], 0);}
-    ierr = polynomial.polyval(az, s, hsDen);
+    ierr = Math::Polynomial::polyval(az, s, hsDen);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute hsDen");
         return -1;
     }
     // Compute the transfer function
-    h.resize(nw);
-    #pragma ivdep
-    for (size_t i=0; i<nw; i++)
+    ierr = IPPS::Div(hsDen, hsNum, h);
+    if (ierr != 0)
     {
-        h[i] = hsNum[i]/hsDen[i];
+        RTSEIS_ERRMSG("%s", "Division failed");
+        return -1;
     }
     return 0;
 }
@@ -121,10 +115,10 @@ int Design::freqs(const BA ba, const std::vector<double> w,
  *                 normalized angular frequencies.  This has dimension
  *                 [w.size()].
  * @result 0 indicates success.
- * @ingroup rtseis_utils_design
+ * @ingroup rtseis_utils_design_response
  */
-int Design::freqz(const BA ba, const std::vector<double> w,
-                  std::vector<std::complex<double>> &h) 
+int Response::freqz(const BA ba, const std::vector<double> w,
+                    std::vector<std::complex<double>> &h) 
 {
     size_t nw = w.size();
     h.resize(0);
@@ -175,26 +169,25 @@ int Design::freqz(const BA ba, const std::vector<double> w,
     }
     // Evaluate the numerator and denominator polynoimals
     std::vector<std::complex<double>> hzNum;
-    Polynomial polynomial;
-    int ierr = polynomial.polyval(bz, z, hzNum);
+    int ierr = Math::Polynomial::polyval(bz, z, hzNum);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute hzNum");
         return -1; 
     }
     std::vector<std::complex<double>> hzDen;
-    ierr = polynomial.polyval(az, z, hzDen);
+    ierr = Math::Polynomial::polyval(az, z, hzDen);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute hzDen");
         return -1;
     }
-    // Compute the transfer function
-    h.resize(nw);
-    #pragma ivdep
-    for (size_t i=0; i<nw; i++)
+    // Compute the transfer function: H = Num/Den
+    ierr = IPPS::Div(hzDen, hzNum, h); 
+    if (ierr != 0)
     {
-        h[i] = hzNum[i]/hzDen[i];
+        RTSEIS_ERRMSG("%s", "Division failed");
+        return -1;
     }
     return 0;
 }

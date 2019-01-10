@@ -3,20 +3,21 @@
 #include <string>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
-#include "rtseis/utils/design.h"
+#include "rtseis/utils/design.hpp"
 #include "rtseis/log.h"
 
+using namespace RTSeis::Utils::FilterDesign;
+
+/*! IIR analog prototype design. */
 int rtseis_test_utils_design_iir_ap(void)
 {
     int ierr;
     double k;
-    AnalogPrototype ap;
     ZPK zpk, zpkRef;
     std::vector<std::complex<double>> pref;
     std::vector<std::complex<double>> zref;
     // Test butterworth order 1
-    ierr = ap.butter(1);
-    zpk = ap.getTransferFunction();
+    ierr = IIR::AnalogPrototype::butter(1, zpk);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "order 1 failed");
@@ -34,8 +35,7 @@ int rtseis_test_utils_design_iir_ap(void)
     }
     zpkRef.clear();
     // Test butterworth order 4
-    ierr = ap.butter(5);
-    zpk = ap.getTransferFunction();
+    ierr = IIR::AnalogPrototype::butter(5, zpk);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "order 4 failed");
@@ -60,8 +60,7 @@ int rtseis_test_utils_design_iir_ap(void)
     }
     zpkRef.clear();
     // Test order 1 cheby1
-    ierr = ap.cheb1ap(1, 2.2);
-    zpk = ap.getTransferFunction();
+    ierr = IIR::AnalogPrototype::cheb1ap(1, 2.2, zpk);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "order 1 failed");
@@ -81,8 +80,7 @@ int rtseis_test_utils_design_iir_ap(void)
         return EXIT_FAILURE;
     }
     // Test order 6 cheby1
-    ierr = ap.cheb1ap(6, 0.994);
-    zpk = ap.getTransferFunction();
+    ierr = IIR::AnalogPrototype::cheb1ap(6, 0.994, zpk);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "order 1 failed");
@@ -107,8 +105,7 @@ int rtseis_test_utils_design_iir_ap(void)
         return EXIT_FAILURE;
     } 
     // Test order 2 cheby2 
-    ierr = ap.cheb2ap(1, 1.1);
-    zpk = ap.getTransferFunction();
+    ierr = IIR::AnalogPrototype::cheb2ap(1, 1.1, zpk);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "order 1 failed");
@@ -128,8 +125,7 @@ int rtseis_test_utils_design_iir_ap(void)
         return EXIT_FAILURE;
     }
     // Test order 6 cheby2 
-    ierr = ap.cheb2ap(6, 1.2);
-    zpk = ap.getTransferFunction();
+    ierr = IIR::AnalogPrototype::cheb2ap(6, 1.2, zpk);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "order 1 failed");
@@ -279,8 +275,7 @@ int rtseis_test_utils_design_freqs(void)
         w[i] = 2.0*M_PI*std::pow(10, x1 + static_cast<double> (i)*dx);
     }
     std::vector<std::complex<double>> h;
-    Design design;
-    int ierr = design.freqs(ba, w, h);
+    int ierr = Response::freqs(ba, w, h);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed calling freqs");
@@ -308,7 +303,7 @@ int rtseis_test_utils_design_freqs(void)
     {
         w[i] = 0 + static_cast<double> (i)*df;
     }  
-    ierr = design.freqz(baz, w, h);
+    ierr = Response::freqz(baz, w, h);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed calling freqz");

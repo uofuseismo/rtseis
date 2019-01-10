@@ -5,7 +5,6 @@
 #include <complex>
 #include <vector>
 
-#ifdef __cplusplus
 class ZPK
 {
     public:
@@ -57,6 +56,5 @@ class ZPK
         /*!< The gain. */
         double k_ = 0;
 };
-#endif
 
 #endif

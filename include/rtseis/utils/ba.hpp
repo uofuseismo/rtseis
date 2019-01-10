@@ -5,7 +5,6 @@
 #include <complex>
 #include <vector>
 
-#ifdef __cplusplus
 class BA
 {
     public:
@@ -49,6 +48,5 @@ class BA
         /*!< The denoninator coefficients. */
         std::vector<double> a_;
 };
-#endif
 
 #endif

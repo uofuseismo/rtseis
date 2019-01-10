@@ -1,6 +1,6 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
-#include "rtseis/utils/ba.h"
+#include "rtseis/utils/ba.hpp"
 #include "rtseis/log.h"
 
 /*!

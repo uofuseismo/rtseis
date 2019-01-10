@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utils/polynomial.h"
+#include "rtseis/utils/polynomial.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
+
+using namespace RTSeis::Utils::Math;
 
 int polynomial_poly_test(void);
 int polynomial_roots_test(void);
@@ -105,9 +107,8 @@ int polynomial_polyval_test(void)
 
     
      
-    Polynomial polynomial;
     std::vector<double> y;
-    ierr = polynomial.polyval(p0, x, y); 
+    ierr = Polynomial::polyval(p0, x, y); 
     if (ierr != 0 || x.size() != y.size())
     {
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -122,7 +123,7 @@ int polynomial_polyval_test(void)
         }
     }
 
-    ierr = polynomial.polyval(p1, x, y); 
+    ierr = Polynomial::polyval(p1, x, y); 
     if (ierr != 0 || x.size() != y.size())
     {   
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -137,7 +138,7 @@ int polynomial_polyval_test(void)
         }
     }
  
-    ierr = polynomial.polyval(p2, x, y); 
+    ierr = Polynomial::polyval(p2, x, y); 
     if (ierr != 0 || x.size() != y.size())
     {
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -152,7 +153,7 @@ int polynomial_polyval_test(void)
         }
     }
 
-    ierr = polynomial.polyval(p3, x, y); 
+    ierr = Polynomial::polyval(p3, x, y); 
     if (ierr != 0 || x.size() != y.size())
     {   
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -167,7 +168,7 @@ int polynomial_polyval_test(void)
         }
     }
 
-    ierr = polynomial.polyval(p4, x, y); 
+    ierr = Polynomial::polyval(p4, x, y); 
     if (ierr != 0 || x.size() != y.size())
     {
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -183,7 +184,7 @@ int polynomial_polyval_test(void)
     }
     // Complex
     std::vector<std::complex<double>> zy;
-    ierr = polynomial.polyval(zp0, zx, zy);
+    ierr = Polynomial::polyval(zp0, zx, zy);
     if (ierr != 0 || zx.size() != zy.size())
     {
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -198,7 +199,7 @@ int polynomial_polyval_test(void)
         }
     }
 
-    ierr = polynomial.polyval(zp1, zx, zy);
+    ierr = Polynomial::polyval(zp1, zx, zy);
     if (ierr != 0 || zx.size() != zy.size())
     {
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -213,7 +214,7 @@ int polynomial_polyval_test(void)
         }
     }
 
-    ierr = polynomial.polyval(zp2, zx, zy);
+    ierr = Polynomial::polyval(zp2, zx, zy);
     if (ierr != 0 || zx.size() != zy.size())
     { 
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -228,7 +229,7 @@ int polynomial_polyval_test(void)
         }
     }
 
-    ierr = polynomial.polyval(zp3, zx, zy);
+    ierr = Polynomial::polyval(zp3, zx, zy);
     if (ierr != 0 || zx.size() != zy.size())
     {   
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -243,7 +244,7 @@ int polynomial_polyval_test(void)
         }
     }
 
-    ierr = polynomial.polyval(zp4, zx, zy);
+    ierr = Polynomial::polyval(zp4, zx, zy);
     if (ierr != 0 || zx.size() != zy.size())
     {
         RTSEIS_ERRMSG("%s", "Failed polyval");
@@ -264,7 +265,6 @@ int polynomial_polyval_test(void)
 int polynomial_roots_test(void)
 {
     int ierr;
-    Polynomial polynomial;
 
     std::vector<std::complex<double>> ref1, ref2;
     ref1.resize(3);
@@ -281,7 +281,7 @@ int polynomial_roots_test(void)
     p.resize(4);
     p[0] = 1; p[1] =-6; p[2] =-72; p[3] =-27; 
     std::vector<std::complex<double>> roots;
-    ierr = polynomial.roots(p, roots);
+    ierr = Polynomial::roots(p, roots);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed calling roots");
@@ -305,7 +305,7 @@ int polynomial_roots_test(void)
     p[1] =-6;
     p[2] = 72;
     p[3] = 27;
-    ierr = polynomial.roots(p, roots);
+    ierr = Polynomial::roots(p, roots);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "Failed calling roots");
@@ -331,7 +331,6 @@ int polynomial_roots_test(void)
 int polynomial_poly_test(void)
 {
     int ierr;
-    Polynomial polynomial;
     std::vector<std::complex<double>> croots;
     croots.resize(4);
     croots[0] = std::complex<double> (1, 0);
@@ -363,7 +362,7 @@ int polynomial_poly_test(void)
     cref[4] = std::complex<double> (8.6, 0);
 
     std::vector<double> poly;
-    ierr = polynomial.poly(roots, poly);
+    ierr = Polynomial::poly(roots, poly);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to call poly");
@@ -384,7 +383,7 @@ int polynomial_poly_test(void)
     }
 
     std::vector<std::complex<double>> cpoly;
-    ierr = polynomial.poly(croots, cpoly);
+    ierr = Polynomial::poly(croots, cpoly);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "Failed to call poly");

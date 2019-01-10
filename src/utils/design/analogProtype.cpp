@@ -1,8 +1,10 @@
 #define RTSEIS_LOGGING 1
 #include <vector>
 #include <cmath>
-#include "rtseis/utils/design.h"
+#include "rtseis/utils/design.hpp"
 #include "rtseis/log.h"
+
+using namespace RTSeis::Utils::FilterDesign::IIR;
 
 /*!
  * @defgroup rtseis_utils_design_iir_ap Analog Prototype
@@ -18,29 +20,36 @@
  * @brief Constructor.
  * @ingroup rtseis_utils_design_iir_ap
  */
+/*
 AnalogPrototype::AnalogPrototype(void)
 {
     zpk_.clear();
     return;
 }
+*/
+
 /*!
  * @brief Destructor.
  * @ingroup rtseis_utils_design_iir_ap
  */
+/*
 AnalogPrototype::~AnalogPrototype(void)
 {
     zpk_.clear();
     return;
 }
+*/
 /*!
  * @brief Computes an n'th order analog prototype Butterworth filter design.
  * @param[in] n      Order.  This must be positive.
+ * @param[out] zpk   The corresonding Butterworth filter in zero, pole,
+ *                   gain format.
  * @result 0 indicates success.
  * @ingroup rtseis_utils_design_iir_ap
  */
-int AnalogPrototype::butter(const int n)
+int AnalogPrototype::butter(const int n, ZPK &zpk)
 {
-    zpk_.clear();
+    zpk.clear();
     if (n < 1 || n > 25)
     {
         if (n < 1){RTSEIS_ERRMSG("Order=%d must be positive", n);}
@@ -59,7 +68,7 @@ int AnalogPrototype::butter(const int n)
         poles[i] =-std::exp(arg);
     }
     double k = 1.0; //k = real(prod(-p)) which is 1
-    zpk_ = ZPK(zeros, poles, k);
+    zpk = ZPK(zeros, poles, k);
     return 0;
 }
 /*!
@@ -69,12 +78,14 @@ int AnalogPrototype::butter(const int n)
  * @param[in] n      Order of filter.
  * @param[in] rp     Controls the size of the ripples in the passband.
  *                   This is measured in decibels and must be positive.
+ * @param[out] zpk   The corresonding Chebyshev I filter in zero, pole,
+ *                   gain format.
  * @result 0 indicates success.
  * @ingroup rtseis_utils_design_iir_ap
  */
-int AnalogPrototype::cheb1ap(const int n, const double rp)
+int AnalogPrototype::cheb1ap(const int n, const double rp, ZPK &zpk)
 {
-    zpk_.clear();
+    zpk.clear();
     if (n < 1)
     {
         RTSEIS_ERRMSG("Order=%d must be positive", n);
@@ -113,7 +124,7 @@ int AnalogPrototype::cheb1ap(const int n, const double rp)
     }
     double k = std::real(zprod); //Take real
     if (n%2 == 0){k = k/std::sqrt(1.0 + eps*eps);}
-    zpk_ = ZPK(zeros, poles, k);
+    zpk = ZPK(zeros, poles, k);
     return 0;
 }
 /*!
@@ -123,12 +134,14 @@ int AnalogPrototype::cheb1ap(const int n, const double rp)
  * @param[in] n      Order of filter.
  * @param[in] rs     Controls the size of the ripples in the stopband.
  *                   This is measured in decibels and must be positive.
+ * @param[out] zpk   The corresonding Chebyshev II filter in zero, pole,
+ *                   gain format.
  * @result 0 indicates success.
  * @ingroup rtseis_utils_design_iir_ap
  */
-int AnalogPrototype::cheb2ap(const int n, const double rs)
+int AnalogPrototype::cheb2ap(const int n, const double rs, ZPK &zpk)
 {
-    zpk_.clear();
+    zpk.clear();
     if (n < 1)
     {
         RTSEIS_ERRMSG("Order=%d must be positive", n); 
@@ -208,18 +221,20 @@ int AnalogPrototype::cheb2ap(const int n, const double rs)
        znum = (-poles[i])*znum;
     }
     double k = std::real(znum/zden);
-    zpk_ = ZPK(zeros, poles, k);
+    zpk = ZPK(zeros, poles, k);
     return 0;
 }
 /*!
  * @brief Computes an n'th order analog prototype Bessel filter design.
  * @param[in] n      Order.  This must be positive.
+ * @param[out] zpk   The corresonding Bessel filter in zero, pole,
+ *                   gain format.
  * @result 0 indicates success.
  * @ingroup rtseis_utils_design_iir_ap
  */
-int AnalogPrototype::bessel(const int n)
+int AnalogPrototype::bessel(const int n, ZPK &zpk)
 {
-    zpk_.clear();
+    zpk.clear();
     if (n < 1)
     {
         RTSEIS_ERRMSG("Order=%d must be positive", n);
@@ -636,6 +651,6 @@ int AnalogPrototype::bessel(const int n)
         RTSEIS_ERRMSG("%s", "Unsupported filter order");
         return -1; 
     }
-    zpk_ = ZPK(zeros, poles, k);
+    zpk = ZPK(zeros, poles, k);
     return 0;
 }

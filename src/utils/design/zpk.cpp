@@ -1,6 +1,6 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
-#include "rtseis/utils/zpk.h"
+#include "rtseis/utils/zpk.hpp"
 #include "rtseis/log.h"
 
 /*!

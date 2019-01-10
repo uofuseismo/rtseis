@@ -173,7 +173,7 @@ int Detrend::detrend(const int nx, const double x[], double y[])
  */
 int Detrend::detrend(const int nx, const float x[], float y[])
 {
-    b0_ = 0; 
+    b0_ = 0;
     b1_ = 0;
     if (nx < 1 || x == nullptr || y == nullptr)
     {
@@ -370,3 +370,4 @@ void rtseis_modules_detrend_finalize(void *detrend)
     detrend = nullptr;
     return;
 }
+

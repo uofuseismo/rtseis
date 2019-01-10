@@ -3,8 +3,16 @@
 #ifndef RTSEIS_CONFIG_H__
 #define RTSEIS_CONFIG_H__ 1
 
+#cmakedefine RTSEIS_VERSION_MAJOR @RTSEIS_VERSION_MAJOR@
+#cmakedefine RTSEIS_VERSION_MINOR @RTSEIS_VERSION_MINOR@
+#cmakedefine RTSEIS_VERSION_PATCH @RTSEIS_VERSION_PATCH@
+#cmakedefine RTSEIS_VERSION "@RTSEIS_VERSION@"
+
 /* Use cJSON libraries for paring JSON. */
 #cmakedefine RTSEIS_USE_CJSON
+
+/* Use Boost to wrap Python. */
+#cmakedefine RTSEIS_WRAP_PYTHON
 
 #define RTSEIS_MAXMSG_LEN 4096
 
@@ -14,10 +22,5 @@
 #ifndef MIN
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
 #endif
-
-#cmakedefine RTSEIS_VERSION_MAJOR @RTSEIS_VERSION_MAJOR@
-#cmakedefine RTSEIS_VERSION_MINOR @RTSEIS_VERSION_MINOR@
-#cmakedefine RTSEIS_VERSION_PATCH @RTSEIS_VERSION_PATCH@
-#cmakedefine RTSEIS_VERSION "@RTSEIS_VERSION@"
 
 #endif /* RTSEIS_CONFIG_H__ */

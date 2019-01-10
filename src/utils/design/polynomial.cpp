@@ -5,9 +5,11 @@
 #include <algorithm>
 #include <float.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utils/polynomial.h"
+#include "rtseis/utils/polynomial.hpp"
 #include "rtseis/log.h"
 #include <mkl_lapacke.h>
+
+using namespace::RTSeis::Utils::Math;
 
 /*!
  * @defgroup rtseis_utils_polynomial Polynomial
@@ -19,22 +21,6 @@
  * @ingroup rtseis_utils
  */
 
-/*!
- * @brief Default constructor. 
- * @ingroup rtseis_utils_polynomial
- */
-Polynomial::Polynomial(void)
-{
-    return;
-}
-/*!
- * @brief Default destructor.
- * @ingroup rtseis_utils_polynomial
- */
-Polynomial::~Polynomial(void)
-{
-    return;
-}
 /*!
  * @brief Evaluates the polynomial
  *        \f[

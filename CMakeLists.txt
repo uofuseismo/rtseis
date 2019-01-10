@@ -9,11 +9,11 @@ SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
-SET(RTSeis_VERSION_MAJOR 1)
-SET(RTSeis_VERSION_MINOR 1)
-SET(RTSeis_VERSION_PATCH 1)
-SET(RTSeis_VERSION ${RTSeis_VERSION_MAJOR}.${RTSeis_VERSION_MINOR}.${RTSeis_VERSION_PATCH})
-MESSAGE("Configuring RTSeis version: " ${RTSeis_VERSION})
+SET(RTSEIS_VERSION_MAJOR 1)
+SET(RTSEIS_VERSION_MINOR 1)
+SET(RTSEIS_VERSION_PATCH 1)
+SET(RTSEIS_VERSION ${RTSEIS_VERSION_MAJOR}.${RTSEIS_VERSION_MINOR}.${RTSEIS_VERSION_PATCH})
+MESSAGE("Configuring RTSeis version: " ${RTSEIS_VERSION})
 #set(CMAKE_BUILD_TYPE Release)
 # Add modules for finding requisites
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
@@ -45,19 +45,37 @@ ELSE()
    ENDIF()
 ENDIF()
 
+IF (RTSEIS_WRAP_PYTHON)
+   FIND_PACKAGE(Boost COMPONENTS python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
+   FIND_PACKAGE(PythonInterp 3)
+   FIND_PACKAGE(PythonLibs 3 REQUIRED)
+   MESSAGE(STATUS "PYTHON_LIBRARIES = ${PYTHON_LIBRARIES}")
+   MESSAGE(STATUS "PYTHON_EXECUTABLE = ${PYTHON_EXECUTABLE}")
+   MESSAGE(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
+   MESSAGE(STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
+   MESSAGE(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+ENDIF()
+
 INCLUDE_DIRECTORIES(
    ${CMAKE_CURRENT_SOURCE_DIR}/include
    ${IPP_INCLUDE_DIR}
    ${MKL_INCLUDE_DIR}
+   ${PYTHON_INCLUDE_DIRS}
+   ${Boost_INCLUDE_DIRS} 
    ${CJSON_INCLUDE_DIR})
 
 ADD_SUBDIRECTORY(include)
 
-SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY} ${CJSON_LIBRARY})  
+SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY} ${CJSON_LIBRARY})
+SET(LIBALL_PYTHON rtseis_shared ${LIBALL} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
+SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
     src/utils/verbosity.c
-    src/utils/design/design.cpp
+    src/utils/ipps.cpp
+    src/utils/design/response.cpp
+    src/utils/design/iir.cpp
+    src/utils/design/fir.cpp
     src/utils/design/ba.cpp
     src/utils/design/zpk.cpp
     src/utils/design/analogProtype.cpp
@@ -73,6 +91,11 @@ SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
 
 ADD_LIBRARY(rtseis_shared SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
+IF (RTSEIS_WRAP_PYTHON)
+   PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
+   TARGET_LINK_LIBRARIES(rtseis_python
+                         rtseis_shared ${LIBALL} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+ENDIF()
 
 #########################################################################################
 #                                        Unit Tests                                     #
@@ -81,6 +104,7 @@ TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
 ADD_EXECUTABLE(testUtils
                testing/utils/utils.cpp
                testing/utils/polynomial.cpp
+               testing/utils/fir.cpp
                testing/utils/design.cpp)
 ADD_EXECUTABLE(testModules
                testing/modules/modules.cpp
@@ -103,45 +127,46 @@ ADD_TEST(NAME modules
 #------------------------------------------------------------------------------#
 #                                   CPACK Packaging                            #
 #------------------------------------------------------------------------------#
-SET(CPACK_PACKAGE_NAME "artsspl")
-SET(CPACK_PACKAGE_VENDOR "ISTI")
+SET(CPACK_PACKAGE_NAME "rtseis")
+SET(CPACK_PACKAGE_VENDOR "The Internet")
 SET(CPACK_PACKAGE_CONTACT "bakerb845@gmail.com")
 SET(CPACK_PACKAGE_LICENSE "MIT")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A real-time seismic signals processing library")
-SET(CPACK_PACKAGE_VERSION_MAJOR ${RTSeis_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${RTSeis_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${RTSeis_VERSION_PATCH})
+SET(CPACK_PACKAGE_VERSION_MAJOR ${RTSEIS_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${RTSEIS_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${RTSEIS_VERSION_PATCH})
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 #IF (WIN32 AND NOT UNIX)
 
 #ELSE(WIN32 AND NOT UNIX)
   SET(CPACK_GENERATOR "TGZ")
   SET(CPACK_SOURCE_GENERATOR TGZ)
-  SET(CPACK_SOURCE_PACKAGE_FILE_NAME "artspl-${RTSeis_VERSION}" )
+  SET(CPACK_SOURCE_PACKAGE_FILE_NAME "artspl-${RTSEIS_VERSION}" )
 #ENDIF(WIN32 AND NOT UNIX)
 INCLUDE(CPack)
 
 #------------------------------------------------------------------------------#
 #                              Configuration Details                           #
 #------------------------------------------------------------------------------#
+SET_PROPERTY(TARGET rtseis_shared PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 SET(RTSeis_LIBRARY sspl)
 SET(INCLUDE_INSTALL_DIR include/)
 SET(LIB_INSTALL_DIR lib/)
-SET(SYSCONFIG_INSTALL_DIR etc/artspl/)
+SET(SYSCONFIG_INSTALL_DIR etc/rtseis/)
 INCLUDE(CMakePackageConfigHelpers)
-#CONFIGURE_PACKAGE_CONFIG_FILE(${CMAKE_MODULE_PATH}/FindRTSeis.cmake.in
-#                              ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
-#                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/artspl/cmake
-#                              PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR)
-#WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_LIBRARY_PATH}/lib/RTSeisConfigVersion.cmake
-#                                 VERSION ${RTSeis_VERSION}
-#                                 COMPATIBILITY SameMajorVersion)
-#INSTALL(TARGETS ${TARGET_NAMES}
-#        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ WORLD_EXECUTE WORLD_WRITE WORLD_READ
-#        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-#        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-#        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-#INSTALL(FILES
-#        ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
-#        ${LIBRARY_OUTPUT_PATH}/RTSeisConfigVersion.cmake
-#        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/artspl/cmake)
+CONFIGURE_PACKAGE_CONFIG_FILE(${CMAKE_MODULE_PATH}/FindRTSeis.cmake.in
+                              ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
+                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/rtseis/cmake
+                              PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR)
+WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RTSeisConfigVersion.cmake
+                                 VERSION ${RTSEIS_VERSION}
+                                 COMPATIBILITY SameMajorVersion)
+INSTALL(TARGETS ${TARGET_NAMES}
+        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ WORLD_EXECUTE WORLD_WRITE WORLD_READ
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+INSTALL(FILES
+        ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RTSeisConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/rtseis/cmake)
