@@ -525,6 +525,10 @@ int rtseis_ippsMedianFilter_initialize(
 int rtseis_ippsMedianFilter_toggleRealTime(
     const bool lisRealTime,
     struct ippsMedianFilter_struct *ippsMedian);
+/* Copy the median filter. */
+int rtseis_ippsMedianFilter_copy(
+    const struct ippsMedianFilter_struct ippsMedianIn,
+    struct ippsMedianFilter_struct *ippsMedianOut);
 /* Resets the initial conditions on the median filter. */
 int rtseis_ippsMedianFilter_resetInitialConditions(
     struct ippsMedianFilter_struct *ippsMedian);

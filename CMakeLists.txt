@@ -82,7 +82,9 @@ SET(UTILS_SRCS
     src/utils/design/polynomial.cpp)
 SET(IPPS_SRCS
     src/ipps/dft.c
-    src/ipps/firfilter.c)
+    src/ipps/downsample.c 
+    src/ipps/firfilter.c
+    src/ipps/medianFilter.c)
 SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp)
