@@ -107,7 +107,8 @@ ADD_EXECUTABLE(testUtils
                testing/utils/utils.cpp
                testing/utils/polynomial.cpp
                testing/utils/fir.cpp
-               testing/utils/design.cpp)
+               testing/utils/iir.cpp
+               testing/utils/response.cpp)
 ADD_EXECUTABLE(testModules
                testing/modules/modules.cpp
                testing/modules/detrend.cpp)

@@ -152,7 +152,7 @@ int IIR::iirfilter(const int n, const double *W,
     {
         ierr = IIR::zpklp2hp(zpkAp, warped[0], zpktf);
     }
-    else if (btype == Bandtype::BANDSTOP)
+    else if (btype == Bandtype::BANDPASS)
     {
         double bw = warped[1] - warped[0];
         double w0 = std::sqrt(warped[0]*warped[1]);
@@ -491,12 +491,12 @@ int IIR::zpklp2lp(const ZPK zpkIn, const double w0, ZPK &zpkOut)
     std::vector<std::complex<double>> p = zpkIn.getPoles();
     // Scale all points radially from origin to shift cutoff frequency
     std::vector<std::complex<double>> z_lp(nzeros);
-    for (size_t i=0; i<nzeros; i++)
+    for (size_t i=0; i<z.size(); i++)
     {
         z_lp[i] = w0*z[i];
     }
     std::vector<std::complex<double>> p_lp(npoles);
-    for (size_t i=0; i<npoles; i++)
+    for (size_t i=0; i<p.size(); i++)
     {
         p_lp[i] = w0*p[i];
     }

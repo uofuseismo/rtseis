@@ -78,6 +78,7 @@ void ZPK::clear(void)
     p_.clear();
     z_.clear();
     k_ = 0;
+    tol_ = defaultTol_;
     return;
 }
 /*!
@@ -114,7 +115,7 @@ int ZPK::getNumberOfPoles(void) const
  */
 int ZPK::getNumberOfZeros(void) const
 {
-    return static_cast<int> (p_.size());
+    return static_cast<int> (z_.size());
 }
 /*!
  * @brief Sets the poles in the transfer function.
@@ -193,4 +194,15 @@ std::vector<std::complex<double>> ZPK::getPoles(void) const
 std::vector<std::complex<double>> ZPK::getZeros(void) const
 {
     return z_;
+}
+/*!
+ * @brief Sets the tolerance in the equality.
+ * @param[in] tol   Tolerance.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+void ZPK::setEqualityTolerance(const double tol)
+{
+    if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
+    tol_ = tol;
+    return;
 }

@@ -21,19 +21,22 @@ class ZPK
         }
         bool operator==(const ZPK &zpk) const
         {
-            double tol = 1.e-12;
             if (p_.size() != zpk.p_.size()){return false;}
             if (z_.size() != zpk.z_.size()){return false;}
             for (size_t i=0; i<p_.size(); i++)
             {
-                if (std::abs(p_[i] - zpk.p_[i]) > tol){return false;}
+                if (std::abs(p_[i] - zpk.p_[i]) > tol_){return false;}
             }
             for (size_t i=0; i<z_.size(); i++)
             {
-                if (std::abs(z_[i] - zpk.z_[i]) > tol){return false;}
+                if (std::abs(z_[i] - zpk.z_[i]) > tol_){return false;}
             }
-            if (std::abs(k_ - zpk.k_) > tol){return false;}
+            if (std::abs(k_ - zpk.k_) > tol_){return false;}
             return true;
+        }
+        bool operator!=(const ZPK &zpk) const
+        {
+            return !(*this == zpk);
         }
         ~ZPK(void);
         void print(FILE *fout = stdout);
@@ -48,6 +51,7 @@ class ZPK
         void setZeros(const std::vector<std::complex<double>> zeros);
         std::vector<std::complex<double>> getPoles(void) const;
         std::vector<std::complex<double>> getZeros(void) const;
+        void setEqualityTolerance(const double tol = 1.e-12);
     private:
         /*!< The zeros. */
         std::vector<std::complex<double>> z_;
@@ -55,6 +59,10 @@ class ZPK
         std::vector<std::complex<double>> p_;
         /*!< The gain. */
         double k_ = 0;
+        /*!< Default tolerance. */
+        const double defaultTol_ = 1.e-12;
+        /*!< Tolerance in checking equality. */
+        double tol_ = defaultTol_;
 };
 
 #endif

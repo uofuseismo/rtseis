@@ -18,18 +18,21 @@ class BA
         }
         bool operator==(const BA &ba) const
         {
-            double tol = 1.e-12;
             if (b_.size() != ba.b_.size()){return false;}
             if (a_.size() != ba.a_.size()){return false;}
             for (size_t i=0; i<b_.size(); i++)
             {
-                if (std::abs(b_[i] - ba.b_[i]) > tol){return false;}
+                if (std::abs(b_[i] - ba.b_[i]) > tol_){return false;}
             }
             for (size_t i=0; i<a_.size(); i++)
             {
-                if (std::abs(a_[i] - ba.a_[i]) > tol){return false;}
+                if (std::abs(a_[i] - ba.a_[i]) > tol_){return false;}
             }
             return true;
+        }
+        bool operator!=(const BA &ba) const
+        {
+            return !(*this == ba);
         }
         ~BA(void);
         void print(FILE *fout = stdout);
@@ -42,11 +45,16 @@ class BA
         void setDenominatorCoefficients(const std::vector<double> a);
         std::vector<double> getNumeratorCoefficients(void) const;
         std::vector<double> getDenominatorCoefficients(void) const;
+        void setEqualityTolerance(const double tol = 1.e-12);
     private:
         /*!< The numerator coefficients. */
         std::vector<double> b_;
         /*!< The denoninator coefficients. */
         std::vector<double> a_;
+        /*!< Default tolerance. */
+        const double defaultTol_ = 1.e-12;
+        /*!< Tolerance in checking equality. */
+        double tol_ = defaultTol_;
 };
 
 #endif

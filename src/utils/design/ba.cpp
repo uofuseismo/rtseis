@@ -73,6 +73,7 @@ void BA::clear(void)
 {
     b_.clear();
     a_.clear();
+    tol_ = defaultTol_;
     return;
 }
 /*!
@@ -177,4 +178,15 @@ std::vector<double> BA::getNumeratorCoefficients(void) const
 std::vector<double> BA::getDenominatorCoefficients(void) const
 {
     return a_;
+}
+/*!
+ * @brief Sets the tolerance in the equality.
+ * @param[in] tol   Tolerance.
+ * @ingroup rtseis_utils_design_iir_ba
+ */
+void BA::setEqualityTolerance(const double tol)
+{
+    if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
+    tol_ = tol;
+    return;
 }

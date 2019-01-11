@@ -8,6 +8,7 @@ extern "C"
 
 int rtseis_test_utils_polynomial(void);
 int rtseis_test_utils_design_iir_ap(void);
+int rtseis_test_utils_design_iir(void);
 int rtseis_test_utils_design_fir_fir1(void);
 int rtseis_test_utils_design_freqs(void);
 
