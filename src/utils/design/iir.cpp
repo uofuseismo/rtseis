@@ -9,6 +9,7 @@
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utils::FilterDesign;
+using namespace RTSeis::Utils::Math;
 
 /*!
  * @defgroup rtseis_utils_design_iir IIR Design
@@ -20,6 +21,170 @@ using namespace RTSeis::Utils::FilterDesign;
  * @ingroup rtseis_utils_design
  */
 
+int IIR::iirfilter(const int n, const double *W, 
+                   const double rp, const double rs, 
+                   const Bandtype btype,
+                   const Prototype ftype,
+                   BA &ba,
+                   const bool lanalog)
+{
+     ba.clear();
+     ZPK zpk;
+     int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, lanalog);
+     if (ierr != 0)
+     {
+         RTSEIS_ERRMSG("%s", "Failed to create iirfilter");
+         return -1;
+     }
+     ierr = IIR::zpk2tf(zpk, ba);
+     return 0;
+}
+
+int IIR::iirfilter(const int n, const double *W,
+                   const double rp, const double rs,
+                   const Bandtype btype,
+                   const Prototype ftype,
+                   ZPK &zpk,
+                   const bool lanalog)
+{
+    zpk.clear();
+    if (n < 1)
+    {
+        RTSEIS_ERRMSG("%d must be positive", n);
+        return -1;
+    }
+    if (W == nullptr)
+    {
+        RTSEIS_ERRMSG("%s", "W cannot be null");
+        return -1;
+    }
+    // Check ripples
+    if (ftype == Prototype::CHEBYSHEV1 && rp <= 0)
+    {
+        RTSEIS_ERRMSG("rp %lf must be positive", rp);
+        return -1;
+    }
+    if (ftype == Prototype::CHEBYSHEV2 && rs <= 0)
+    {
+        RTSEIS_ERRMSG("rs %lf must be positive", rs);
+        return -1;
+    }
+    if (lanalog){RTSEIS_WARNMSG("%s", "Analog filter design is untested");}
+    // Check the low-corner frequency
+    double wn[2];
+    wn[0] = W[0];
+    wn[1] = 0;
+    if (wn[0] < 0)
+    {
+        RTSEIS_ERRMSG("W[0]=%lf cannot be negative", wn[0]);
+        return -1;
+    } 
+    if (!lanalog && wn[0] > 1)
+    {
+        RTSEIS_ERRMSG("W[0]=%lf cannot exceed 1", wn[0]);
+        return -1;
+    }
+    // Check the high-corner frequency
+    if (btype == Bandtype::BANDPASS || btype == Bandtype::BANDSTOP)
+    {
+        wn[1] = W[1];
+        if (wn[1] < wn[0])
+        {
+            RTSEIS_ERRMSG("W[1]=%lf can't be less than W[0]=%lf", wn[0], wn[1]);
+            return -1;
+        }
+        if (wn[1] > 1)
+        {
+            RTSEIS_ERRMSG("W[1]=%lf cannot exced 1", wn[1]);
+            return -1;
+        } 
+    }
+    // Create the analog prototype
+    int ierr;
+    ZPK zpkAp;
+    if (ftype == Prototype::BUTTERWORTH)
+    {
+        ierr = AnalogPrototype::butter(n, zpkAp);
+    }
+    else if (ftype == Prototype::BESSEL)
+    {
+        ierr = AnalogPrototype::bessel(n, zpkAp);
+    }
+    else if (ftype == Prototype::CHEBYSHEV1)
+    {
+        ierr = AnalogPrototype::cheb1ap(n, rp, zpkAp); 
+    }
+    else
+    {
+        ierr = AnalogPrototype::cheb2ap(n, rs, zpkAp);
+    }
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Analog prototype failed");
+        return -1;
+    }
+    // Pre-warp the frequencies
+    double warped[2];
+    double fs;
+    if (lanalog != 1)
+    {
+        fs = 2.0;
+        warped[0] = 2.0*fs*tan(M_PI*wn[0]/fs);
+        warped[1] = 2.0*fs*tan(M_PI*wn[1]/fs);
+    }
+    else
+    {
+        fs = 1.0;
+        warped[0] = wn[0];
+        warped[1] = wn[1];
+        if (wn[1] > 1.0)
+        {
+            RTSEIS_ERRMSG("%s", "wn[1] > 0; result may be unstable");
+        }
+    }
+    // Transform to lowpass, bandpass, highpass, or bandstop 
+    ZPK zpktf;
+    if (btype == Bandtype::LOWPASS)
+    {
+        ierr = IIR::zpklp2lp(zpkAp, warped[0], zpktf);
+    }
+    else if (btype == Bandtype::HIGHPASS)
+    {
+        ierr = IIR::zpklp2hp(zpkAp, warped[0], zpktf);
+    }
+    else if (btype == Bandtype::BANDSTOP)
+    {
+        double bw = warped[1] - warped[0];
+        double w0 = std::sqrt(warped[0]*warped[1]);
+        ierr = IIR::zpklp2bp(zpkAp, w0, bw, zpktf);
+    }
+    else if (btype == Bandtype::BANDSTOP)
+    {
+        double bw = warped[1] - warped[0];
+        double w0 = std::sqrt(warped[0]*warped[1]);
+        ierr = IIR::zpklp2bs(zpkAp, w0, bw, zpktf);
+    }
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to convert filter");
+        return -1;
+    }
+    // Find the discrete equivalent
+    if (!lanalog)
+    {
+        ierr = zpkbilinear(zpktf, fs, zpk);
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed in bilinear transform");
+            return -1;
+        }
+    }
+    else
+    {
+        zpk = zpktf;
+    }
+    return 0;
+}
 /*!
  * @brief Computes the polynomial transfer function from a pole-zero
  *        representation.
@@ -30,20 +195,116 @@ using namespace RTSeis::Utils::FilterDesign;
  * @result 0 indicates success.
  * @ingroup rtseis_utils_design
  */
-/*
-int Design::zpk2tf(const ZPK zpk, BA &ba)
+int IIR::zpk2tf(const ZPK zpk, BA &ba)
 {
+    ba.clear();
     double k = zpk.getGain();
     if (k == 0){RTSEIS_WARNMSG("%s", "System gain is zero");}
-    size_t nzeros = zpk.getNumberOfZeros();
-    size_t npoles = zpk.getNumberOfPoles();
-    size_t nb = nzeros + 1;
-    size_t na = npoles + 1; 
+    // Compute polynomial representation of zeros by expanding:
+    //  (z - z_1)*(z - z_2)*...*(z - z_nzeros)
     std::vector<std::complex<double>> z = zpk.getZeros();
-    
+    std::vector<std::complex<double>> bz;
+    int ierr = Polynomial::poly(z, bz); 
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to expand numerator polynomial");
+        return -1;
+    }
+    // Compute polynomial representation of zeros by expanding:
+    //  (z - z_1)*(z - z_2)*...*(z - z_nzeros)
+    std::vector<std::complex<double>> p = zpk.getPoles();
+    std::vector<std::complex<double>> az;
+    ierr = Polynomial::poly(p, az); 
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to expand denominator polynomial");
+        return -1;
+    }
+    // Introduce gain into the numerator zeros
+    #pragma ivdep
+    for (size_t i=0; i<bz.size(); i++){bz[i] = k*bz[i];}
+    // Take the real
+    std::vector<double> b;
+    b.resize(bz.size());
+    #pragma ivdep
+    for (size_t i=0; i<bz.size(); i++){b[i] = std::real(bz[i]);}
+    std::vector<double> a;
+    a.resize(az.size());
+    #pragma ivdep
+    for (size_t i=0; i<az.size(); i++){a[i] = std::real(az[i]);}
+    // Pack into a transfer function struct
+    ba = BA(b, a);
     return 0;
 }
-*/
+/*!
+ * @brief Converts an analog filter to a digital filter using hte bilinear
+ *        transform.  This works by transforming a set of poles and zeros from
+ *        the s-plane to the digital z-plane using Tustin's method, which
+ *        substitutes \f$ s = \frac{z-1}{z+1} \f$ threby maintaining the
+ *        the shape of the freuqency response.
+ *
+ * @param[in] zpk     The analog zeros, poles, and gain to transform to the
+ *                    z-plane.
+ * @param[in] fs      The sampling rate in Hz.  Note, that pre-warping is
+ *                    performed in this function.
+ * @param[out] zpkbl  The bilinear-transformed variant of zpk.
+ * @result 0 indicates success.
+ * @ingroup rtseis_utils_design
+ */
+int IIR::zpkbilinear(const ZPK zpk, const double fs, ZPK &zpkbl)
+{
+    zpkbl.clear();
+    size_t nzeros = zpk.getNumberOfZeros();
+    size_t npoles = zpk.getNumberOfPoles();
+    if (nzeros > npoles)
+    {
+        RTSEIS_ERRMSG("%s", "Cannot have more zeros than poles");
+        return -1;
+    }
+    std::vector<std::complex<double>> z = zpk.getZeros();
+    std::vector<std::complex<double>> p = zpk.getPoles();
+    // Bilinear transform
+    std::complex<double> fs2 = std::complex<double> (2*fs, 0);
+    std::vector<std::complex<double>> z_bl;
+    z_bl.resize(npoles);
+    for (size_t i=0; i<nzeros; i++)
+    {
+        std::complex<double> znum = fs2 + z[i];
+        std::complex<double> zden = fs2 - z[i];
+        z_bl[i] = znum/zden; //(fs2 + z)/(fs2 - z)
+    }
+    // Any zeros at infinity get moved to Nyquist frequency
+    for (size_t i=nzeros; i<npoles; i++)
+    {
+        z_bl[i] = std::complex<double> (-1, 0);
+    }
+    std::vector<std::complex<double>> p_bl;
+    p_bl.resize(npoles);
+    for (size_t i=0; i<npoles; i++)
+    {
+        std::complex<double> znum = fs2 + p[i];
+        std::complex<double> zden = fs2 - p[i];
+        p_bl[i] = znum/zden; //(fs2 + p)/(fs2 - p) 
+    }
+    // Compensate for gain change
+    std::complex<double> znum = std::complex<double> (1, 0);
+    for (size_t i=0; i<nzeros; i++)
+    {
+        std::complex<double> zdif = fs2 - z[i];
+        znum = znum*zdif;
+    }
+    std::complex<double> zden = std::complex<double> (1, 0);
+    for (size_t i=0; i<npoles; i++)
+    {
+        std::complex<double> zdif = fs2 - p[i];
+        zden = zden*zdif;
+    }
+    std::complex<double> zk = znum/zden;
+    double k = zpk.getGain();
+    double k_bl = k*std::real(zk);
+    zpkbl = ZPK(z_bl, p_bl, k_bl);
+    return 0;
+}
 /*!
  * @brief Transforms a lowpass filter prototype to a bandpass filter.
  *        The passband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.

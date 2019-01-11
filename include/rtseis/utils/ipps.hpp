@@ -11,10 +11,13 @@ namespace Utils
 {
 namespace IPPS
 {
-    /*! Divides res = num/den. */
+    /* Divides res = num/den. */
     int Div(std::vector<std::complex<double>> den,
             std::vector<std::complex<double>> num,
             std::vector<std::complex<double>> &res);
+    /* Multiplies x = val*x. */
+    int MulC(const std::complex<double> val,
+             std::vector<std::complex<double>> x);
 };
 
 };

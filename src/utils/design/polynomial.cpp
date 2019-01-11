@@ -200,7 +200,7 @@ int Polynomial::polyval(const std::vector<double> p,
     return 0;
 }
 /*!
- * @brief Returns a polynomial whos eroots are given by p.
+ * @brief Returns a polynomial whose roots are given by p.
  * @param[in] p    The polynomial roots.  
  * @param[in] y    The polynomial coefficients corresponding to the
  *                 roots of the given polynomial.  This has dimension

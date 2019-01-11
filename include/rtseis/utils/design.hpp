@@ -15,6 +15,44 @@ namespace FilterDesign
 
 namespace IIR
 {
+    enum class Prototype
+    {
+        /*!
+         * @brief Defines the analog prototype for the IIR filter design.
+         * @ingroup rtseis_utils_design_iir
+         */
+        BUTTERWORTH = 0, /*!< Butterworth filter design. */
+        BESSEL      = 1, /*!< Bessel filter design. */
+        CHEBYSHEV1  = 2, /*!< Chebyshev I filter design. */
+        CHEBYSHEV2  = 3  /*!< Chebyshev II filter design. */
+    };
+    enum class Bandtype
+    {
+        /*!
+         * @brief Defines the bandtype for the IIR filter design.
+         * @ingroup rtseis_utils_design_iir
+         */
+        LOWPASS = 0,  /*!< Lowpass filter. */  
+        HIGHPASS = 1, /*!< Highpass filter. */
+        BANDPASS = 2, /*!< Bandpass filter. */
+        BANDSTOP = 3  /*!< Bandstop filter. */
+    };
+    /* Generalized analog protoytpe filter design. */
+    int iirfilter(const int n, const double *W,
+                  const double rp, const double rs,
+                  const Bandtype btype,
+                  const Prototype ftype,
+                  BA &ba,
+                  const bool lanalog = false);
+    /* Generalized analog protoytpe filter design. */
+    int iirfilter(const int n, const double *W,
+                  const double rp, const double rs,
+                  const Bandtype btype,
+                  const Prototype ftype,
+                  ZPK &zpk,
+                  const bool lanalog = false);
+    /* Convert a ZPK structure to a transfer function. */
+    int zpk2tf(const ZPK zpk, BA &ba);
     /* Convert lowpass prototype filter to a lowpass filter. */
     int zpklp2lp(const ZPK zpkIn, const double w0, ZPK &zpkOut);
     /* Convert lowpass prototype filter to a highpass filter. */
@@ -23,6 +61,8 @@ namespace IIR
     int zpklp2bp(const ZPK zpkIn, const double w0, const double bw, ZPK &zpkOut);
     /* Convert lowpass prototype filter to a bandstop filter. */
     int zpklp2bs(const ZPK zpkIn, const double w0, const double bw, ZPK &zpkOut);
+    /* Bilinear transform. */
+    int zpkbilinear(const ZPK zpk, const double fs, ZPK &zpkbl);
     namespace AnalogPrototype
     {
         /* Chebyshev I analog prototype. */
