@@ -62,8 +62,10 @@ int Polynomial::polyval(const std::vector<std::complex<double>> p,
     // Expand the linear case
     else if (norder == 1)
     {
+#ifdef __INTEL_COMPILER
         #pragma ivdep
-        for (int i=0; i<nx; i++)
+#endif
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[0]*x[i] + p[1];
         }
@@ -71,8 +73,10 @@ int Polynomial::polyval(const std::vector<std::complex<double>> p,
     // Expand the quadratic case
     else if (norder == 2)
     {
+#ifdef __INTEL_COMPILER
         #pragma ivdep
-        for (int i=0; i<nx; i++)
+#endif
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[2] + x[i]*(p[1] + x[i]*p[0]);
         }
@@ -80,8 +84,10 @@ int Polynomial::polyval(const std::vector<std::complex<double>> p,
     // Expand the cubic case
     else if (norder == 3)
     {
+#ifdef __INTEL_COMPILER
         #pragma ivdep
-        for (int i=0; i<nx; i++)
+#endif
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[3] + x[i]*(p[2] + x[i]*p[1] + x[i]*x[i]*p[0]);
         }   
@@ -89,21 +95,27 @@ int Polynomial::polyval(const std::vector<std::complex<double>> p,
     // Be more general 
     else
     {
+#ifdef __INTEL_COMPILER 
         #pragma ivdep
-        for (int i=0; i<nx; i++)
+#endif
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[0]*x[i];
         }
-        for (int j=1; j<norder; j++)
+        for (size_t j=1; j<norder; j++)
         {
+#ifdef __INTEL_COMPILER
             #pragma ivdep
-            for (int i=0; i<nx; i++)
+#endif
+            for (size_t i=0; i<nx; i++)
             {
                 y[i] = (p[j] + y[i])*x[i];
             }
         }
+#ifdef __INTEL_COMPILER
         #pragma ivdep
-        for (int i=0; i<nx; i++)
+#endif
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[norder] + y[i];
         }
@@ -152,7 +164,7 @@ int Polynomial::polyval(const std::vector<double> p,
     else if (norder == 1)
     {
         #pragma omp simd
-        for (int i=0; i<nx; i++)
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[0]*x[i] + p[1];
         }
@@ -161,7 +173,7 @@ int Polynomial::polyval(const std::vector<double> p,
     else if (norder == 2)
     {
         #pragma omp simd
-        for (int i=0; i<nx; i++)
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[2] + x[i]*(p[1] + x[i]*p[0]);
         }
@@ -170,7 +182,7 @@ int Polynomial::polyval(const std::vector<double> p,
     else if (norder == 3)
     {
         #pragma omp simd
-        for (int i=0; i<nx; i++)
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[3] + x[i]*(p[2] + x[i]*p[1] + x[i]*x[i]*p[0]);
         }   
@@ -179,20 +191,20 @@ int Polynomial::polyval(const std::vector<double> p,
     else
     {   
         #pragma omp simd
-        for (int i=0; i<nx; i++)
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[0]*x[i];
         }
-        for (int j=1; j<norder; j++)
+        for (size_t j=1; j<norder; j++)
         {
             #pragma omp simd
-            for (int i=0; i<nx; i++)
+            for (size_t i=0; i<nx; i++)
             {
                 y[i] = (p[j] + y[i])*x[i];
             }
         }
         #pragma omp simd
-        for (int i=0; i<nx; i++)
+        for (size_t i=0; i<nx; i++)
         {
             y[i] = p[norder] + y[i];
         }
@@ -238,7 +250,9 @@ int Polynomial::poly(const std::vector<std::complex<double>> p,
     {
         // x*(a_0 + a_1 x + ... + a_n x^{n-1}) = a_0 x + a_1 x^2 + ... + a_n x^i
         // shift right
+#ifdef __INTEL_COMPILER
         #pragma ivdep
+#endif
         for (size_t j=i; j>=1; j--)
         {
             temp1[j] = y[j-1];
@@ -246,7 +260,9 @@ int Polynomial::poly(const std::vector<std::complex<double>> p,
         temp1[0] = zero;
         // -p_i*(a_0 + .... + a_n x^{i-1}) =-p_i a_0 - ... p_i a_n x^{i-1}
         // multiply
+#ifdef __INTEL_COMPILER
         #pragma ivdep
+#endif
         for (size_t j=1; j<=i; j++)
         {
             temp2[j-1] =-y[j-1]*p[i-1];
@@ -255,14 +271,18 @@ int Polynomial::poly(const std::vector<std::complex<double>> p,
         // -p_i a_0 + p_i a_1 x + ... + p_i a_n x^{i-1} 
         //          -     a_0 x - ...                   - a_n x^i
         // difference previous two loops
+#ifdef __INTEL_COMPILER
         #pragma ivdep
+#endif
         for (size_t j=1; j<=i+1; j++)
         {
             y[j-1] = temp1[j-1] + temp2[j-1];
         }   
     }
     // Purge any numerical junk
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<nord+1; i++)
     {
         if (std::abs(std::imag(y[i])) < DBL_EPSILON)
@@ -309,7 +329,7 @@ int Polynomial::poly(const std::vector<double> p,
     {
         // x*(a_0 + a_1 x + ... + a_n x^{n-1}) = a_0 x + a_1 x^2 + ... + a_n x^i
         // shift right
-        #pragma ivdep
+        #pragma omp simd
         for (size_t j=i; j>=1; j--)
         {
             temp1[j] = y[j-1];
@@ -317,7 +337,7 @@ int Polynomial::poly(const std::vector<double> p,
         temp1[0] = zero;
         // -p_i*(a_0 + .... + a_n x^{i-1}) =-p_i a_0 - ... p_i a_n x^{i-1}
         // multiply
-        #pragma ivdep
+        #pragma omp simd
         for (size_t j=1; j<=i; j++)
         {
             temp2[j-1] =-y[j-1]*p[i-1];
@@ -326,7 +346,7 @@ int Polynomial::poly(const std::vector<double> p,
         // -p_i a_0 + p_i a_1 x + ... + p_i a_n x^{i-1} 
         //          -     a_0 x - ...                   - a_n x^i
         // difference previous two loops
-        #pragma ivdep
+        #pragma omp simd
         for (size_t j=1; j<=i+1; j++)
         {
             y[j-1] = temp1[j-1] + temp2[j-1];
@@ -404,7 +424,9 @@ int Polynomial::roots(const std::vector<double> coeffs,
     }
     else
     {
+#ifdef __INTEL_COMPILER
         #pragma ivdep
+#endif
         for (int i=0; i<n; i++)
         {
             roots[i] = std::complex<double> (wr[i], wi[i]);

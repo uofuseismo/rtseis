@@ -221,16 +221,22 @@ int IIR::zpk2tf(const ZPK zpk, BA &ba)
         return -1;
     }
     // Introduce gain into the numerator zeros
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<bz.size(); i++){bz[i] = k*bz[i];}
     // Take the real
     std::vector<double> b;
     b.resize(bz.size());
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<bz.size(); i++){b[i] = std::real(bz[i]);}
     std::vector<double> a;
     a.resize(az.size());
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<az.size(); i++){a[i] = std::real(az[i]);}
     // Pack into a transfer function struct
     ba = BA(b, a);

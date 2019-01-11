@@ -64,7 +64,9 @@ int Response::freqs(const BA ba, const std::vector<double> w,
     // Evaluate the numerator and denominator polynoimals
     std::vector<std::complex<double>> bz;
     bz.resize(b.size());
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<b.size(); i++){bz[i] = std::complex<double> (b[i], 0);}
     std::vector<std::complex<double>> hsNum;
     int ierr = Math::Polynomial::polyval(bz, s, hsNum);
@@ -76,7 +78,9 @@ int Response::freqs(const BA ba, const std::vector<double> w,
     std::vector<std::complex<double>> hsDen;
     std::vector<std::complex<double>> az;
     az.resize(a.size());
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<a.size(); i++){az[i] = std::complex<double> (a[i], 0);}
     ierr = Math::Polynomial::polyval(az, s, hsDen);
     if (ierr != 0)
@@ -147,7 +151,9 @@ int Response::freqz(const BA ba, const std::vector<double> w,
     size_t nb = b.size();
     std::vector<std::complex<double>> bz;
     bz.resize(nb);
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<nb; i++)
     {
         bz[i] = b[nb-1-i];
@@ -155,14 +161,18 @@ int Response::freqz(const BA ba, const std::vector<double> w,
     size_t na = a.size();
     std::vector<std::complex<double>> az;
     az.resize(a.size());
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<na; i++)
     {
         az[i] = a[na-1-i];
     }
     std::vector<std::complex<double>> z;
     z.resize(nw);
+#ifdef __INTEL_COMPILER
     #pragma ivdep
+#endif
     for (size_t i=0; i<nw; i++)
     {
         z[i] = std::exp(std::complex<double> (0, -w[i]));

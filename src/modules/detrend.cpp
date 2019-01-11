@@ -320,7 +320,7 @@ int Detrend::removeTrend_(const int length, const float x[], float y[])
 //============================================================================//
 //                             ctypes interface                               //
 //============================================================================//
-
+/*
 void *rtseis_modules_detrend_parameters_initialize(void)
 {
     DetrendParameters::DetrendParameters *parms = new DetrendParameters::DetrendParameters; 
@@ -370,4 +370,4 @@ void rtseis_modules_detrend_finalize(void *detrend)
     detrend = nullptr;
     return;
 }
-
+*/
