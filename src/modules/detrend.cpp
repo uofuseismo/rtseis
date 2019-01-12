@@ -5,7 +5,7 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/modules/detrend.h"
+#include "rtseis/modules/detrend.hpp"
 
 using namespace RTSeis::Modules;
 
@@ -60,6 +60,7 @@ void DetrendParameters::setDefaults(void)
  * @brief Sets the precision.
  * @param[in] precision  Precision of calculations in module.
  * @result 0 indicates success.
+ * @ingroup rtseis_modules_detrend_parameters
  */
 int DetrendParameters::setPrecision(
     const enum rtseisPrecision_enum precision)
@@ -67,6 +68,7 @@ int DetrendParameters::setPrecision(
     precision_ = defaultPrecision_;
     if (precision != RTSEIS_DOUBLE && precision != RTSEIS_FLOAT)
     {
+        RTSEIS_ERRMSG("%s", "Invalid precision");
         return -1;
     }
     precision_ = precision;
@@ -74,7 +76,8 @@ int DetrendParameters::setPrecision(
 }
 /*!
  * @brief Gets the precision of the module.
- * @result The module precision.
+ * @result The precision of the module.
+ * @ingroup rtseis_modules_detrend_parameters
  */
 enum rtseisPrecision_enum DetrendParameters::getPrecision(void) const
 {

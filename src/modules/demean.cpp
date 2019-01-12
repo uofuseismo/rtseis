@@ -4,7 +4,7 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/modules/demean.h"
+#include "rtseis/modules/demean.hpp"
 
 using namespace RTSeis::Modules;
 

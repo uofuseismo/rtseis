@@ -21,6 +21,31 @@ using namespace RTSeis::Utils::Math;
  * @ingroup rtseis_utils_design
  */
 
+/*!
+ * @param[in] Convenience function to design a digital or analog filter from
+ *            an analog prototype.
+ * @param[in] n        Order of filter to design.
+ * @param[in] W        A scalar or length-2 array defining the critical
+ *                     frequencies.  For digital filters, these are normalized
+ *                     frequencies in the range [0,1] where 1 is the Nyquist
+ *                     frequency in pi radians/sample (thereby making Wn
+ *                     half-cycles per sample.)   For analog filters, Wn is the
+ *                     angular frequency in rad/s.
+ * @param[in] rp       For Chebyshev I filters this specifies the maximum ripple
+ *                     in the passband in decibels.
+ * @param[in] rs       For Chebyshev II filters this specifies the minimum
+ *                     attenutation in the stop band in decibels.
+ * @param[in] btype    The type of filter, e.g., lowpass, highpass, bandpass,
+ *                     or bandstop.
+ * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel, 
+ *                     Chebyshev1, or Chebyshev2.
+ * @param[in] lanlaog  If true then this designs an analog filter.  The
+ *                     default is a digital filter.
+ * @param[out] ba      The corresponding filter specified in terms of numerators
+ *                     and denominators.
+ * @result 0 indicates success.
+ * @ingroup rtseis_utils_design
+ */
 int IIR::iirfilter(const int n, const double *W, 
                    const double rp, const double rs, 
                    const Bandtype btype,
@@ -39,7 +64,31 @@ int IIR::iirfilter(const int n, const double *W,
      ierr = IIR::zpk2tf(zpk, ba);
      return 0;
 }
-
+/*!
+ * @param[in] Convenience function to design a digital or analog filter from
+ *            an analog prototype.
+ * @param[in] n        Order of filter to design.
+ * @param[in] W        A scalar or length-2 array defining the critical
+ *                     frequencies.  For digital filters, these are normalized
+ *                     frequencies in the range [0,1] where 1 is the Nyquist
+ *                     frequency in pi radians/sample (thereby making Wn
+ *                     half-cycles per sample.)   For analog filters, Wn is the
+ *                     angular frequency in rad/s.
+ * @param[in] rp       For Chebyshev I filters this specifies the maximum ripple
+ *                     in the passband in decibels.
+ * @param[in] rs       For Chebyshev II filters this specifies the minimum
+ *                     attenutation in the stop band in decibels.
+ * @param[in] btype    The type of filter, e.g., lowpass, highpass, bandpass,
+ *                     or bandstop.
+ * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel, 
+ *                     Chebyshev1, or Chebyshev2.
+ * @param[in] lanlaog  If true then this designs an analog filter.  The
+ *                     default is a digital filter.
+ * @param[out] zpk     The corresonding filter stored in zero, pole, and gain
+ *                     format.
+ * @result 0 indicates success.
+ * @ingroup rtseis_utils_design
+ */
 int IIR::iirfilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,

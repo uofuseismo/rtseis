@@ -84,10 +84,12 @@ SET(IPPS_SRCS
     src/ipps/dft.c
     src/ipps/downsample.c 
     src/ipps/firfilter.c
+    src/ipps/iirfilter.c
     src/ipps/medianFilter.c)
 SET(MODULES_SRCS
     src/modules/detrend.cpp
-    src/modules/demean.cpp)
+    src/modules/demean.cpp
+    src/modules/iir.cpp)
 SET(DATA_SRCS src/data/waveform.cpp)
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
 

@@ -2,7 +2,7 @@
 #define RTSEIS_WAVEFORM_H 1
 #include <stdlib.h>
 #include "rtseis/config.h"
-#include "rtseis/modules.h"
+#include "rtseis/modules.hpp"
 #include <string>
 
 enum rtseisCommand_enum

@@ -46,6 +46,7 @@ class BA
         std::vector<double> getNumeratorCoefficients(void) const;
         std::vector<double> getDenominatorCoefficients(void) const;
         void setEqualityTolerance(const double tol = 1.e-12);
+        bool isZeroDenominator(void) const;
     private:
         /*!< The numerator coefficients. */
         std::vector<double> b_;

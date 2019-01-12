@@ -3,7 +3,7 @@
 #include <math.h>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#include "rtseis/modules/detrend.h"
+#include "rtseis/modules/detrend.hpp"
 #include "rtseis/log.h"
 #include "modules.hpp"
 

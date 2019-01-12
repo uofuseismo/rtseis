@@ -1,9 +1,8 @@
-#ifndef RTSEIS_MODULES_DEMEAN_H
-#define RTSEIS_MODULES_DEMEAN_H 1
+#ifndef RTSEIS_MODULES_DEMEAN_HPP
+#define RTSEIS_MODULES_DEMEAN_HPP 1
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 
-#ifdef __cplusplus
 namespace RTSeis
 {
 namespace Modules
@@ -30,6 +29,5 @@ class Demean
 
 };
 };
-#endif
 
 #endif

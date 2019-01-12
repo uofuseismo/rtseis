@@ -190,3 +190,18 @@ void BA::setEqualityTolerance(const double tol)
     tol_ = tol;
     return;
 }
+/*!
+ * @brief Convenience function to determine if all denominator coefficients
+ *        are 0.
+ * @retval True indicates that all denominator coefficients are 0.
+ * @retval False indicates that all denominator coefficients are not 0.
+ * @ingroup rtseis_utils_design_iir_ba
+ */
+bool BA::isZeroDenominator(void) const
+{
+    for (size_t i=0; i<a_.size(); i++)
+    {
+        if (a_[i] != 0){return false;}
+    }
+    return true;
+}

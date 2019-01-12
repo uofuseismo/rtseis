@@ -1,9 +1,8 @@
-#ifndef RTSEIS_MODULES_DETREND_H
-#define RTSEIS_MODULES_DETREND_H 1
+#ifndef RTSEIS_MODULES_DETREND_HPP
+#define RTSEIS_MODULES_DETREND_HPP 1
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 
-#ifdef __cplusplus
 namespace RTSeis
 {
 namespace Modules
@@ -83,6 +82,5 @@ class Detrend : public DetrendParameters
 
 };
 };
-#endif
 
 #endif
