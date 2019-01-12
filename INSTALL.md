@@ -7,14 +7,49 @@ Below are instructions for building RTSeis from source on Linux.
 Prior to building RTSeis the following dependencies must be cleared:
 
    1. A C11 or higher C compiler.
-   2. A C++11 or higher C++ compiler.
-   3. [CMake](https://cmake.org/) V2.8 or higher.
+   2. A C++14 or higher C++ compiler.
+   3. [CMake](https://cmake.org/) V3.2 or higher.
    4. [Intel's Performance Primitives](https://software.intel.com/en-us/intel-ipp) performs most of the heavy lifting.
-   5. [Intel's MKL](https://software.intel.com/en-us/mkl) backfills some of the matrix algebra and any massiv correlations.
+   5. [Intel's MKL](https://software.intel.com/en-us/mkl) backfills some of the matrix algebra and any massive correlations.
    6. [cJSON](https://github.com/DaveGamble/cJSON) parses JSON messages.
-   7. Python3 with NumPy and ctypes.
+   7. [Boost](https://www.boost.org/) for accessing the C++ library from Python.  Note, the Python portion of Boost must be configured with Python3.
+   8. Python3 with NumPy.
 
 ## Configuring
 
-After clearing the dependencies configure CMake
+CMake can be configured using a script like
+
+    #!/bin/sh
+    export IPP_DIR=/opt/intel/ipp
+    export IPP_LIB_ROOT=${IPP_DIR}/lib/intel64
+    export MKL_DIR=/opt/intel/mkl
+    export MKL_LIB_ROOT=${MKL_DIR}/lib/intel64
+    export BOOST_ROOT=/home/bakerb25/cpp/boost_1_64_0
+    if [ -f Makefile ]; then
+       make clean
+    fi
+    if [ -f CMakeCache.txt ]; then
+       echo "Removing CMakeCache.txt"
+       rm CMakeCache.txt
+    fi
+    if [ -d CMakeFiles ]; then
+       echo "Removing CMakeFiles"
+       rm -rf CMakeFiles
+    fi
+    cmake ./ \
+    -DCMAKE_C_COMPILER=gcc \
+    -DCMAKE_CXX_COMPILER=g++ \
+    -DCMAKE_C_FLAGS="-g3 -O2 -Wall" \
+    -DCMAKE_CXX_FLAGS="-g3 -O2 -Wall" \
+    -DIPP_INCLUDE_DIR=${IPP_DIR}/include \
+    -DIPP_LIBRARY="${IPP_LIB_ROOT}/libipps.so;${IPP_LIB_ROOT}/libippvm.so;${IPP_LIB_ROOT}/libippcore.so" \
+    -DMKL_INCLUDE_DIR="${MKL_DIR}/include" \
+    -DMKL_LIBRARY="${MKL_LIB_ROOT}/libmkl_intel_lp64.so;${MKL_LIB_ROOT}/libmkl_sequential.so;${MKL_LIB_ROOT}/libmkl_core.so;${MKL_LIB_ROOT}/libmkl_avx2.so" \
+    -DRTSEIS_WRAP_PYTHON=TRUE \
+    -DBoost_DIR=${BOOST_ROOT} \
+    -DBOOST_INCLUDEDIR=${BOOST_ROOT}/include \
+    -DBOOST_LIBRARYDIR=${BOOST_ROOT}/lib \
+    -DBoost_PYTHON_LIBRARY_RELEASE=${BOOST_ROOT}/stage/lib/libboost_python3.so \
+    -DCJSON_INCLUDE_DIR=/home/bakerb25/C/cJSON/include \
+    -DCJSON_LIBRARY=/home/bakerb25/C/cJSON/lib/libcjson.so
 

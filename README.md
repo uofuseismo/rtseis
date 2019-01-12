@@ -8,13 +8,13 @@ RTSeis is a real-time focused seismic signals processing library that is intende
 
 ## History
 
-This approximately the third iteration of this library and is offshoot of my time at [ISTI](http://www.isti.com/) where I'd frequently have to write holistic applications that do some generic signals processing and, with that processed data, something project specific.  The generic part is the focus of this library where the goal is to help network seismologists easily implement a new processing workflow.
+RTSeis is the offshoot of my time at [ISTI](http://www.isti.com/) where I'd frequently have to write holistic applications that were required do some generic signals processing.  The generic part is the focus of this library where the goal is to help seismologists easily add a signals processing workflow to their seismological application.
 
 ## Alternatives
 
 There are a great many signals processing packages.  In general, RTSeis tries to distinguish itself by 
  
-   1. Being accessible from C.
+   1. Being accessible from a low-level compiled language and a high-level scripting language; in this case C++ and Python, respectively.
    2. Focusing on the real-time component of signals processing.
 
 These points are really driven by the target audience which is seismologists in network operations.  Indeed, these focuses may even make RTSeis a suboptimal solution as the first point requires compilation and clearing library dependencies while the second point can diminish some algorithm performance.
@@ -29,10 +29,10 @@ ObsPy is a feature-rich platform for seismic processing with an easy-to-use Pyth
 
 ### Matlab
 
-Matlab is a complete signals processing solution.  RTSeis cannot even begin to approximate Matlab's functionality.  However, what RTSeis can do is provide a solution that doesn't require developers to have a Matlab license.
+Matlab is a complete signals processing solution.  RTSeis does not even begin to approach the breadth and depth of Matlab's functionality.  However, what RTSeis does provide a solution that doesn't require developers to have a Matlab license.
 
 # Acknowledgements
 
-Much of this development was financed by ISTI.  However, the real heroes are beta testers who put this library through its paces.
+Much of the core development was done while I was at ISTI where unwitting beta testers like Jeff Leifer and Josh Stachnik tested many of the fundamental concepts in the library.
 
 
