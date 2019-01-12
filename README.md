@@ -19,6 +19,10 @@ There are a great many signals processing packages.  In general, RTSeis tries to
 
 These points are really driven by the target audience which is seismologists in network operations.  Indeed, these focuses may even make RTSeis a suboptimal solution as the first point requires compilation and clearing library dependencies while the second point can diminish some algorithm performance.
 
+## Limitations
+
+RTSeis leverages libraries designed explicitly for x86\_64 hardware.  In particular, these libraries are tuned for Intel chips however AMD should be okay.  It's unclear if this library could be compiled and/or executed on ARM or Power9 architectures.
+
 ### SciPy
 
 RTSeis's focus is basic filtering of seismic data.  It is most analogous to SciPy's signal's processing package.  The main difference is that RTSeis has more support for real-time signals processing.
