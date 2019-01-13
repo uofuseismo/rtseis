@@ -22,7 +22,7 @@ BA::BA(void)
 }
 /*!
  * @brief Constructs a transfer function class from the given numerator and 
-*         denminator coefficients.
+ *        denminator coefficients.
  * @param[in] b     The numerator coefficients.
  * @param[in] a     The denomiantor coefficients.
  * @ingroup rtseis_utils_design_iir_ba
@@ -32,6 +32,20 @@ BA::BA(const std::vector<double> b, const std::vector<double> a)
     clear();
     setNumeratorCoefficients(b);
     setDenominatorCoefficients(a);
+    return;
+}
+/*!
+ * @brief Constructs a transfer function class from the given FIR filter
+ *        coefficients.
+ * @param[in] firTaps   The FIR coefficients.
+ * @ingroup rtseis_utils_design_iir_ba
+ */
+BA::BA(const std::vector<double> firTaps)
+{
+    clear();
+    setNumeratorCoefficients(firTaps);
+    std::vector<double> a({1});
+    setDenominatorCoefficients(a); 
     return;
 }
 /*!
@@ -53,15 +67,25 @@ void BA::print(FILE *fout)
 {
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
-    fprintf(f, "Numerator Coefficients:\n");
+    if (!isFIR())
+    {
+        fprintf(f, "Numerator Coefficients:\n");
+    }
+    else
+    {
+        fprintf(f, "FIR Coefficients:\n");
+    }
     for (size_t i=0; i<b_.size(); i++)
     {
         fprintf(f, "%+.16lf\n", b_[i]);
     }
-    fprintf(f, "Denominator Coefficients:\n");
-    for (size_t i=0; i<a_.size(); i++)
+    if (!isFIR())
     {
-        fprintf(f, "%+.16lf\n", a_[i]);
+        fprintf(f, "Denominator Coefficients:\n");
+        for (size_t i=0; i<a_.size(); i++)
+        {
+            fprintf(f, "%+.16lf\n", a_[i]);
+        }
     }
     return;
 }
@@ -74,6 +98,7 @@ void BA::clear(void)
     b_.clear();
     a_.clear();
     tol_ = defaultTol_;
+    isFIR_ = false;
     return;
 }
 /*!
@@ -135,6 +160,7 @@ void BA::setNumeratorCoefficients(const std::vector<double> b)
  */
 void BA::setDenominatorCoefficients(const size_t n, double a[])
 {
+    isFIR_ = false;
     if (n > 0 && a == nullptr)
     {
         RTSEIS_ERRMSG("%s", "a is null");
@@ -147,6 +173,10 @@ void BA::setDenominatorCoefficients(const size_t n, double a[])
     {
         a_[i] = a[i];
     }
+    if (a_.size() == 1)
+    {
+        if (std::abs(a_[0] - 1) < 1.e-14){isFIR_ = true;}
+    }
     return;
 }
 /*! 
@@ -156,11 +186,16 @@ void BA::setDenominatorCoefficients(const size_t n, double a[])
  */
 void BA::setDenominatorCoefficients(const std::vector<double> a)
 {
+    isFIR_ = false;
     if (a.size() > 0)
     {
         if (a[0] == 0){RTSEIS_WARNMSG("%s", "a[0] = 0");}
     }
     a_ = a;
+    if (a_.size() == 1)
+    {
+        if (std::abs(a_[0] - 1) < 1.e-14){isFIR_ = true;}
+    }
     return;
 }
 /*!
@@ -204,4 +239,14 @@ bool BA::isZeroDenominator(void) const
         if (a_[i] != 0){return false;}
     }
     return true;
+}
+/*!
+ * @brief Determines if the filter is an FIR filter.
+ * @retval True indicates that this is an FIR filter.
+ * @retval False indicates that this is an IIR filter.
+ * @ingroup rtseis_utils_design_iir_ba 
+ */
+bool BA::isFIR(void) const
+{
+    return isFIR_;
 }

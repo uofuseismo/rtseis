@@ -9,11 +9,14 @@ class BA
 {
     public:
         BA(void);
+        BA(const std::vector<double> firTaps);
         BA(const std::vector<double> b, const std::vector<double> a);
         BA &operator=(const BA &ba)
         {
             b_ = ba.b_;
             a_ = ba.a_;
+            tol_ = ba.tol_;
+            isFIR_ = ba.isFIR_;
             return *this;
         }
         bool operator==(const BA &ba) const
@@ -47,15 +50,18 @@ class BA
         std::vector<double> getDenominatorCoefficients(void) const;
         void setEqualityTolerance(const double tol = 1.e-12);
         bool isZeroDenominator(void) const;
+        bool isFIR(void) const;
     private:
+        /*!< Default tolerance. */
+        const double defaultTol_ = 1.e-12;
         /*!< The numerator coefficients. */
         std::vector<double> b_;
         /*!< The denoninator coefficients. */
         std::vector<double> a_;
-        /*!< Default tolerance. */
-        const double defaultTol_ = 1.e-12;
         /*!< Tolerance in checking equality. */
         double tol_ = defaultTol_;
+        /*!< Determines if the filter is an FIR filter. */
+        bool isFIR_ = false;
 };
 
 #endif

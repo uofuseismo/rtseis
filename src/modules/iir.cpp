@@ -35,7 +35,7 @@ IIRParameters::IIRParameters(void)
     return;
 }
 /*!
- * @brief Constructs an IIR filter parameters class by copying a class.
+ * @brief Constructor which copies the input parameter class.
  * @ingroup rtseis_modules_iir_parameters
  */
 IIRParameters::IIRParameters(const IIRParameters &parameters)
@@ -44,7 +44,7 @@ IIRParameters::IIRParameters(const IIRParameters &parameters)
     return;
 }
 /*!
- * @brief Default constructor.
+ * @brief Default destructor.
  * @ingroup rtseis_modules_iir_parameters
  */
 IIRParameters::~IIRParameters(void)
@@ -52,13 +52,17 @@ IIRParameters::~IIRParameters(void)
     clear();
     return;
 }
+/*!
+ * @brief Resets the current filter design and deletes saved filter designs.
+ * @ingroup rtseis_modules_iir_parameters
+ */
 void IIRParameters::clear(void)
 {
     resetFilterDesign();
     return;
 }
 /*!
- * @brief Resets the filter design parameters.  This saved filter designs
+ * @brief Resets the filter design parameters.  The saved filter designs
  *        will be preserved. 
  * @ingroup rtseis_modules_iir_parameters
  */
@@ -66,7 +70,7 @@ void IIRParameters::resetFilterDesign(void)
 {
     ba_.clear();
     prototype_ = defaultPrototype_;
-    bandtype_ == defaultBandtype_;
+    bandtype_ = defaultBandtype_;
     w0_[0] = 0;
     w0_[1] = 0;
     fs_ = fsDefault_; 

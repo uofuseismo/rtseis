@@ -21,7 +21,7 @@ These points are really driven by the target audience which is seismologists in 
 
 ## Limitations
 
-RTSeis leverages libraries designed explicitly for x86\_64 hardware.  In particular, these libraries are tuned for Intel chips however AMD should be okay.  It's unclear if this library could be compiled and/or executed on ARM or Power9 architectures.
+RTSeis leverages libraries designed explicitly for x86\_64 hardware.  In particular, these libraries are tuned for Intel chips however AMD should be okay.  It's unclear if this library could even be compiled and/or executed on ARM or Power9 architectures.
 
 ### SciPy
 

@@ -1,5 +1,5 @@
-#ifndef RTSEIS_MODULES_DETREND_HPP
-#define RTSEIS_MODULES_DETREND_HPP 1
+#ifndef RTSEIS_MODULES_IIR_HPP
+#define RTSEIS_MODULES_IIR_HPP 1
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
@@ -23,7 +23,7 @@ class IIRParameters
             BESSEL = 1,       /*!< Bessel filter. */
             CHEBYSHEV1 = 2,   /*!< Chebyshev I filter. */
             CHEBYSHEV2 = 3,   /*!< Chebyshev II filter. */
-            CUSTOM = 100      /*!< Custom filter. */
+            CUSTOM = 100      /*!< Indicates a custom filter. */
         };
         enum class Bandtype
         {
@@ -35,7 +35,7 @@ class IIRParameters
             HIGHPASS = 1,     /*!< Highpass filter. */
             BANDPASS = 2,     /*!< Bandpass filter. */
             BANDSTOP = 3,     /*!< Bandstop filter. */
-            CUSTOM = 100      /*!< Custom band. */
+            CUSTOM = 100      /*!< Indicates a custom filter. */
         };
     public:
         IIRParameters(void);
@@ -50,6 +50,7 @@ class IIRParameters
             order_ = parameters.order_;
             precision_ = parameters.precision_;
             lrt_ = parameters.lrt_;
+            lhaveFilter_ = parameters.lhaveFilter_;
             return *this;
         }
         IIRParameters(const IIRParameters &parameters);
@@ -98,9 +99,9 @@ class IIRParameters
         Prototype prototype_ = defaultPrototype_;
         /*!< The filter bandtype. */
         Bandtype bandtype_ = defaultBandtype_;
-        /*! The critical frequencies. */
+        /*! The critical frequencies (Hz). */
         double w0_[2]; 
-        /*!< The sampling period. */
+        /*!< The sampling frequench (Hz). */
         double fs_ = fsDefault_;
         /*!< The filter order. */
         int order_ = defaultOrder_;
@@ -108,6 +109,8 @@ class IIRParameters
         enum rtseisPrecision_enum precision_ = defaultPrecision_;
         /*!< Flag indicating this is for real-time. */
         bool lrt_ = lrtDefault_;
+        /*!< Flag indicating a filter is initialized. */
+        bool lhaveFilter_ = false;
 };
 
 class IIR
@@ -125,7 +128,7 @@ class IIR
 };
 
 
-};
-};
+}; /* End Modules */
+}; /* End RTSeis */
 
 #endif
