@@ -55,7 +55,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[i] - c[i]) > 1.e-10)
             {
@@ -72,7 +72,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[i] - c[i]) > 1.e-10)
             {
@@ -117,7 +117,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[1+i] - c[i]) > 1.e-10)
             {
@@ -134,7 +134,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[1+i] - c[i]) > 1.e-10)
             {
@@ -157,7 +157,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[i] - c[i]) > 1.e-10)
             {
@@ -174,7 +174,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[i] - c[i]) > 1.e-10)
             {
@@ -191,7 +191,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::fabs(r2[2+i] - c[i]) > 1.e-10)
             {
@@ -213,7 +213,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::fabs(r2[2+i] - c[i]) > 1.e-10)
             {
@@ -230,7 +230,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::fabs(r2[1+i] - c[i]) > 1.e-10)
             {
@@ -247,7 +247,7 @@ int convolve_convolve_test(void)
             RTSEIS_ERRMSG("Failed to call convolve on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::fabs(r2[1+i] - c[i]) > 1.e-10)
             {
@@ -286,7 +286,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[i] - c[i]) > 1.e-10)
             {
@@ -303,7 +303,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[4-i] - c[i]) > 1.e-10)
             {
@@ -348,7 +348,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[1+i] - c[i]) > 1.e-10)
             {
@@ -365,7 +365,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r1[3-i] - c[i]) > 1.e-10)
             {
@@ -388,7 +388,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[i] - c[i]) > 1.e-10)
             {
@@ -405,7 +405,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[c.size()-1-i] - c[i]) > 1.e-10)
             {
@@ -422,7 +422,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[2+i] - c[i]) > 1.e-10)
             {
@@ -439,7 +439,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[5-i] - c[i]) > 1.e-10)
             {
@@ -456,7 +456,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[1+i] - c[i]) > 1.e-10)
             {
@@ -473,7 +473,7 @@ int convolve_correlate_test(void)
             RTSEIS_ERRMSG("Failed to call correlate unequal on round %d", imp);
             return EXIT_FAILURE;
         }
-        for (int i=0; i<c.size(); i++)
+        for (size_t i=0; i<c.size(); i++)
         {
             if (std::abs(r2[6-i] - c[i]) > 1.e-10)
             {
