@@ -40,13 +40,17 @@ namespace Convolve
     int convolve(const std::vector<double> a,
                  const std::vector<double> b,
                  std::vector<double> &c,
-                 const Mode = Mode::FULL,
-                 const Implementation = Implementation::AUTO);
+                 const Mode mode = Mode::FULL,
+                 const Implementation implementation = Implementation::AUTO);
     int correlate(const std::vector<double> a,
                   const std::vector<double> b,
                   std::vector<double> &c, 
-                  const Convolve::Mode mode,
-                  const Convolve::Implementation implementation);
+                  const Mode mode = Mode::FULL,
+                  const Implementation implementation = Implementation::AUTO);
+    int autocorrelate(const std::vector<double> a,
+                      std::vector<double> &c, 
+                      const Mode mode = Convolve::Mode::FULL,
+                      const Implementation implementation = Implementation::AUTO);
 }; /* End Convolve. */
 }; /* End Math. */
 }; /* End Utils */

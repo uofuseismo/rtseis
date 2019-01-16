@@ -10,6 +10,7 @@ using namespace RTSeis::Utils::Math;
 
 int convolve_convolve_test(void);
 int convolve_correlate_test(void);
+int convolve_autocorrelate_test(void);
 
 int rtseis_test_utils_convolve(void)
 {
@@ -24,6 +25,12 @@ int rtseis_test_utils_convolve(void)
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed correlation test");
+        return -1;
+    }
+    ierr = convolve_autocorrelate_test();
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed autocorrelation test");
         return -1;
     }
     return EXIT_SUCCESS;
@@ -485,3 +492,143 @@ int convolve_correlate_test(void)
     }
     return EXIT_SUCCESS;
 }
+//============================================================================//
+int convolve_autocorrelate_test(void)
+{
+    int ierr;
+    for (int imp=0; imp<2; imp++)
+    {
+        Convolve::Implementation implementation;
+        if (imp == 0)
+        {
+            implementation = Convolve::Implementation::DIRECT;
+        }
+        else
+        {
+            implementation = Convolve::Implementation::FFT;
+        }
+        std::vector<double> a1({1, 3, 2, 42, 31, -32, 34, -42, 3}); 
+        std::vector<double> b1({1, 3, 2, 42, 31, -32, 34, -42, 3});
+        std::vector<double> c, cref;
+        // Test 1
+        ierr = Convolve::correlate(a1, b1, cref,
+                                   Convolve::Mode::FULL, implementation);
+        ierr = Convolve::autocorrelate(a1, c,
+                                       Convolve::Mode::FULL, implementation);
+        if (ierr != 0 || cref.size() != c.size())
+        {
+            RTSEIS_ERRMSG("Failed to call autocorrelate on round %d", imp);
+            return EXIT_FAILURE;
+        }
+        for (size_t i=0; i<c.size(); i++)
+        {
+            if (std::abs(cref[i] - c[i]) > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed autocorr %lf %lf on iter %d",
+                              cref[i], c[i], imp);
+                return EXIT_FAILURE;
+            }
+        }
+        // Test 2
+        ierr = Convolve::correlate(a1, b1, cref,
+                                   Convolve::Mode::VALID, implementation);
+        ierr = Convolve::autocorrelate(a1, c,
+                                       Convolve::Mode::VALID, implementation);
+        if (ierr != 0 || cref.size() != c.size())
+        {
+            RTSEIS_ERRMSG("Failed to call autocorrelate on round %d", imp);
+            return EXIT_FAILURE;
+        }
+        for (size_t i=0; i<c.size(); i++)
+        {
+            if (std::abs(cref[i] - c[i]) > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed autocorr %lf %lf on iter %d",
+                              cref[i], c[i], imp);
+                return EXIT_FAILURE;
+            }
+        }
+        // Test 3
+        ierr = Convolve::correlate(a1, b1, cref,
+                                   Convolve::Mode::SAME, implementation);
+        ierr = Convolve::autocorrelate(a1, c,
+                                       Convolve::Mode::SAME, implementation);
+        if (ierr != 0 || cref.size() != c.size())
+        {
+            RTSEIS_ERRMSG("Failed to call autocorrelate on round %d", imp);
+            return EXIT_FAILURE;
+        }
+        for (size_t i=0; i<c.size(); i++)
+        {
+            if (std::abs(cref[i] - c[i]) > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed autocorr %lf %lf on iter %d",
+                              cref[i], c[i], imp);
+                return EXIT_FAILURE;
+            }
+        }
+        //--------------------------------------------------------------------//
+        //                         Different Length                           //
+        //--------------------------------------------------------------------// 
+        std::vector<double> a2({1, 3, 2, 42, 31, -32, 34, -42}); 
+        std::vector<double> b2({1, 3, 2, 42, 31, -32, 34, -42});
+        // Test 4
+        ierr = Convolve::correlate(a2, b2, cref,
+                                   Convolve::Mode::FULL, implementation);
+        ierr = Convolve::autocorrelate(a2, c,
+                                       Convolve::Mode::FULL, implementation);
+        if (ierr != 0 || cref.size() != c.size())
+        {
+            RTSEIS_ERRMSG("Failed to call autocorrelate on round %d", imp);
+            return EXIT_FAILURE;
+        }
+        for (size_t i=0; i<c.size(); i++)
+        {
+            if (std::abs(cref[i] - c[i]) > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed autocorr %lf %lf on iter %d",
+                              cref[i], c[i], imp);
+                return EXIT_FAILURE;
+            }
+        }
+        // Test 5
+        ierr = Convolve::correlate(a2, b2, cref,
+                                   Convolve::Mode::VALID, implementation);
+        ierr = Convolve::autocorrelate(a2, c,
+                                       Convolve::Mode::VALID, implementation);
+        if (ierr != 0 || cref.size() != c.size())
+        {
+            RTSEIS_ERRMSG("Failed to call autocorrelate on round %d", imp);
+            return EXIT_FAILURE;
+        }
+        for (size_t i=0; i<c.size(); i++)
+        {
+            if (std::abs(cref[i] - c[i]) > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed autocorr %lf %lf on iter %d",
+                              cref[i], c[i], imp);
+                return EXIT_FAILURE;
+            }
+        }
+        // Test 6
+        ierr = Convolve::correlate(a2, b2, cref,
+                                   Convolve::Mode::SAME, implementation);
+        ierr = Convolve::autocorrelate(a2, c,
+                                       Convolve::Mode::SAME, implementation);
+        if (ierr != 0 || cref.size() != c.size())
+        {
+            RTSEIS_ERRMSG("Failed to call autocorrelate on round %d", imp);
+            return EXIT_FAILURE;
+        }
+        for (size_t i=0; i<c.size(); i++)
+        {
+            if (std::abs(cref[i] - c[i]) > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed autocorr %lf %lf on iter %d",
+                              cref[i], c[i], imp);
+                return EXIT_FAILURE;
+            }
+        }
+    }
+    return EXIT_SUCCESS;
+} 

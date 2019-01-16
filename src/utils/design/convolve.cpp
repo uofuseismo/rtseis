@@ -27,7 +27,6 @@ static std::pair<int,int> computeTrimIndices(
 
 /*!
  * @brief Computes the convolution \f$ c[k] = \sum_n a[n] b[n-k] \f$.
- * @ingroup rtseis_utils_convolve
  * @param[in] a               First array in convolution.  This has length [m].
  * @param[in] b               Second array in convolution.  This has length [n].
  * @param[out] c              The resulting convolution.
@@ -104,7 +103,6 @@ int Convolve::convolve(const std::vector<double> a,
 }
 /*!
  * @brief Computes the correlation \f$ c[k] = \sum_n a[n] b[n+k] \f$.
- * @ingroup rtseis_utils_convolve
  * @param[in] a               First array in correlation.  This has length [m].
  * @param[in] b               Second array in correlation.  This has length [n].
  * @param[out] c              The resulting correlation.
@@ -165,7 +163,7 @@ int Convolve::correlate(const std::vector<double> a,
     ippsFree(pBuffer);
     if (status != ippStsNoErr)
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute convolution");
+        RTSEIS_ERRMSG("%s", "Failed to compute correlation");
         c.resize(0);
         return -1;
     }
@@ -182,6 +180,84 @@ int Convolve::correlate(const std::vector<double> a,
 #endif
     std::copy(&pDst[i1], &pDst[i1]+i2, c.begin());
     ippsFree(pDst);
+    return 0;
+}
+/*!
+ * @brief Computes the autocorrelation \f$ c[k] = \sum_n a[n] a[n+k] \f$.
+ * @ingroup rtseis_utils_convolve
+ * @param[in] a               Array to autocorrelation.  This has length [m].
+ * @param[out] c              The resulting autocorrelation.
+ * @param[in] mode            Defines the correlation mode which can be
+ *                            FULL, VALID, or SAME.  The default is FULL.
+ * @param[in] implementation  Defines the implementation type.  This can
+ *                            be AUTO, DIRECT, or FFT.
+ * @result 0 indicates success.
+ * @ingroup rtseis_utils_convolve
+ */
+int Convolve::autocorrelate(const std::vector<double> a,
+                            std::vector<double> &c, 
+                            const Convolve::Mode mode,
+                            const Convolve::Implementation implementation)
+{
+    IppEnum funCfg = getImplementation(implementation) | ippsNormNone;
+    int src1Len = static_cast<size_t> (a.size());
+    c.resize(0);
+    if (src1Len < 1)
+    {
+        if (src1Len < 1){RTSEIS_ERRMSG("%s", "No points in a");}
+        return -1;
+    }
+    int len = (2*src1Len - 1)/2 + 1;
+    // Figure out the buffer size
+    int bufSize = 0;
+    IppStatus status = ippsAutoCorrNormGetBufferSize(src1Len, len,
+                                                     ipp64f, funCfg, &bufSize);
+    if (status != ippStsNoErr)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute buffer size");
+        return -1;
+    }
+    Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
+    // Perform the autocorrelation
+    const double *pSrc1 = a.data();
+    double *pDst = nullptr;
+    pDst = ippsMalloc_64f(len);
+    status = ippsAutoCorrNorm_64f(pSrc1, src1Len, pDst, len, funCfg, pBuffer);
+    ippsFree(pBuffer);
+    if (status != ippStsNoErr)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute autocorrelation");
+        c.resize(0);
+        return -1;
+    }
+    // Only the first half is computed
+    if (mode == Mode::FULL)
+    {
+        c.resize(2*src1Len - 1);
+        double *cPtr = c.data();
+        ippsFlip_64f(pDst, cPtr, len);
+        ippsCopy_64f(&pDst[1], &cPtr[len], len-1); 
+        ippsFree(pDst);
+        return 0;
+    }
+    else
+    {
+        Ipp64f *scratch = ippsMalloc_64f(2*src1Len - 1);
+        ippsFlip_64f(pDst, scratch, len);
+        ippsCopy_64f(&pDst[1], &scratch[len], len-1); 
+        ippsFree(pDst);
+        // Trim the full autocorrelation
+        std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src1Len);
+        int i1 = indexes.first;
+        int i2 = indexes.second;
+        len = i2 - i1; 
+        c.resize(len);
+#ifdef _INTEL_COMPILER
+        #pragma ivdep
+#endif
+        std::copy(&scratch[i1], &scratch[i1]+i2, c.begin());
+        ippsFree(scratch);
+    }
     return 0;
 }
 /*!
