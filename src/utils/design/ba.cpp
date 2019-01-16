@@ -49,6 +49,29 @@ BA::BA(const std::vector<double> firTaps)
     return;
 }
 /*!
+ * @brief Copy assignment operator.
+ * @param[in] ba   BA class to copy.
+ * @result A deep copy of the BA class.
+ * @ingroup rtseis_utils_design_iir_ba
+ */
+BA& BA:: operator=(const BA &ba)
+{
+    b_ = ba.b_;
+    a_ = ba.a_;
+    tol_ = ba.tol_;
+    isFIR_ = ba.isFIR_;
+    return *this;
+}
+/*!
+ * @brief Copy constructor.
+ * 
+ */
+BA::BA(const BA &ba)
+{
+    *this = ba;
+    return;
+}
+/*!
  * @brief Default destructor.
  * @ingroup rtseis_utils_design_iir_ba
  */

@@ -79,16 +79,19 @@ SET(UTILS_SRCS
     src/utils/design/ba.cpp
     src/utils/design/zpk.cpp
     src/utils/design/analogProtype.cpp
+    src/utils/design/convolve.cpp
     src/utils/design/polynomial.cpp)
 SET(IPPS_SRCS
     src/ipps/dft.c
     src/ipps/downsample.c 
     src/ipps/firfilter.c
     src/ipps/iirfilter.c
-    src/ipps/medianFilter.c)
+    src/ipps/medianFilter.c
+    src/ipps/firfilter.cpp)
 SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp
+    src/modules/fir.cpp
     src/modules/iir.cpp)
 SET(DATA_SRCS src/data/waveform.cpp)
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
@@ -98,7 +101,7 @@ TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
 IF (RTSEIS_WRAP_PYTHON)
    PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
    TARGET_LINK_LIBRARIES(rtseis_python
-                         rtseis_shared ${LIBALL} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+                         rtseis_shared ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 ENDIF()
 
 #########################################################################################
@@ -108,6 +111,7 @@ ENDIF()
 ADD_EXECUTABLE(testUtils
                testing/utils/utils.cpp
                testing/utils/polynomial.cpp
+               testing/utils/convolve.cpp
                testing/utils/fir.cpp
                testing/utils/iir.cpp
                testing/utils/response.cpp)

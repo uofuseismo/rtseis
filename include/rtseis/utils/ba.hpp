@@ -1,7 +1,6 @@
 #ifndef RTSEIS_UTILS_BA_HPP
 #define RTSEIS_UTILS_BA_HPP 1
 #include "rtseis/config.h"
-#include <stdio.h>
 #include <complex>
 #include <vector>
 
@@ -11,14 +10,8 @@ class BA
         BA(void);
         BA(const std::vector<double> firTaps);
         BA(const std::vector<double> b, const std::vector<double> a);
-        BA &operator=(const BA &ba)
-        {
-            b_ = ba.b_;
-            a_ = ba.a_;
-            tol_ = ba.tol_;
-            isFIR_ = ba.isFIR_;
-            return *this;
-        }
+        BA(const BA &ba);
+        BA &operator=(const BA &ba);
         bool operator==(const BA &ba) const
         {
             if (b_.size() != ba.b_.size()){return false;}

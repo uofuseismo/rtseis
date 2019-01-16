@@ -1,7 +1,6 @@
 #ifndef RTSEIS_UTILS_ZPK_HPP
 #define RTSEIS_UTILS_ZPK_HPP 1
 #include "rtseis/config.h"
-#include <stdio.h>
 #include <complex>
 #include <vector>
 
@@ -12,13 +11,7 @@ class ZPK
         ZPK(const std::vector<std::complex<double>> zeros,
             const std::vector<std::complex<double>> poles,
             const double k);
-        ZPK &operator=(const ZPK &zpk)
-        {
-            z_ = zpk.z_;
-            p_ = zpk.p_;
-            k_ = zpk.k_;
-            return *this;
-        }
+        ZPK &operator=(const ZPK &zpk);
         bool operator==(const ZPK &zpk) const
         {
             if (p_.size() != zpk.p_.size()){return false;}
@@ -39,6 +32,8 @@ class ZPK
             return !(*this == zpk);
         }
         ~ZPK(void);
+        void sortPoles(bool ascending=true);
+        void sortZeros(bool ascending=true);
         void print(FILE *fout = stdout);
         void clear(void);
         void setGain(const double k);

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <ipps.h>
+#include "rtseis/utils/ipps.hpp"
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/modules/fir.hpp"
@@ -310,4 +311,12 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     order_ = order;
     lhaveFilter_ = true;
     return ierr;
+}
+//============================================================================//
+
+FIRFilter::FIRFilter(const FIRParameters parms)
+{
+    IPPSFIRFilter *fir = firFilter_.get();
+    fir->clear();
+    return;
 }

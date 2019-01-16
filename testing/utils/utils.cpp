@@ -10,6 +10,14 @@ int main()
     int ierr;
     rtseis_utils_verbosity_setLoggingLevel(RTSEIS_SHOW_ALL);
 
+    ierr = rtseis_test_utils_convolve();
+    if (ierr != EXIT_SUCCESS)
+    {   
+        RTSEIS_ERRMSG("%s", "Failed convolve test");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed convolve test");
+
     ierr = rtseis_test_utils_polynomial();
     if (ierr != EXIT_SUCCESS)
     {

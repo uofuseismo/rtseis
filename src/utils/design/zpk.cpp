@@ -1,5 +1,6 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
+#include <algorithm>
 #include "rtseis/utils/zpk.hpp"
 #include "rtseis/log.h"
 
@@ -47,6 +48,20 @@ ZPK::~ZPK(void)
     return;
 }
 /*!
+ * @breif Copy assignment operator.
+ * @param[in] zpk   ZPK class to copy.
+ * @result A deep copy of the input ZPK class.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+ZPK& ZPK::operator=(const ZPK &zpk)
+{
+    z_ = zpk.z_;
+    p_ = zpk.p_;
+    k_ = zpk.k_;
+    tol_ = zpk.tol_;
+    return *this;
+}
+/*!
  * @brief Prints the ZPK structure.
  * @param[in] fout   File handle to print to.  If fout is NULL then this
  *                   will print to stdout.
@@ -68,6 +83,70 @@ void ZPK::print(FILE *fout)
         fprintf(f, "%+.16lf + %+.16lfi\n", std::real(p_[i]), std::imag(p_[i]));
     }
     return;
+}
+/*!
+ * @brief Sorts the poles.
+ * @param[in] ascending  If true then the poles will be sorted in increasing
+ *                       order of magnitude.
+ * @param[in] ascending  If false then the poles will be sorted in decreasing
+ *                       order of magnitude.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+void ZPK::sortPoles(const bool ascending)
+{
+    if (ascending)
+    {
+        std::sort(p_.begin(), p_.end(),
+                  // Begin lambda
+                  [](std::complex<double> a,
+                     std::complex<double> b)
+                  {
+                     return (std::abs(a) < std::abs(b));
+                  });
+    }
+    else
+    {
+        std::sort(p_.begin(), p_.end(),
+                  // Begin lambda
+                  [](std::complex<double> a,
+                     std::complex<double> b)
+                  {
+                     return (std::abs(a) > std::abs(b));
+                  });
+    }
+    return; 
+}
+/*!
+ * @brief Sorts the zeros.
+ * @param[in] ascending  If true then the zeros will be sorted in increasing
+ *                       order of magnitude.
+ * @param[in] ascending  If false then the zeros will be sorted in decreasing
+ *                       order of magnitude.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+void ZPK::sortZeros(const bool ascending)
+{
+    if (ascending)
+    {
+        std::sort(z_.begin(), z_.end(),
+                  // Begin lambda
+                  [](std::complex<double> a,
+                     std::complex<double> b)
+                  {
+                     return (std::abs(a) < std::abs(b));
+                  });
+    }   
+    else
+    {
+        std::sort(z_.begin(), z_.end(),
+                  // Begin lambda
+                  [](std::complex<double> a,
+                     std::complex<double> b)
+                  {
+                     return (std::abs(a) > std::abs(b));
+                  });
+    }   
+    return; 
 }
 /*!
  * @brief Clears the structure.

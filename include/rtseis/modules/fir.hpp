@@ -4,9 +4,14 @@
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
 #include "rtseis/utils/design.hpp"
+//#include "rtseis/utils/ipps.hpp"
+#include <memory>
+
+class IPPSFIRFilter;
 
 namespace RTSeis
 {
+
 namespace Modules
 {
 
@@ -62,6 +67,7 @@ class FIRParameters
                              const double f0, const double f1,
                              const Bandtype btype,
                              const Window window = Window::HAMMING);
+        BA getFilter(void) const{return ba_;}
         FIRParameters(const FIRParameters &parameters);
         ~FIRParameters(void);
         void clear(void);
@@ -97,6 +103,15 @@ class FIRParameters
         bool lrt_ = lrtDefault_;
         /*!< Flag indicating a filter is set. */
         bool lhaveFilter_ = false;
+};
+
+class FIRFilter
+{
+    public:
+         FIRFilter(const FIRParameters parms);
+    private:
+         std::unique_ptr<IPPSFIRFilter> firFilter_;
+
 };
 
 }; /* End Modules */
