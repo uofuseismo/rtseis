@@ -17,9 +17,95 @@ namespace RTSeis
 namespace Data
 {
 
+class Waveform;
+class Command;
+
+class Command
+{
+    enum class FilterType
+    {
+        /*!< No action. */
+        NONE = 0,
+        /*!< Remove the mean from the data. */
+        DEMEAN = 1,
+        /*!< Remove the trend fro the data. */
+        DETREND = 2
+    };
+    public:
+        /*!
+         * @brief Default constructor.
+         */
+        Command(void)
+        {
+            clear();
+        }
+        /*!
+         * @brief Initializes a demean command from the given parameters.
+         * @param[in] parms  The demean parameters.
+         */
+        Command(const Modules::DemeanParameters &parms)
+        {
+            clear();
+            int ierr = demean_.setParameters(parms);
+            if (ierr != 0)
+            {
+                //RTSEIS_ERRMSG("%s", "Failed to set demean parameters");
+                filterType_ = FilterType::NONE;
+                demean_.clear();
+                return;
+            }
+            filterType_ = FilterType::DEMEAN;
+            return;
+        }
+        /*!
+         * @brief Initializes a detrend command from the given parameters.
+         * @param[in] parms  The detrend parameters.
+         */
+        Command(const Modules::DetrendParameters &parms)
+        {
+            clear();
+            int ierr = detrend_.setParameters(parms);
+            if (ierr != 0)
+            {
+                //RTSEIS_ERRMSG("%s", "Failed to set detrend parameters");
+                filterType_ = FilterType::NONE;
+                detrend_.clear();
+                return;
+            }
+            filterType_ = FilterType::DETREND;
+            return;
+        }
+        /*!
+         * @brief Deletes the current command and sets the filter to none.
+         */
+        void clear(void)
+        {
+            if (filterType_ != FilterType::NONE)
+            {
+                if (filterType_ == FilterType::DEMEAN)
+                {
+                    demean_.clear();
+                }
+                else if (filterType_ == FilterType::DETREND)
+                {
+                    detrend_.clear();
+                }
+            }
+            filterType_ = FilterType::NONE;
+        }
+        //int setDetrendCommand(const DetrendParameters );
+    private:
+        /*!< Module for removing mean from data. */
+        Modules::Demean demean_;
+        /*!< Module for removing trend from data. */
+        Modules::Detrend detrend_;
+        /*!< Defines the filter type to apply. */
+        FilterType filterType_ = FilterType::NONE;
+    friend class Waveform;
+};
+
 class Waveform : 
-    public RTSeis::Modules::Demean, 
-           RTSeis::Modules::Detrend
+    public RTSeis::Modules::Demean//, RTSeis::Modules::Detrend
 {
     public:
         Waveform(void);
@@ -29,6 +115,13 @@ class Waveform :
         int setLocationCode(const std::string location);
         int getLocationCode(std::string &location);
 
+        /*!
+         * @brief Sets the data to process.
+         * @param[in] nx   Number of points in time series.
+         * @param[in] x    Time series to process.
+         * @result 0 indicates success.
+         * @ingroup rtseis_data_waveform
+         */
         int setData(const int nx, const double x[])
         {
             if (x_ != nullptr){free(x_); x_ = nullptr;}
@@ -53,36 +146,53 @@ class Waveform :
             lhaveX_ = true;
             return 0;
         }
-
-        int detrend(void)
-        {
-            int ierr;
-            if (nx_ == 0){return 0;}
-            if (!lhaveX_)
-            {
-                //RTSEIS_ERRMSG("%s", "No input data");
-                return -1;
-            }
-            resizeY_(nx_);
-            job_ = RTSEIS_COMMAND_DETREND;
-            ierr = compute_();
-            return ierr;
-        }
+        /*!
+         * @brief Applies the demean command to the data.
+         * @result 0 indicates succes.
+         * @ingroup rtseis_data_waveform
+         */
         int demean(void)
         {
             int ierr;
-            if (nx_ == 0){return 0;}
+            Modules::DemeanParameters parms;
+            command_ = Command(parms);
+            if (nx_ == 0){return 0;} 
             if (!lhaveX_)
             {
-                return -1;
+                //if (!lhaveX_){RTSEIS_ERRMSG("%s", "No data");}
+                return -1; 
             }
-            if (nx_ < 2)
+            resizeY_(ny_);
+            ierr = command_.demean_.demean(nx_, x_, y_);
+            if (ierr != 0)
             {
+                //RTSEIS_ERRMSG("%s", "Failed to apply demean");
+            }
+            return ierr;
+        }
+        /*!
+         * @brief Applies the detrend command to the data.
+         * @result 0 indicates succes.
+         * @ingroup rtseis_data_waveform
+         */
+        int detrend(void)
+        {
+            int ierr;
+            Modules::DetrendParameters parms;
+            command_ = Command(parms);
+            if (nx_ == 0){return 0;}
+            if (!lhaveX_ || nx_ < 2)
+            {
+                //if (!lhaveX_){RTSEIS_ERRMSG("%s", "No data");}
+                //if (nx_ < 2){RTSEIS_ERRMSG("%s", "At least 2 points needed");}
                 return -1;
             }
-            resizeY_(ny_); 
-            job_ = RTSEIS_COMMAND_DEMEAN;
-            ierr = compute_();
+            resizeY_(ny_);
+            ierr = command_.detrend_.detrend(nx_, x_, y_);
+            if (ierr != 0)
+            {
+                //RTSEIS_ERRMSG("%s", "Failed to apply detrend");
+            }
             return ierr;
         }
         /*!
@@ -100,10 +210,10 @@ class Waveform :
          * @result 0 indicates success.
          * @ingroup rtseis_data_waveform
          */
-        int setDetrendParameters(const DetrendParameters &parameters)
+        int setDetrendParameters(const Modules::DetrendParameters &parameters)
         {
-            int ierr = RTSeis::Modules::Detrend::setParameters(parameters);
-            return ierr;
+            detrend_.setParameters(parameters);
+            return 0; //ierr;
         }
     private:
         int compute_(void)
@@ -115,7 +225,7 @@ class Waveform :
             }
             else if (job_ == RTSEIS_COMMAND_DEMEAN)
             {
-                ierr = RTSeis::Modules::Detrend::detrend(nx_, xptr_, y_);
+                ierr = detrend_.detrend(nx_, xptr_, y_);
             }
             else if (job_ == RTSEIS_COMMAND_DETREND)
             {
@@ -170,12 +280,16 @@ class Waveform :
         std::string channel_;
         /*!< Location code. */
         std::string location_;
+        /*!< Classes. */
+        Modules::Detrend detrend_;
         /*!< Sampling period. */
         double dt_ = 0;
         /*!< Number of samples in input signal. */
         int nx_ = 0; 
         /*!< Number of samples in output signals. */
         int ny_ = 0;
+        /*!< Command to apply. */
+        Data::Command command_;
         /*!< Precision. */
         enum rtseisPrecision_enum precision_ = RTSEIS_DOUBLE;
         /*!< Command to apply. */

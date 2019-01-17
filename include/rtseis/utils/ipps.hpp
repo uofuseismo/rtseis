@@ -8,6 +8,39 @@
 
 namespace RTSeis
 {
+    class IPPSDownsample
+    {
+        public:
+            IPPSDownsample(void);
+            ~IPPSDownsample(void);
+            IPPSDownsample(const IPPSDownsample &downsample);
+            IPPSDownsample& operator=(const IPPSDownsample &downsample);
+            int initialize(const int downFactor,
+                           const bool lisRealTime = false,
+                           const enum rtseisPrecision_enum precision = RTSEIS_DOUBLE);
+            int estimateSpace(const int n) const;
+            int getDownsampleFactor(void) const;
+            int setInitialConditions(const int phase);
+            int apply(const int n, const double x[],
+                      const int ny, int *nyDown, double y[]);
+            int apply(const int n, const float x[],
+                      const int ny, int *nyDown, float y[]);
+            int resetInitialConditions(void);
+            void clear(void);
+        private:
+            /*!< Precision of module. */
+            enum rtseisPrecision_enum precision_ = RTSEIS_DOUBLE;
+            /*!< Initial conditions for phase. */
+            int phase0_ = 0;
+            /*!< Downsampling factor. */
+            int downFactor_ = 0;
+            /*!< The phase. */
+            int phase_ = 0;
+            /*!< Flag indicating the module is for real-time. */
+            bool lrt_ = false;
+            /*!< Flag indicating the module is initialized. */
+            bool linit_ = false;
+    };
 
     class IPPSFIRFilter
     {

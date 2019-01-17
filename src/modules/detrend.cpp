@@ -22,11 +22,14 @@ using namespace RTSeis::Modules;
 
 /*!
  * @brief Default construtor.
+ * @param[in] precision  Defines the precision.  By default this is double.
  * @ingroup rtseis_modules_detrend_parameters 
  */
-DetrendParameters::DetrendParameters(void)
+DetrendParameters::DetrendParameters(const enum rtseisPrecision_enum precision) :
+    precision_(precision),
+    lrt_(false),
+    linit_(true)
 {
-    setDefaults();
     return;
 }
 /*!
@@ -40,28 +43,58 @@ DetrendParameters::DetrendParameters(const DetrendParameters &parameters)
     return;
 }
 /*!
+ * @brief Copy assignement operator.
+ * @param[in] parameters  Parameters from copy.
+ * @result A copy of the input parameters.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+DetrendParameters&
+    DetrendParameters::operator=(const DetrendParameters &parameters)
+{
+    if (&parameters == this){return *this;}
+    precision_ = parameters.precision_;
+    lrt_ = parameters.lrt_;
+    linit_ = parameters.linit_;
+    return *this;
+}
+/*!
  * @brief Destructor.
  * @ingroup rtseis_modules_detrend_parameters
  */
 DetrendParameters::~DetrendParameters(void)
 {
+    clear();
+    return;
+}
+/*!
+ * @brief Clears variables in class and restores defaults.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+void DetrendParameters::clear(void)
+{
+    precision_ = defaultPrecision_;
+    lrt_ = false;
+    linit_ = true; // Detrending is always ready to roll
     return;
 }
 /*!
  * @brief Sets the default parameters.
  * @ingroup rtseis_modules_detrend_parameters
  */
+/*
 void DetrendParameters::setDefaults(void)
 {
-    precision_ = defaultPrecision_;
+    clear();
     return;
 }
+*/
 /*!
  * @brief Sets the precision.
  * @param[in] precision  Precision of calculations in module.
  * @result 0 indicates success.
  * @ingroup rtseis_modules_detrend_parameters
  */
+/*
 int DetrendParameters::setPrecision(
     const enum rtseisPrecision_enum precision)
 {
@@ -74,6 +107,7 @@ int DetrendParameters::setPrecision(
     precision_ = precision;
     return 0;
 }
+*/
 /*!
  * @brief Gets the precision of the module.
  * @result The precision of the module.
@@ -86,10 +120,20 @@ enum rtseisPrecision_enum DetrendParameters::getPrecision(void) const
 /*!
  * @brief Returns whether or not the module is for real-time application.
  * @retval A flag indicating whether or not this is for real-time use.
+ * @ingroup rtseis_modules_detrend_parameters
  */
 bool DetrendParameters::getIsRealTime(void) const
 {
     return lrt_;
+}
+/*!
+ * @brief Returns whether or not the parameters class is ready to be
+ *        passed onto the Detrend class for use.
+ * @retval True indicates this is a correctly initialized parameter class.
+ */
+bool DetrendParameters::isInitialized(void) const
+{
+    return linit_;
 }
 //============================================================================//
 /*!
@@ -98,7 +142,45 @@ bool DetrendParameters::getIsRealTime(void) const
  */
 Detrend::Detrend(void)
 {
+    clear();
     return;
+}
+/*!
+ * @brief Copy constructor.
+ * @param[in] detrend  Initializes class from the given detrend class.
+ * @ingroup rtseis_modules_detrend
+ */
+Detrend::Detrend(const Detrend &detrend)
+{
+    *this = detrend;
+    return;
+}
+/*!
+ * @brief Initializes class from the detrend parameters.
+ * @param[in] parameters  The detrend parameters.
+ * @ingroup rtseis_modules_detrend 
+ */
+Detrend::Detrend(const DetrendParameters &parameters)
+{
+    clear();
+    int ierr = setParameters(parameters);
+    if (ierr != 0){clear();}
+    return;
+}
+/*!
+ * @brief Copy assignment operator.
+ * @param[in] detrend  Detrend class to copy to this class.
+ * @result A copy of the input detrend class.
+ * @ingroup rtseis_modules_detrend
+ */
+Detrend& Detrend::operator=(const Detrend &detrend)
+{
+    if (&detrend == this){return *this;}
+    parms_ = detrend.parms_;
+    b0_ = detrend.b0_;
+    b1_ = detrend.b1_;
+    linit_ = detrend.linit_;
+    return *this;
 }
 /*!
  * @brief Default destructor.
@@ -106,32 +188,38 @@ Detrend::Detrend(void)
  */
 Detrend::~Detrend(void)
 {
+    clear();
+    return;
+}
+/*!
+ * @brief Releases memory and restores defaults.
+ * @ingroup rtseis_modules_detrend
+ */
+void Detrend::clear(void)
+{
     b0_ = 0;
     b1_ = 0;
+    linit_ = true; // Module is always ready to roll
+    parms_.clear(); 
     return;
 }
 /*!
  * @brief Sets the parameters for the detrend class.
- * @param[in] precision  RTSEIS_DOUBLE indicates that double precision
- *                       calculations will be used.
- * @param[in] precision  RTSEIS_FLOAT indicates that float precision
- *                       calculations will be used.
+ * @param[in] parameters  Parameters to set.
  * @result 0 indicates success.
  * @ingroup rtseis_modules_detrend
  */
-/*
-int Detrend::setParameters(const enum rtseisPrecision_enum precision)
+int Detrend::setParameters(const DetrendParameters &parameters)
 {
-    precision_ = RTSEIS_DOUBLE;
-    if (precision != RTSEIS_DOUBLE && precision != RTSEIS_FLOAT)
+    clear();
+    if (!parameters.isInitialized())
     {
-        RTSEIS_ERRMSG("Invalid precision %d", (int) precision);
+        RTSEIS_ERRMSG("%s", "Detrend parameters are malformed");
         return -1;
     }
-    precision_ = precision;
+    parms_ = parameters;
     return 0;
 }
-*/
 /*!
  * @brief Removes the trend from the data by fitting a best-fitting line.
  * @param[in] nx   Number of points in x.
@@ -323,54 +411,3 @@ int Detrend::removeTrend_(const int length, const float x[], float y[])
 //============================================================================//
 //                             ctypes interface                               //
 //============================================================================//
-/*
-void *rtseis_modules_detrend_parameters_initialize(void)
-{
-    DetrendParameters::DetrendParameters *parms = new DetrendParameters::DetrendParameters; 
-    parms->setDefaults();
-    return parms;
-}
-
-void rtseis_modules_detrend_parameters_setDefault(void *parameters)
-{
-    DetrendParameters::DetrendParameters *parms
-        = static_cast<DetrendParameters::DetrendParameters *> (parameters);
-    parms->setDefaults();
-    return;
-}
-
-void rtseis_modules_detrend_parameters_finalize(void *parameters)
-{
-    DetrendParameters::DetrendParameters *parms
-        = static_cast<DetrendParameters::DetrendParameters *> (parameters);
-    if (parms != nullptr){delete parms;}
-    parameters = nullptr;
-    return;
-}
-
-void *rtseis_modules_detrend_initialize(void *parameters)
-{
-    Detrend::Detrend *detrend = new Detrend::Detrend;
-    DetrendParameters::DetrendParameters *parms
-        = static_cast<DetrendParameters::DetrendParameters *> (parameters);
-    detrend->setParameters(*parms);
-    return static_cast<void *> (detrend);
-}
-
-int rtseis_modules_detrend_detrend(const int nx, const double x[],
-                                   double y[], 
-                                   void *detrend)
-{
-    Detrend::Detrend *module = static_cast<Detrend::Detrend *> (detrend);
-    int ierr = module->detrend(nx, x, y);
-    return ierr;
-} 
-
-void rtseis_modules_detrend_finalize(void *detrend)
-{
-    Detrend::Detrend *module = static_cast<Detrend::Detrend *> (detrend);
-    delete module;
-    detrend = nullptr;
-    return;
-}
-*/

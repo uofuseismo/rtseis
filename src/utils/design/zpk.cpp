@@ -55,6 +55,7 @@ ZPK::~ZPK(void)
  */
 ZPK& ZPK::operator=(const ZPK &zpk)
 {
+    if (&zpk == this){return *this;}
     z_ = zpk.z_;
     p_ = zpk.p_;
     k_ = zpk.k_;

@@ -87,6 +87,7 @@ SET(IPPS_SRCS
     src/ipps/firfilter.c
     src/ipps/iirfilter.c
     src/ipps/medianFilter.c
+    src/ipps/downsample.cpp
     src/ipps/firfilter.cpp)
 SET(MODULES_SRCS
     src/modules/detrend.cpp

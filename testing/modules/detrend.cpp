@@ -12,8 +12,8 @@ using namespace RTSeis::Modules;
 
 int rtseis_test_modules_detrend(void)
 {
-    Detrend detrend;
-    detrend.setDefaults();
+    DetrendParameters parms;
+    Detrend detrend(parms);
     int npts = 360001;
     for (int j=0; j<2; j++)
     {

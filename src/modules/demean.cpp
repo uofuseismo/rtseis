@@ -13,14 +13,128 @@ using namespace RTSeis::Modules;
  * @brief Removes the mean from the data.
  * @ingroup rtseis_modules
  */
+/*!
+ * @defgroup rtseis_modules_demean_parameters Parameters
+ * @brief Defines the parameters for the demean module.
+ * @ingroup rtseis_modules_demean
+ */
 
+/*!
+ * @brief Default construtor.
+ * @param[in] precision  Defines the precision.  By default this is double.
+ * @ingroup rtseis_modules_detrend_parameters 
+ */
+DemeanParameters::DemeanParameters(const enum rtseisPrecision_enum precision) :
+    precision_(precision),
+    lrt_(false),
+    linit_(true)
+{
+    return;
+}
+/*!
+ * @brief Initializes parameters from parameters class.
+ * @param[in] parameters   Parameters class to initialize from.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+DemeanParameters::DemeanParameters(const DemeanParameters &parameters)
+{
+    *this = parameters;
+    return;
+}
+/*!
+ * @brief Copy assignement operator.
+ * @param[in] parameters  Parameters from copy.
+ * @result A copy of the input parameters.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+DemeanParameters&
+    DemeanParameters::operator=(const DemeanParameters &parameters)
+{
+    if (&parameters == this){return *this;}
+    precision_ = parameters.precision_;
+    lrt_ = parameters.lrt_;
+    linit_ = parameters.linit_;
+    return *this;
+}
+/*!
+ * @brief Destructor.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+DemeanParameters::~DemeanParameters(void)
+{
+    clear();
+    return;
+}
+/*!
+ * @brief Clears variables in class and restores defaults.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+void DemeanParameters::clear(void)
+{
+    precision_ = defaultPrecision_;
+    lrt_ = false;
+    linit_ = true; // Demeaning is always ready to roll
+    return;
+}
+/*!
+ * @brief Gets the precision of the module.
+ * @result The precision of the module.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+enum rtseisPrecision_enum DemeanParameters::getPrecision(void) const
+{
+    return precision_;
+}
+/*!
+ * @brief Returns whether or not the module is for real-time application.
+ * @retval A flag indicating whether or not this is for real-time use.
+ * @ingroup rtseis_modules_detrend_parameters
+ */
+bool DemeanParameters::getIsRealTime(void) const
+{
+    return lrt_;
+}
+/*!
+ * @brief Returns whether or not the parameters class is ready to be
+ *        passed onto the Detrend class for use.
+ * @retval True indicates this is a correctly initialized parameter class.
+ */
+bool DemeanParameters::isInitialized(void) const
+{
+    return linit_;
+}
 /*!
  * @brief Default constructor.
  * @ingroup rtseis_modules_demean
  */
 Demean::Demean(void)
 {
+    clear();
     return;
+}
+/*!
+ * @brief Copy constructor.
+ * @param[in] demean   Demean class from which to initialize.
+ * @ingroup rtseis_modules_demean
+ */
+Demean::Demean(const Demean &demean)
+{
+    *this = demean;
+    return;
+}
+/*!
+ * @brief Copy assignment operator.
+ * @param[in] demean   Demean class to copy.
+ * @result A deep copy of the demean class.
+ * @ingroup rtseis_modules_demean
+ */
+Demean& Demean::operator=(const Demean &demean)
+{
+    if (&demean == this){return *this;}
+    clear();
+    mean_ = demean.mean_;
+    linit_ = demean.linit_;
+    return *this;
 }
 /*!
  * @brief Default destructor.
@@ -28,7 +142,17 @@ Demean::Demean(void)
  */
 Demean::~Demean(void)
 {
+    clear();
+    return;
+}
+/*!
+ * @brief Clears the memory and restores the defaults.
+ */
+void Demean::clear(void)
+{
     mean_ = 0;
+    linit_ = true; // MOdule is always ready to roll
+    parms_.clear();
     return;
 }
 /*!
@@ -40,15 +164,11 @@ Demean::~Demean(void)
  * @result 0 indicates success.
  * @ingroup rtseis_modules_demean
  */
-int Demean::setParameters(const enum rtseisPrecision_enum precision)
+int Demean::setParameters(const DemeanParameters &parameters)
 {
-    precision_ = RTSEIS_DOUBLE;
-    if (precision != RTSEIS_DOUBLE && precision != RTSEIS_FLOAT)
-    {
-        RTSEIS_ERRMSG("Invalid precision %d", (int) precision);
-        return -1;
-    }
-    precision_ = precision;
+    clear();
+    int ierr = setParameters(parameters);
+    if (ierr != 0){clear();}
     return 0;
 }
 /*!
@@ -70,7 +190,7 @@ int Demean::demean(const int nx, const double x[], double y[])
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }
-    if (precision_ == RTSEIS_DOUBLE)
+    if (parms_.getPrecision() == RTSEIS_DOUBLE)
     {
         computeMean_(nx, x);
         removeMean_(nx, x, y);
@@ -107,7 +227,7 @@ int Demean::demean(const int nx, const float x[], float y[])
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }
-    if (precision_ == RTSEIS_FLOAT)
+    if (parms_.getPrecision() == RTSEIS_FLOAT)
     {
         computeMean_(nx, x);
         removeMean_(nx, x, y);
