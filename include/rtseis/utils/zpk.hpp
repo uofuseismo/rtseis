@@ -12,25 +12,8 @@ class ZPK
             const std::vector<std::complex<double>> poles,
             const double k);
         ZPK &operator=(const ZPK &zpk);
-        bool operator==(const ZPK &zpk) const
-        {
-            if (p_.size() != zpk.p_.size()){return false;}
-            if (z_.size() != zpk.z_.size()){return false;}
-            for (size_t i=0; i<p_.size(); i++)
-            {
-                if (std::abs(p_[i] - zpk.p_[i]) > tol_){return false;}
-            }
-            for (size_t i=0; i<z_.size(); i++)
-            {
-                if (std::abs(z_[i] - zpk.z_[i]) > tol_){return false;}
-            }
-            if (std::abs(k_ - zpk.k_) > tol_){return false;}
-            return true;
-        }
-        bool operator!=(const ZPK &zpk) const
-        {
-            return !(*this == zpk);
-        }
+        bool operator==(const ZPK &zpk) const;
+        bool operator!=(const ZPK &zpk) const;
         ~ZPK(void);
         void sortPoles(bool ascending=true);
         void sortZeros(bool ascending=true);

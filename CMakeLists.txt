@@ -79,16 +79,16 @@ SET(UTILS_SRCS
     src/utils/design/ba.cpp
     src/utils/design/zpk.cpp
     src/utils/design/analogProtype.cpp
-    src/utils/design/convolve.cpp
-    src/utils/design/polynomial.cpp)
+    src/utils/filters/downsample.cpp
+    src/utils/filters/firfilter.cpp
+    src/utils/math/convolve.cpp
+    src/utils/math/polynomial.cpp)
 SET(IPPS_SRCS
     src/ipps/dft.c
     src/ipps/downsample.c 
     src/ipps/firfilter.c
     src/ipps/iirfilter.c
-    src/ipps/medianFilter.c
-    src/ipps/downsample.cpp
-    src/ipps/firfilter.cpp)
+    src/ipps/medianFilter.c)
 SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp

@@ -12,24 +12,8 @@ class BA
         BA(const std::vector<double> b, const std::vector<double> a);
         BA(const BA &ba);
         BA &operator=(const BA &ba);
-        bool operator==(const BA &ba) const
-        {
-            if (b_.size() != ba.b_.size()){return false;}
-            if (a_.size() != ba.a_.size()){return false;}
-            for (size_t i=0; i<b_.size(); i++)
-            {
-                if (std::abs(b_[i] - ba.b_[i]) > tol_){return false;}
-            }
-            for (size_t i=0; i<a_.size(); i++)
-            {
-                if (std::abs(a_[i] - ba.a_[i]) > tol_){return false;}
-            }
-            return true;
-        }
-        bool operator!=(const BA &ba) const
-        {
-            return !(*this == ba);
-        }
+        bool operator==(const BA &ba) const;
+        bool operator!=(const BA &ba) const;
         ~BA(void);
         void print(FILE *fout = stdout);
         void clear(void);

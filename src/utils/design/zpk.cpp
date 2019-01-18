@@ -48,7 +48,7 @@ ZPK::~ZPK(void)
     return;
 }
 /*!
- * @breif Copy assignment operator.
+ * @brief Copy assignment operator.
  * @param[in] zpk   ZPK class to copy.
  * @result A deep copy of the input ZPK class.
  * @ingroup rtseis_utils_design_iir_zpk
@@ -61,6 +61,38 @@ ZPK& ZPK::operator=(const ZPK &zpk)
     k_ = zpk.k_;
     tol_ = zpk.tol_;
     return *this;
+}
+/*!
+ * @brief Equality operator.
+ * @param[in] zpk  Class to compare to this class.
+ * @result True indicates that zpk equals this class within a given tolerance.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+bool ZPK::operator==(const ZPK &zpk) const
+{
+    if (p_.size() != zpk.p_.size()){return false;}
+    if (z_.size() != zpk.z_.size()){return false;}
+    for (size_t i=0; i<p_.size(); i++)
+    {
+        if (std::abs(p_[i] - zpk.p_[i]) > tol_){return false;}
+    }
+    for (size_t i=0; i<z_.size(); i++)
+    {
+        if (std::abs(z_[i] - zpk.z_[i]) > tol_){return false;}
+    }
+    if (std::abs(k_ - zpk.k_) > tol_){return false;}
+    return true;
+}
+/*!
+ * @brief Inequality operator.
+ * @param[in] zpk  Class to compare to this class.
+ * @result True indicates that zpk does not equal this class within a given
+ *         tolerance.
+ * @ingroup rtseis_utils_design_iir_zpk
+ */
+bool ZPK::operator!=(const ZPK &zpk) const
+{
+    return !(*this == zpk); 
 }
 /*!
  * @brief Prints the ZPK structure.

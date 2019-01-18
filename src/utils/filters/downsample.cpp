@@ -3,24 +3,30 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #define IPPS_CORE_SRC 1
+#include "rtseis/utils/filters.hpp"
 #include "rtseis/log.h"
-#include "rtseis/utils/ipps.hpp"
 
-using namespace RTSeis;
+using namespace RTSeis::Utils::Filters;
 
 /*!
- * @brief Default constructor.
- * @ingroup rtseis_ipps_downsample
+ * @defgroup rtseis_utils_filters_downsample Downsample
+ * @brief This is the core implementation for downsampling a signal.
+ * @copyright Ben Baker distributed under the MIT license.
+ * @ingroup rtseis_utils_filters
  */
-IPPSDownsample::IPPSDownsample(void)
+/*!
+ * @brief Default constructor.
+ * @ingroup rtseis_utils_filters_downsample
+ */
+Downsample::Downsample(void)
 {
     return;
 }
 /*!
  * @brief Default destructor.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-IPPSDownsample::~IPPSDownsample(void)
+Downsample::~Downsample(void)
 {
     clear();
     return;
@@ -28,9 +34,9 @@ IPPSDownsample::~IPPSDownsample(void)
 /*!
  * @brief Copy constructor.
  * @param[in] downsample  Class from which to initialize.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-IPPSDownsample::IPPSDownsample(const IPPSDownsample &downsample)
+Downsample::Downsample(const Downsample &downsample)
 {
     *this = downsample;
     return;
@@ -39,17 +45,15 @@ IPPSDownsample::IPPSDownsample(const IPPSDownsample &downsample)
  * @brief Copy operator.
  * @param[in] downsample  Downsample class to copy.
  * @result A deep copy of the input class.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-IPPSDownsample& IPPSDownsample::operator=(const IPPSDownsample &downsample)
+Downsample& Downsample::operator=(const Downsample &downsample)
 {
     if (&downsample == this){return *this;}
     clear();
-    precision_  = downsample.precision_;
     phase0_     = downsample.phase0_;
     downFactor_ = downsample.downFactor_;
     phase_      = downsample.phase_;
-    lrt_        = downsample.lrt_;
     linit_      = downsample.linit_;
     return *this;
 }
@@ -61,9 +65,9 @@ IPPSDownsample& IPPSDownsample::operator=(const IPPSDownsample &downsample)
  * @param[in] lisRealTime  Otherwise, it is for post-processing.
  * @param[in] precision    Precision of the downsampler.
  * @result 0 indicates success.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-int IPPSDownsample::initialize(const int downFactor,
+int Downsample::initialize(const int downFactor,
                                const bool lisRealTime,
                                const enum rtseisPrecision_enum precision)
 {
@@ -73,23 +77,23 @@ int IPPSDownsample::initialize(const int downFactor,
         RTSEIS_ERRMSG("Downsampling factor=%d must be positive", downFactor_);
         return -1;
     }
-    precision_ = precision;
+    setPrecision(precision);
+    toggleRealTime(lisRealTime);
     downFactor_ = downFactor;
-    lrt_ = lisRealTime;
     linit_ = true; 
     return 0;
 }
 /*!
  * @brief Releases memory on module and sets defaults.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-void IPPSDownsample::clear(void)
+void Downsample::clear(void)
 {
-    precision_ = RTSEIS_DOUBLE;
+    setPrecision(RTSEIS_DOUBLE);
+    toggleRealTime(false);
     phase0_ = 0;
     downFactor_ = 0;
     phase_ = 0;
-    lrt_ = false;
     linit_ = false;
     return;
 }
@@ -98,9 +102,9 @@ void IPPSDownsample::clear(void)
  * @param[in] phase  Phase of downsampler.  This must be in the range
  *                  [0, getDownsampleFactor()].
  * @result 0 indicates success.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-int IPPSDownsample::setInitialConditions(const int phase)
+int Downsample::setInitialConditions(const int phase)
 {
     if (!linit_)
     {   
@@ -120,9 +124,9 @@ int IPPSDownsample::setInitialConditions(const int phase)
  * @brief Resets the initial conditions to the phase set in 
  *        setInitialConditions.  If setInitialConditions was not called
  *        then this will set the phase to 0.
- * @ingroup rtseis_ipps_downsample 
+ * @ingroup rtseis_utils_filters_downsample 
  */
-int IPPSDownsample::resetInitialConditions(void)
+int Downsample::resetInitialConditions(void)
 {
     if (!linit_)
     {
@@ -142,9 +146,9 @@ int IPPSDownsample::resetInitialConditions(void)
  * @param[out] y       The downsampled signal.  This has dimension [ny] however
  *                     only the first [nyDown] points are defined.
  * @result 0 indicates success.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-int IPPSDownsample::apply(const int nx, const double x[], const int ny,
+int Downsample::apply(const int nx, const double x[], const int ny,
                           int *nyDown, double y[])
 {
     *nyDown = 0;
@@ -172,7 +176,7 @@ int IPPSDownsample::apply(const int nx, const double x[], const int ny,
         return -1;
     }
     // Handle the float case
-    if (precision_ == RTSEIS_FLOAT)
+    if (isFloatPrecision())
     {
         float *x32 = ippsMalloc_32f(nx);
         float *y32 = ippsMalloc_32f(ny);
@@ -189,7 +193,7 @@ int IPPSDownsample::apply(const int nx, const double x[], const int ny,
         return 0;
     }
     int phase = 0;
-    if (lrt_){phase = phase_;}
+    if (isRealTime()){phase = phase_;}
     IppStatus status = ippsSampleDown_64f(x, nx, y, nyDown,
                                           downFactor_, &phase);
     if (status != ippStsNoErr)
@@ -197,7 +201,7 @@ int IPPSDownsample::apply(const int nx, const double x[], const int ny,
         RTSEIS_ERRMSG("%s", "Failed to downsample signal");
         return -1;
     }
-    if (lrt_){phase_ = phase;}
+    if (isRealTime()){phase_ = phase;}
     return 0;
 }
 /*!
@@ -210,9 +214,9 @@ int IPPSDownsample::apply(const int nx, const double x[], const int ny,
  * @param[out] y       The downsampled signal.  This has dimension [ny] however
  *                     only the first [nyDown] points are defined.
  * @result 0 indicates success.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-int IPPSDownsample::apply(const int nx, const float x[], const int ny, 
+int Downsample::apply(const int nx, const float x[], const int ny, 
                           int *nyDown, float y[])
 {
     *nyDown = 0;
@@ -240,7 +244,7 @@ int IPPSDownsample::apply(const int nx, const float x[], const int ny,
         return -1; 
     }
     // Handle the float case
-    if (precision_ == RTSEIS_DOUBLE)
+    if (isDoublePrecision())
     {
         double *x64 = ippsMalloc_64f(nx);
         double *y64 = ippsMalloc_64f(ny);
@@ -257,7 +261,7 @@ int IPPSDownsample::apply(const int nx, const float x[], const int ny,
         return 0;
     }
     int phase = 0;
-    if (lrt_){phase = phase_;}
+    if (isRealTime()){phase = phase_;}
     IppStatus status = ippsSampleDown_32f(x, nx, y, nyDown,
                                           downFactor_, &phase);
     if (status != ippStsNoErr)
@@ -265,7 +269,7 @@ int IPPSDownsample::apply(const int nx, const float x[], const int ny,
         RTSEIS_ERRMSG("%s", "Failed to downsample signal");
         return -1; 
     }   
-    if (lrt_){phase_ = phase;}
+    if (isRealTime()){phase_ = phase;}
     return 0;
 }
 /*!
@@ -273,9 +277,9 @@ int IPPSDownsample::apply(const int nx, const float x[], const int ny,
  * @param[in] n   Number of points in the signal to downsample.
  * @result The number of points required to store the output signal.
  *         If negative then there was a failure.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-int IPPSDownsample::estimateSpace(const int n) const
+int Downsample::estimateSpace(const int n) const
 {
     if (!linit_ || n < 0)
     {
@@ -284,16 +288,16 @@ int IPPSDownsample::estimateSpace(const int n) const
         return -1;
     }
     int phase = 0;
-    if (lrt_){phase = phase_;}
+    if (isRealTime()){phase = phase_;}
     int pDstLen = (n + downFactor_ - 1 - phase)/downFactor_;
     return pDstLen;
 }
 /*!
  * @brief Service routine to get the downsampling factor.
  * @result The downsampling factor.
- * @ingroup rtseis_ipps_downsample
+ * @ingroup rtseis_utils_filters_downsample
  */
-int IPPSDownsample::getDownsampleFactor(void) const
+int Downsample::getDownsampleFactor(void) const
 {
     return downFactor_;
 }

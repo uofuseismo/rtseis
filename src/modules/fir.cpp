@@ -316,7 +316,7 @@ int FIRParameters::designFromWindow(const int order, const double fs,
 
 FIRFilter::FIRFilter(const FIRParameters parms)
 {
-    IPPSFIRFilter *fir = firFilter_.get();
+    Utils::Filters::FIRFilter *fir = firFilter_.get();
     fir->clear();
     return;
 }

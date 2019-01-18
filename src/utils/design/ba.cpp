@@ -65,7 +65,7 @@ BA& BA:: operator=(const BA &ba)
 }
 /*!
  * @brief Copy constructor.
- * 
+ * @ingroup rtseis_utils_design_iir_ba
  */
 BA::BA(const BA &ba)
 {
@@ -80,6 +80,39 @@ BA::~BA(void)
 {
     clear();
     return;
+}
+/*!
+ * @brief Equality operator.
+ * @param[in] ba  Class to compare to this class.
+ * @result True indicates that ba equals this class to within a given
+ *         tolerance.
+ * @ingroup rtseis_utils_design_iir_ba
+ */
+bool BA::operator==(const BA &ba) const
+{
+    if (b_.size() != ba.b_.size()){return false;}
+    if (a_.size() != ba.a_.size()){return false;}
+    for (size_t i=0; i<b_.size(); i++)
+    {
+        if (std::abs(b_[i] - ba.b_[i]) > tol_){return false;}
+    }
+    for (size_t i=0; i<a_.size(); i++)
+    {
+        if (std::abs(a_[i] - ba.a_[i]) > tol_){return false;}
+    }
+    if (isFIR_ != ba.isFIR_){return false;}
+    return true;
+}
+/*!
+ * @brief Inequality operator.
+ * @param[in] ba   Class to compare to this class.
+ * @result True indicates that ba does not equal this class to within a 
+ *         given tolerance. 
+ * @ingroup rtseis_utils_design_iir_ba
+ */
+bool BA::operator!=(const BA &ba) const
+{
+    return !(*this == ba);
 }
 /*!
  * @brief Prints the BA structure.

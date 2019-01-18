@@ -4,6 +4,7 @@
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
 #include "rtseis/utils/design.hpp"
+#include "rtseis/utils/filters.hpp"
 //#include "rtseis/utils/ipps.hpp"
 #include <memory>
 
@@ -110,7 +111,7 @@ class FIRFilter
     public:
          FIRFilter(const FIRParameters parms);
     private:
-         std::unique_ptr<IPPSFIRFilter> firFilter_;
+         std::unique_ptr<Utils::Filters::FIRFilter> firFilter_;
 
 };
 
