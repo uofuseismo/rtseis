@@ -81,6 +81,7 @@ SET(UTILS_SRCS
     src/utils/design/analogProtype.cpp
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
+    src/utils/filters/medianFilter.cpp
     src/utils/math/convolve.cpp
     src/utils/math/polynomial.cpp)
 SET(IPPS_SRCS
@@ -115,7 +116,8 @@ ADD_EXECUTABLE(testUtils
                testing/utils/convolve.cpp
                testing/utils/fir.cpp
                testing/utils/iir.cpp
-               testing/utils/response.cpp)
+               testing/utils/response.cpp
+               testing/utils/filters.cpp)
 ADD_EXECUTABLE(testModules
                testing/modules/modules.cpp
                testing/modules/detrend.cpp)

@@ -4,6 +4,7 @@
 #include "rtseis/config.h"
 #include "rtseis/log.h"
 #include "utils.hpp"
+#include <mkl.h>
 
 int main()
 {
@@ -58,5 +59,15 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed freqs/freqz test");
 
+    ierr = rtseis_test_utils_filters();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed filters test");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed filters test");
+
+    // Last line
+    mkl_free_buffers();
     return EXIT_SUCCESS;
 }

@@ -129,6 +129,44 @@ namespace Filters
             bool linit_ = false;
     };
 
+    class MedianFilter : protected Precision, RealTime
+    {
+        public:
+            MedianFilter(void);
+            ~MedianFilter(void);
+            MedianFilter(const MedianFilter &median);
+            MedianFilter& operator=(const MedianFilter &median);
+            int initialize(const int n,
+                           const bool lisRealTime = false,
+                           const enum rtseisPrecision_enum precision = RTSEIS_DOUBLE);
+            int getInitialConditionLength(void) const;
+            int getGroupDelay(void) const;
+            int setInitialConditions(const int nz, const double zi[]);
+            int apply(const int n, const double x[], double y[]);
+            int apply(const int n, const float x[], float y[]);
+            int resetInitialConditions(void);
+            void clear(void);
+        private:
+            /*!< Delay line source vector.  This has dimension [nwork_]. */
+            void *dlysrc_ = nullptr;
+            /*!< Delay line destination.  This has dimension [nwork_]. */
+            void *dlydst_ = nullptr;
+            /*!< Workspace for median filter.  This has dimension [bufferSize_]. */
+            void *pBuf_ = nullptr;
+            /*!< A reference of the saved initial conditions.  This has 
+                 dimension [nwork_] though only the first maskSize_  - 1
+                 points are valid. */
+            double *zi_ = nullptr;
+            /*!< The median filter window length. */
+            int maskSize_ = 0;
+            /*!< The workspace for the temporary arrays. */
+            int nwork_ = 0;
+            /*!< The size of the workspace buffer. */
+            int bufferSize_ = 0;
+            /*!< Flag indicating the module is initialized. */
+            bool linit_ = false;
+    };
+
     class FIRFilter
     {
         enum class Implementation

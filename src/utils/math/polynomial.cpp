@@ -390,7 +390,7 @@ int Polynomial::roots(const std::vector<double> coeffs,
     }
     // Set space for companion matrix
     int n   = nord;
-    int lda = nord;
+    int lda = std::max(8, nord);
     double *a = new double[lda*lda];
     memset(a, 0, static_cast<size_t> (lda*lda)*sizeof(double));
     double ami = 1.0/coeffs[0]; //coefficient on highest order term

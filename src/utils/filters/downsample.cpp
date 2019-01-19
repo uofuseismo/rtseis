@@ -111,6 +111,7 @@ int Downsample::setInitialConditions(const int phase)
         RTSEIS_ERRMSG("%s", "Downsampler not initialized");
         return -1;
     }
+    resetInitialConditions();
     if (phase < 0 || phase > downFactor_ - 1)
     {
         RTSEIS_ERRMSG("phase=%d must be in range[0,%d]", phase, downFactor_-1);
@@ -149,10 +150,10 @@ int Downsample::resetInitialConditions(void)
  * @ingroup rtseis_utils_filters_downsample
  */
 int Downsample::apply(const int nx, const double x[], const int ny,
-                          int *nyDown, double y[])
+                      int *nyDown, double y[])
 {
     *nyDown = 0;
-    if (nx == 0){return 0;} // Nothing to do
+    if (nx <= 0){return 0;} // Nothing to do
     if (!linit_)
     {
         RTSEIS_ERRMSG("%s", "ippsDS structure not intitialized");
@@ -183,24 +184,34 @@ int Downsample::apply(const int nx, const double x[], const int ny,
         ippsConvert_64f32f(x, x32, nx);
         int ierr = apply(nx, x32, ny, nyDown, y32);
         ippsFree(x32);
-        ippsFree(x32);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Switched precision failed");
+            ippsFree(y32);
             return -1;
         }
         ippsConvert_32f64f(y32, y, *nyDown);
+        ippsFree(y32);
         return 0;
     }
+    // There's really nothing to do
+    if (downFactor_ == 1)
+    {
+        ippsCopy_64f(x, y, nx);
+        *nyDown = nx;
+        return 0;
+    }
+    // Apply downsampler
     int phase = 0;
     if (isRealTime()){phase = phase_;}
-    IppStatus status = ippsSampleDown_64f(x, nx, y, nyDown,
+    IppStatus status = ippsSampleDown_64f(x, nx, y, &pDstLen,
                                           downFactor_, &phase);
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to downsample signal");
         return -1;
     }
+    *nyDown = std::min(nx, std::max(0, pDstLen));
     if (isRealTime()){phase_ = phase;}
     return 0;
 }
@@ -220,7 +231,7 @@ int Downsample::apply(const int nx, const float x[], const int ny,
                           int *nyDown, float y[])
 {
     *nyDown = 0;
-    if (nx == 0){return 0;} // Nothing to do
+    if (nx <= 0){return 0;} // Nothing to do
     if (!linit_)
     {
         RTSEIS_ERRMSG("%s", "ippsDS structure not intitialized");
@@ -243,7 +254,7 @@ int Downsample::apply(const int nx, const float x[], const int ny,
         if (y == nullptr){RTSEIS_ERRMSG("%s", "Error y is NULL");}
         return -1; 
     }
-    // Handle the float case
+    // Handle the double case
     if (isDoublePrecision())
     {
         double *x64 = ippsMalloc_64f(nx);
@@ -251,24 +262,35 @@ int Downsample::apply(const int nx, const float x[], const int ny,
         ippsConvert_32f64f(x, x64, nx);
         int ierr = apply(nx, x64, ny, nyDown, y64);
         ippsFree(x64);
-        ippsFree(x64);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Switched precision failed");
+            ippsFree(y64);
             return -1;
         }
         ippsConvert_64f32f(y64, y, *nyDown);
+        ippsFree(y64);
         return 0;
     }
+    // There's really nothing to do
+    if (downFactor_ == 1)
+    {   
+        ippsCopy_32f(x, y, nx);
+        *nyDown = nx; 
+        return 0;
+    }
+    // Apply downsampler
     int phase = 0;
     if (isRealTime()){phase = phase_;}
-    IppStatus status = ippsSampleDown_32f(x, nx, y, nyDown,
+    IppStatus status = ippsSampleDown_32f(x, nx, y, &pDstLen,
                                           downFactor_, &phase);
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to downsample signal");
         return -1; 
-    }   
+    }
+    pDstLen = std::min(nx, std::max(0, pDstLen));
+    *nyDown = pDstLen;
     if (isRealTime()){phase_ = phase;}
     return 0;
 }

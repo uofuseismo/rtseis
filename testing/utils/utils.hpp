@@ -13,6 +13,7 @@ int rtseis_test_utils_design_iir(void);
 int rtseis_test_utils_design_fir_fir1(void);
 int rtseis_test_utils_design_freqs(void);
 
+int rtseis_test_utils_filters(void);
 
 #ifdef __cplusplus
 }

@@ -51,10 +51,10 @@ int FIRFilter::initialize(const int nb, const double b[],
 {
     clear();
     // Checks
-    if (nb < 1 || b == NULL)
+    if (nb < 1 || b == nullptr)
     {
         if (nb < 1){RTSEIS_ERRMSG("%s", "No b coefficients\n");}
-        if (b == NULL){RTSEIS_ERRMSG("%s", "b is NULL\n");}
+        if (b == nullptr){RTSEIS_ERRMSG("%s", "b is NULL\n");}
         return -1; 
     }
     // Figure out sizes and save some basic info
@@ -198,10 +198,10 @@ int FIRFilter::apply(const int n,
                          double y[])
 {
     if (n <= 0){return 0;} // Nothing to do
-    if (x == NULL || y == NULL)
+    if (x == nullptr || y == nullptr)
     {
-        if (x == NULL){RTSEIS_ERRMSG("%s", "Error x is NULL");}
-        if (y == NULL){RTSEIS_ERRMSG("%s", "Error y is NULL");}
+        if (x == nullptr){RTSEIS_ERRMSG("%s", "Error x is NULL");}
+        if (y == nullptr){RTSEIS_ERRMSG("%s", "Error y is NULL");}
         return -1;
     }
     if (!isInitialized())
