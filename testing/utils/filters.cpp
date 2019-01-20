@@ -15,11 +15,11 @@ static int filters_downsample_test(const int npts, const double x[]);
 static int filters_medianFilter_test(const int npts, const double x[],
                                      const std::string fileName);
 static int filters_sosFilter_test(const int npts, const double x[],
-                                  const std::string filename);
+                                  const std::string fileName);
 
 int rtseis_test_utils_filters(void)
 {
-    double dt = 1.0/200.0;
+//    double dt = 1.0/200.0;
     int npts;
     double *x = nullptr;
     std::string dataDir = "utils/data/";
@@ -46,14 +46,20 @@ int rtseis_test_utils_filters(void)
         return EXIT_FAILURE;
     }
     // Apply the second order section filter
-    ierr = filters_sosFilter_test(npts, x, "gse2.txt");
+    ierr = filters_sosFilter_test(npts, x,
+                                  dataDir + "sosReference.txt");
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed sos filter test");
+        return EXIT_FAILURE;
+    }
 
     if (x != nullptr){free(x);}
     return EXIT_SUCCESS;
 }
 //============================================================================//
 int filters_sosFilter_test(const int npts, const double x[],
-                           const std::string filename)
+                           const std::string fileName)
 {
     fprintf(stdout, "Testing SOS filter...\n");
     int ns = 7; // number of sections 
@@ -113,11 +119,117 @@ int filters_sosFilter_test(const int npts, const double x[],
     }
     delete[] y40;
     delete[] impulse;
-    // Now do a real problem
-
+    // Load a reference solution
+    double *yref = nullptr;
+    int npref = 0;
+    ierr = readTextFile(&npref, &yref, fileName);
+    if (ierr != 0 || npts != npref)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to load reference data");
+        return EXIT_FAILURE;
+    }
+    ns = 4;
+    const double bs[12] = {0.000401587491686,  0.000803175141692,  0.000401587491549,
+                           1.000000000000000, -2.000000394412897,  0.999999999730209,
+                           1.000000000000000,  1.999999605765104,  1.000000000341065,
+                           1.000000000000000, -1.999999605588274,  1.000000000269794};
+    const double as[12] = {1.000000000000000, -1.488513049541281,  0.562472929601870,
+                           1.000000000000000, -1.704970593447777,  0.792206889942566,
+                           1.000000000000000, -1.994269533089365,  0.994278822534674,
+                           1.000000000000000, -1.997472946622339,  0.997483252685326};
+    lrt = false;
+    ierr = sos.initialize(ns, bs, as, lrt, RTSEIS_DOUBLE);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+        return EXIT_FAILURE;
+    } 
+    double *y = new double[npts];
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    ierr = sos.apply(npts, x, y);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute post-processing soln");
+        return -1;
+    }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    for (int i=0; i<npts; i++)
+    {
+        if (std::abs(y[i] - yref[i]) > 1.e-8)
+        {
+            RTSEIS_ERRMSG("Failed to compute sample %d %lf %lf",
+                          i, yref[i], y[i]);
+            return EXIT_FAILURE;
+        }
+    } 
+    std::copy(y, y+static_cast<size_t> (npts), yref);
+    std::chrono::duration<double> tdif = timeEnd - timeStart;
+    fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
+            tdif.count());
+    // Do packetized tests 
+    lrt = true;
+    ierr = sos.initialize(ns, bs, as, lrt, RTSEIS_DOUBLE);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+        return EXIT_FAILURE;
+    }
+    std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
+                                 1000, 1024, 1200, 2048, 4000, 4096, 5000});
+    for (int job=0; job<2; job++)
+    {
+        for (size_t ip=0; ip<packetSize.size(); ip++)
+        {
+            timeStart = std::chrono::high_resolution_clock::now();
+            int nxloc = 0;
+            int nptsPass = 0;
+            while (nxloc < npts)
+            {
+                nptsPass = packetSize[ip];
+                if (job == 1)
+                {
+                     nptsPass = std::max(1, nptsPass + rand()%50 - 25);
+                }
+                nptsPass = std::min(nptsPass, npts - nxloc);
+                ierr = sos.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply sos filter");
+                    return EXIT_FAILURE;
+                }
+                nxloc = nxloc + nptsPass;
+            }
+            sos.resetInitialConditions();
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            for (int i=0; i<npts; i++)
+            {
+                if (std::abs(yref[i] - y[i]) > 1.e-8)
+                {
+                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
+                                  i, y[i], yref[i]);
+                    return EXIT_FAILURE;
+                }
+            }
+            if (job == 0)
+            {
+                fprintf(stdout,
+                        "Passed SOS filter fixed packet size %4d in %.8e (s)\n",
+                        packetSize[ip], tdif.count());
+            }
+            else
+            {
+                fprintf(stdout,
+                        "Passed SOS filter random in %.8e (s)\n", tdif.count());
+            }
+        }
+    }
+    delete[] y;
+    free(yref);
     return EXIT_SUCCESS;
     
 }
+//============================================================================//
 int filters_medianFilter_test(const int npts, const double x[],
                               const std::string fileName)
 {
@@ -177,6 +289,7 @@ int filters_medianFilter_test(const int npts, const double x[],
         RTSEIS_ERRMSG("%s", "Failed to compute reference solution");
         return EXIT_FAILURE;
     }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
     for (int i=0; i<npts; i++)
     {
         if (std::abs(y[i] - yref[i]) > 1.e-10)
@@ -186,7 +299,6 @@ int filters_medianFilter_test(const int npts, const double x[],
             return EXIT_FAILURE;
         }
     }
-    auto timeEnd = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());

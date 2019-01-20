@@ -309,12 +309,12 @@ int SOSFilter::resetInitialConditions(void)
     if (isDoublePrecision())
     {
         Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-        ippsCopy_64f(zi_, dlysrc, nwork_);
+        ippsCopy_64f(zi_, dlysrc, 2*nsections_);
     }
     else
     {
         Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-        ippsConvert_64f32f(zi_, dlysrc, nwork_);
+        ippsConvert_64f32f(zi_, dlysrc, 2*nsections_);
     }
     return 0;
 }
