@@ -159,8 +159,59 @@ namespace Filters
             double *zi_ = nullptr;
             /*!< The median filter window length. */
             int maskSize_ = 0;
-            /*!< The workspace for the temporary arrays. */
+            /*!< The workspace for the delay lines. */
             int nwork_ = 0;
+            /*!< The size of the workspace buffer. */
+            int bufferSize_ = 0;
+            /*!< Flag indicating the module is initialized. */
+            bool linit_ = false;
+    };
+
+    class SOSFilter : protected Precision, RealTime
+    {
+        public:
+            SOSFilter(void);
+            ~SOSFilter(void);
+            SOSFilter(const SOSFilter &sos);
+            SOSFilter& operator=(const SOSFilter &sos);
+            int initialize(const int ns,
+                           const double bs[],
+                           const double as[],
+                           const bool lisRealTime = false,
+                           const enum rtseisPrecision_enum precision = RTSEIS_DOUBLE);
+            int getInitialConditionLength(void) const;
+            int setInitialConditions(const int nz, const double zi[]);
+            int apply(const int n, const double x[], double y[]);
+            int apply(const int n, const float x[], float y[]);
+            int resetInitialConditions(void);
+            void clear(void);
+            int getNumberOfSections(void) const;
+        private:
+            /*!< The IIR filtering state. */
+            void *pState_ = nullptr;
+            /*!< A workspace buffer.  This has dimension [bufferSize_]. */
+            void *pBuf_ = nullptr;
+            /*!< The filter coefficients.  This has dimension [tapsLen_]. */
+            void *pTaps_ = nullptr;
+            /*!< Delay line source vector.  This has dimension [nwork_]. */
+            void *dlysrc_ = nullptr;
+            /*!< Delay line destination vector.  This has dimension [nwork_]. */
+            void *dlydst_ = nullptr;
+            /*!< A copy of the input filter numerator coefficients.  This
+                 has dimension [3 x nsections_]. */
+            double *bsRef_ = nullptr;
+            /*!< A copy of the input filter denominator coefficients.  This
+                 has dimension [3 x nsections_]. */
+            double *asRef_ = nullptr;
+            /*!< A copy of the initial conditions.  This has dimension
+                 [2*nsections_]. */
+            double *zi_ = nullptr;
+            /*!< The number of sections. */
+            int nsections_ = 0;
+            /*!< The number of filter taps. */
+            int tapsLen_ = 0;
+            /*!< The workspace for the delay lines. */
+            int nwork_ = 0; 
             /*!< The size of the workspace buffer. */
             int bufferSize_ = 0;
             /*!< Flag indicating the module is initialized. */

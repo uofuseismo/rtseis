@@ -14,6 +14,8 @@ static int readTextFile(int *npts, double *xPtr[],
 static int filters_downsample_test(const int npts, const double x[]);
 static int filters_medianFilter_test(const int npts, const double x[],
                                      const std::string fileName);
+static int filters_sosFilter_test(const int npts, const double x[],
+                                  const std::string filename);
 
 int rtseis_test_utils_filters(void)
 {
@@ -43,11 +45,81 @@ int rtseis_test_utils_filters(void)
         RTSEIS_ERRMSG("%s", "Failed median filter test");
         return EXIT_FAILURE;
     }
+    // Apply the second order section filter
+    ierr = filters_sosFilter_test(npts, x, "gse2.txt");
 
     if (x != nullptr){free(x);}
     return EXIT_SUCCESS;
 }
-int filters_medianFilter_test(const int npts, const double x[], const std::string fileName)
+//============================================================================//
+int filters_sosFilter_test(const int npts, const double x[],
+                           const std::string filename)
+{
+    fprintf(stdout, "Testing SOS filter...\n");
+    int ns = 7; // number of sections 
+    const double bs7[21] = {6.37835424e-05,  6.37835424e-05,  0.00000000e+00, 
+                           1.00000000e+00, -1.78848938e+00,  1.00000000e+00,
+                           1.00000000e+00, -1.93118487e+00,  1.00000000e+00,
+                           1.00000000e+00, -1.95799864e+00,  1.00000000e+00,
+                           1.00000000e+00, -1.96671846e+00,  1.00000000e+00,
+                           1.00000000e+00, -1.97011885e+00,  1.00000000e+00,
+                           1.00000000e+00, -1.97135784e+00,  1.00000000e+00};
+    const double as7[21] = {1.00000000e+00, -9.27054679e-01,  0.00000000e+00,
+                           1.00000000e+00, -1.87008942e+00,  8.78235919e-01,
+                           1.00000000e+00, -1.90342568e+00,  9.17455718e-01,
+                           1.00000000e+00, -1.93318668e+00,  9.52433552e-01,
+                           1.00000000e+00, -1.95271141e+00,  9.75295685e-01,
+                           1.00000000e+00, -1.96423610e+00,  9.88608056e-01,
+                           1.00000000e+00, -1.97157693e+00,  9.96727086e-01};
+    double yref40[40] = {6.37835424e-05,  1.23511272e-04,  1.34263690e-04,
+                         1.78634911e-04,  2.50312740e-04,  3.46332848e-04,
+                         4.66239952e-04,  6.11416691e-04,  7.84553129e-04,
+                         9.89232232e-04,  1.22960924e-03,  1.51016546e-03,
+                         1.83551947e-03,  2.21028135e-03,  2.63893773e-03,
+                         3.12575784e-03,  3.67471270e-03,  4.28940130e-03,
+                         4.97297977e-03,  5.72809028e-03,  6.55678845e-03,
+                         7.46046851e-03,  8.43978671e-03,  9.49458408e-03,
+                         1.06238101e-02,  1.18254496e-02,  1.30964547e-02,
+                         1.44326848e-02,  1.58288573e-02,  1.72785101e-02,
+                         1.87739799e-02,  2.03063976e-02,  2.18657022e-02,
+                         2.34406756e-02,  2.50189979e-02,  2.65873261e-02,
+                         2.81313940e-02,  2.96361349e-02,  3.10858256e-02,
+                         3.24642512e-02};
+    double *impulse = new double[40];
+    double *y40 = new double[40]; 
+    std::fill(impulse, impulse+40, 0);
+    impulse[0] = 1;
+    SOSFilter sos;
+    bool lrt = false;
+    int ierr = sos.initialize(ns, bs7, as7, lrt, RTSEIS_DOUBLE);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize sos");
+        return -1;
+    }
+    ierr = sos.apply(40, impulse, y40);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to apply filter");
+        return -1;
+    }
+    for (int i=0; i<40; i++)
+    {
+        if (std::abs(y40[i] - yref40[i]) > 1.e-8)
+        {
+            RTSEIS_ERRMSG("Impulse response failed %lf %lf", yref40[i], y40[i]);
+            return EXIT_FAILURE;
+        }
+    }
+    delete[] y40;
+    delete[] impulse;
+    // Now do a real problem
+
+    return EXIT_SUCCESS;
+    
+}
+int filters_medianFilter_test(const int npts, const double x[],
+                              const std::string fileName)
 {
     fprintf(stdout, "Testing median filter...\n");
     double xin[8] = {1, 2, 127, 4, 5, 0, 7, 8};

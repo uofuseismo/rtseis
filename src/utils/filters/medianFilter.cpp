@@ -43,7 +43,7 @@ MedianFilter::MedianFilter(const MedianFilter &median)
 }
 /*!
  * @brief Copy operator.
- * @param[in] median   Median Filter class to copy.
+ * @param[in] median   Median filter class to copy.
  * @result A deep copy of the input class.
  * @ingroup rtseis_utils_filters_median
  */
@@ -51,6 +51,7 @@ MedianFilter& MedianFilter::operator=(const MedianFilter &median)
 {
     if (&median == this){return *this;}
     clear();
+    if (!median.linit_){return *this;}
     // Reinitialize the filter
     initialize(median.maskSize_, median.isRealTime(), median.getPrecision());
     // Now copy the filter states

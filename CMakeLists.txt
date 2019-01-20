@@ -82,6 +82,7 @@ SET(UTILS_SRCS
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
     src/utils/filters/medianFilter.cpp
+    src/utils/filters/sos.cpp
     src/utils/math/convolve.cpp
     src/utils/math/polynomial.cpp)
 SET(IPPS_SRCS
