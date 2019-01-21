@@ -54,6 +54,8 @@ IF (RTSEIS_WRAP_PYTHON)
    MESSAGE(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
    MESSAGE(STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
    MESSAGE(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+
+   FIND_PACKAGE(pybind11 REQUIRED)
 ENDIF()
 
 INCLUDE_DIRECTORIES(
@@ -77,6 +79,7 @@ SET(UTILS_SRCS
     src/utils/design/iir.cpp
     src/utils/design/fir.cpp
     src/utils/design/ba.cpp
+    src/utils/design/sos.cpp
     src/utils/design/zpk.cpp
     src/utils/design/analogProtype.cpp
     src/utils/filters/downsample.cpp
@@ -102,9 +105,11 @@ SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
 ADD_LIBRARY(rtseis_shared SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
 IF (RTSEIS_WRAP_PYTHON)
-   PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
-   TARGET_LINK_LIBRARIES(rtseis_python
-                         rtseis_shared ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+   ADD_LIBRARY(pyrtseis MODULE python/pyrtseis.cpp)
+   TARGET_LINK_LIBRARIES(pyrtseis PRIVATE pybind11::module)
+   #PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
+   #TARGET_LINK_LIBRARIES(rtseis_python
+   #                      rtseis_shared ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 ENDIF()
 
 #########################################################################################
@@ -167,19 +172,19 @@ SET(INCLUDE_INSTALL_DIR include/)
 SET(LIB_INSTALL_DIR lib/)
 SET(SYSCONFIG_INSTALL_DIR etc/rtseis/)
 INCLUDE(CMakePackageConfigHelpers)
-CONFIGURE_PACKAGE_CONFIG_FILE(${CMAKE_MODULE_PATH}/FindRTSeis.cmake.in
-                              ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
-                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/rtseis/cmake
-                              PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR)
-WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RTSeisConfigVersion.cmake
-                                 VERSION ${RTSEIS_VERSION}
-                                 COMPATIBILITY SameMajorVersion)
-INSTALL(TARGETS ${TARGET_NAMES}
-        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ WORLD_EXECUTE WORLD_WRITE WORLD_READ
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-INSTALL(FILES
-        ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RTSeisConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/rtseis/cmake)
+#CONFIGURE_PACKAGE_CONFIG_FILE(${CMAKE_MODULE_PATH}/FindRTSeis.cmake.in
+#                              ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
+#                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/rtseis/cmake
+#                              PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR)
+#WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RTSeisConfigVersion.cmake
+#                                 VERSION ${RTSEIS_VERSION}
+#                                 COMPATIBILITY SameMajorVersion)
+#INSTALL(TARGETS ${TARGET_NAMES}
+#        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ WORLD_EXECUTE WORLD_WRITE WORLD_READ
+#        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+#        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+#        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+#INSTALL(FILES
+#        ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
+#        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RTSeisConfigVersion.cmake
+#        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/rtseis/cmake)

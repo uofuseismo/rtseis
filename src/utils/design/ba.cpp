@@ -57,6 +57,7 @@ BA::BA(const std::vector<double> firTaps)
 BA& BA:: operator=(const BA &ba)
 {
     if (&ba == this){return *this;}
+    clear();
     b_ = ba.b_;
     a_ = ba.a_;
     tol_ = ba.tol_;

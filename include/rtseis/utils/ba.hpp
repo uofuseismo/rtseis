@@ -1,7 +1,7 @@
 #ifndef RTSEIS_UTILS_BA_HPP
 #define RTSEIS_UTILS_BA_HPP 1
 #include "rtseis/config.h"
-#include <complex>
+#include <stdio.h>
 #include <vector>
 
 class BA

@@ -56,6 +56,7 @@ ZPK::~ZPK(void)
 ZPK& ZPK::operator=(const ZPK &zpk)
 {
     if (&zpk == this){return *this;}
+    clear();
     z_ = zpk.z_;
     p_ = zpk.p_;
     k_ = zpk.k_;
@@ -293,6 +294,7 @@ void ZPK::setZeros(const std::vector<std::complex<double>> zeros)
 }
 /*!
  * @brief Gets the poles.
+ * @result A vector containing the poles.
  * @ingroup rtseis_utils_design_iir_zpk
  */
 std::vector<std::complex<double>> ZPK::getPoles(void) const
@@ -301,6 +303,7 @@ std::vector<std::complex<double>> ZPK::getPoles(void) const
 }
 /*!
  * @brief Gets the zeros.
+ * @result A vector containing the zeros.
  * @ingroup rtseis_utils_design_iir_zpk
  */
 std::vector<std::complex<double>> ZPK::getZeros(void) const
