@@ -80,6 +80,8 @@ int Downsample::initialize(const int downFactor,
     setPrecision(precision);
     toggleRealTime(lisRealTime);
     downFactor_ = downFactor;
+    phase0_ = 0;
+    phase_ = 0;
     linit_ = true; 
     return 0;
 }
@@ -203,15 +205,17 @@ int Downsample::apply(const int nx, const double x[], const int ny,
     }
     // Apply downsampler
     int phase = 0;
+    int pEst = pDstLen;
     if (isRealTime()){phase = phase_;}
-    IppStatus status = ippsSampleDown_64f(x, nx, y, &pDstLen,
+    IppStatus status = ippsSampleDown_64f(x, nx, y, &pEst,
                                           downFactor_, &phase);
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to downsample signal");
         return -1;
     }
-    *nyDown = std::min(nx, std::max(0, pDstLen));
+    if (pEst < 0 || pEst >= nx){pEst = pDstLen;} // Weird unhandled exception
+    *nyDown = pEst; //std::min(nx, std::max(0, pEst));
     if (isRealTime()){phase_ = phase;}
     return 0;
 }
@@ -281,16 +285,17 @@ int Downsample::apply(const int nx, const float x[], const int ny,
     }
     // Apply downsampler
     int phase = 0;
+    int pEst = pDstLen;
     if (isRealTime()){phase = phase_;}
-    IppStatus status = ippsSampleDown_32f(x, nx, y, &pDstLen,
+    IppStatus status = ippsSampleDown_32f(x, nx, y, &pEst,
                                           downFactor_, &phase);
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to downsample signal");
         return -1; 
     }
-    pDstLen = std::min(nx, std::max(0, pDstLen));
-    *nyDown = pDstLen;
+    if (pEst < 0 || pEst >= nx){pEst = pDstLen;} // Weird unhandled exception
+    *nyDown = pEst; //std::min(nx, std::max(0, pEst));
     if (isRealTime()){phase_ = phase;}
     return 0;
 }
@@ -303,7 +308,7 @@ int Downsample::apply(const int nx, const float x[], const int ny,
  */
 int Downsample::estimateSpace(const int n) const
 {
-    if (!linit_ || n < 0)
+    if (!linit_ || n <= 0)
     {
         if (!linit_){RTSEIS_ERRMSG("%s", "Class not initialized");}
         if (n < 0){RTSEIS_ERRMSG("n=%d cannot be negative", n);}

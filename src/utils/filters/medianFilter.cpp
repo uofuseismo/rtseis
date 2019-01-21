@@ -301,7 +301,7 @@ int MedianFilter::apply(const int n, const double x[], double y[])
     }
     IppStatus status;
     Ipp8u *pBuf = static_cast<Ipp8u *> (pBuf_);
-    Ipp64f *dlysrc = dlysrc = static_cast<Ipp64f *> (dlysrc_);
+    Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
     Ipp64f *dlydst = nullptr;
     if (isRealTime()){dlydst = static_cast<Ipp64f *> (dlydst_);}
     status = ippsFilterMedian_64f(x, y, n, maskSize_,
@@ -357,7 +357,7 @@ int MedianFilter::apply(const int n, const float x[], float y[])
     }
     IppStatus status;
     Ipp8u *pBuf = static_cast<Ipp8u *> (pBuf_);
-    Ipp32f *dlysrc = dlysrc = static_cast<Ipp32f *> (dlysrc_);
+    Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
     Ipp32f *dlydst = nullptr;
     if (isRealTime()){dlydst = static_cast<Ipp32f *> (dlydst_);}
     status = ippsFilterMedian_32f(x, y, n, maskSize_,

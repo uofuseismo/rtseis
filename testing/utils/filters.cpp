@@ -366,7 +366,7 @@ int filters_downsample_test(const int npts, const double x[])
     const enum rtseisPrecision_enum precision = RTSEIS_DOUBLE;
     // Call this in post-processing for a couple different decimation rates
     bool lrt = false;
-    srand(10245); 
+    srand(10245);
     Downsample downsample;
     double *y = static_cast<double *>
                 (calloc(static_cast<size_t> (npts), sizeof(double)));
@@ -439,7 +439,7 @@ int filters_downsample_test(const int npts, const double x[])
                 int nptsPass = std::min(packetSize[ip], npts - nxloc);
                 int nyDec = 0;
                 ierr = downsample.apply(nptsPass, &x[nxloc],
-                                        npts+1-nxloc, &nyDec, &y[nyloc]);
+                                        npts+1-nyloc, &nyDec, &y[nyloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("Failed to apply downsampler for iq=%d", iq);
@@ -453,14 +453,16 @@ int filters_downsample_test(const int npts, const double x[])
             downsample.resetInitialConditions();
             if (nyloc != nyref)
             {
-                RTSEIS_ERRMSG("%s", "Failed fixed packet size test");
+                RTSEIS_ERRMSG("Failed fixed packet size test %d %d",
+                              nyloc, nyref);
                 return EXIT_FAILURE;
             }
             for (int iy=0; iy<nyref; iy++)
             {
                 if (std::abs(y[iy] - yref[iy]) > 1.e-10)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed fixed packet size test");
+                    RTSEIS_ERRMSG("Failed fixed packet size test %lf %lf",
+                                  y[iy], yref[iy]);
                     return EXIT_FAILURE;
                 }
             }
@@ -481,7 +483,7 @@ int filters_downsample_test(const int npts, const double x[])
             int nptsPass = std::min(packetLen, npts - nxloc);
             int nyDec = 0;
             ierr = downsample.apply(nptsPass, &x[nxloc],
-                                    npts+1-nxloc, &nyDec, &y[nyloc]);
+                                    npts+1-nyloc, &nyDec, &y[nyloc]);
             if (ierr != 0)
             {
                 RTSEIS_ERRMSG("Failed to apply downsampler for iq=%d", iq);
@@ -493,7 +495,7 @@ int filters_downsample_test(const int npts, const double x[])
         }
         if (nyloc != nyref)
         {
-            RTSEIS_ERRMSG("%s", "Failed fixed packet size test");
+            RTSEIS_ERRMSG("Failed fixed packet size test %d %d", nyloc, nyref);
             return EXIT_FAILURE;
         }
         for (int iy=0; iy<nyref; iy++)

@@ -453,8 +453,8 @@ int SOSFilter::apply(const int n, const float x[], float y[])
     return 0;
 }
 /*!
- * @brief Returns the number of sections in the filter.
- * @result The number of cascaded second order sections.
+ * @brief Returns the length of the initial conditions.
+ * @result The length of the initial condtions array.
  * @ingroup rtseis_utils_filters_sos
  */
 int SOSFilter::getInitialConditionLength(void) const

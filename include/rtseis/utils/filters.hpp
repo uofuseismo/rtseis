@@ -218,7 +218,7 @@ namespace Filters
             bool linit_ = false;
     };
 
-    class FIRFilter
+    class FIRFilter : protected Precision, RealTime
     {
         enum class Implementation
         {
@@ -228,33 +228,28 @@ namespace Filters
         public:
             FIRFilter(void);
             ~FIRFilter(void);
+            FIRFilter(const FIRFilter &fir);
+            FIRFilter& operator=(const FIRFilter &fir);
             int initialize(const int nb, const double b[],
                            const bool lisRealTime = false,
                            const enum rtseisPrecision_enum precision = RTSEIS_DOUBLE,
                            Implementation implementation = Implementation::DIRECT);
+            int getInitialConditionLength(void) const;
+            int setInitialConditions(const int nz, const double zi[]);
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);
+            int resetInitialConditions(void);
             void clear(void);
-            bool isRealTime(void) const{return lrt_;}
-            bool isInitialized(void) const{return linit_;}
         private:
-            /*!< The filter state for double precision. */
-            void *pFIRspec64_ = nullptr;
-            /*!< The double precision taps. */
-            void *pTaps64_ = nullptr;
-            /*!< The input delay line. */
-            void *dlysrc64_ = nullptr;
-            /*!< The output delay line. */
-            void *dlydst64_ = nullptr;
-            /*!< The filter state for single precision. */
-            void *pFIRspec32_ = nullptr;
-            /*!< The double precision taps. */
-            void *pTaps32_ = nullptr;
-            /*!< The intpu delay line. */
-            void *dlysrc32_ = nullptr;
-            /*!< The output delay line. */
-            void *dlydst32_ = nullptr;
-            /*!< Workspace. */
+            /*!< The filter state. */
+            void *pFIRSpec_ = nullptr;
+            /*!< The filter taps.  This has dimension [tapsLen_]. */
+            void *pTaps_ = nullptr;
+            /*!< The input delay line.  This has dimension [nwork_]. */
+            void *dlysrc_ = nullptr;
+            /*!< The output delay line.  This has dimension [nwork_]. */
+            void *dlydst_ = nullptr;
+            /*!< Workspace.  This has dimension [bufferSize_]. */
             void *pBuf_ = nullptr;
             /*!< A copy of the input taps. */
             double *tapsRef_ = nullptr;
@@ -264,7 +259,7 @@ namespace Filters
             /*!< The number of taps. */
             int tapsLen_ = 0; 
             /*!< The length of the delay line which is max(128, order+1). */
-            int nbDly_ = 0;
+            int nwork_ = 0;
             /*!< Size of pBuf. */
             int bufferSize_ = 0;
             /*!< Size of state. */
@@ -273,10 +268,6 @@ namespace Filters
             int order_ = 0;
             /*!< Implementation. */
             Implementation implementation_ = Implementation::DIRECT; 
-            /*!< Precision of module. */
-            enum rtseisPrecision_enum precision_ = RTSEIS_DOUBLE;
-            /*!< Flag indicating the module is for real-time. */
-            bool lrt_ = false;
             /*!< Flag indicating the module is initialized. */
             bool linit_ = false;
     };
