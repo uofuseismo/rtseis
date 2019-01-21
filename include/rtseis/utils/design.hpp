@@ -3,6 +3,7 @@
 #include "rtseis/config.h"
 #include "rtseis/utils/zpk.hpp"
 #include "rtseis/utils/ba.hpp"
+#include "rtseis/utils/sos.hpp"
 #include <complex>
 #include <vector>
 
@@ -37,6 +38,18 @@ namespace IIR
         BANDPASS = 2, /*!< Bandpass filter. */
         BANDSTOP = 3  /*!< Bandstop filter. */
     };
+    enum class Pairing
+    {
+        /*!
+         * @brief Pairing strategy when converting a ZPK filter to an 
+         *        SOS filter.
+         * @ingroup rtseis_utils_design_iir
+         */ 
+        NEAREST = 0,  /*!< This attempts to minimize the peak gain. */
+        KEEP_ODD = 1  /*!< This attempts to minimize the peak gain
+                           subject to the constraint that odd-order
+                           systems should retain one section as first order. */
+    };
     /* Generalized analog protoytpe filter design. */
     int iirfilter(const int n, const double *W,
                   const double rp, const double rs,
@@ -51,6 +64,17 @@ namespace IIR
                   const Prototype ftype,
                   ZPK &zpk,
                   const bool lanalog = false);
+    /* Generalized analog prototype filter design. */
+    int iirfilter(const int n, const double *W,
+                   const double rp, const double rs,
+                   const Bandtype btype,
+                   const Prototype ftype,
+                   SOS &sos,
+                   const bool lanalog,
+                   const Pairing pairing = Pairing::NEAREST);
+    /* Convert a ZPK structure to second order sections. */
+    int zpk2sos(const ZPK zpk, SOS &sos,
+                const Pairing pairing = Pairing::NEAREST);
     /* Convert a ZPK structure to a transfer function. */
     int zpk2tf(const ZPK zpk, BA &ba);
     /* Convert lowpass prototype filter to a lowpass filter. */

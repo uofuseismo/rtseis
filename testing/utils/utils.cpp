@@ -43,6 +43,14 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed prototype-based digital filter design");
 
+    ierr = rtseis_test_utils_design_zpk2sos();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed sos filter design");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed sos filter design");
+
     ierr = rtseis_test_utils_design_fir_fir1();
     if (ierr != EXIT_SUCCESS)
     {

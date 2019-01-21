@@ -75,6 +75,17 @@ bool SOS::operator==(const SOS &sos) const
     return true;
 }
 /*!
+ * @brief Inequality operator.
+ * @param[in] sos  Class to compare to this class.
+ * @result True indicates that sos does not equal this class to within a
+ *         given tolerance.
+ * @ingroup rtseis_utils_design_iir_sos 
+ */
+bool SOS::operator!=(const SOS &sos) const
+{
+    return !(*this == sos);
+}
+/*!
  * @brief Copy constructor.
  * @param[in] sos  SOS filter from which to copy.
  * @ingroup rtseis_utils_design_iir_sos
@@ -115,13 +126,13 @@ void SOS::print(FILE *fout)
 {
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
-    fprintf(f, "Numerator sections");
+    fprintf(f, "Numerator sections\n");
     for (int i=0; i<ns_; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
                 bs_[3*i], bs_[3*i+1], bs_[3*i+2]);
     }
-    fprintf(f, "Denominator sections");
+    fprintf(f, "Denominator sections\n");
     for (int i=0; i<ns_; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",

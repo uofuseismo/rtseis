@@ -8,6 +8,78 @@
 
 using namespace RTSeis::Utils::FilterDesign;
 
+/*!< IIR SOS analog prototype design. */
+int rtseis_test_utils_design_zpk2sos(void)
+{
+    SOS sos;
+    int n = 4;
+    double Wn[1] = {0.1};
+    int ierr;
+    const std::vector<double> bsRef1({
+         4.16599204e-04,   8.33198409e-04,   4.16599204e-04,
+         1.00000000e+00,   2.00000000e+00,   1.00000000e+00});
+    const std::vector<double> asRef1({
+         1.,        -1.47967422,  0.55582154,
+         1.,        -1.70096433,  0.78849974});
+    SOS sosRef1(2, bsRef1, asRef1);
+    const std::vector<double> bsRefEll({
+         0.0014154,   0.00248707,  0.0014154,
+         1.,          0.72965193,  1.,
+         1.,          0.17594966,  1.});
+    const std::vector<double> asRefEll({
+         1.,        -1.32543251,  0.46989499,
+         1.,        -1.26117915,  0.6262586,
+         1.,        -1.25707217,  0.86199667});
+    SOS sosRefEll(3, bsRefEll, asRefEll);
+    ierr = IIR::iirfilter(n, Wn, 5, 60,  
+                          IIR::Bandtype::LOWPASS, IIR::Prototype::BUTTERWORTH,
+                          sos, false, IIR::Pairing::NEAREST);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to design filter");
+        return EXIT_FAILURE;
+    }
+    sos.setEqualityTolerance(1.e-5);
+    if (sos != sosRef1)
+    {
+        sos.print();
+        sosRef1.print();
+        RTSEIS_ERRMSG("%s", "Filters do not match");
+        return EXIT_FAILURE;
+    }
+    // 
+    std::vector<std::complex<double>> zell;
+    zell.push_back(std::complex<double> (-0.878578886634,  0.47759725707));
+    zell.push_back(std::complex<double> (-0.364825965978,  0.93107572976));
+    zell.push_back(std::complex<double> (-0.0879748281791, 0.996122698068));
+    zell.push_back(std::complex<double> (-0.878578886634, -0.47759725707));
+    zell.push_back(std::complex<double> (-0.364825965978, -0.93107572976));
+    zell.push_back(std::complex<double> (-0.0879748281791,-0.996122698068));
+    std::vector<std::complex<double>> pell;
+    pell.push_back(std::complex<double> (0.662716257451,-0.175220303539)); 
+    pell.push_back(std::complex<double> (0.630589576722,-0.478137415927));
+    pell.push_back(std::complex<double> (0.62853608609, -0.683329390963));
+    pell.push_back(std::complex<double> (0.662716257451,+0.175220303539));
+    pell.push_back(std::complex<double> (0.630589576722,+0.478137415927));
+    pell.push_back(std::complex<double> (0.62853608609, +0.683329390963));
+    double kell = 0.00141539634442;
+    ZPK zpk(zell, pell, kell);
+    ierr = IIR::zpk2sos(zpk, sos, IIR::Pairing::NEAREST);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to convert filter");
+        return EXIT_FAILURE;
+    }
+    sos.setEqualityTolerance(1.e-5);
+    if (sos != sosRefEll)
+    {
+        sos.print();
+        sosRefEll.print();
+        RTSEIS_ERRMSG("%s", "Filters do not match");
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
 /*! IIR analog prototype design. */
 int rtseis_test_utils_design_iir_ap(void)
 {
