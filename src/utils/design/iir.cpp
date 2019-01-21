@@ -1039,7 +1039,7 @@ static int getWorstPoleIndex(const std::vector<bool> pmask,
 {
     double difMin = DBL_MAX;
     int indx =-1;
-    for (int i=0; i<pmask.size(); i++)
+    for (size_t i=0; i<pmask.size(); i++)
     {
         if (!pmask[i])
         {

@@ -29,7 +29,7 @@ RTSeis's focus is basic filtering of seismic data.  It is most analogous to SciP
 
 ### ObsPy
 
-ObsPy is a feature-rich platform for seismic processing with an easy-to-use Python interface.  As ObsPy uses SciPy to implement many of its signals processing routines it is, at the time of writing, limited in its real-time applications.  Additionally, RTSeis's Apache 2 license does not involve a copyleft clause which may be advantageous for those looking to create closed-source solutions.
+ObsPy is a feature-rich platform for seismic processing with an easy-to-use Python interface.  As ObsPy uses SciPy to implement many of its signals processing routines it is, at the time of writing, limited in its real-time applications.  Additionally, RTSeis's license does not involve a copyleft clause which may be advantageous for those looking to create closed-source solutions.
 
 ### Matlab
 
