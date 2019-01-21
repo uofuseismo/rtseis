@@ -220,11 +220,12 @@ namespace Filters
 
     class FIRFilter : protected Precision, RealTime
     {
-        enum class Implementation
-        {
-            DIRECT = 0, /*!< Direct-form implementation. */
-            FFT = 1     /*!< FFT overlap and add implementation. */ 
-        };
+        public:
+            enum class Implementation
+            {
+                DIRECT = 0, /*!< Direct-form implementation. */
+                FFT = 1     /*!< FFT overlap and add implementation. */ 
+            };
         public:
             FIRFilter(void);
             ~FIRFilter(void);

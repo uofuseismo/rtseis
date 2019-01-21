@@ -12,6 +12,8 @@ using namespace RTSeis::Utils::Filters;
 static int readTextFile(int *npts, double *xPtr[],
                         const std::string fileName = "utils/data/gse2.txt");
 static int filters_downsample_test(const int npts, const double x[]);
+static int filters_firFilter_test(const int npts, const double x[],
+                           const std::string fileName);
 static int filters_medianFilter_test(const int npts, const double x[],
                                      const std::string fileName);
 static int filters_sosFilter_test(const int npts, const double x[],
@@ -53,8 +55,153 @@ int rtseis_test_utils_filters(void)
         RTSEIS_ERRMSG("%s", "Failed sos filter test");
         return EXIT_FAILURE;
     }
+    // Apply the FIR filter
+    ierr = filters_firFilter_test(npts, x, dataDir + "firReference.txt");
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed fir filter test");
+        return EXIT_FAILURE;
+    }
 
     if (x != nullptr){free(x);}
+    return EXIT_SUCCESS;
+}
+//============================================================================//
+int filters_firFilter_test(const int npts, const double x[],
+                           const std::string fileName)
+{
+    fprintf(stdout, "Testing FIR filter...\n");
+    const int nb = 51;
+    //const int na = 1;
+    const double b[51] = {-0.000000000000000, -0.001056235801065,
+                          -0.000769341020163,  0.000956323223723,
+                           0.001976082742122, -0.000000000000000,
+                          -0.003265384800345, -0.002568519852901,
+                           0.003234633130890,  0.006519908075213,
+                          -0.000000000000000, -0.009825739114867,
+                          -0.007365685405410,  0.008881348924986,
+                           0.017256056989442, -0.000000000000000,
+                          -0.024784271698734, -0.018417666768131,
+                           0.022299534288278,  0.044222443880910,
+                          -0.000000000000000, -0.071469809226860,
+                          -0.060430328816090,  0.092317626953209,
+                           0.302027315266443,  0.400523418058701,
+                           0.302027315266443,  0.092317626953209,
+                          -0.060430328816090, -0.071469809226860,
+                          -0.000000000000000,  0.044222443880910,
+                           0.022299534288278, -0.018417666768131,
+                          -0.024784271698734, -0.000000000000000,
+                           0.017256056989442,  0.008881348924986,
+                          -0.007365685405410, -0.009825739114867,
+                          -0.000000000000000,  0.006519908075213,
+                           0.003234633130890, -0.002568519852901,
+                          -0.003265384800345, -0.000000000000000,
+                           0.001976082742122,  0.000956323223723,
+                          -0.000769341020163, -0.001056235801065,
+                          -0.000000000000000};
+    // Load a reference solution
+    double *yref = nullptr;
+    int npref = 0;
+    int ierr = readTextFile(&npref, &yref, fileName);
+    if (ierr != 0 || npts != npref)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to load reference data");
+        return EXIT_FAILURE;
+    }
+    // Make a post-processing solution
+    bool lrt = false;
+    FIRFilter fir;
+    ierr = fir.initialize(nb, b, lrt, RTSEIS_DOUBLE,
+                          FIRFilter::Implementation::DIRECT);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize FIR filter");
+        return EXIT_FAILURE;
+    }
+    double *y = new double[npts];
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    ierr = fir.apply(npts, x, y);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to apply FIR filter");
+        return EXIT_FAILURE;
+    }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    for (int i=0; i<npts; i++)
+    {
+        if (std::abs(y[i] - yref[i]) > 1.e-10)
+        {
+            RTSEIS_ERRMSG("Failed to apply reference FIR filter %lf %lf",
+                          yref[i], y[i]);
+            return EXIT_FAILURE;
+        }
+    }
+    std::copy(y, y+static_cast<size_t> (npts), yref);
+    std::chrono::duration<double> tdif = timeEnd - timeStart;
+    fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
+            tdif.count());
+    fir.clear();
+    // Do packetized tests
+    lrt = true;
+    ierr = fir.initialize(nb, b, lrt, RTSEIS_DOUBLE,
+                          FIRFilter::Implementation::DIRECT);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+        return EXIT_FAILURE;
+    }
+    std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
+                                 1000, 1024, 1200, 2048, 4000, 4096, 5000});
+    for (int job=0; job<2; job++)
+    {
+        for (size_t ip=0; ip<packetSize.size(); ip++)
+        {
+            timeStart = std::chrono::high_resolution_clock::now();
+            int nxloc = 0;
+            int nptsPass = 0;
+            while (nxloc < npts)
+            {
+                nptsPass = packetSize[ip];
+                if (job == 1)
+                {
+                     nptsPass = std::max(1, nptsPass + rand()%50 - 25);
+                }
+                nptsPass = std::min(nptsPass, npts - nxloc);
+                ierr = fir.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply fir filter");
+                    return EXIT_FAILURE;
+                }
+                nxloc = nxloc + nptsPass;
+            }
+            fir.resetInitialConditions();
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            for (int i=0; i<npts; i++)
+            {
+                if (std::abs(yref[i] - y[i]) > 1.e-8)
+                {
+                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
+                                  i, y[i], yref[i]);
+                    return EXIT_FAILURE;
+                }
+            }
+            if (job == 0)
+            {
+                fprintf(stdout,
+                        "Passed FIR filter fixed packet size %4d in %.8e (s)\n",
+                        packetSize[ip], tdif.count());
+            }
+            else
+            {
+                fprintf(stdout,
+                        "Passed SOS filter random in %.8e (s)\n", tdif.count());
+            }
+        }
+     }
+    delete[] y;
+    free(yref);
     return EXIT_SUCCESS;
 }
 //============================================================================//
@@ -101,13 +248,13 @@ int filters_sosFilter_test(const int npts, const double x[],
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize sos");
-        return -1;
+        return EXIT_FAILURE;
     }
     ierr = sos.apply(40, impulse, y40);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1;
+        return EXIT_FAILURE;
     }
     for (int i=0; i<40; i++)
     {
@@ -150,7 +297,7 @@ int filters_sosFilter_test(const int npts, const double x[],
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute post-processing soln");
-        return -1;
+        return EXIT_FAILURE;
     }
     auto timeEnd = std::chrono::high_resolution_clock::now();
     for (int i=0; i<npts; i++)

@@ -214,15 +214,18 @@ int FIRFilter::initialize(const int nb, const double b[],
 void FIRFilter::clear(void)
 {
     if (pFIRSpec_ != nullptr){ippsFree(pFIRSpec_);}
+    if (pTaps_ != nullptr){ippsFree(pTaps_);}
     if (dlysrc_ != nullptr){ippsFree(dlysrc_);}
     if (dlydst_ != nullptr){ippsFree(dlydst_);}
     if (pBuf_ != nullptr){ippsFree(pBuf_);}
-    if (pTaps_ != nullptr){ippsFree(pTaps_);}
+    if (tapsRef_ != nullptr){ippsFree(tapsRef_);}
     if (zi_ != nullptr){ippsFree(zi_);}
     pFIRSpec_ = nullptr;
     pTaps_ = nullptr;
     dlysrc_ = nullptr;
     dlydst_ = nullptr;
+    pBuf_ = nullptr;
+    tapsRef_ = nullptr;
     zi_ = nullptr;
     setPrecision(RTSEIS_DOUBLE);
     toggleRealTime(false);
