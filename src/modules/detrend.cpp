@@ -13,11 +13,13 @@ using namespace RTSeis::Modules;
  * @defgroup rtseis_modules_detrend Detrend
  * @brief Removes the trend from the data.
  * @ingroup rtseis_modules
+ * @copyright Ben Baker distributed under the MIT license.
  */
 /*!
  * @defgroup rtseis_modules_detrend_parameters Parameters
  * @brief Defines the parameters for the detrend module.
  * @ingroup rtseis_modules_detrend
+ * @copyright Ben Baker distributed under the MIT license.
  */
 
 /*!

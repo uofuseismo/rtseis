@@ -12,11 +12,13 @@ using namespace RTSeis::Modules;
  * @defgroup rtseis_modules_demean Demean
  * @brief Removes the mean from the data.
  * @ingroup rtseis_modules
+ * @copyright Ben Baker distributed under the MIT license.
  */
 /*!
  * @defgroup rtseis_modules_demean_parameters Parameters
  * @brief Defines the parameters for the demean module.
  * @ingroup rtseis_modules_demean
+ * @copyright Ben Baker distributed under the MIT license.
  */
 
 /*!

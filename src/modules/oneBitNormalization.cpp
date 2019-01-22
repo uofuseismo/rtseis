@@ -10,7 +10,7 @@ using namespace RTSeis::Modules;
 
 /*!
  * @defgroup rtseis_modules_onebit One-Bit Normalization
- * @brief Computes the copysign of the data:
+ * @brief Computes the one-bit normalization of the data using the copysign
  *        \f$ 
  *          \mathop{copysign}(x)
  *        = \begin{cases}
@@ -19,11 +19,13 @@ using namespace RTSeis::Modules;
  *          \end{cases}
  *        \f$.
  * @ingroup rtseis_modules
+ * @copyright Ben Baker distributed under the MIT license.
  */
 /*!
  * @defgroup rtseis_modules_onebit_parameters Parameters
  * @brief Defines the parameters for the one-bit normalization module.
  * @ingroup rtseis_modules_onebit
+ * @copyright Ben Baker distributed under the MIT license.
  */
 
 /*!
