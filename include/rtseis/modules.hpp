@@ -3,4 +3,5 @@
 #include "rtseis/config.h"
 #include "rtseis/modules/demean.hpp"
 #include "rtseis/modules/detrend.hpp"
+#include "rtseis/modules/oneBitNormalization.hpp"
 #endif

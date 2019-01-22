@@ -234,9 +234,10 @@ int Detrend::detrend(const int nx, const double x[], double y[])
 {
     b0_ = 0;
     b1_ = 0;
-    if (nx < 1 || x == nullptr || y == nullptr)
+    if (nx <= 0){return 0;} // Nothing to do
+    if (nx < 2 || x == nullptr || y == nullptr)
     {
-        if (nx < 1){RTSEIS_ERRMSG("%s", "No points");}
+        if (nx < 2){RTSEIS_ERRMSG("%s", "At least 2 points required");}
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }
@@ -266,9 +267,10 @@ int Detrend::detrend(const int nx, const float x[], float y[])
 {
     b0_ = 0;
     b1_ = 0;
-    if (nx < 1 || x == nullptr || y == nullptr)
+    if (nx <= 0){return 0;} // Nothing to do
+    if (nx < 2 || x == nullptr || y == nullptr)
     {
-        if (nx < 1){RTSEIS_ERRMSG("%s", "No points");}
+        if (nx < 2){RTSEIS_ERRMSG("%s", "At least 2 points required");}
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }

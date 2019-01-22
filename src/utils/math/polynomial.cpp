@@ -406,8 +406,8 @@ int Polynomial::roots(const std::vector<double> coeffs,
             a[indx] = 1.0;
         }
     }
-    double *wr = new double[static_cast<size_t> (n)];
-    double *wi = new double[static_cast<size_t> (n)];
+    double *wr = new double[static_cast<size_t> (std::max(32, n))];
+    double *wi = new double[static_cast<size_t> (std::max(32, n))];
     double vl[1] = {0};
     double vr[1] = {0}; 
     const int ldvl = 1;

@@ -132,6 +132,7 @@ Demean& Demean::operator=(const Demean &demean)
 {
     if (&demean == this){return *this;}
     clear();
+    parms_ = demean.parms_;
     mean_ = demean.mean_;
     linit_ = demean.linit_;
     return *this;
@@ -147,11 +148,12 @@ Demean::~Demean(void)
 }
 /*!
  * @brief Clears the memory and restores the defaults.
+ * @ingroup rtseis_modules_demean
  */
 void Demean::clear(void)
 {
     mean_ = 0;
-    linit_ = true; // MOdule is always ready to roll
+    linit_ = true; // Module is always ready to roll
     parms_.clear();
     return;
 }
@@ -184,9 +186,9 @@ int Demean::setParameters(const DemeanParameters &parameters)
 int Demean::demean(const int nx, const double x[], double y[])
 {
     mean_ = 0;
-    if (nx < 1 || x == nullptr || y == nullptr)
+    if (nx <= 0){return 0;}
+    if (x == nullptr || y == nullptr)
     {
-        if (nx < 1){RTSEIS_ERRMSG("%s", "No points");}
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }
@@ -221,9 +223,9 @@ int Demean::demean(const int nx, const double x[], double y[])
 int Demean::demean(const int nx, const float x[], float y[])
 {
     mean_ = 0; 
-    if (nx < 1 || x == nullptr || y == nullptr)
+    if (nx <= 0){return 0;} // Nothing to do
+    if (x == nullptr || y == nullptr)
     {
-        if (nx < 1){RTSEIS_ERRMSG("%s", "No points");}
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
     }
