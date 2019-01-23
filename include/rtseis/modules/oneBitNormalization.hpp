@@ -13,22 +13,26 @@ class OneBitNormalizationParameters
     public:
         OneBitNormalizationParameters(
             const bool lrt = false,
-            const enum rtseisPrecision_enum precision = RTSEIS_DOUBLE);
+            const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         OneBitNormalizationParameters& operator=(const OneBitNormalizationParameters &parameters);
         OneBitNormalizationParameters(const OneBitNormalizationParameters &parameters);
         ~OneBitNormalizationParameters(void);
-        void clear(void);
-        enum rtseisPrecision_enum getPrecision(void) const;
-        bool getIsRealTime(void) const;
-        bool isInitialized(void) const;
-    private:
-        const enum rtseisPrecision_enum defaultPrecision_ = RTSEIS_DOUBLE;
-        enum rtseisPrecision_enum precision_ = defaultPrecision_;
-        bool lrt_ = false;
-        bool linit_ = true; // This module is always ready to roll
+        virtual void clear(void);
+        virtual bool isInitialized(void) const{return isInitialized_;}
+        bool isRealTime(void) const{return isRealTime_;} 
+        RTSeis::Precision getPrecision(void) const{return precision_;}
+     private:
+        /*!< Default precision. */
+        const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
+        /*!< The precision of the module. */
+        RTSeis::Precision precision_ = defaultPrecision_; 
+        /*!< Flag indicating this module is for real-time. */
+        bool isRealTime_ = false;
+        /*!< Flag indicating the module is initialized. */
+        bool isInitialized_ = false;
 };
 
-class OneBitNormalization
+class OneBitNormalization : OneBitNormalizationParameters
 {
     public:
         OneBitNormalization(void);
@@ -36,15 +40,17 @@ class OneBitNormalization
         OneBitNormalization(const OneBitNormalizationParameters &parameters);
         OneBitNormalization& operator=(const OneBitNormalization &onebit);
         ~OneBitNormalization(void);
-        int setParameters(const OneBitNormalization &parameters);
+        int setInitialConditions(void);
         int apply(const int nx, const double x[], double y[]);
         int apply(const int nx, const float  x[], float  y[]);
-        void clear(void);
+        int resetInitialConditions(void);
+        void clear(void) override;
+        bool isInitialized(void) const override;
     private:
         /*!< The parameters. */ 
         OneBitNormalizationParameters parms_;
-        /*!< Flag indicating this is initialized. */
-        bool linit_ = false;
+        /*!< Flag indicating the module is intialized. */
+        bool isInitialized_ = false;
 };
 
 

@@ -25,4 +25,43 @@ enum rtseisVerbosityLevel_enum
     RTSEIS_SHOW_ALL = 4
 };
 
+#ifdef __cplusplus
+namespace RTSeis
+{
+    enum Precision
+    {
+        FLOAT = 1,
+        DOUBLE = 2
+    };
+//            /*!< Float precision. */
+//            static constexpr enum rtseisPrecision_enum FLOAT   = RTSEIS_FLOAT;
+//            /*!< Double precision. */
+//            static constexpr enum rtseisPrecision_enum DOUBLE  = RTSEIS_DOUBLE;
+//    };
+    class Verbosity
+    {
+        public:
+            /*!< Don't write anything. */
+            static constexpr enum rtseisVerbosityLevel_enum NONE     = RTSEIS_SHOW_NONE;
+            /*!< Display errors only. */
+            static constexpr enum rtseisVerbosityLevel_enum ERRORS   = RTSEIS_SHOW_ERRORS;
+            /*!< Display errors and warnings only. */
+            static constexpr enum rtseisVerbosityLevel_enum WARNINGS = RTSEIS_SHOW_ERRORS_AND_WARNINGS;
+            /*!< Display errors, warnings, and info messages. */
+            static constexpr enum rtseisVerbosityLevel_enum INFO     = RTSEIS_SHOW_ERRORS_WARNINGS_AND_INFO;
+            /*!< Display errors, warnings, info, and debug messages. */
+            static constexpr enum rtseisVerbosityLevel_enum DEBUG    = RTSEIS_SHOW_ALL;
+            /*!< Default constructor. */
+            Verbosity(const enum rtseisVerbosityLevel_enum verbosity) :
+                verbosity_(verbosity){};
+            /*!< Sets the verbosity level. */
+            void setVerbosity(const enum rtseisVerbosityLevel_enum verbosity){verbosity_ = verbosity;}
+            /*!< Gets the verbosity level. */
+            enum rtseisVerbosityLevel_enum getVerbosity(void) const{return verbosity_;}
+        private:
+            enum rtseisVerbosityLevel_enum verbosity_ = ERRORS;
+    };
+};
+#endif
+
 #endif

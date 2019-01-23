@@ -11,6 +11,10 @@ int main()
     int ierr;
 
     rtseis_utils_verbosity_setLoggingLevel(RTSEIS_SHOW_ALL);
+    ierr = rtseis_test_modules_oneBitNormalization();
+ 
+    RTSEIS_INFOMSG("%s", "Passed one-bit normalization test");
+
     ierr = rtseis_test_modules_detrend();
     if (ierr != EXIT_SUCCESS)
     {

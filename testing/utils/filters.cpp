@@ -196,7 +196,7 @@ int filters_firFilter_test(const int npts, const double x[],
             else
             {
                 fprintf(stdout,
-                        "Passed SOS filter random in %.8e (s)\n", tdif.count());
+                        "Passed FIR filter random in %.8e (s)\n", tdif.count());
             }
         }
      }

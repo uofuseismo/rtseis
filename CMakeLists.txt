@@ -127,7 +127,8 @@ ADD_EXECUTABLE(testUtils
                testing/utils/filters.cpp)
 ADD_EXECUTABLE(testModules
                testing/modules/modules.cpp
-               testing/modules/detrend.cpp)
+               testing/modules/detrend.cpp
+               testing/modules/oneBitNormalization.cpp)
 
 TARGET_LINK_LIBRARIES(testUtils   rtseis_shared ${LIBALL})
 TARGET_LINK_LIBRARIES(testModules rtseis_shared ${LIBALL})

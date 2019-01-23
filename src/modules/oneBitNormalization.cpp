@@ -36,10 +36,10 @@ using namespace RTSeis::Modules;
  */
 OneBitNormalizationParameters::OneBitNormalizationParameters(
     const bool lrt,
-    const enum rtseisPrecision_enum precision) :
-    precision_(precision),
-    lrt_(lrt),
-    linit_(true)
+    const RTSeis::Precision prec) :
+    precision_(prec),
+    isRealTime_(lrt),
+    isInitialized_(true)
 {
     return;
 }
@@ -66,8 +66,8 @@ OneBitNormalizationParameters::operator=(
 {
     if (&parameters == this){return *this;}
     precision_ = parameters.precision_;
-    lrt_ = parameters.lrt_;
-    linit_ = parameters.linit_;
+    isRealTime_ = parameters.isRealTime_;
+    isInitialized_ = parameters.isInitialized_;
     return *this;
 }
 /*!
@@ -86,43 +86,19 @@ OneBitNormalizationParameters::~OneBitNormalizationParameters(void)
 void OneBitNormalizationParameters::clear(void)
 {
     precision_ = defaultPrecision_;
-    lrt_ = false;
-    linit_ = true; // One-bit normalization is always ready to roll
+    isRealTime_ = false;
+    isInitialized_ = false;
     return;
 }
-/*!
- * @brief Gets the precision of the module.
- * @result The precision of the module.
- * @ingroup rtseis_modules_onebit_parameters
- */
-enum rtseisPrecision_enum
-    OneBitNormalizationParameters::getPrecision(void) const
-{
-    return precision_;
-}
-/*!
- * @brief Returns whether or not the module is for real-time application.
- * @retval A flag indicating whether or not this is for real-time use.
- * @ingroup rtseis_modules_onebit_parameters
- */
-bool OneBitNormalizationParameters::getIsRealTime(void) const
-{
-    return lrt_;
-}
-/*!
- * @brief Returns whether or not the parameters class is ready to be
- *        passed onto the OneBitNormalization class for use.
- * @retval True indicates this is a correctly initialized parameter class.
- */
-bool OneBitNormalizationParameters::isInitialized(void) const
-{
-    return linit_;
-}
+//============================================================================//
+//                                   End Parameters                           //
+//============================================================================//
 /*!
  * @brief Default constructor.
  * @ingroup rtseis_modules_onebit
  */
-OneBitNormalization::OneBitNormalization(void)
+OneBitNormalization::OneBitNormalization(void) :
+    isInitialized_(false)
 {
     clear();
     return;
@@ -138,6 +114,25 @@ OneBitNormalization::OneBitNormalization(const OneBitNormalization &onebit)
     return;
 }
 /*!
+ * @brief Initializes from the onebit normalization parameters.
+ * @param[in] parameters  One-bit normalization parameters from which
+ *                        to initialized.
+ * @ingroup rtseis_modules_onebit
+ */
+OneBitNormalization::OneBitNormalization(
+     const OneBitNormalizationParameters &parameters)
+{
+    clear();
+    if (!parameters.isInitialized())
+    {
+        RTSEIS_ERRMSG("%s", "Parameters are not yet set");
+        return;
+    }
+    parms_ = parameters;
+    isInitialized_ = true;
+    return;
+}
+/*!
  * @brief Copy assignment operator.
  * @param[in] onebit   One-bit normalization class to copy.
  * @result A deep copy of the one-bit normalization class.
@@ -148,8 +143,27 @@ OneBitNormalization::operator=(const OneBitNormalization &onebit)
 {
     if (&onebit == this){return *this;}
     clear();
-    linit_ = onebit.linit_;
+    parms_ = onebit.parms_;
+    isInitialized_ = onebit.isInitialized_;
     return *this;
+}
+/*!
+ * @brief Resets the initial conditions.  Note, this filter does not require
+ *        initial conditions so this will not actually do anything.
+ * @ingroup rtseis_modules_onebit
+ */
+int OneBitNormalization::setInitialConditions(void)
+{
+    return 0;
+}
+/*!
+ * @brief Resets the filter to the initial conditions.  Note, this filter does
+ *        not use initial conditions so this function will not do anything.
+ * @ingroup rtseis_modules_onebit
+ */
+int OneBitNormalization::resetInitialConditions(void)
+{
+    return 0;
 }
 /*!
  * @brief Default destructor.
@@ -166,8 +180,8 @@ OneBitNormalization::~OneBitNormalization(void)
  */
 void OneBitNormalization::clear(void)
 {
-    linit_ = false;
     parms_.clear();
+    isInitialized_ = false;
     return;
 }
 /*!
@@ -181,6 +195,11 @@ void OneBitNormalization::clear(void)
 int OneBitNormalization::apply(const int nx, const double x[], double y[])
 {
     if (nx <= 0){return 0;} // Nothing to do
+    if (!isInitialized())
+    {
+        RTSEIS_ERRMSG("%s", "Class is not initialied");
+        return -1;
+    }
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
@@ -205,6 +224,11 @@ int OneBitNormalization::apply(const int nx, const double x[], double y[])
 int OneBitNormalization::apply(const int nx, const float x[], float y[])
 {
     if (nx <= 0){return 0;} // Nothing to do
+    if (!isInitialized())
+    {
+        RTSEIS_ERRMSG("%s", "Class is not initialied");
+        return -1;
+    }
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
@@ -217,4 +241,12 @@ int OneBitNormalization::apply(const int nx, const float x[], float y[])
         y[i] = std::copysign(1.0f, x[i]);
     }
     return 0;
+}
+/*!
+ * @brief Returns a flag indicating that this class is initialized.
+ * @ingroup rtseis_modules_onebit
+ */
+bool OneBitNormalization::isInitialized(void) const
+{
+    return isInitialized_;
 }
