@@ -108,7 +108,7 @@ FIRFilter& FIRFilter::operator=(const FIRFilter &fir)
  */
 int FIRFilter::initialize(const int nb, const double b[],
                               const bool lisRealTime,
-                              const enum rtseisPrecision_enum precision,
+                              const RTSeis::Precision precision,
                               Implementation implementation)
 {
     clear();
@@ -131,7 +131,7 @@ int FIRFilter::initialize(const int nb, const double b[],
     IppAlgType algType = ippAlgDirect;
     if (implementation == Implementation::FFT){algType = ippAlgFFT;}
     // Initialize FIR filter
-    if (precision == RTSEIS_DOUBLE)
+    if (precision == RTSeis::Precision::DOUBLE)
     {
         Ipp64f *dlysrc = ippsMalloc_64f(nwork_);
         Ipp64f *dlydst = ippsMalloc_64f(nwork_);
@@ -163,7 +163,7 @@ int FIRFilter::initialize(const int nb, const double b[],
         pFIRSpec_ = pFIRSpec;
         pBuf_ = pBuf;
     }
-    else if (precision == RTSEIS_FLOAT)
+    else if (precision == RTSeis::Precision::FLOAT)
     {
         Ipp32f *dlysrc = ippsMalloc_32f(nwork_);
         Ipp32f *dlydst = ippsMalloc_32f(nwork_);
@@ -227,7 +227,7 @@ void FIRFilter::clear(void)
     pBuf_ = nullptr;
     tapsRef_ = nullptr;
     zi_ = nullptr;
-    setPrecision(RTSEIS_DOUBLE);
+    setPrecision(RTSeis::Precision::DOUBLE);
     toggleRealTime(false);
     tapsLen_ = 0;
     nwork_ = 0;

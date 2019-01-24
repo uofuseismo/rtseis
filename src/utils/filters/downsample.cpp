@@ -69,7 +69,7 @@ Downsample& Downsample::operator=(const Downsample &downsample)
  */
 int Downsample::initialize(const int downFactor,
                                const bool lisRealTime,
-                               const enum rtseisPrecision_enum precision)
+                               const RTSeis::Precision precision)
 {
     clear();
     if (downFactor < 1)
@@ -91,7 +91,7 @@ int Downsample::initialize(const int downFactor,
  */
 void Downsample::clear(void)
 {
-    setPrecision(RTSEIS_DOUBLE);
+    setPrecision(RTSeis::Precision::DOUBLE);
     toggleRealTime(false);
     phase0_ = 0;
     downFactor_ = 0;

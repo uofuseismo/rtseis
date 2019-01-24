@@ -84,6 +84,7 @@ SET(UTILS_SRCS
     src/utils/design/analogProtype.cpp
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
+    src/utils//filters/iiriirFilter.cpp
     src/utils/filters/medianFilter.cpp
     src/utils/filters/sos.cpp
     src/utils/math/convolve.cpp
@@ -105,13 +106,13 @@ SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
 
 ADD_LIBRARY(rtseis_shared SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
-IF (RTSEIS_WRAP_PYTHON)
-   ADD_LIBRARY(pyrtseis MODULE python/pyrtseis.cpp)
-   TARGET_LINK_LIBRARIES(pyrtseis PRIVATE pybind11::module)
-   #PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
-   #TARGET_LINK_LIBRARIES(rtseis_python
-   #                      rtseis_shared ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
-ENDIF()
+#IF (RTSEIS_WRAP_PYTHON)
+#   ADD_LIBRARY(pyrtseis MODULE python/pyrtseis.cpp)
+#   TARGET_LINK_LIBRARIES(pyrtseis PRIVATE pybind11::module)
+#   #PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
+#   #TARGET_LINK_LIBRARIES(rtseis_python
+#   #                      rtseis_shared ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+#ENDIF()
 
 #########################################################################################
 #                                        Unit Tests                                     #

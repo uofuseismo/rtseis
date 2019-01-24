@@ -111,7 +111,7 @@ int filters_firFilter_test(const int npts, const double x[],
     // Make a post-processing solution
     bool lrt = false;
     FIRFilter fir;
-    ierr = fir.initialize(nb, b, lrt, RTSEIS_DOUBLE,
+    ierr = fir.initialize(nb, b, lrt, RTSeis::Precision::DOUBLE,
                           FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {
@@ -143,7 +143,7 @@ int filters_firFilter_test(const int npts, const double x[],
     fir.clear();
     // Do packetized tests
     lrt = true;
-    ierr = fir.initialize(nb, b, lrt, RTSEIS_DOUBLE,
+    ierr = fir.initialize(nb, b, lrt, RTSeis::Precision::DOUBLE,
                           FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {
@@ -244,7 +244,7 @@ int filters_sosFilter_test(const int npts, const double x[],
     impulse[0] = 1;
     SOSFilter sos;
     bool lrt = false;
-    int ierr = sos.initialize(ns, bs7, as7, lrt, RTSEIS_DOUBLE);
+    int ierr = sos.initialize(ns, bs7, as7, lrt, RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize sos");
@@ -285,7 +285,7 @@ int filters_sosFilter_test(const int npts, const double x[],
                            1.000000000000000, -1.994269533089365,  0.994278822534674,
                            1.000000000000000, -1.997472946622339,  0.997483252685326};
     lrt = false;
-    ierr = sos.initialize(ns, bs, as, lrt, RTSEIS_DOUBLE);
+    ierr = sos.initialize(ns, bs, as, lrt, RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
@@ -315,7 +315,7 @@ int filters_sosFilter_test(const int npts, const double x[],
             tdif.count());
     // Do packetized tests 
     lrt = true;
-    ierr = sos.initialize(ns, bs, as, lrt, RTSEIS_DOUBLE);
+    ierr = sos.initialize(ns, bs, as, lrt, RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
@@ -388,7 +388,7 @@ int filters_medianFilter_test(const int npts, const double x[],
     int ierr;
     MedianFilter median;
     bool lrt = false;
-    ierr = median.initialize(3, lrt, RTSEIS_DOUBLE);
+    ierr = median.initialize(3, lrt, RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
@@ -408,7 +408,7 @@ int filters_medianFilter_test(const int npts, const double x[],
             return EXIT_FAILURE;
         }
     }
-    ierr = median.initialize(5, lrt, RTSEIS_DOUBLE);
+    ierr = median.initialize(5, lrt, RTSeis::Precision::DOUBLE);
     ierr = median.apply(8, xin, y8);
     for (int i=2; i<8-2; i++)
     {
@@ -427,7 +427,7 @@ int filters_medianFilter_test(const int npts, const double x[],
         RTSEIS_ERRMSG("%s", "Failed to load reference data");
         return EXIT_FAILURE;
     }
-    median.initialize(11, lrt, RTSEIS_DOUBLE);
+    median.initialize(11, lrt, RTSeis::Precision::DOUBLE);
     auto timeStart = std::chrono::high_resolution_clock::now();
     double *y = new double[npts];
     ierr = median.apply(npts, x, y);
@@ -451,7 +451,7 @@ int filters_medianFilter_test(const int npts, const double x[],
             tdif.count());
     // Now do the packetized tests
     lrt = true;
-    median.initialize(11, lrt, RTSEIS_DOUBLE);
+    median.initialize(11, lrt, RTSeis::Precision::DOUBLE);
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (int job=0; job<2; job++)
@@ -510,7 +510,7 @@ int filters_medianFilter_test(const int npts, const double x[],
 int filters_downsample_test(const int npts, const double x[])
 {
     const int nq = 7;
-    const enum rtseisPrecision_enum precision = RTSEIS_DOUBLE;
+    RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     // Call this in post-processing for a couple different decimation rates
     bool lrt = false;
     srand(10245);

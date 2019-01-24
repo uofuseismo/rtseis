@@ -53,7 +53,7 @@ void SOSFilter::clear(void)
     bsRef_ = nullptr;
     asRef_ = nullptr;
     zi_ = nullptr;
-    setPrecision(RTSEIS_DOUBLE);
+    setPrecision(RTSeis::Precision::DOUBLE);
     toggleRealTime(false);
     nsections_ = 0;
     tapsLen_ = 0;
@@ -140,7 +140,7 @@ int SOSFilter::initialize(const int ns,
                           const double bs[],
                           const double as[],
                           const bool lisRealTime,
-                          const enum rtseisPrecision_enum precision)
+                          const RTSeis::Precision precision)
 {
     clear();
     // Checks
@@ -176,12 +176,13 @@ int SOSFilter::initialize(const int ns,
     zi_ = ippsMalloc_64f(2*nsections_);
     ippsZero_64f(zi_, 2*nsections_);
     IppStatus status;
-    if (precision == RTSEIS_DOUBLE)
+    if (precision == RTSeis::Precision::DOUBLE)
     {
         status = ippsIIRGetStateSize_BiQuad_64f(nsections_, &bufferSize_);
         if (status != ippStsNoErr)
         {
             RTSEIS_ERRMSG("%s", "Failed to get state size");
+            clear();
             return -1;
         }
         IppsIIRState_64f *pState = nullptr; 
@@ -205,6 +206,7 @@ int SOSFilter::initialize(const int ns,
         if (status != ippStsNoErr)
         {
             RTSEIS_ERRMSG("%s", "Failed to initialized biquad filter");
+            clear();
             return -1;
         }
         pState_ = pState;
@@ -219,6 +221,7 @@ int SOSFilter::initialize(const int ns,
         if (status != ippStsNoErr)
         {
             RTSEIS_ERRMSG("%s", "Failed to get state size");
+            clear();
             return -1;
         }
         IppsIIRState_32f *pState = nullptr;
@@ -242,6 +245,7 @@ int SOSFilter::initialize(const int ns,
         if (status != ippStsNoErr)
         {
             RTSEIS_ERRMSG("%s", "Failed to initialized biquad filter");
+            clear();
             return -1;
         }
         pState_ = pState;

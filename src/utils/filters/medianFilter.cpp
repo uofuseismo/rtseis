@@ -95,7 +95,7 @@ void MedianFilter::clear(void)
     if (dlysrc_ != nullptr){ippsFree(dlysrc_);}
     if (dlydst_ != nullptr){ippsFree(dlydst_);}
     if (zi_ != nullptr){ippsFree(zi_);}
-    setPrecision(RTSEIS_DOUBLE);
+    setPrecision(RTSeis::Precision::DOUBLE);
     toggleRealTime(false);
     pBuf_ = nullptr;
     dlysrc_ = nullptr;
@@ -120,7 +120,7 @@ void MedianFilter::clear(void)
  */
 int MedianFilter::initialize(const int n,
                              const bool lisRealTime,
-                             const enum rtseisPrecision_enum precision)
+                             const RTSeis::Precision precision)
 {
     clear();
     // Set the mask size
@@ -140,7 +140,7 @@ int MedianFilter::initialize(const int n,
     nwork_ = std::max(8, maskSize_ - 1);
     zi_ = ippsMalloc_64f(nwork_);
     ippsZero_64f(zi_, nwork_);
-    if (precision == RTSEIS_DOUBLE)
+    if (precision == RTSeis::Precision::DOUBLE)
     {
         IppStatus status = ippsFilterMedianGetBufferSize(maskSize_, ipp64f,
                                                          &bufferSize_);
