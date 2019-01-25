@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <float.h>
 #include <cmath>
 #include <chrono>
 #include <algorithm>
@@ -19,6 +20,7 @@ using namespace RTSeis::Utils::Transforms;
 int transforms_nextPow2_test(void);
 int transforms_phase_test(void);
 int transforms_unwrap_test(void);
+int transforms_test_dft(void);
 int rfft(const int nx, double x[], const int n,
          const int ny, std::complex<double> y[]);
 int irfft(const int nx, const std::complex<double> x[],
@@ -42,6 +44,12 @@ int rtseis_test_utils_transforms(void)
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to unwrap phase");
+        return EXIT_FAILURE;
+    }
+    ierr = transforms_test_dft();
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute rdft");
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
@@ -209,6 +217,164 @@ int transforms_phase_test(void)
     }
     return EXIT_SUCCESS; 
 }
+
+int transforms_test_dft(void)
+{
+    int niter = 50;
+    int np0 = 12001;
+    double *x = new double[np0+1];
+    for (int i=0; i<np0+1; i++)
+    {
+        x[i] = static_cast<double> (rand())/RAND_MAX;
+    }
+
+    for (int j=0; j<2; j++)
+    {
+        int npts = np0 + j;
+        // Compute a DFT w/ FFTw
+        int lendft = npts/2 + 1;
+        std::complex<double> *zrefDFT = new std::complex<double>[lendft];
+        int ierr = rfft(npts, x, npts, lendft, zrefDFT);
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to compute rfft");
+            return EXIT_FAILURE;
+        }
+        // Compute an FFT w/ FFTw
+        int np2 = DFTUtils::nextPow2(npts);
+        int lenfft = np2/2 + 1;
+        std::complex<double> *zrefFFT = new std::complex<double>[lenfft];
+        ierr = rfft(npts, x, np2, lenfft, zrefFFT); 
+
+        // Initialize the DFT
+        DFTR2C dft; 
+        bool ldoFFT = false;
+        ierr = dft.initialize(npts, ldoFFT, RTSeis::Precision::DOUBLE); 
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to initialize dft");
+            return EXIT_FAILURE;
+        }
+        if (dft.getTransformLength() != lendft)
+        {
+            RTSEIS_ERRMSG("%s", "Inconsistent sizes");
+            return EXIT_FAILURE;
+        }
+        std::complex<double> *z = new std::complex<double>[lendft];
+        ierr = dft.forwardTransform(npts, x, lendft, z);
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to forward transform");
+            return EXIT_FAILURE;
+        }
+        double error = 0; 
+        for (int i=0; i<lendft; i++)
+        {
+            error = error + std::abs(z[i] - zrefDFT[i]);
+        }
+        if (error > 1.e-10)
+        {
+            RTSEIS_ERRMSG("Failed to compute dft %.10e", error);
+            return EXIT_FAILURE;
+        }
+        // Stress test it
+        if (j == 1)
+        {
+            auto timeStart = std::chrono::high_resolution_clock::now();
+            for (int kiter=0; kiter<niter; kiter++)
+            {
+                ierr = dft.forwardTransform(npts, x, lendft, z); 
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed DFT");
+                    return EXIT_FAILURE;
+                }
+            }
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            error = 0;
+            for (int i=0; i<lendft; i++)
+            {
+                error = error + std::abs(z[i] - zrefDFT[i]);
+            }
+            if (error > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed to compute dft %.10e", error);
+                return EXIT_FAILURE;
+            }
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            fprintf(stdout, "Average DFT time %.8lf (s)\n",
+                    tdif.count()/static_cast<double>(niter)); 
+ 
+        }
+        delete[] z;
+        // Redo this for an FFT
+        ldoFFT = true;
+        dft.initialize(npts, ldoFFT, RTSeis::Precision::DOUBLE);
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to initialize fft");
+            return EXIT_FAILURE;
+        }
+        if (dft.getTransformLength() != lenfft)
+        {
+            RTSEIS_ERRMSG("Inconsistent sizes %d %d",
+                          dft.getTransformLength(), lenfft);
+            return EXIT_FAILURE;
+        }
+        z = new std::complex<double>[lenfft];
+        ierr = dft.forwardTransform(npts, x, lenfft, z); 
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to forward transform");
+            return EXIT_FAILURE;
+        }
+        error = 0;  
+        for (int i=0; i<lenfft; i++)
+        {
+            error = error + std::abs(z[i] - zrefFFT[i]);
+        }
+        if (error > 1.e-10)
+        {
+            RTSEIS_ERRMSG("Failed to compute fft %.10e", error);
+            return EXIT_FAILURE;
+        }
+        // Stress test it
+        if (j == 1)
+        {
+            auto timeStart = std::chrono::high_resolution_clock::now();
+            for (int kiter=0; kiter<niter; kiter++)
+            {
+                ierr = dft.forwardTransform(npts, x, lenfft, z);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed FFT");
+                    return EXIT_FAILURE;
+                }
+            }
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            error = 0;  
+            for (int i=0; i<lenfft; i++)
+            {
+                error = error + std::abs(z[i] - zrefFFT[i]);
+            }
+            if (error > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed to compute fft %.10e", error);
+                return EXIT_FAILURE;
+            }
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            fprintf(stdout, "Average FFT time %.8lf (s)\n",
+                    tdif.count()/static_cast<double>(niter)); 
+ 
+        }
+        delete[] z;
+        // Free reference space 
+        delete[] zrefFFT;
+        delete[] zrefDFT;
+    }
+    delete[] x;
+    return EXIT_SUCCESS;
+} 
 
 int irfft(const int nx, const std::complex<double> x[],
           const int n, double y[])

@@ -15,6 +15,12 @@ DFTR2C::DFTR2C(void)
     return;
 }
 
+DFTR2C::~DFTR2C(void)
+{
+    clear();
+    return;
+}
+
 DFTR2C::DFTR2C(const DFTR2C &dftr2c)
 {
     *this = dftr2c;
@@ -33,13 +39,35 @@ DFTR2C& DFTR2C::operator=(const DFTR2C &dftr2c)
         clear();
         return *this;
     }
+    if (specSize_ > 0)
+    {
+        Ipp8u *pSpecIn  = static_cast<Ipp8u *> (dftr2c.ftHandle_);
+        Ipp8u *pSpecOut = static_cast<Ipp8u *> (ftHandle_);
+        ippsCopy_8u(pSpecIn, pSpecOut, specSize_);
+    }
+    if (bufferSize_ > 0)
+    {
+        Ipp8u *pBufIn  = static_cast<Ipp8u *> (dftr2c.ftBuffer_);
+        Ipp8u *pBufOut = static_cast<Ipp8u *> (ftBuffer_);
+        ippsCopy_8u(pBufIn, pBufOut, bufferSize_);
+    }
     if (precision_ == RTSeis::Precision::DOUBLE)
     {
-
+        if (nwork_ > 0)
+        {
+            Ipp64f *workIn  = static_cast<Ipp64f *> (dftr2c.work_);
+            Ipp64f *workOut = static_cast<Ipp64f *> (work_); 
+            ippsCopy_64f(workIn, workOut, nwork_);
+        }
     }
     else
     {
-
+        if (nwork_ > 0)
+        {
+            Ipp32f *workIn  = static_cast<Ipp32f *> (dftr2c.work_);
+            Ipp32f *workOut = static_cast<Ipp32f *> (work_); 
+            ippsCopy_32f(workIn, workOut, nwork_);
+        }
     }
     return *this;
 }
@@ -53,6 +81,7 @@ void DFTR2C::clear(void)
     ftBuffer_ = nullptr;
     work_ = nullptr;
     precision_ = RTSeis::Precision::DOUBLE;
+    isInitialized_ = false;
     length_ = 0;
     lenft_ = 0;
     nwork_ = 0;
@@ -60,7 +89,6 @@ void DFTR2C::clear(void)
     specSize_ = 0;
     order_ = 0;
     ldoFFT_ = false;
-    isInitialized_ = false;
     return;
 }
 
@@ -104,6 +132,7 @@ int DFTR2C::initialize(const int length,
         order_ = orderWork;
         length_ = n2;
     }
+    lenft_ = length_/2 + 1;
     // Initialize the appropriate transform
     IppStatus status;
     int sizeInit;
@@ -172,7 +201,7 @@ int DFTR2C::initialize(const int length,
                 clear();
                 return -1;
             }
-            ftHandle_ = pSpecBuffer;
+            ftHandle_ = pSpec;
             ftBuffer_ = ippsMalloc_8u(bufferSize_);
         }
         nwork_ = std::max(length_, 2*lenft_);
@@ -245,7 +274,7 @@ int DFTR2C::initialize(const int length,
                 clear();
                 return -1;
             }
-            ftHandle_ = pSpecBuffer;
+            ftHandle_ = pSpec;
             ftBuffer_ = ippsMalloc_8u(bufferSize_);
         }
         nwork_ = std::max(length_, 2*lenft_);
@@ -253,7 +282,6 @@ int DFTR2C::initialize(const int length,
         ippsZero_32f(work, nwork_);
         work_ = work;
     }
-    lenft_ = length/2 + 1;
     precision_ = precision;
     isInitialized_ = true;
     return 0;
