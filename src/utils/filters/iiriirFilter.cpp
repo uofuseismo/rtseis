@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ipps.h>
+#include <cmath>
 #define RTSEIS_LOGGING 1
 #define IPPS_CORE_SRC 1
 #include "rtseis/utils/filters.hpp"
@@ -58,12 +59,12 @@ IIRIIRFilter& IIRIIRFilter::operator=(const IIRIIRFilter &iiriir)
             ippsCopy_32f(dlysrcIn, dlysrcOut, nwork_);
         }
     }
+    lhaveZI_ = iiriir.lhaveZI_;
     return *this;
 }
 
 void IIRIIRFilter::clear(void)
 {
-    pState_ = nullptr;
     if (pTaps_ != nullptr){ippsFree(pTaps_);}
     if (dlysrc_ != nullptr){ippsFree(dlysrc_);}
     if (pBuf_ != nullptr){ippsFree(pBuf_);}
@@ -72,11 +73,19 @@ void IIRIIRFilter::clear(void)
     if (zi_ != nullptr){ippsFree(zi_);}
     setPrecision(RTSeis::Precision::DOUBLE);
     toggleRealTime(false);
+    pState_ = nullptr;
+    pTaps_ = nullptr;
+    dlysrc_ = nullptr;
+    pBuf_ = nullptr;
+    bRef_ = nullptr;
+    aRef_ = nullptr;
+    zi_ = nullptr;
     nwork_ = 0;
     bufferSize_ = 0;
     order_ = 0;
     nbRef_ = 0;
     naRef_ = 0;
+    lhaveZI_ = false;
     isInitialized_ = false;
     return;
 }
@@ -175,7 +184,39 @@ int IIRIIRFilter::initialize(const int nb, const double b[],
     }
     setPrecision(precision);
     toggleRealTime(false);
+    lhaveZI_ = false;
     isInitialized_ = true;
+    return 0;
+}
+
+int IIRIIRFilter::setInitialConditions(const int nz, const double zi[])
+{
+    if (!isInitialized_)
+    {
+        RTSEIS_ERRMSG("%s", "Class not initialized");
+        return -1;
+    }
+    lhaveZI_ = false;
+    resetInitialConditions();
+    int nzRef = getInitialConditionLength();
+    if (nz != nzRef || zi == nullptr)
+    {
+        if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
+        if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
+        return -1;
+    }
+    ippsCopy_64f(zi, zi_, nzRef);
+    if (isDoublePrecision())
+    {
+        Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
+        ippsCopy_64f(zi, dlysrc, nzRef);
+    }
+    else
+    {
+        Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
+        ippsConvert_64f32f(zi, dlysrc, nzRef);
+    }
+    lhaveZI_ = true;
     return 0;
 }
 
@@ -210,50 +251,30 @@ int IIRIIRFilter::apply(const int n, const double x[], double y[])
         ippsFree(y32);
         return 0;
     }
-    // Get handles to arrays
-    Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
+    // Get handle to filter state
     IppsIIRState_64f *pState = static_cast<IppsIIRState_64f *> (pState_);
-    IppStatus status = ippsIIRIIRSetDlyLine_64f(pState, dlysrc);
-    if (status != ippStsNoErr)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to set delay line");
-        return -1; 
+    // Set a delay line if the user desires it.  Note, the initialization
+    // sets a NULL delay line.
+    IppStatus status;
+    if (lhaveZI_)
+    {
+        Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
+        status = ippsIIRIIRSetDlyLine_64f(pState, dlysrc);
+        if (status != ippStsNoErr)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to set delay line");
+            return -1; 
+        }
     }
+    // Apply the filter
     status = ippsIIRIIR_64f(x, y, n, pState);
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
         return -1;
     }
-    return 0;
-}
-
-int IIRIIRFilter::setInitialConditions(const int nz, const double zi[])
-{
-    if (!isInitialized_)
-    {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
-    }
-    resetInitialConditions();
-    int nzRef = getInitialConditionLength();
-    if (nz != nzRef || zi == nullptr)
-    {
-        if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
-        if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
-        return -1;
-    }
-    ippsCopy_64f(zi, zi_, nzRef);
-    if (isDoublePrecision())
-    {
-        Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-        ippsCopy_64f(zi, dlysrc, nzRef);
-    }
-    else
-    {
-        Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-        ippsConvert_64f32f(zi, dlysrc, nzRef);
-    }
+    // Undo the action of setting a delay line
+    if (lhaveZI_){ippsIIRIIRSetDlyLine_64f(pState, NULL);}
     return 0;
 }
 
@@ -288,21 +309,30 @@ int IIRIIRFilter::apply(const int n, const float x[], float y[])
         ippsFree(y64);
         return 0;
     }
-    // Get handles to arrays
-    Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
+    // Get handle to filter state
     IppsIIRState_32f *pState = static_cast<IppsIIRState_32f *> (pState_);
-    IppStatus status = ippsIIRIIRSetDlyLine_32f(pState, dlysrc);
-    if (status != ippStsNoErr)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to set delay line");
-        return -1; 
-    }   
+    // Set a delay line if the user desires it.  Note, the initialization sets
+    // a NULL delay line.
+    IppStatus status;
+    if (lhaveZI_)
+    {
+        Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
+        status = ippsIIRIIRSetDlyLine_32f(pState, dlysrc);
+        if (status != ippStsNoErr)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to set delay line");
+            return -1;
+        }
+    }
+    // Apply the filter
     status = ippsIIRIIR_32f(x, y, n, pState);
     if (status != ippStsNoErr)
-    {   
+    {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1; 
-    }   
+        return -1;
+    }
+    // Undo the action of setting a delay line
+    if (lhaveZI_){ippsIIRIIRSetDlyLine_32f(pState, NULL);}
     return 0;
 }
 

@@ -8,6 +8,7 @@ extern "C"
 
 int rtseis_test_utils_polynomial(void);
 int rtseis_test_utils_convolve(void);
+int rtseis_test_utils_transforms(void);
 int rtseis_test_utils_design_iir_ap(void);
 int rtseis_test_utils_design_zpk2sos(void);
 int rtseis_test_utils_design_iir(void);

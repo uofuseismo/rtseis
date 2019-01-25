@@ -3,9 +3,6 @@
 #include <stdio.h>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
-#include <complex>
-#include <vector>
-#include <memory>
 
 namespace RTSeis
 {
@@ -511,6 +508,8 @@ namespace Filters
             int nbRef_ = 0;
             /*!< The number of denominator coefficients. */
             int naRef_ = 0;
+            /*!< Flag indicating that the initial conditions have been set. */
+            bool lhaveZI_ = false;
             /*!< Flag indicating that the filter is initialized. */
             bool isInitialized_ = false; 
 

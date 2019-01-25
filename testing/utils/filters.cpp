@@ -2,11 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <cmath>
 #include <chrono>
+#include <algorithm>
+#include <complex>
+#include <vector>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utils/filters.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
+#include <ipps.h>
 
 using namespace RTSeis::Utils::Filters;
 static int readTextFile(int *npts, double *xPtr[],
@@ -18,6 +23,8 @@ static int filters_medianFilter_test(const int npts, const double x[],
                                      const std::string fileName);
 static int filters_sosFilter_test(const int npts, const double x[],
                                   const std::string fileName);
+int filters_iiriirFilter_test(const int npts, const double x[],
+                              const std::string fileName);
 
 int rtseis_test_utils_filters(void)
 {
@@ -37,6 +44,14 @@ int rtseis_test_utils_filters(void)
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed downsampler test");
+        return EXIT_FAILURE;
+    }
+    // Apply the zero-phase IIR filter
+    ierr = filters_iiriirFilter_test(npts, x,
+                                     dataDir + "iiriirReference.txt"); 
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed iiriir filter test");
         return EXIT_FAILURE;
     }
     // Apply the median filter
@@ -64,6 +79,141 @@ int rtseis_test_utils_filters(void)
     }
 
     if (x != nullptr){free(x);}
+    return EXIT_SUCCESS;
+}
+//============================================================================//
+
+//============================================================================//
+int filters_iiriirFilter_test(const int npts, const double x[],
+                              const std::string fileName)
+{
+    fprintf(stdout, "Testing IIRIIR filter...\n");
+    // Hardwire a bandpass butterworth filter
+    const int na = 9;
+    const int nb = 9;
+    const double b[9] = {0.000401587491686,
+                         0.0,
+                        -0.001606349966746,
+                         0.0,
+                         0.002409524950119,
+                         0.0,
+                        -0.001606349966746,
+                         0.0,
+                         0.000401587491686};
+    const double a[9] = {1.000000000000000,
+                        -7.185226122700763,
+                        22.615376628798678,
+                       -40.733465892344896,
+                        45.926605646620146,
+                       -33.196326377161412,
+                        15.023103545324197,
+                        -3.891997997268024,
+                         0.441930568732716};
+    // Load a reference solution
+    double *yref = nullptr;
+    int npref = 0;
+    int ierr = readTextFile(&npref, &yref, fileName);
+    if (ierr != 0 || npts != npref)
+    {   
+        RTSEIS_ERRMSG("%s", "Failed to load reference data");
+        return EXIT_FAILURE;
+    } 
+    // Compute the zero-phase IIR filter alternative
+    IIRIIRFilter iiriir;
+    ierr = iiriir.initialize(nb, b, na, a, RTSeis::Precision::DOUBLE);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+        return EXIT_FAILURE;
+    }
+    double *y = new double[npts];
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    ierr = iiriir.apply(npts, x, y); 
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to apply zero-phase IIR filter");
+        return EXIT_FAILURE;
+    }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    double error = 0;
+    for (int i=0; i<npts; i++)
+    {
+        error = error + std::pow(y[i] - yref[i], 2);
+    }
+    error = std::sqrt(error)/static_cast<double> (npts);
+    if (error > 3.e-2)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute reference solution");
+        return EXIT_FAILURE;
+    }
+    std::chrono::duration<double> tdif = timeEnd - timeStart;
+    fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
+            tdif.count());
+    delete[] y;
+    free(yref);
+    // Do the Intel test
+#ifdef IPPS_H__
+    iiriir.clear();
+    const int LEN = 256;
+    const double SMP_RATE = 1000;
+    const double F1 = 50;
+    const double F2 = 120;
+    const double AMPL = 10;
+    const double CUT_OFF = 0.3;
+    const int ORDER = 3;
+    Ipp64f *f1 = ippsMalloc_64f(LEN);
+    Ipp64f *f2 = ippsMalloc_64f(LEN);
+    double *xi = new double[LEN];
+    double *yi = new double[LEN];
+    double *yiRef = new double[LEN];
+    // Generate 50 Hz sine tone
+    Ipp64f phase = 3*static_cast<Ipp64f> (IPP_PI2);
+    ippsTone_64f(f1, LEN, AMPL, F1/SMP_RATE, &phase, ippAlgHintAccurate);
+    phase =  3*static_cast<Ipp64f> (IPP_PI2); // Restore phase
+    // Generate 120 Hz sine tone
+    ippsTone_64f(f2, LEN, AMPL, F2/SMP_RATE, &phase, ippAlgHintAccurate);
+    ippsAdd_64f(f1, f2, xi, LEN); 
+    ippsAbs_64f_I(xi, LEN); // Make positive; 
+    // Make a filter
+    int bufferSizeGen, bufferSizeIIRIIR;
+    ippsIIRIIRGetStateSize_64f(ORDER, &bufferSizeIIRIIR);
+    ippsIIRGenGetBufferSize(ORDER, &bufferSizeGen);
+    Ipp8u *pBufIIRIIR = ippsMalloc_8u(IPP_MAX(bufferSizeGen, bufferSizeIIRIIR));
+    Ipp64f *pTaps = ippsMalloc_64f( 2 * ( ORDER + 1 ));
+    ippsIIRGenLowpass_64f(CUT_OFF/2, 0.0, ORDER, pTaps,
+                          ippButterworth, pBufIIRIIR);
+    // Filter
+    IppsIIRState_64f *pStateIIRIIR = NULL;
+    ippsIIRIIRInit_64f(&pStateIIRIIR, pTaps, ORDER, NULL, pBufIIRIIR );
+    ippsIIRIIR_64f(xi, yiRef, LEN, pStateIIRIIR);
+    // Repeat with RTSeis
+    ierr = iiriir.initialize(ORDER+1, &pTaps[0], ORDER+1, &pTaps[ORDER+1]);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+        return EXIT_FAILURE;
+    }
+    ierr = iiriir.apply(LEN, xi, yi);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to apply filter");
+        return EXIT_FAILURE;
+    }
+    for (int i=0; i<LEN; i++)
+    {
+        if (std::abs(yiRef[i] - yi[i]) > 1.e-14)
+        {
+            RTSEIS_ERRMSG("Failed ref test %lf %lf", yiRef[i], yi[i]);
+        }
+    }
+    ippsFree(f1);
+    ippsFree(f2);
+    ippsFree(pTaps);
+    ippsFree(pBufIIRIIR);
+    delete[] xi;
+    delete[] yi;
+    delete[] yiRef;
+#endif 
     return EXIT_SUCCESS;
 }
 //============================================================================//

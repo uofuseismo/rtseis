@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #define IPPS_CORE_SRC 1
