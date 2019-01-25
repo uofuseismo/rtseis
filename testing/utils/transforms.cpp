@@ -29,25 +29,25 @@ int irfft(const int nx, const std::complex<double> x[],
 int rtseis_test_utils_transforms(void)
 {
     int ierr = transforms_nextPow2_test();
-    if (ierr != 0)
+    if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed nextpow2 test");
         return EXIT_FAILURE;
     }
     ierr = transforms_phase_test();
-    if (ierr != 0)
+    if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed phase test");
         return EXIT_FAILURE;
     }
     ierr = transforms_unwrap_test();
-    if (ierr != 0)
+    if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed to unwrap phase");
         return EXIT_FAILURE;
     }
     ierr = transforms_test_dft();
-    if (ierr != 0)
+    if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute rdft");
         return EXIT_FAILURE;
@@ -237,7 +237,7 @@ int transforms_test_dft(void)
         int ierr = rfft(npts, x, npts, lendft, zrefDFT);
         if (ierr != 0)
         {
-            RTSEIS_ERRMSG("%s", "Failed to compute rfft");
+            RTSEIS_ERRMSG("%s", "Failed to compute rdft");
             return EXIT_FAILURE;
         }
         // Compute an FFT w/ FFTw
@@ -245,7 +245,11 @@ int transforms_test_dft(void)
         int lenfft = np2/2 + 1;
         std::complex<double> *zrefFFT = new std::complex<double>[lenfft];
         ierr = rfft(npts, x, np2, lenfft, zrefFFT); 
-
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to compute rfft");
+            return EXIT_FAILURE;
+        }
         // Initialize the DFT
         DFTR2C dft; 
         bool ldoFFT = false;
@@ -270,13 +274,38 @@ int transforms_test_dft(void)
         double error = 0; 
         for (int i=0; i<lendft; i++)
         {
-            error = error + std::abs(z[i] - zrefDFT[i]);
+            error = std::max(error, std::abs(z[i] - zrefDFT[i]));
         }
-        if (error > 1.e-10)
+        if (error > 1.e-12)
         {
             RTSEIS_ERRMSG("Failed to compute dft %.10e", error);
             return EXIT_FAILURE;
         }
+        // Inverse DFT
+        int npout = dft.getInverseTransformLength(); 
+        if (npout != npts)
+        {
+            RTSEIS_ERRMSG("%s", "Size inconsitency");
+            return EXIT_FAILURE;
+        }
+        double *xinv = new double[npout];
+        ierr = dft.inverseTransform(lendft, z, npout, xinv); 
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to inverse dft");
+            return EXIT_FAILURE;
+        }
+        error = 0;
+        for (int i=0; i<npts; i++)
+        {
+            error = std::max(error, std::abs(x[i] - xinv[i]));
+        }
+        if (error > 1.e-10)
+        {
+            RTSEIS_ERRMSG("Failed to compute idft %.10e", error);
+            return EXIT_FAILURE;
+        } 
+        delete[] xinv;
         // Stress test it
         if (j == 1)
         {
@@ -294,9 +323,9 @@ int transforms_test_dft(void)
             error = 0;
             for (int i=0; i<lendft; i++)
             {
-                error = error + std::abs(z[i] - zrefDFT[i]);
+                error = std::max(error, std::abs(z[i] - zrefDFT[i]));
             }
-            if (error > 1.e-10)
+            if (error > 1.e-12)
             {
                 RTSEIS_ERRMSG("Failed to compute dft %.10e", error);
                 return EXIT_FAILURE;
@@ -331,13 +360,37 @@ int transforms_test_dft(void)
         error = 0;  
         for (int i=0; i<lenfft; i++)
         {
-            error = error + std::abs(z[i] - zrefFFT[i]);
+            error = std::max(error, std::abs(z[i] - zrefFFT[i]));
         }
-        if (error > 1.e-10)
+        if (error > 1.e-12)
         {
             RTSEIS_ERRMSG("Failed to compute fft %.10e", error);
             return EXIT_FAILURE;
         }
+        npout = dft.getInverseTransformLength(); 
+        if (npout != np2)
+        {
+            RTSEIS_ERRMSG("%s", "Size inconsitency");
+            return EXIT_FAILURE;
+        }
+        xinv = new double[npout];
+        ierr = dft.inverseTransform(lenfft, z, npout, xinv); 
+        if (ierr != 0)
+        {
+            RTSEIS_ERRMSG("%s", "Failed to inverse fft");
+            return EXIT_FAILURE;
+        }
+        error = 0;
+        for (int i=0; i<npts; i++)
+        {
+            error = std::max(error, std::abs(x[i] - xinv[i]));
+        }
+        if (error > 1.e-10)
+        {
+            RTSEIS_ERRMSG("Failed to compute ifft %.10e", error);
+            return EXIT_FAILURE;
+        }
+        delete[] xinv;
         // Stress test it
         if (j == 1)
         {
@@ -355,9 +408,9 @@ int transforms_test_dft(void)
             error = 0;  
             for (int i=0; i<lenfft; i++)
             {
-                error = error + std::abs(z[i] - zrefFFT[i]);
+                error = std::max(error, std::abs(z[i] - zrefFFT[i]));
             }
-            if (error > 1.e-10)
+            if (error > 1.e-12)
             {
                 RTSEIS_ERRMSG("Failed to compute fft %.10e", error);
                 return EXIT_FAILURE;

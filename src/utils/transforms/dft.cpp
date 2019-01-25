@@ -499,6 +499,16 @@ int DFTR2C::getTransformLength(void) const
     }
     return lenft_;
 }
+
+int DFTR2C::getInverseTransformLength(void) const
+{
+    if (!isInitialized_)
+    {
+        RTSEIS_ERRMSG("%s", "Class is not intiialized");
+        return -1;
+    }
+    return length_;
+}
  
 int DFTR2C::getMaximumInputSignalLength(void) const
 {

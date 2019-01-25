@@ -124,6 +124,12 @@ namespace Transforms
                                  const std::complex<double> x[],
                                  const int maxy, double y[]);
             /*!
+             * @brief Gets the inverse transform length.
+             * @result The length of the inverse DFT or FFT.  If negative
+             *         then an error has occurred.
+             */
+            int getInverseTransformLength(void) const;
+            /*!
              * @brief Gets the length of the transform.
              * @result The length of the DFT or FFT.  If negative then an
              *         error has occurred.
