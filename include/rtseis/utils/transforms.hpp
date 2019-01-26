@@ -12,39 +12,70 @@ namespace Utils
 {
 
 /*!
- * @defgroup rtseis_utils_transforms Transforms
- * @brief These are core utilities for transforming a signal to another
- *        domain.
+ * @page utilities Utilities
+ *
+ * @section utilities_overview Overview
+ * The functions contained in the utilities section are the building blocks
+ * from which RTSeis can develop high-level modules for signals processing. 
+ */
+/*!
+ * @section Transforms
+ * @brief These are utilities that enable users to transform data
+ *        between domains.  Found here are building blocks for Fourier
+ *        and Hilbert transforms.
  * @copyright Ben Baker distributed under the MIT license.
+ * @defgroup rtseis_utils_transforms Transforms
  */    
 namespace Transforms 
 {
-
     /*!
+     * @defgroup rtseis_utils_transforms_dft Discrete Fourier Transform
+     * @brief Utilities for computing the discrete Fourier transform
+     *        of a signal.
+     * @ingroup rtseis_utils_transforms
+     */
+    /*! 
+     * @defgroup rtseis_utils_transforms_dftc2c Hilbert Transform
+     *           A class for computing the Hilbert transform of
+     *           a signal.
+     * @ingroup rtseis_utils_transforms  
+     */
+    /*!
+     * @defgroup rtseis_utils_transforms_dftc2c Complex-to-Complex DFT
+     * @brief A class for computing the discrete Fourier transform of
+     *        complex-valued signals.
+     * @ingroup rtseis_utils_transforms_dft
+     */
+    /*!
+     * @defgroup rtseis_utils_transforms_dftr2c Real-to-Complex DFT
      * @brief A class for computing the discrete Fourier transform of
      *        time domain signals.
-     * @ingroup rtseis_utils_transforms
+     * @ingroup rtseis_utils_transforms_dft
      */
     class DFTR2C
     {
         public:
             /*!
              * @brief Default constructor.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             DFTR2C(void);
             /*!
              * @brief Copy constructor.
              * @param[in] dftr2c  Class from which to initialize from.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             DFTR2C(const DFTR2C &dftr2c); 
             /*!
              * @brief Copy operator.
              * @param[in] dftr2c  DFTR2C class to copy.
              * @result A deep copy of the input class.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             DFTR2C& operator=(const DFTR2C &dftr2c);
             /*!
              * @brief Default destructor.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             ~DFTR2C(void);
             /*!
@@ -70,13 +101,15 @@ namespace Transforms
              *                       arithmetic.  The default is double
              *                       precision.
              * @result 0 indicates success.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             int initialize(const int length,
                            const bool ldoFFT = false,
                            const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
             /*!
-             * @brief Fourier transforms a real time domain signal to the 
-             *        frequency domain.
+             * @brief Fourier transforms a real-valued time domain signal to the
+             *        frequency domain.   The transform is defined as 
+             *        \f$ y(\omega) = \int e^{-i \omega t} x(t) dt \f$.
              * @param[in] n     Number of points in input signal.  This cannot
              *                  be negative and cannot exceed
              *                  getMaximumSignalLength().  If n is less than
@@ -92,13 +125,21 @@ namespace Transforms
              *                  Here, y[0] is the zero-frequency and 
              *                  y[getTransformLength()-1] is the Nyquist.
              * @result 0 indicates success.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             int forwardTransform(const int n,
                                  const double x[],
                                  const int maxx,
                                  std::complex<double> y[]);
             /*!
-             * @brief Inverse trnasforms a signal back to the time domain.
+             * @brief Inverse transforms complex-valued frequency domian signal
+             *        to a real-valued time domain signal.  The transform is
+             *        defined as
+             *        \f$ y(t) = \frac{1}{n}
+             *                   \int e^{ i \omega t} x(\omega) d \omega \f$.
+             *        where \f$ n \f$ is the length of the transform given
+             *        in getTransformLength().
+             * 
              * @param[in] lenft   Length of the Fourier transformed signal.
              *                    This cannot be negative and cannot exceed
              *                    getTransformLength().  If lenft is less 
@@ -119,6 +160,7 @@ namespace Transforms
              *                    the first getMaximumSignalLength() points
              *                    are defined.
              * @result 0 indicates success.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             int inverseTransform(const int lenft,
                                  const std::complex<double> x[],
@@ -127,30 +169,35 @@ namespace Transforms
              * @brief Gets the inverse transform length.
              * @result The length of the inverse DFT or FFT.  If negative
              *         then an error has occurred.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             int getInverseTransformLength(void) const;
             /*!
              * @brief Gets the length of the transform.
              * @result The length of the DFT or FFT.  If negative then an
              *         error has occurred.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             int getTransformLength(void) const;
             /*!
              * @brief Gets the maximum length of the input signal.
              * @result The maximum length of the input signal.  If negative
              *         then an error has occurred.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             int getMaximumInputSignalLength(void) const;
             /*!
              * @brief Returns whether or not the class is initialized.
              * @retval True indicates the class is initialized.
              * @retval False indicates the class is not-initialized.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             bool isInitialized(void) const;
             /*!
              * @brief Releases the memory on the module and resets the
              *        defaults.  The class must be reinitialized before
              *        using it again.
+             * @ingroup rtseis_utils_transforms_dftr2c
              */
             void clear(void);
         private:
@@ -184,6 +231,7 @@ namespace Transforms
     };
 
     /*!
+     * @defgroup rtseis_utils_transforms_utils Utility Functions
      * @brief Utility routines accompanying the DFT.
      * @ingroup rtseis_utils_transforms
      */
@@ -202,6 +250,7 @@ namespace Transforms
          * @param[in] tol  The jump tolerance specified in radians which
          *                 must be positive.  The default is \f$ \pi \f$.
          * @result 0 indicates success.
+         * @ingroup rtseis_utils_transforms_utils
          */
         int unwrap(const int n, const double p[], double q[], 
                    const double tol = M_PI);
@@ -222,6 +271,7 @@ namespace Transforms
          *                      If false then phi is given in radians.
          *                      This is the default.
          * @result 0 indicates success.
+         * @ingroup rtseis_utils_transforms_utils
          */ 
         int phase(const int n, const std::complex<double> z[], double phi[],
                   const bool lwantDeg = false);
@@ -232,6 +282,7 @@ namespace Transforms
          *               of 2.
          * @result On successful exit this is a number that is a power of 2
          *         and is greater than or equal to n.
+         * @ingroup rtseis_utils_transforms_utils
          */
         int nextPow2(const int n);
     };

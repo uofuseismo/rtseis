@@ -424,3 +424,37 @@ int FIRFilter::getInitialConditionLength(void) const
     }
     return order_;
 }
+/*!
+ * @brief Returns a copy of the initial conditions.
+ * @param[in] nz   The length of zi.  This must be at least 
+ *                 getInitialConditionLength().
+ * @param[out] zi  A copy of the initial conditions.  This has dimension
+ *                 [nz] however only the first getInitialConditionLength()
+ *                 elements are copied.
+ * @result 0 indicates success.
+ * @ingroup rtseis_utils_filters_fir
+ */
+int FIRFilter::getInitialConditions(const int nz, double zi[]) const
+{
+    if (!linit_)
+    {   
+        RTSEIS_ERRMSG("%s", "Class is not yet initialized");
+        return -1;
+    }
+    int nzLen = getInitialConditionLength();
+    if (nzLen > nz)
+    {
+        RTSEIS_ERRMSG("nz = %d must be at least %d", nz, nzLen);
+        return -1;
+    }
+    if (nzLen > 0)
+    {
+        if (zi == nullptr)
+        {
+            RTSEIS_ERRMSG("%s", "zi is NULL");
+            return -1;
+        }
+        ippsCopy_64f(zi_, zi, nzLen);
+    }
+    return 0;
+}

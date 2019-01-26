@@ -30,6 +30,8 @@ OneBitNormalizationParameters::operator=(
     const OneBitNormalizationParameters &parameters)
 {
     if (&parameters == this){return *this;}
+    clear();
+    if (!parameters.isInitialized()){return *this;}
     precision_ = parameters.precision_;
     isRealTime_ = parameters.isRealTime_;
     isInitialized_ = parameters.isInitialized_;
@@ -54,6 +56,7 @@ bool OneBitNormalizationParameters::isInitialized(void) const
 {
     return isInitialized_;
 }
+
 bool OneBitNormalizationParameters::isRealTime(void) const
 {
     return isRealTime_;

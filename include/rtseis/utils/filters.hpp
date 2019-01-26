@@ -341,6 +341,7 @@ namespace Filters
                            const RTSeis::Precision precision = RTSeis::Precision::DOUBLE,
                            Implementation implementation = Implementation::DIRECT);
             int getInitialConditionLength(void) const;
+            int getInitialConditions(const int nz, double zi[]) const;
             int setInitialConditions(const int nz, const double zi[]);
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);

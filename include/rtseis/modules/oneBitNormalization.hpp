@@ -65,7 +65,7 @@ class OneBitNormalizationParameters
          *         operation will be performed.
          */
         RTSeis::Precision getPrecision(void) const;
-     private:
+    private:
         /*!< Default precision. */
         const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
         /*!< The precision of the module. */
@@ -155,9 +155,10 @@ class OneBitNormalization : OneBitNormalizationParameters
          */
         int apply(const int nx, const float  x[], float  y[]);
         /*!
-         * @brief Resets the filter to the initial conditions should a gap
-         *        be encountered.  Note, the copysign operation is applied
-         *        to each sample so there are no initial parameters to restore.
+         * @brief Resets the filter to the initial conditions specified
+         *        in setInitialConditions().  Note, the copysign operation
+         *        is applied each sample so there are no initial
+         *        parameters to restore.
          * @result 0 indicates success.
          */
         int resetInitialConditions(void);

@@ -84,7 +84,7 @@ SET(UTILS_SRCS
     src/utils/design/analogProtype.cpp
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
-    src/utils//filters/iiriirFilter.cpp
+    src/utils/filters/iiriirFilter.cpp
     src/utils/filters/medianFilter.cpp
     src/utils/filters/sos.cpp
     src/utils/math/convolve.cpp
@@ -101,6 +101,7 @@ SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp
     src/modules/oneBitNormalization.cpp
+    src/modules/classicSTALTA.cpp
     src/modules/fir.cpp
     src/modules/iir.cpp)
 SET(DATA_SRCS src/data/waveform.cpp)
