@@ -40,7 +40,7 @@ int DFTUtils::unwrap(const int n, const double p[], double q[],
     // Differentiate phases
     double *b = new double[n];
     b[0] = q[0];
-    #pragma ivdep 
+    #pragma omp simd
     for (int i=1; i<n; i++)
     {
         b[i] = q[i] - q[i-1];
