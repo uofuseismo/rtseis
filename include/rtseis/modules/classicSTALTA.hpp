@@ -56,12 +56,11 @@ class ClassicSTALTAParameters
         /*!
          * @brief Initializes the Classic STA/LTA parameters.
          * @param[in] staWin  The short-term average window duration in 
-         *                    seconds.  This must greater than or equal to
-         *                    the sampling period.
-         *                    period.
+         *                    seconds.  This must be non-negative.
          * @param[in] ltaWin  The long-term average window duration in 
          *                    seconds.  This must be greater than the STA
-         *                    window length plus the sampling period.
+         *                    window length plus the half sampling period
+         *                    i.e., \f$ LTA \gt STA + \frac{\Delta T}{2} \f$.
          * @param[in] dt   The sampling period in seconds.  This must be
          *                 positive.
          * @param[in] lrt  Flag indicating whether or not this is for real-time.
@@ -98,12 +97,11 @@ class ClassicSTALTAParameters
         /*!
          * @brief Initializes the Classic STA/LTA parameters.
          * @param[in] staWin  The short-term average window duration in 
-         *                    seconds.  This must greater than or equal to
-         *                    the sampling period.
-         *                    period.
+         *                    seconds.  This must be non-negative.
          * @param[in] ltaWin  The long-term average window duration in 
          *                    seconds.  This must be greater than the STA
-         *                    window length plus the sampling period.
+         *                    window length plus half the sampling period
+         *                    i.e., \f$ LTA \gt STA + \frac{\Delta T}{2} \f$.
          * @param[in] chunkSize  A tuning parameter that defines the temporary
          *                       storage of the workspace arrays.  This should
          *                       be a power of 2 and positive. 
@@ -127,12 +125,64 @@ class ClassicSTALTAParameters
          */ 
         ~ClassicSTALTAParameters(void);
         /*!
+         * @brief Clears variables in class and restores defaults.
+         *        This class will have to be re-initialized to use again.
+         * @ingroup rtseis_modules_cSTALTA_parameters
+         */
+        virtual void clear(void);
+        /*!
+         * @brief Determines if the class parameters are valid and can be
+         *        used to initialize the STA/LTA processing.
+         * @retval True indicates that the parameters are valid.
+         * @retval False indicates that the parameters are invalid.
+         * @ingroup rtseis_modules_cSTALTA_parameters
+         */
+        bool isValid(void) const;
+        /*!
+         * @brief Sets the chunksize.  The real-time FIR filter will be applied
+         *        by looping over chunks of data.  There are three temporary
+         *        storage arrays.  This parameter can help minimize the memory
+         *        footprint of the module.
+         * @param[in] chunkSize  The length of the scratch space arrays.
+         * @result 0 indicates success.
+         * @ingroup rtseis_modules_cSTALTA_parameters 
+         */
+        int setChunkSize(const size_t chunkSize);
+        /*!
          * @brief Gets the chunksize.
          * @result The chunk size for the temporary arrays to minimize 
          *         temporary space overhead.
          * @ingroup rtseis_modules_cSTALTA_parameters 
          */
         size_t getChunkSize(void) const;
+        /*!
+         * @brief Sets the short-term and long-term window size in samples.
+         * @param[in] nsta  Number of samples in the short-term average
+         *                  window.  This must be positive.
+         * @param[in] nlta  Number of samples in the long-term average
+         *                  window.  This must be greater than nlta.
+         * @result 0 indicates success.   On failure the number of samples
+         *         in the short-term and long-term windows will remain 
+         *         unchaged.
+         * @ingroup rtseis_modules_cSTALTA_parameters
+         */
+        int setShortTermAndLongTermWindowSize(const int nsta, const int nlta);
+        /*!
+         * @brief Sets the short-term and long-term window durations.
+         * @param[in] staWin  The short-term average window duration in 
+         *                    seconds.  This must be non-negative.
+         * @param[in] ltaWin  The long-term average window duration in 
+         *                    seconds.  This must be greater than the STA
+         *                    window length plus the sampling period
+         *                    i.e., \f$ LTA \gt STA + \frac{\Delta T}{2} \f$.
+         * @param[in] dt      The sampling period in seconds.  This must be
+         *                    positive.
+         * @result 0 indicates success.
+         * @ingroup rtseis_modules_cSTALTA_parameters
+         */
+        int setShortTermAndLongTermWindowSize(const double staWin,
+                                              const double ltaWin,
+                                              const double dt);
         /*!
          * @brief Gets the number of samples in the long-term window.
          * @result The number of samples in the long-term window.
@@ -148,18 +198,14 @@ class ClassicSTALTAParameters
          */
         int getShortTermWindowSize(void) const;
         /*!
-         * @brief Clears variables in class and restores defaults.
-         *        This class will have to be re-initialized to use again.
-         * @ingroup rtseis_modules_cSTALTA_parameters
+         * @brief Enables the class as being for real-time application or not.
+         * @param[in] lrt  True indicates that this class will be for real-time
+         *                 processing.
+         * @param[in] lrt  False indicates that this class will be for
+         *                 post-processing. 
+         * @ingroup rtseis_modules_onebit_parameters
          */
-        virtual void clear(void);
-        /*!
-         * @brief Determines if the class is initialized.
-         * @retval True indicates that the class is inititalized.
-         * @retval False indicates that the class is not initialized.
-         * @ingroup rtseis_modules_cSTALTA_parameters
-         */
-        virtual bool isInitialized(void) const;
+        void setRealTime(const bool lrt);
         /*!
          * @brief Determines if the class is for real-time application.
          * @retval True indicates that the class is for real-time
@@ -168,7 +214,7 @@ class ClassicSTALTAParameters
          *         application.
          * @ingroup rtseis_modules_cSTALTA_parameters
          */
-        bool isRealTime(void) const;
+        bool getRealTime(void) const;
         /*!
          * @brief Determines the precision of the class.
          * @result The precision with which the underlying copysign
@@ -177,6 +223,8 @@ class ClassicSTALTAParameters
          */
         RTSeis::Precision getPrecision(void) const;
     private:
+        /*!< Routine to validate the parameters. */
+        void validate_(void);
         /*!< Default precision. */
         const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
         /*!< The number of samples in the short term average window. */
@@ -190,8 +238,8 @@ class ClassicSTALTAParameters
         RTSeis::Precision precision_ = defaultPrecision_;
         /*!< Flag indicating this module is for real-time. */
         bool isRealTime_ = false;
-        /*!< Flag indicating the module is initialized. */
-        bool isInitialized_ = false;
+        /*!< Flag indicating that this is a valid module for processing. */
+        bool isValid_ = false;
 };
 
 /*!
@@ -216,7 +264,7 @@ class ClassicSTALTA : ClassicSTALTAParameters
          *                        the classic STA/LTA.
          * @ingroup rtseis_modules_cSTALTA
          */
-        ClassicSTALTA(const ClassicSTALTAParameters &parameters);
+        ClassicSTALTA(const ClassicSTALTAParameters parameters);
         /*!
          * @brief Copy constructor.
          * @param[in] cstalta  A Classic STA/LTA class from which this
@@ -304,7 +352,7 @@ class ClassicSTALTA : ClassicSTALTAParameters
          * @retval If true then the class is for real-time application.
          * @retval If false then the class is not for real-time application.
          */
-        bool isInitialized(void) const override;
+        bool isInitialized(void) const;
     private:
         /*!< Numerator FIR signal to keep track of the short-term average. */
         RTSeis::Utils::Filters::FIRFilter firNum_;

@@ -13,7 +13,7 @@ OneBitNormalizationParameters::OneBitNormalizationParameters(
     const RTSeis::Precision prec) :
     precision_(prec),
     isRealTime_(lrt),
-    isInitialized_(true)
+    isValid_(true)
 {
     return;
 }
@@ -31,10 +31,9 @@ OneBitNormalizationParameters::operator=(
 {
     if (&parameters == this){return *this;}
     clear();
-    if (!parameters.isInitialized()){return *this;}
     precision_ = parameters.precision_;
     isRealTime_ = parameters.isRealTime_;
-    isInitialized_ = parameters.isInitialized_;
+    isValid_ = parameters.isValid_;
     return *this;
 }
 
@@ -48,16 +47,23 @@ void OneBitNormalizationParameters::clear(void)
 {
     precision_ = defaultPrecision_;
     isRealTime_ = false;
-    isInitialized_ = false;
+    isValid_ = true; // This is still a valid processing class 
     return;
 }
 
-bool OneBitNormalizationParameters::isInitialized(void) const
+bool OneBitNormalizationParameters::isValid(void) const
 {
-    return isInitialized_;
+    return isValid_;
 }
 
-bool OneBitNormalizationParameters::isRealTime(void) const
+void OneBitNormalizationParameters::setRealTime(const bool lrt)
+{
+    isRealTime_ = lrt;
+    validate_();
+    return;
+} 
+
+bool OneBitNormalizationParameters::getRealTime(void) const
 {
     return isRealTime_;
 }
@@ -65,6 +71,15 @@ bool OneBitNormalizationParameters::isRealTime(void) const
 RTSeis::Precision OneBitNormalizationParameters::getPrecision(void) const
 {
     return precision_;
+}
+
+void OneBitNormalizationParameters::validate_(void)
+{
+    isValid_ = false;
+    if (getPrecision() != RTSeis::Precision::DOUBLE &&
+        getPrecision() != RTSeis::Precision::FLOAT){return;}
+    isValid_ = true;
+    return;
 }
 //============================================================================//
 //                                   End Parameters                           //
@@ -87,9 +102,9 @@ OneBitNormalization::OneBitNormalization(
      const OneBitNormalizationParameters &parameters)
 {
     clear();
-    if (!parameters.isInitialized())
+    if (!parameters.isValid())
     {
-        RTSEIS_ERRMSG("%s", "Parameters are not yet set");
+        RTSEIS_ERRMSG("%s", "Input parameters are not yet valid");
         return;
     }
     parms_ = parameters;
@@ -110,9 +125,9 @@ OneBitNormalization::operator=(const OneBitNormalization &onebit)
 int OneBitNormalization::initialize(const OneBitNormalizationParameters &parameters)
 {
     clear();
-    if (!parameters.isInitialized())
+    if (!parameters.isValid())
     {
-        RTSEIS_ERRMSG("%s", "Parameters are not yet initialized");
+        RTSEIS_ERRMSG("%s", "Parameters are not valid");
         return -1;
     }
     *this = OneBitNormalization(parameters);

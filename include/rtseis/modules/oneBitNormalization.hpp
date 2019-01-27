@@ -23,6 +23,7 @@ class OneBitNormalizationParameters
          *                 By default this is for post-processing.
          * @param[in] precision  Defines the precision.  By default this
          *                       is double precision.
+         * @ingroup rtseis_modules_onebit_parameters
          */
         OneBitNormalizationParameters(
             const bool lrt = false,
@@ -31,49 +32,69 @@ class OneBitNormalizationParameters
          * @brief Copy assignement operator.
          * @param[in] parameters  Parameters class to copy.
          * @result A deep copy of the input parameters.
+         * @ingroup rtseis_modules_onebit_parameters
          */
         OneBitNormalizationParameters& operator=(const OneBitNormalizationParameters &parameters);
         /*! 
          * @brief Copy constructor.
          * @param[in] parameters  Parameters class to initialize from.
+         * @ingroup rtseis_modules_onebit_parameters
          */
         OneBitNormalizationParameters(const OneBitNormalizationParameters &parameters);
         /*!
          * @brief Default destructor.
+         * @ingroup rtseis_modules_onebit_parameters 
          */
         ~OneBitNormalizationParameters(void);
         /*!
          * @brief Clears variables in class and restores defaults.
          *        This class will have to be re-initialized to use again.
+         * @ingroup rtseis_modules_onebit_parameters
          */
         virtual void clear(void);
         /*!
-         * @brief Determines if the class is initialized.
-         * @retval If true then the class is inititalized.
-         * @retval If false then the class is not initialized.
+         * @brief Determines if the class parameters are valid and can be
+         *        used to initialize the one-bit normalization processing.
+         * @retval True indicates that the parameters are valid.
+         * @retval False indicates that the parameters are invalid.
+         * @ingroup rtseis_modules_onebit_parameters
          */
-        virtual bool isInitialized(void) const;
+        bool isValid(void) const;
+        /*!
+         * @brief Enables the class as being for real-time application or not.
+         * @param[in] lrt  True indicates that this class will be for real-time
+         *                 processing.
+         * @param[in] lrt  False indicates that this class will be for
+         *                 post-processing. 
+         * @ingroup rtseis_modules_onebit_parameters
+         */
+        void setRealTime(const bool lrt);
         /*!
          * @brief Determines if the class is for real-time application.
          * @retval If true then the class is for real-time application.
          * @retval If false then the class is not for real-time application.
+         * @ingroup rtseis_modules_onebit_parameters
          */
-        bool isRealTime(void) const;
+        bool getRealTime(void) const;
         /*!
          * @brief Determines the precision of the class.
          * @result The precision with which the underlying copysign
          *         operation will be performed.
+         * @ingroup rtseis_modules_onebit_parameters
          */
         RTSeis::Precision getPrecision(void) const;
     private:
+        /*!< Validates the parameters. */
+        void validate_(void);
         /*!< Default precision. */
         const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
         /*!< The precision of the module. */
         RTSeis::Precision precision_ = defaultPrecision_; 
         /*!< Flag indicating this module is for real-time. */
         bool isRealTime_ = false;
-        /*!< Flag indicating the module is initialized. */
-        bool isInitialized_ = false;
+        /*!< Flag indicating these parameters are valid for initializing
+             the one-bit normalization structure. */
+        bool isValid_ = true;
 };
 /*!
  * @defgroup rtseis_modules_onebit One-Bit Normalization
@@ -172,7 +193,7 @@ class OneBitNormalization : OneBitNormalizationParameters
          * @retval If true then the class is for real-time application.
          * @retval If false then the class is not for real-time application.
          */
-        bool isInitialized(void) const override;
+        bool isInitialized(void) const;
     private:
         /*!< The parameters. */ 
         OneBitNormalizationParameters parms_;

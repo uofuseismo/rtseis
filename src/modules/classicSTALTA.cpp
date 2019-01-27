@@ -29,13 +29,12 @@ ClassicSTALTAParameters::operator=(const ClassicSTALTAParameters &parameters)
 {
     if (&parameters == this){return *this;}
     clear();
-    if (!parameters.isInitialized()){return *this;}
     precision_ = parameters.precision_;
     isRealTime_ = parameters.isRealTime_;
     nsta_ = parameters.nsta_;
     nlta_ = parameters.nlta_;
     chunkSize_ = parameters.chunkSize_;
-    isInitialized_ = parameters.isInitialized_;
+    isValid_ = parameters.isValid_;
     return *this;
 }
 
@@ -45,8 +44,18 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     const RTSeis::Precision prec) :
     chunkSize_(1024)
 {
-    size_t chunk = chunkSize_;
-    ClassicSTALTAParameters(nsta, nlta, chunk, lrt, prec);
+    clear();
+    // Set the long-term and short-term parameters
+    int ierr = setShortTermAndLongTermWindowSize(nsta, nlta);
+    if (ierr != 0)
+    {
+        clear();
+        return;
+    }
+    setRealTime(lrt);
+    precision_ = prec;
+    // Validate
+    validate_();
     return;
 }
 
@@ -56,8 +65,18 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     const RTSeis::Precision prec) :
     chunkSize_(1024)
 {
-    size_t chunk = chunkSize_;
-    ClassicSTALTAParameters(staWin, ltaWin, dt, chunk, lrt, prec);
+    clear();
+    // Check parameters
+    int ierr = setShortTermAndLongTermWindowSize(staWin, ltaWin, dt);
+    if (ierr != 0)
+    {
+        clear();
+        return;
+    }
+    setRealTime(lrt);
+    precision_ = prec;
+    // Validate
+    validate_();
     return;
 }
 
@@ -68,34 +87,25 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     const RTSeis::Precision prec)
 {
     clear();
-    // Check parameters
-    if (nsta < 1)
-    {   
-        RTSEIS_ERRMSG("STA window=%d samples must be at least 1", nsta);
-        return;
-    }   
-    if (nlta <= nsta)
-    {   
-        RTSEIS_ERRMSG("LTA window=%d samples must be greater than %d",
-                      nlta, nsta);
-        return;
-    }   
-    if (chunkSize < 1)
+    // Set the long-term and short-term parameters
+    int ierr = setShortTermAndLongTermWindowSize(nsta, nlta);
+    if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Chunksize must be positive");
+        clear();
         return;
     }
-    // Initialize
+    ierr = setChunkSize(chunkSize);
+    if (ierr != 0)
+    {
+        clear();
+        return;
+    }
+    setRealTime(lrt);
     precision_ = prec;
-    isRealTime_ = lrt;
-    nsta_ = nsta;
-    nlta_ = nlta;
-    chunkSize_ = chunkSize;
-    isInitialized_ = true;
+    // Validate
+    validate_();
     return;
 }
-
-
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
     const double staWin, const double ltaWin, const double dt, 
@@ -105,42 +115,22 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
 {
     clear();
     // Check parameters
-    if (chunkSize < 1)
+    int ierr = setShortTermAndLongTermWindowSize(staWin, ltaWin, dt);
+    if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Chunksize must be positive");
+        clear();
         return;
     }
-    if (dt <= 0)
+    ierr = setChunkSize(chunkSize);
+    if (ierr != 0)
     {
-        RTSEIS_ERRMSG("dt=%lf must be postiive", dt) 
+        clear();
         return;
     }
-    if (staWin < dt) 
-    {
-        RTSEIS_ERRMSG("STA window length=%lf (s) must be at least %lf (s) ",
-                      staWin, dt);
-        return;
-    }
-    if (ltaWin <= staWin + dt) 
-    {
-        RTSEIS_ERRMSG("LTA window length=%lf (s) must be at least %lf (s) ",
-                      ltaWin, staWin + dt);
-        return;
-    }
-    int nsta = static_cast<int> (staWin/dt + 0.5);
-    int nlta = static_cast<int> (ltaWin/dt + 0.5);
-    if (nlta <= nsta)
-    {
-        RTSEIS_ERRMSG("%s", "Algorithmic failure");
-        return;
-    }
-    // Initialize
+    setRealTime(lrt);
     precision_ = prec;
-    isRealTime_ = lrt;
-    nsta_ = nsta;
-    nlta_ = nlta;
-    chunkSize_ = chunkSize;
-    isInitialized_ = true;
+    // Validate
+    validate_();
     return;
 }
 
@@ -153,15 +143,81 @@ void ClassicSTALTAParameters::clear(void)
 {
     nsta_ = 0;
     nlta_ = 0;
+    chunkSize_ = 1024;
     precision_ = defaultPrecision_;
     isRealTime_ = false;
-    isInitialized_ = false;
+    isValid_ = false;
     return;
+}
+
+int ClassicSTALTAParameters::setChunkSize(const size_t chunkSize)
+{
+    if (chunkSize < 1)
+    {
+        RTSEIS_ERRMSG("%s", "Chunksize must be positive");
+        return -1;
+    }
+    chunkSize_ = chunkSize;
+    validate_();
+    return 0;
 }
 
 size_t ClassicSTALTAParameters::getChunkSize(void) const
 {
     return chunkSize_;
+}
+
+int ClassicSTALTAParameters::setShortTermAndLongTermWindowSize(
+    const int nsta, const int nlta)
+{
+    if (nsta < 1)
+    {
+        RTSEIS_ERRMSG("STA window=%d samples must be at least 1", nsta);
+        return -1;
+    }
+    if (nlta <= nsta)
+    {
+        RTSEIS_ERRMSG("LTA window=%d samples must be greater than %d",
+                      nlta, nsta);
+        return -1;
+    }
+    nsta_ = nsta;
+    nlta_ = nlta;
+    validate_();
+    return 0;
+}
+
+int ClassicSTALTAParameters::setShortTermAndLongTermWindowSize(
+    const double staWin, const double ltaWin, const double dt)
+{
+    if (dt <= 0)
+    {
+        RTSEIS_ERRMSG("dt=%lf must be postiive", dt);
+        return -1;
+    }
+    if (staWin < 0)
+    {
+        RTSEIS_ERRMSG("STA window length=%lf (s) must be at least %lf (s) ",
+                      staWin, dt);
+        return -1;
+    }
+    if (ltaWin <= staWin + dt/2)
+    {
+        RTSEIS_ERRMSG("LTA window length=%lf (s) must be at least %lf (s) ",
+                      ltaWin, staWin + dt);
+        return -1;
+    }
+    int nsta = static_cast<int> (staWin/dt + 0.5) + 1;
+    int nlta = static_cast<int> (ltaWin/dt + 0.5) + 1;
+    if (nlta <= nsta)
+    {
+        RTSEIS_ERRMSG("%s", "Algorithmic failure");
+        return -1;
+    }
+    nsta_ = nsta;
+    nlta_ = nlta;
+    validate_();
+    return 0;
 }
 
 int ClassicSTALTAParameters::getLongTermWindowSize(void) const
@@ -174,12 +230,14 @@ int ClassicSTALTAParameters::getShortTermWindowSize(void) const
     return nsta_;
 }
 
-bool ClassicSTALTAParameters::isInitialized(void) const
+void ClassicSTALTAParameters::setRealTime(const bool lrt)
 {
-    return isInitialized_;
+    isRealTime_ = lrt;
+    validate_();
+    return;
 }
 
-bool ClassicSTALTAParameters::isRealTime(void) const
+bool ClassicSTALTAParameters::getRealTime(void) const
 {
     return isRealTime_;
 }
@@ -187,6 +245,23 @@ bool ClassicSTALTAParameters::isRealTime(void) const
 RTSeis::Precision ClassicSTALTAParameters::getPrecision(void) const
 {
     return precision_;
+}
+
+bool ClassicSTALTAParameters::isValid(void) const
+{
+    return isValid_;
+}
+
+void ClassicSTALTAParameters::validate_(void)
+{
+    isValid_ = false;
+    if (chunkSize_ < 1){return;}
+    if (nsta_ < 1){return;}
+    if (nlta_ <= nsta_){return;}
+    if (getPrecision() != RTSeis::Precision::DOUBLE &&
+        getPrecision() != RTSeis::Precision::FLOAT){return;}
+    isValid_ = true;
+    return;
 }
 
 //============================================================================//
@@ -203,13 +278,13 @@ ClassicSTALTA::ClassicSTALTA(const ClassicSTALTA &cstalta)
     *this = cstalta;
 }
 
-ClassicSTALTA::ClassicSTALTA(const ClassicSTALTAParameters &parameters)
+ClassicSTALTA::ClassicSTALTA(const ClassicSTALTAParameters parameters)
 {
     const bool lrt = true;
     clear();
-    if (!parameters.isInitialized())
+    if (!parameters.isValid())
     {
-        RTSEIS_ERRMSG("%s", "Parameters are not initialized");
+        RTSEIS_ERRMSG("%s", "Parameters are not valid");
         return;
     }
     parms_ = parameters;
@@ -298,28 +373,34 @@ ClassicSTALTA& ClassicSTALTA::operator=(const ClassicSTALTA &cstalta)
         Ipp64f *x2In  = static_cast<Ipp64f *> (cstalta.x2_);
         Ipp64f *x2Out = ippsMalloc_64f(chunkSize);
         ippsCopy_64f(x2In, x2Out, chunkSize);
+        x2_ = x2Out;
 
         Ipp64f *ynumIn  = static_cast<Ipp64f *> (cstalta.ynum_);
         Ipp64f *ynumOut = ippsMalloc_64f(chunkSize);
         ippsCopy_64f(ynumIn, ynumOut, chunkSize);
+        ynum_ = ynumOut;
 
         Ipp64f *ydenIn  = static_cast<Ipp64f *> (cstalta.yden_);
         Ipp64f *ydenOut = ippsMalloc_64f(chunkSize);
         ippsCopy_64f(ydenIn, ydenOut, chunkSize);
+        yden_ = ydenOut;
     }
     else
     {
         Ipp32f *x2In  = static_cast<Ipp32f *> (cstalta.x2_);
         Ipp32f *x2Out = ippsMalloc_32f(chunkSize);
         ippsCopy_32f(x2In, x2Out, chunkSize);
+        x2_ = x2Out;
 
         Ipp32f *ynumIn  = static_cast<Ipp32f *> (cstalta.ynum_);
         Ipp32f *ynumOut = ippsMalloc_32f(chunkSize);
         ippsCopy_32f(ynumIn, ynumOut, chunkSize);
+        ynum_ = ynumOut;
 
         Ipp32f *ydenIn  = static_cast<Ipp32f *> (cstalta.yden_);
         Ipp32f *ydenOut = ippsMalloc_32f(chunkSize);
         ippsCopy_32f(ydenIn, ydenOut, chunkSize);
+        yden_ = ydenOut;
     }
     isInitialized_ = cstalta.isInitialized_;
     return *this;
@@ -507,7 +588,7 @@ int ClassicSTALTA::apply(const int nx, const double x[], double y[])
         }
     }
     // Reset the initial conditions for post-processing
-    if (!parms_.isRealTime())
+    if (!parms_.getRealTime())
     {
         resetInitialConditions();
     }
@@ -579,7 +660,7 @@ int ClassicSTALTA::apply(const int nx, const float x[], float y[])
         }
     }
     // Reset the initial conditions for post-processing
-    if (!parms_.isRealTime())
+    if (!parms_.getRealTime())
     {
         resetInitialConditions();
     }

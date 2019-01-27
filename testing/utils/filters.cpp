@@ -31,7 +31,7 @@ int rtseis_test_utils_filters(void)
 //    double dt = 1.0/200.0;
     int npts;
     double *x = nullptr;
-    std::string dataDir = "utils/data/";
+    std::string dataDir = "data/";
     // Load the data
     int ierr = readTextFile(&npts, &x, dataDir + "gse2.txt");
     if (ierr != EXIT_SUCCESS)

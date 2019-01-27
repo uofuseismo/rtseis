@@ -133,6 +133,7 @@ ADD_EXECUTABLE(testUtils
 ADD_EXECUTABLE(testModules
                testing/modules/modules.cpp
                testing/modules/detrend.cpp
+               testing/modules/classicSTALTA.cpp
                testing/modules/oneBitNormalization.cpp)
 
 TARGET_LINK_LIBRARIES(testUtils   rtseis_shared ${LIBALL})
