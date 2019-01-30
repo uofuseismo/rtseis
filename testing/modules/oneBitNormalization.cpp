@@ -15,8 +15,10 @@ using namespace RTSeis::Modules;
 int rtseis_test_modules_oneBitNormalization(void)
 {
     // Set the defaults
-    OneBitNormalizationParameters ppParms(false, RTSeis::Precision::DOUBLE);
-    OneBitNormalizationParameters rtParms(true,  RTSeis::Precision::DOUBLE);
+    OneBitNormalizationParameters ppParms(RTSeis::ProcessingMode::POST_PROCESSING,
+                                          RTSeis::Precision::DOUBLE);
+    OneBitNormalizationParameters rtParms(RTSeis::ProcessingMode::REAL_TIME,
+                                          RTSeis::Precision::DOUBLE);
     OneBitNormalization oneBit(ppParms);
     // Create a random signal
     int npts = 6500;

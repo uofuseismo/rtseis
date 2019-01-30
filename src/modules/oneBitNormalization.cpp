@@ -9,10 +9,10 @@
 using namespace RTSeis::Modules;
 
 OneBitNormalizationParameters::OneBitNormalizationParameters(
-    const bool lrt,
+    const RTSeis::ProcessingMode mode,
     const RTSeis::Precision prec) :
     precision_(prec),
-    isRealTime_(lrt),
+    processingMode_(mode),
     isValid_(true)
 {
     return;
@@ -32,7 +32,7 @@ OneBitNormalizationParameters::operator=(
     if (&parameters == this){return *this;}
     clear();
     precision_ = parameters.precision_;
-    isRealTime_ = parameters.isRealTime_;
+    processingMode_ = parameters.processingMode_;
     isValid_ = parameters.isValid_;
     return *this;
 }
@@ -46,7 +46,7 @@ OneBitNormalizationParameters::~OneBitNormalizationParameters(void)
 void OneBitNormalizationParameters::clear(void)
 {
     precision_ = defaultPrecision_;
-    isRealTime_ = false;
+    processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
     isValid_ = true; // This is still a valid processing class 
     return;
 }
@@ -56,16 +56,18 @@ bool OneBitNormalizationParameters::isValid(void) const
     return isValid_;
 }
 
-void OneBitNormalizationParameters::setRealTime(const bool lrt)
+void OneBitNormalizationParameters::setProcessingMode(
+    const RTSeis::ProcessingMode mode)
 {
-    isRealTime_ = lrt;
+    processingMode_ = mode;
     validate_();
     return;
 } 
 
-bool OneBitNormalizationParameters::getRealTime(void) const
+RTSeis::ProcessingMode
+OneBitNormalizationParameters::getProcessingMode(void) const
 {
-    return isRealTime_;
+    return processingMode_;
 }
 
 RTSeis::Precision OneBitNormalizationParameters::getPrecision(void) const

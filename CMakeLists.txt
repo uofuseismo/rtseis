@@ -82,6 +82,7 @@ SET(UTILS_SRCS
     src/utils/design/sos.cpp
     src/utils/design/zpk.cpp
     src/utils/design/analogProtype.cpp
+    src/utils/design/windowFunctions.cpp
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
     src/utils/filters/iiriirFilter.cpp
@@ -129,7 +130,8 @@ ADD_EXECUTABLE(testUtils
                testing/utils/iir.cpp
                testing/utils/response.cpp
                testing/utils/filters.cpp
-               testing/utils/transforms.cpp)
+               testing/utils/transforms.cpp
+               testing/utils/windowFunctions.cpp)
 ADD_EXECUTABLE(testModules
                testing/modules/modules.cpp
                testing/modules/detrend.cpp

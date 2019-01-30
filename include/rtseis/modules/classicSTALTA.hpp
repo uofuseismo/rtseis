@@ -43,15 +43,15 @@ class ClassicSTALTAParameters
          *                  window.  This must be positive.
          * @param[in] nlta  Number of samples in the long-term average
          *                  window.  This must be greater than nlta.
-         * @param[in] lrt  Flag indicating whether or not this is for real-time.
-         *                 By default this is for post-processing.
+         * @param[in] mode  Indicates whether or not this is for real-time.
+         *                  By default this is for post-processing.
          * @param[in] precision  Defines the precision.  By default this
          *                       is a double precision module.
          * @ingroup rtseis_modules_cSTALTA_parameters
          */
         ClassicSTALTAParameters(
             const int nsta, const int nlta,
-            const bool lrt = false,
+            const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
             const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         /*!
          * @brief Initializes the Classic STA/LTA parameters.
@@ -61,10 +61,10 @@ class ClassicSTALTAParameters
          *                    seconds.  This must be greater than the STA
          *                    window length plus the half sampling period
          *                    i.e., \f$ LTA \gt STA + \frac{\Delta T}{2} \f$.
-         * @param[in] dt   The sampling period in seconds.  This must be
-         *                 positive.
-         * @param[in] lrt  Flag indicating whether or not this is for real-time.
-         *                 By default this is for post-processing.
+         * @param[in] dt      The sampling period in seconds.  This must be
+         *                    positive.
+         * @param[in] mode    Indicates whether or not this is for real-time.
+         *                    By default this is for post-processing.
          * @param[in] precision  Defines the precision.  By default this
          *                       is a double precision module.
          * @ingroup rtseis_modules_cSTALTA_parameters
@@ -72,7 +72,7 @@ class ClassicSTALTAParameters
         ClassicSTALTAParameters(
             const double staWin, const double ltaWin,
             const double dt,
-            const bool lrt = false,
+            const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
             const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         /*!
          * @brief Initializes the Classic STA/LTA parameters.
@@ -83,16 +83,16 @@ class ClassicSTALTAParameters
          * @param[in] chunkSize  A tuning parameter that defines the temporary
          *                       storage of the workspace arrays.  This should
          *                       be a power of 2 and positive.
-         * @param[in] lrt  Flag indicating whether or not this is for real-time.
-         *                 By default this is for post-processing.
+         * @param[in] mode  Indicates whether or not this is for real-time.
+         *                  By default this is for post-processing.
          * @param[in] precision  Defines the precision.  By default this
          *                       is a double precision module.
          * @ingroup rtseis_modules_cSTALTA_parameters
          */
         ClassicSTALTAParameters(
             const int nsta, const int nlta,
-            const size_t chunkSize = 1024,
-            const bool lrt = false,
+            const size_t chunkSize,
+            const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
             const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         /*!
          * @brief Initializes the Classic STA/LTA parameters.
@@ -107,8 +107,8 @@ class ClassicSTALTAParameters
          *                       be a power of 2 and positive. 
          * @param[in] dt   The sampling period in seconds.  This must be
          *                 positive.
-         * @param[in] lrt  Flag indicating whether or not this is for real-time.
-         *                 By default this is for post-processing.
+         * @param[in] mode  Indicates whether or not this is for real-time.
+         *                  By default this is for post-processing.
          * @param[in] precision  Defines the precision.  By default this
          *                       is a double precision module.
          * @ingroup rtseis_modules_cSTALTA_parameters
@@ -116,8 +116,8 @@ class ClassicSTALTAParameters
         ClassicSTALTAParameters(
             const double staWin, const double ltaWin,
             const double dt, 
-            const size_t chunkSize = 1024,
-            const bool lrt = false,
+            const size_t chunkSize,
+            const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
             const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         /*!
          * @brief Default destructor.
@@ -199,13 +199,11 @@ class ClassicSTALTAParameters
         int getShortTermWindowSize(void) const;
         /*!
          * @brief Enables the class as being for real-time application or not.
-         * @param[in] lrt  True indicates that this class will be for real-time
-         *                 processing.
-         * @param[in] lrt  False indicates that this class will be for
-         *                 post-processing. 
+         * @param[in] mode  Indicates whether the module is for post-processing
+         *                  or real-time processing.
          * @ingroup rtseis_modules_onebit_parameters
          */
-        void setRealTime(const bool lrt);
+        void setProcessingMode(const RTSeis::ProcessingMode mode);
         /*!
          * @brief Determines if the class is for real-time application.
          * @retval True indicates that the class is for real-time
@@ -214,7 +212,7 @@ class ClassicSTALTAParameters
          *         application.
          * @ingroup rtseis_modules_cSTALTA_parameters
          */
-        bool getRealTime(void) const;
+        RTSeis::ProcessingMode getProcessingMode(void) const;
         /*!
          * @brief Determines the precision of the class.
          * @result The precision with which the underlying copysign
@@ -236,8 +234,8 @@ class ClassicSTALTAParameters
         size_t chunkSize_ = 1024;
         /*!< The precision of the module. */
         RTSeis::Precision precision_ = defaultPrecision_;
-        /*!< Flag indicating this module is for real-time. */
-        bool isRealTime_ = false;
+        /*!< Flag indicating this module is for real-time or post-processing. */
+        RTSeis::ProcessingMode processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         /*!< Flag indicating that this is a valid module for processing. */
         bool isValid_ = false;
 };

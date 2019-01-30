@@ -28,9 +28,20 @@ enum rtseisVerbosityLevel_enum
 #ifdef __cplusplus
 namespace RTSeis
 {
+    enum ProcessingMode
+    {
+        /*!< Indicates the module is to be used for post-processing. */
+        POST_PROCESSING = 1,
+        /*!< Indicates the mdoule is to be used for real-time processing. */
+        REAL_TIME = 2
+    };
     enum Precision
     {
+        /*!< Indicates the computations underlying the module should be
+             performed in floating point precision. */
         FLOAT = 1,
+        /*!< Indicates the computations underlying the module should be
+             performed in double precision. */
         DOUBLE = 2
     };
 //            /*!< Float precision. */

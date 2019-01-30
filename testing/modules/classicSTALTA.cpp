@@ -31,9 +31,10 @@ int rtseis_test_modules_classicSTALTA(const int npts, const double x[],
     int nlta = static_cast<int> (10/dt);
     int nsta = static_cast<int> (5/dt);
     ClassicSTALTAParameters ppParms(nsta, nlta,
-                                    false, RTSeis::Precision::DOUBLE);
+                                    RTSeis::ProcessingMode::POST_PROCESSING,
+                                    RTSeis::Precision::DOUBLE);
     ClassicSTALTAParameters rtParms = ppParms;
-    rtParms.setRealTime(true);
+    rtParms.setProcessingMode(RTSeis::ProcessingMode::REAL_TIME);
     rtParms.setChunkSize(512);
     // Initialize the stalta
     ClassicSTALTA stalta(ppParms);

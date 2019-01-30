@@ -14,7 +14,7 @@ using namespace RTSeis::Modules;
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(void)
 {
-    clear();
+    return;
 }
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
@@ -30,7 +30,7 @@ ClassicSTALTAParameters::operator=(const ClassicSTALTAParameters &parameters)
     if (&parameters == this){return *this;}
     clear();
     precision_ = parameters.precision_;
-    isRealTime_ = parameters.isRealTime_;
+    processingMode_ = parameters.processingMode_;
     nsta_ = parameters.nsta_;
     nlta_ = parameters.nlta_;
     chunkSize_ = parameters.chunkSize_;
@@ -40,11 +40,10 @@ ClassicSTALTAParameters::operator=(const ClassicSTALTAParameters &parameters)
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
     const int nsta, const int nlta,
-    const bool lrt,
+    const RTSeis::ProcessingMode mode,
     const RTSeis::Precision prec) :
     chunkSize_(1024)
 {
-    clear();
     // Set the long-term and short-term parameters
     int ierr = setShortTermAndLongTermWindowSize(nsta, nlta);
     if (ierr != 0)
@@ -52,7 +51,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
         clear();
         return;
     }
-    setRealTime(lrt);
+    setProcessingMode(mode);
     precision_ = prec;
     // Validate
     validate_();
@@ -61,11 +60,10 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
     const double staWin, const double ltaWin, const double dt,
-    const bool lrt,
+    const RTSeis::ProcessingMode mode,
     const RTSeis::Precision prec) :
     chunkSize_(1024)
 {
-    clear();
     // Check parameters
     int ierr = setShortTermAndLongTermWindowSize(staWin, ltaWin, dt);
     if (ierr != 0)
@@ -73,7 +71,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
         clear();
         return;
     }
-    setRealTime(lrt);
+    setProcessingMode(mode);
     precision_ = prec;
     // Validate
     validate_();
@@ -83,10 +81,9 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
 ClassicSTALTAParameters::ClassicSTALTAParameters(
     const int nsta, const int nlta,
     const size_t chunkSize,
-    const bool lrt,
+    const RTSeis::ProcessingMode mode,
     const RTSeis::Precision prec)
 {
-    clear();
     // Set the long-term and short-term parameters
     int ierr = setShortTermAndLongTermWindowSize(nsta, nlta);
     if (ierr != 0)
@@ -100,7 +97,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
         clear();
         return;
     }
-    setRealTime(lrt);
+    setProcessingMode(mode);
     precision_ = prec;
     // Validate
     validate_();
@@ -110,10 +107,9 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
 ClassicSTALTAParameters::ClassicSTALTAParameters(
     const double staWin, const double ltaWin, const double dt, 
     const size_t chunkSize,
-    const bool lrt,
+    const RTSeis::ProcessingMode mode,
     const RTSeis::Precision prec)
 {
-    clear();
     // Check parameters
     int ierr = setShortTermAndLongTermWindowSize(staWin, ltaWin, dt);
     if (ierr != 0)
@@ -127,7 +123,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
         clear();
         return;
     }
-    setRealTime(lrt);
+    setProcessingMode(mode);
     precision_ = prec;
     // Validate
     validate_();
@@ -145,7 +141,7 @@ void ClassicSTALTAParameters::clear(void)
     nlta_ = 0;
     chunkSize_ = 1024;
     precision_ = defaultPrecision_;
-    isRealTime_ = false;
+    processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
     isValid_ = false;
     return;
 }
@@ -230,16 +226,17 @@ int ClassicSTALTAParameters::getShortTermWindowSize(void) const
     return nsta_;
 }
 
-void ClassicSTALTAParameters::setRealTime(const bool lrt)
+void ClassicSTALTAParameters::setProcessingMode(
+    const RTSeis::ProcessingMode mode)
 {
-    isRealTime_ = lrt;
+    processingMode_ = mode;
     validate_();
     return;
 }
 
-bool ClassicSTALTAParameters::getRealTime(void) const
+RTSeis::ProcessingMode ClassicSTALTAParameters::getProcessingMode(void) const
 {
-    return isRealTime_;
+    return processingMode_;
 }
 
 RTSeis::Precision ClassicSTALTAParameters::getPrecision(void) const
@@ -588,7 +585,7 @@ int ClassicSTALTA::apply(const int nx, const double x[], double y[])
         }
     }
     // Reset the initial conditions for post-processing
-    if (!parms_.getRealTime())
+    if (parms_.getProcessingMode() != RTSeis::ProcessingMode::REAL_TIME)
     {
         resetInitialConditions();
     }
@@ -660,7 +657,7 @@ int ClassicSTALTA::apply(const int nx, const float x[], float y[])
         }
     }
     // Reset the initial conditions for post-processing
-    if (!parms_.getRealTime())
+    if (parms_.getProcessingMode() != RTSeis::ProcessingMode::REAL_TIME)
     {
         resetInitialConditions();
     }

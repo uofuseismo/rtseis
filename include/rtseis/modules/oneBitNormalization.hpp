@@ -19,14 +19,14 @@ class OneBitNormalizationParameters
     public:
         /*!
          * @brief Default constructor.
-         * @param[in] lrt  Flag indicating whether or not this is for real-time.
-         *                 By default this is for post-processing.
+         * @param[in] mode  Determines the processing mode as being for 
+         *                  post-processing or real-time processing.
          * @param[in] precision  Defines the precision.  By default this
          *                       is double precision.
          * @ingroup rtseis_modules_onebit_parameters
          */
         OneBitNormalizationParameters(
-            const bool lrt = false,
+            const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
             const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         /*!
          * @brief Copy assignement operator.
@@ -62,20 +62,17 @@ class OneBitNormalizationParameters
         bool isValid(void) const;
         /*!
          * @brief Enables the class as being for real-time application or not.
-         * @param[in] lrt  True indicates that this class will be for real-time
-         *                 processing.
-         * @param[in] lrt  False indicates that this class will be for
-         *                 post-processing. 
+         * @param[in] mode  Defines the processing mode as for post-processing
+         *                  or real-time application.
          * @ingroup rtseis_modules_onebit_parameters
          */
-        void setRealTime(const bool lrt);
+        void setProcessingMode(const RTSeis::ProcessingMode mode);
         /*!
-         * @brief Determines if the class is for real-time application.
-         * @retval If true then the class is for real-time application.
-         * @retval If false then the class is not for real-time application.
+         * @brief Determines if the class is for post-processing or
+         *        real-time processing.
          * @ingroup rtseis_modules_onebit_parameters
          */
-        bool getRealTime(void) const;
+        RTSeis::ProcessingMode getProcessingMode(void) const;
         /*!
          * @brief Determines the precision of the class.
          * @result The precision with which the underlying copysign
@@ -91,7 +88,7 @@ class OneBitNormalizationParameters
         /*!< The precision of the module. */
         RTSeis::Precision precision_ = defaultPrecision_; 
         /*!< Flag indicating this module is for real-time. */
-        bool isRealTime_ = false;
+        RTSeis::ProcessingMode processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         /*!< Flag indicating these parameters are valid for initializing
              the one-bit normalization structure. */
         bool isValid_ = true;
