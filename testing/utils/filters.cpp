@@ -19,6 +19,8 @@ static int readTextFile(int *npts, double *xPtr[],
 static int filters_downsample_test(const int npts, const double x[]);
 static int filters_firFilter_test(const int npts, const double x[],
                            const std::string fileName);
+static int filters_firMRFilter_test(const int npts, const double x[],
+                                    const std::string fileName);
 static int filters_medianFilter_test(const int npts, const double x[],
                                      const std::string fileName);
 static int filters_sosFilter_test(const int npts, const double x[],
@@ -75,6 +77,13 @@ int rtseis_test_utils_filters(void)
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed fir filter test");
+        return EXIT_FAILURE;
+    }
+    ierr = filters_firMRFilter_test(npts, x,
+                                    dataDir + "firResampleReference.txt");
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed firmr filter test");
         return EXIT_FAILURE;
     }
 
@@ -214,6 +223,99 @@ int filters_iiriirFilter_test(const int npts, const double x[],
     delete[] yi;
     delete[] yiRef;
 #endif 
+    return EXIT_SUCCESS;
+}
+//============================================================================//
+int filters_firMRFilter_test(const int npts, const double x[],
+                             const std::string fileName)
+{
+    fprintf(stdout, "Testing FIR filter...\n");
+    const int nb = 51; 
+    int upFactor = 3;
+    int downFactor = 8; 
+    //const int na = 1;
+    const double b[51] = {-0.000000000000000, -0.001056235801065,
+                          -0.000769341020163,  0.000956323223723,
+                           0.001976082742122, -0.000000000000000,
+                          -0.003265384800345, -0.002568519852901,
+                           0.003234633130890,  0.006519908075213,
+                          -0.000000000000000, -0.009825739114867,
+                          -0.007365685405410,  0.008881348924986,
+                           0.017256056989442, -0.000000000000000,
+                          -0.024784271698734, -0.018417666768131,
+                           0.022299534288278,  0.044222443880910,
+                          -0.000000000000000, -0.071469809226860,
+                          -0.060430328816090,  0.092317626953209,
+                           0.302027315266443,  0.400523418058701,
+                           0.302027315266443,  0.092317626953209,
+                          -0.060430328816090, -0.071469809226860,
+                          -0.000000000000000,  0.044222443880910,
+                           0.022299534288278, -0.018417666768131,
+                          -0.024784271698734, -0.000000000000000,
+                           0.017256056989442,  0.008881348924986,
+                          -0.007365685405410, -0.009825739114867,
+                          -0.000000000000000,  0.006519908075213,
+                           0.003234633130890, -0.002568519852901,
+                          -0.003265384800345, -0.000000000000000,
+                           0.001976082742122,  0.000956323223723,
+                          -0.000769341020163, -0.001056235801065,
+                          -0.000000000000000};
+    // Load a reference solution
+    double *yref = nullptr;
+    int npref = 0;
+    int ierr = readTextFile(&npref, &yref, fileName);
+    if (ierr != 0)
+    {   
+        RTSEIS_ERRMSG("%s", "Failed to load reference data");
+        return EXIT_FAILURE;
+    }
+    // Initialize filter
+    //double gain = static_cast<double> (upFactor);
+    //ippsMulC_64f(b, gain, bgain, nb); // Fix gain
+    MultiRateFIRFilter firmr;
+    ierr = firmr.initialize(upFactor, downFactor, nb, b,
+                            RTSeis::ProcessingMode::POST_PROCESSING,
+                            RTSeis::Precision::DOUBLE);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize fir filter");
+        return EXIT_FAILURE;
+    }
+    // Estimate space in output
+    int nest = firmr.estimateSpace(npts);
+    if (nest != 4500)
+    {
+        RTSEIS_WARNMSG("%s", "Anticipating 4500 points in comparison");
+    }
+    int ncomp = std::min(nest, npref);
+    // Filter 
+    double *y = new double[npts];
+    int ny;
+    ierr = firmr.apply(npts, x, npts, &ny, y);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to apply filter");
+        return EXIT_FAILURE;
+    }
+    double error = 0;
+    for (int i=0; i<ncomp; i++)
+    {
+        error = std::max(error, std::abs(y[i] - yref[i]));
+    }
+    if (error > 1.e-10)
+    {
+        RTSEIS_ERRMSG("Failed to apply upfirndn post-proc %.10e\n", error); 
+        return EXIT_FAILURE;
+    }
+    // Repeat for real-time 
+    MultiRateFIRFilter firmrRT;
+    ierr = firmrRT.initialize(upFactor, downFactor, nb, b,
+                              RTSeis::ProcessingMode::REAL_TIME,
+                              RTSeis::Precision::DOUBLE); 
+    //firmr = firmrRT; 
+printf("%d %d\n", firmr.estimateSpace(npts), npref);
+    delete[] y;
+    free(yref);
     return EXIT_SUCCESS;
 }
 //============================================================================//

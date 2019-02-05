@@ -3,7 +3,6 @@
 #include <ipps.h>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#define IPPS_CORE_SRC 1
 #include "rtseis/log.h"
 #include "rtseis/utils/filters.hpp"
 

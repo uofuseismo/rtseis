@@ -1,6 +1,7 @@
 #ifndef RTSEIS_MODULES_ONEBIT_HPP
 #define RTSEIS_MODULES_ONEBIT_HPP 1
 #include "rtseis/config.h"
+#include <memory>
 #include "rtseis/enums.h"
 
 namespace RTSeis
@@ -81,17 +82,19 @@ class OneBitNormalizationParameters
          */
         RTSeis::Precision getPrecision(void) const;
     private:
+        class OneBitVars;
+        std::unique_ptr<OneBitVars> pImpl_;
         /*!< Validates the parameters. */
-        void validate_(void);
+        //void validate_(void);
         /*!< Default precision. */
-        const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
+        //const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
         /*!< The precision of the module. */
-        RTSeis::Precision precision_ = defaultPrecision_; 
+        //RTSeis::Precision precision_ = defaultPrecision_; 
         /*!< Flag indicating this module is for real-time. */
-        RTSeis::ProcessingMode processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        //RTSeis::ProcessingMode processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         /*!< Flag indicating these parameters are valid for initializing
              the one-bit normalization structure. */
-        bool isValid_ = true;
+        //bool isValid_ = true;
 };
 /*!
  * @defgroup rtseis_modules_onebit One-Bit Normalization

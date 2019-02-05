@@ -85,6 +85,7 @@ SET(UTILS_SRCS
     src/utils/design/windowFunctions.cpp
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
+    src/utils/filters/firfilterMR.cpp
     src/utils/filters/iiriirFilter.cpp
     src/utils/filters/medianFilter.cpp
     src/utils/filters/sos.cpp

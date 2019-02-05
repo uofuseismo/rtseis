@@ -8,12 +8,87 @@
 
 using namespace RTSeis::Modules;
 
+class OneBitNormalizationParameters::OneBitVars
+{
+    public:
+        OneBitVars(void){return;}
+        OneBitVars(const RTSeis::ProcessingMode mode,
+                   const RTSeis::Precision prec) :
+                   precision_(prec),
+                   processingMode_(mode),
+                   isValid_(true)
+        {
+            return;
+        }
+        OneBitVars& operator=(const OneBitVars &pParms)
+        {
+            if (&pParms == this){return *this;}
+            precision_ = pParms.precision_;
+            processingMode_ = pParms.processingMode_;
+            isValid_ = pParms.isValid_;
+            return *this;
+        }
+        OneBitVars(const OneBitVars &pParms)
+        {
+            *this = pParms;
+            return;
+        }
+        ~OneBitVars(void)
+        {
+            clear();
+        }  
+        void clear(void)
+        {
+            processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+            precision_ = defaultPrecision_;
+            isValid_ = true;
+            return;
+        }
+        bool isValid(void) const
+        {
+            return isValid_;
+        }
+        RTSeis::ProcessingMode getProcessingMode(void) const
+        {
+            return processingMode_;
+        }
+        int setProcessingMode(const RTSeis::ProcessingMode mode)
+        {
+            processingMode_ = mode;
+            validate();
+            return 0;
+        }
+        int setPrecision(const RTSeis::Precision prec)
+        {
+            precision_ = prec;
+            validate();
+            return 0;
+        } 
+        RTSeis::Precision getPrecision(void) const
+        {
+            return precision_;
+        }
+        void validate(void)
+        {
+            isValid_ = false;
+            if (getPrecision() != RTSeis::Precision::DOUBLE &&
+                getPrecision() != RTSeis::Precision::FLOAT){return;}
+            isValid_ = true;
+            return;
+        }
+        const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
+        RTSeis::Precision precision_ = defaultPrecision_;
+        RTSeis::ProcessingMode processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        bool isValid_ = true;
+};
+
 OneBitNormalizationParameters::OneBitNormalizationParameters(
     const RTSeis::ProcessingMode mode,
     const RTSeis::Precision prec) :
-    precision_(prec),
-    processingMode_(mode),
-    isValid_(true)
+//    precision_(prec),
+//    processingMode_(mode),
+//    isValid_(true),
+    pImpl_(new OneBitVars(mode, prec))
 {
     return;
 }
@@ -30,10 +105,12 @@ OneBitNormalizationParameters::operator=(
     const OneBitNormalizationParameters &parameters)
 {
     if (&parameters == this){return *this;}
-    clear();
+    pImpl_ = std::unique_ptr<OneBitVars> (new OneBitVars(*parameters.pImpl_));
+/*
     precision_ = parameters.precision_;
     processingMode_ = parameters.processingMode_;
     isValid_ = parameters.isValid_;
+*/
     return *this;
 }
 
@@ -45,36 +122,46 @@ OneBitNormalizationParameters::~OneBitNormalizationParameters(void)
 
 void OneBitNormalizationParameters::clear(void)
 {
+    pImpl_->clear();
+/*
     precision_ = defaultPrecision_;
     processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
     isValid_ = true; // This is still a valid processing class 
+*/
     return;
 }
 
 bool OneBitNormalizationParameters::isValid(void) const
 {
-    return isValid_;
+    return pImpl_->isValid();
+    //return isValid_;
 }
 
 void OneBitNormalizationParameters::setProcessingMode(
     const RTSeis::ProcessingMode mode)
 {
+    pImpl_->setProcessingMode(mode);
+/*
     processingMode_ = mode;
     validate_();
+*/
     return;
 } 
 
 RTSeis::ProcessingMode
 OneBitNormalizationParameters::getProcessingMode(void) const
 {
-    return processingMode_;
+    return pImpl_->getProcessingMode();
+    //return processingMode_;
 }
 
 RTSeis::Precision OneBitNormalizationParameters::getPrecision(void) const
 {
-    return precision_;
+    return pImpl_->getPrecision();
+    //return precision_;
 }
 
+/*
 void OneBitNormalizationParameters::validate_(void)
 {
     isValid_ = false;
@@ -83,6 +170,7 @@ void OneBitNormalizationParameters::validate_(void)
     isValid_ = true;
     return;
 }
+*/
 //============================================================================//
 //                                   End Parameters                           //
 //============================================================================//
