@@ -429,9 +429,10 @@ int filters_firFilter_test(const int npts, const double x[],
         return EXIT_FAILURE;
     }
     // Make a post-processing solution
-    bool lrt = false;
     FIRFilter fir;
-    ierr = fir.initialize(nb, b, lrt, RTSeis::Precision::DOUBLE,
+    ierr = fir.initialize(nb, b,
+                          RTSeis::ProcessingMode::POST_PROCESSING,
+                          RTSeis::Precision::DOUBLE,
                           FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {
@@ -460,16 +461,18 @@ int filters_firFilter_test(const int npts, const double x[],
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
-    fir.clear();
     // Do packetized tests
-    lrt = true;
-    ierr = fir.initialize(nb, b, lrt, RTSeis::Precision::DOUBLE,
+    FIRFilter firrt;
+    ierr = firrt.initialize(nb, b,
+                          RTSeis::ProcessingMode::REAL_TIME,
+                          RTSeis::Precision::DOUBLE,
                           FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
         return EXIT_FAILURE;
     }
+    fir = firrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (int job=0; job<2; job++)

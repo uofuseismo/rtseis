@@ -1,6 +1,5 @@
 #ifndef RTSEIS_UTILS_FILTERS_HPP
 #define RTSEIS_UTILS_FILTERS_HPP 1
-#include <cstdio>
 #include <memory>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
@@ -106,6 +105,7 @@ namespace Filters
              * @param[in] fptr  File handle to which the contents of the class
              *                  are printed.  By default this is stdout.
              */ 
+/*
             void print(FILE *fptr = stdout)
             {
                 FILE *f = stdout;
@@ -119,6 +119,7 @@ namespace Filters
                     fprintf(f, "Class is float precision\n"); 
                 }
             }
+*/
         private: 
             /*! The precision of the module. */
             RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
@@ -184,6 +185,7 @@ namespace Filters
              * @param[in] fptr   File pointer to which this class will print its
              *                   contents.  The default is stdout.
              */
+/*
             void print(FILE *fptr = stdout)
             {
                 FILE *f = stdout;
@@ -197,6 +199,7 @@ namespace Filters
                     fprintf(f, "Class is for post-processing\n"); 
                 }
             }
+*/
         private:
             /*! Flag indicating whether or not this is for real-time. */
             bool lrt_ = false;
@@ -284,7 +287,7 @@ namespace Filters
              * @brief Utility routine to determine the initial condition length.
              * @retval A non-negative number is the length of the initial
              *         condition array.
-             * @retval 1 Indicates failure.
+             * @retval -1 Indicates failure.
              */
             int getInitialConditionLength(void) const;
             /*!
@@ -324,7 +327,7 @@ namespace Filters
              */
             void clear(void);
         private:
-            /* Forward declass for PIMPL. */
+            /* Forward of class for PIMPL. */
             class MedianFilterImpl;
             /* Pointer to the the filter implementation and parameters. */
             std::unique_ptr<MedianFilterImpl> pMedian_;
@@ -384,7 +387,13 @@ namespace Filters
             bool linit_ = false;
     };
 
-    class FIRFilter : protected Precision, RealTime
+    /*!
+     * @defgroup rtseis_utils_filters_fir FIR Filtering
+     * @brief This is the core implementation for FIR filtering.
+     * @copyright Ben Baker distributed under the MIT license.
+     * @ingroup rtseis_utils_filters
+     */
+    class FIRFilter
     {
         public:
             /*!
@@ -392,55 +401,116 @@ namespace Filters
              */
             enum Implementation
             {
-                DIRECT = 0, /*!< Direct-form implementation. */
-                FFT = 1     /*!< FFT overlap and add implementation. */ 
+                /*!< Direct-form implementation. */
+                DIRECT = 0,
+                /*!< FFT overlap and add implementation. */
+                FFT = 1,
+                /*!< The implementation will decide between 
+                     DIRECT or FFT. */
+                AUTO = 2
             };
         public:
+            /*!
+             * @brief Default constructor.
+             */
             FIRFilter(void);
-            ~FIRFilter(void);
+            /*!
+             * @brief Copy constructor.
+             * @param[in] fir   FIR class from which to initialize.
+             */
             FIRFilter(const FIRFilter &fir);
+            /*!
+             * @brief Copy operator.
+             * @param[in] fir   FIR class to copy.
+             * @result A deep copy of the FIR class.
+             */
             FIRFilter& operator=(const FIRFilter &fir);
+            /*!
+             * @brief Default destructor.
+             */
+            ~FIRFilter(void);
+            /*!
+             * @brief Initializes the FIR filter.
+             * @param[in] nb    Number of numerator coefficients.
+             * @param[in] b     Numerator coefficients.  This is an array of
+             *                  dimension [nb].
+             * @param[in] mode  The processing mode.  By default this
+             *                  is for post-processing.
+             * @param[in] precision   The precision of the filter.  By default
+             *                        this is double precision.
+             * @param[in] implementation  Defines the implementation.  This can
+             *                            specify Implementation::DIRECT form
+             *                            for direct form implementation,
+             *                            Implementation::FFT for an FFT-based
+             *                            overlap-add implementation which 
+             *                            can be advantageous when
+             *                            \f$ \log_2 L < N \f$ where \f$ L \f$
+             *                            is the signal length and \f N \f$
+             *                            the number of filter taps, or, auto
+             *                            to let the computer decide.
+             *                            The default is to use the direct form.
+             * @result 0 indicates success.
+             */
             int initialize(const int nb, const double b[],
-                           const bool lisRealTime = false,
+                           const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
                            const RTSeis::Precision precision = RTSeis::Precision::DOUBLE,
                            Implementation implementation = Implementation::DIRECT);
+            /*!
+             * @brief Determines if the module is initialized.
+             * @retval True indicates that the module is initialized.
+             * @retval False indicates that the module is not initialized.
+             */
+            bool isInitialized(void) const;
+            /*!
+             * @brief Utility routine to determine the initial condition length.
+             * @result A non-negative number is the length of the initial
+             *         condition array.
+             */
             int getInitialConditionLength(void) const;
-            int getInitialConditions(const int nz, double zi[]) const;
+            /*!
+             * @brief Sets the initial conditions for the filter.  This should
+             *        be called prior to filter application as it will reset
+             *        the filter.
+             * @param[in] nz   The FIR filter initial condition length.
+             *                 This should be equal to
+             *                 getInitialConditionLength().
+             * @param[in] zi   The initial conditions.  This has dimension [nz].
+             * @result 0 indicates success.
+             */
             int setInitialConditions(const int nz, const double zi[]);
+            /*!
+             * @brief Gets a copy of the initial conditions.
+             * @param[in] nz   The FIR filter initial condition length.
+             *                 This should be equal to
+             *                 getInitialConditionLength().
+             * @param[out] zi  The initial conditions.  This has dimension [nz].
+             * @result 0 indicate success.
+             */
+            int getInitialConditions(const int nz, double zi[]) const;
+            /*!
+             * @brief Applies the FIR filter to the data.
+             * @param[in] n   Number of points in signals.
+             * @param[in] x   Signal to filter.  This has dimension [n].
+             * @param[out] y  The filtered signal.  This has dimension [n].
+             */
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);
+            /*!
+             * @brief Resets the initial conditions on the source delay line to
+             *        the default initial conditions or the initial conditions
+             *        set when FIRFilter::setInitialConditions() was called.
+             * @result 0 indicates success.
+             */
             int resetInitialConditions(void);
+            /*!
+             * @brief Clears the module and resets all parameters.
+             */
             void clear(void);
         private:
-            /*!< The filter state. */
-            void *pFIRSpec_ = nullptr;
-            /*!< The filter taps.  This has dimension [tapsLen_]. */
-            void *pTaps_ = nullptr;
-            /*!< The input delay line.  This has dimension [nwork_]. */
-            void *dlysrc_ = nullptr;
-            /*!< The output delay line.  This has dimension [nwork_]. */
-            void *dlydst_ = nullptr;
-            /*!< Workspace.  This has dimension [bufferSize_]. */
-            void *pBuf_ = nullptr;
-            /*!< A copy of the input taps. */
-            double *tapsRef_ = nullptr;
-            /*!< A copy of the initial conditions.  This has dimension
-                 [order]. */
-            double *zi_ = nullptr;
-            /*!< The number of taps. */
-            int tapsLen_ = 0; 
-            /*!< The length of the delay line which is max(128, order+1). */
-            int nwork_ = 0;
-            /*!< Size of pBuf. */
-            int bufferSize_ = 0;
-            /*!< Size of state. */
-            int specSize_ = 0;
-            /*!< Filter order. */
-            int order_ = 0;
-            /*!< Implementation. */
-            Implementation implementation_ = Implementation::DIRECT; 
-            /*!< Flag indicating the module is initialized. */
-            bool linit_ = false;
+            /* Forward of class for PIMPL. */
+            class FIRImpl;
+            /* Pointer to the the filter implementation and parameters. */
+            std::unique_ptr<FIRImpl> pFIR_;
     };
 
     /*!
@@ -591,7 +661,7 @@ namespace Filters
              */
             void clear(void);
         private:
-            /* Forward declass for PIMPL. */
+            /* Forward of class for PIMPL. */
             class MultiRateFIRImpl;
             /* Pointer to the the filter implementation and parameters. */
             std::unique_ptr<MultiRateFIRImpl> pFIR_;
@@ -706,7 +776,7 @@ namespace Filters
              */
             int getFilterOrder(void) const;
         private:
-            /* Forward declass for PIMPL. */
+            /* Forward of class for PIMPL. */
             class IIRIIRImpl;
             /* Pointer to the the filter implementation and parameters. */
             std::unique_ptr<IIRIIRImpl> pIIRIIR_;

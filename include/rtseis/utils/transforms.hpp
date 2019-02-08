@@ -1,6 +1,5 @@
 #ifndef RTSEIS_UTILS_TRANSFORMS_HPP
 #define RTSEIS_UTILS_TRANSFORMS_HPP 1
-#include <stdio.h>
 #include <cmath>
 #include <complex>
 #include "rtseis/config.h"
@@ -54,6 +53,14 @@ namespace Transforms
      */
     class DFTR2C
     {
+        public:
+            enum Implementation
+            {
+                /*!< Use a DFT computation. */
+                DFT = 0,
+                /*!< Force an FFT computation. */
+                FFT = 1
+            };
         public:
             /*!
              * @brief Default constructor.

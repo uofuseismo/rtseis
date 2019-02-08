@@ -290,7 +290,9 @@ ClassicSTALTA::ClassicSTALTA(const ClassicSTALTAParameters parameters)
     Ipp64f *xsta = ippsMalloc_64f(nsta);
     double xdiv = 1.0/static_cast<double> (nsta);
     ippsSet_64f(xdiv, xsta, nsta);
-    int ierr = firNum_.initialize(nsta, xsta, lrt, parms_.getPrecision(),
+    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING;
+    if (lrt){mode = RTSeis::ProcessingMode::REAL_TIME;}
+    int ierr = firNum_.initialize(nsta, xsta, mode, parms_.getPrecision(),
                     RTSeis::Utils::Filters::FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {
@@ -314,7 +316,7 @@ ClassicSTALTA::ClassicSTALTA(const ClassicSTALTAParameters parameters)
     Ipp64f *xlta = ippsMalloc_64f(nlta);
     xdiv = 1.0/static_cast<double> (nlta);
     ippsSet_64f(xdiv, xlta, nlta);
-    ierr = firDen_.initialize(nlta, xlta, lrt, parms_.getPrecision(),
+    ierr = firDen_.initialize(nlta, xlta, mode, parms_.getPrecision(),
                   RTSeis::Utils::Filters::FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {

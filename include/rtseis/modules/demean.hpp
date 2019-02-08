@@ -1,5 +1,6 @@
 #ifndef RTSEIS_MODULES_DEMEAN_HPP
 #define RTSEIS_MODULES_DEMEAN_HPP 1
+#include <memory>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 
