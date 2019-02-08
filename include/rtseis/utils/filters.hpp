@@ -232,42 +232,102 @@ namespace Filters
             bool linit_ = false;
     };
 
-    class MedianFilter : protected Precision, RealTime
+    /*!
+     * @defgroup rtseis_utils_filters_median Median Filter
+     * @brief This is the core implementation for median filtering.
+     * @copyright Ben Baker distributed under the MIT license.
+     * @ingroup rtseis_utils_filters
+     */
+    class MedianFilter
     {
         public:
+            /*!
+             * @brief Copy constructor.
+             */
             MedianFilter(void);
+            /*!
+             * @brief Destructor.
+             */
             ~MedianFilter(void);
+            /*!
+             * @brief Copy constructor.
+             * @param[in] median  Median class from which to initialize.
+             */
             MedianFilter(const MedianFilter &median);
+            /*!
+             * @brief Copy operator.
+             * @param[in] median  The median class to copy.
+             * @result A deep copy of the median filter class.
+             */
             MedianFilter& operator=(const MedianFilter &median);
+            /*!
+             * @brief Initializes the median filter.
+             * @param[in] n   The window size of the median filter.  This must
+             *                be a positive and odd number.  If n is not odd
+             *                then it's length will be increased by 1.
+             * @param[in] mode  The processing mode.  By default this
+             *                  is for post-processing.
+             * @param[in] precision   The precision of the filter.  By default
+             *                        this is double precision.
+             * @result 0 indicates success.
+             */
             int initialize(const int n,
-                           const bool lisRealTime = false,
+                           const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
                            const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+            /*!
+             * @brief Determines if the module is initialized.
+             * @retval True indicates that the module is initialized.
+             * @retval False indicates that the module is not initialized.
+             */
+            bool isInitialized(void) const;
+            /*!
+             * @brief Utility routine to determine the initial condition length.
+             * @retval A non-negative number is the length of the initial
+             *         condition array.
+             * @retval 1 Indicates failure.
+             */
             int getInitialConditionLength(void) const;
+            /*!
+             * @brief Returns the group delay of the filter.  Note, that this
+             *        shift is required to get a correspondence to Matlab.
+             * @result The group delay.
+             */
             int getGroupDelay(void) const;
+            /*!
+             * @brief Sets the initial conditions for the filter.  This should
+             *        be called prior to filter application as it will reset
+             *        the filter.
+             * @param[in] nz   The median filter initial conditions.  This
+             *                 should be equal to getInitialConditionLength().
+             * @param[in] zi   The initial conditions.  This has dimension [nz].
+             * @result 0 indicates success.
+             */
             int setInitialConditions(const int nz, const double zi[]);
+            /*!
+             * @brief Appplies the median filter to the array x.
+             * @param[in] n   Number of points in x.
+             * @param[in] x   The signal to filter.  This has dimension [n].
+             * @param[out] y  The filtered signal.  This has dimension [n].
+             * @result 0 indicates success.
+             */
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);
+            /*!
+             * @brief Resets the initial conditions on the source delay line to
+             *        the default initial conditions or the initial conditions
+             *        set when MedianFilter::setInitialConditions() was called.
+             * @result 0 indicates success.
+             */ 
             int resetInitialConditions(void);
+            /*! 
+             * @brief Clears the module and resets all parameters.
+             */
             void clear(void);
         private:
-            /*!< Delay line source vector.  This has dimension [nwork_]. */
-            void *dlysrc_ = nullptr;
-            /*!< Delay line destination.  This has dimension [nwork_]. */
-            void *dlydst_ = nullptr;
-            /*!< Workspace for median filter.  This has dimension [bufferSize_]. */
-            void *pBuf_ = nullptr;
-            /*!< A reference of the saved initial conditions.  This has 
-                 dimension [nwork_] though only the first maskSize_  - 1
-                 points are valid. */
-            double *zi_ = nullptr;
-            /*!< The median filter window length. */
-            int maskSize_ = 0;
-            /*!< The workspace for the delay lines. */
-            int nwork_ = 0;
-            /*!< The size of the workspace buffer. */
-            int bufferSize_ = 0;
-            /*!< Flag indicating the module is initialized. */
-            bool linit_ = false;
+            /* Forward declass for PIMPL. */
+            class MedianFilterImpl;
+            /* Pointer to the the filter implementation and parameters. */
+            std::unique_ptr<MedianFilterImpl> pMedian_;
     };
 
     class SOSFilter : protected Precision, RealTime
@@ -287,6 +347,9 @@ namespace Filters
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);
             int resetInitialConditions(void);
+            /*! 
+             * @brief Clears the module and resets all parameters.
+             */
             void clear(void);
             int getNumberOfSections(void) const;
         private:
@@ -453,6 +516,12 @@ namespace Filters
                            const RTSeis::Precision precision 
                                = RTSeis::Precision::DOUBLE);
             /*!
+             * @brief Determines if the module is initialized.
+             * @retval True indicates that the module is initialized.
+             * @retval False indicates that the module is not initialized.
+             */
+            bool isInitialized(void) const;
+            /*!
              * @brief Gets the length of the initial conditions array.
              * @result On successful exit this is the length of the initial
              *         conditions array.  On failure this is negative.
@@ -536,7 +605,7 @@ namespace Filters
      * @ingroup rtseis_utils_filters
      * @copyright Ben Baker distributed under the MIT license.
      */
-    class IIRIIRFilter : protected Precision, RealTime
+    class IIRIIRFilter
     {
         public:
             /*!
@@ -576,6 +645,12 @@ namespace Filters
             int initialize(const int nb, const double b[],
                            const int na, const double a[],
                            const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+            /*!
+             * @brief Determines if the module is initialized.
+             * @retval True indicates that the module is initialized.
+             * @retval False indicates that the module is not initialized.
+             */
+            bool isInitialized(void) const;
             /*!
              * @brief Gets the length of the initial conditions array.
              * @result On successful exit this is the length of the initial
@@ -631,39 +706,10 @@ namespace Filters
              */
             int getFilterOrder(void) const;
         private:
-            /*!< A pointer to the IIRIIR filter state. */
-            void *pState_ = nullptr;
-            /*!< The IIR filter taps.  This has dimension [2*(order_+1)]. */
-            void *pTaps_ = nullptr;
-            /*!< Workspace for applying the IIR IIR filter.  This has 
-                 dimension [bufferSize_]. */
-            void *pBuf_ = nullptr;
-            /*!< The initial conditions.  This has dimension [nwork_]. */
-            void *dlysrc_ = nullptr;
-            /*!< A saved copy of the numerator coefficients.  This has
-                 dimension [nbRef_]. */
-            double *bRef_ = nullptr;
-            /*!< A saved copy of the denominator coefficients.  This has
-                 dimension [naRef_]. */
-            double *aRef_ = nullptr;
-            /*!< A saved copy of the initial conditions.  This has
-                 dimension [nwork_]. */
-            double *zi_ = nullptr;
-            /*!< The initial condtiions.  This has dimension [nwork_]. */
-            int nwork_ = 0;
-            /*!< The buffer size. */
-            int bufferSize_ = 0;
-            /*!< The filter order.  This equals max(nbRef_, naRef_) - 1. */
-            int order_ = 0;
-            /*!< The number of numerator coefficients. */
-            int nbRef_ = 0;
-            /*!< The number of denominator coefficients. */
-            int naRef_ = 0;
-            /*!< Flag indicating that the initial conditions have been set. */
-            bool lhaveZI_ = false;
-            /*!< Flag indicating that the filter is initialized. */
-            bool isInitialized_ = false; 
-
+            /* Forward declass for PIMPL. */
+            class IIRIIRImpl;
+            /* Pointer to the the filter implementation and parameters. */
+            std::unique_ptr<IIRIIRImpl> pIIRIIR_;
     };
 }; /* End Filters. */
 }; /* End Utils. */

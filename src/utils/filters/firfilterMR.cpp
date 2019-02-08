@@ -147,6 +147,73 @@ class MultiRateFIRFilter::MultiRateFIRImpl
             return;
         }
         //====================================================================//
+        /// Gets the length of the intiial conditions
+        int getInitialConditionLength(void) const
+        {
+            return nbDly_;
+        }
+        /// Sets the initial conditions
+        int setInitialConditions(const int nz, const double zi[])
+        {
+            resetInitialConditions();
+            int nzRef = getInitialConditionLength();
+            if (nzRef != nz){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+            if (nzRef > 0){ippsCopy_64f(zi, zi_, nzRef);}
+            ippsCopy_64f(zi, zi_, nzRef);
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                ippsCopy_64f(zi_, pDlySrc64_, nzRef); 
+            }
+            else
+            {
+                ippsConvert_64f32f(zi_, pDlySrc32_, nzRef);
+            }
+            return 0;
+        }
+        /// Resets the initial conditions
+        int resetInitialConditions(void)
+        {
+            upPhase_ = 0;
+            downPhase_ = 0;
+            nExcess_ = 0; 
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                ippsZero_64f(work64_, downFactor_);
+                ippsZero_64f(pDlySrc64_, mbDly_);
+                if (nbDly_ > 0)
+                {
+                    ippsCopy_64f(zi_, pDlySrc64_, nbDly_);
+                }
+                IppStatus status = ippsFIRMRInit_64f(pTaps64_, tapsLen_,
+                                                     upFactor_, upPhase_,
+                                                     downFactor_, downPhase_,
+                                                     pSpec64_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error reinitializing state structure");
+                    return -1;
+                }
+            }
+            else
+            {
+                ippsZero_32f(work32_, downFactor_);
+                ippsZero_32f(pDlySrc32_, mbDly_);
+                if (nbDly_ > 0)
+                {   
+                    ippsConvert_64f32f(zi_, pDlySrc32_, nbDly_);
+                }   
+                IppStatus status = ippsFIRMRInit_32f(pTaps32_, tapsLen_,
+                                                     upFactor_, upPhase_,
+                                                     downFactor_, downPhase_,
+                                                     pSpec32_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error reinitializing state structure");
+                    return -1;
+                }
+            }
+            return 0;
+        }
         /// Initializes the filter.
         int initialize(const int upFactor, const int downFactor,
                        const int nb, const double b[],
@@ -525,7 +592,7 @@ MultiRateFIRFilter&
 MultiRateFIRFilter::operator=(const MultiRateFIRFilter &firmr)
 {
     if (&firmr == this){return *this;}
-    pFIR_->clear();
+    if (pFIR_){pFIR_->clear();}
     pFIR_ = std::unique_ptr<MultiRateFIRImpl> (new MultiRateFIRImpl(*firmr.pFIR_));
     return *this;
 }
@@ -587,6 +654,7 @@ int MultiRateFIRFilter::initialize(
     const RTSeis::ProcessingMode mode,
     const RTSeis::Precision precision)
 {
+    clear();
     int ierr = pFIR_->initialize(upFactor, downFactor, nb, b,
                                  mode, precision, 1024);
     if (ierr != 0)
@@ -607,6 +675,25 @@ int MultiRateFIRFilter::estimateSpace(const int n) const
     if (n <= 0){return 0;} // No points
     int len = pFIR_->estimateSpace(n);
     return len;
+}
+
+int MultiRateFIRFilter::setInitialConditions(
+    const int nz, const double zi[])
+{
+    if (!pFIR_->isInitialized())
+    {
+        RTSEIS_ERRMSG("%s", "Class not initialized");
+        return -1;
+    }
+    int nzRef = pFIR_->getInitialConditionLength();
+    if (nz != nzRef || zi == nullptr)
+    {
+        if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
+        if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
+        return -1;
+    }
+    pFIR_->setInitialConditions(nz, zi);
+    return 0;
 }
 
 int MultiRateFIRFilter::apply(const int n, const double x[],
@@ -642,4 +729,57 @@ int MultiRateFIRFilter::apply(const int n, const double x[],
         return -1;
     }
     return 0; 
+}
+
+/*
+int MultiRateFIRFilter::apply(const int n, const float x[],
+                              const int nywork, int *ny, float y[])
+{
+    *ny = 0;
+    if (n <= 0){return 0;} // Nothing to do
+    if (x == nullptr)
+    {
+        RTSEIS_ERRMSG("%s", "x is NULL");
+        return -1; 
+    }
+    if (!pFIR_->isInitialized())
+    {
+        RTSEIS_ERRMSG("%s", "Module is not initialized");
+        return -1; 
+    }
+    int nworkEst = pFIR_->estimateSpace(n);
+    if (nywork < nworkEst)
+    {
+        RTSEIS_WARNMSG("May have insufficient space %d %d", nywork, nworkEst);
+    }
+    if (y == nullptr)
+    {
+        RTSEIS_ERRMSG("%s", "y is NULL");
+        return -1; 
+    }
+    int ierr = pFIR_->apply(n, x, nywork, ny, y); 
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to apply filter");
+        *ny = 0;
+        return -1;
+    }
+    return 0;
+}
+*/
+
+int MultiRateFIRFilter::resetInitialConditions(void)
+{
+    if (!pFIR_->isInitialized())
+    {
+        RTSEIS_ERRMSG("%s", "Module is not initialized");
+        return -1;
+    }
+    int ierr = pFIR_->resetInitialConditions();
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to reset initial conditions");
+        return -1;
+    }
+    return 0;
 }

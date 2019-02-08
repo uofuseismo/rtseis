@@ -229,7 +229,7 @@ int filters_iiriirFilter_test(const int npts, const double x[],
 int filters_firMRFilter_test(const int npts, const double x[],
                              const std::string fileName)
 {
-    fprintf(stdout, "Testing FIR filter...\n");
+    fprintf(stdout, "Testing FIR multirate filter...\n");
     const int nb = 51; 
     int upFactor = 3;
     int downFactor = 8; 
@@ -291,12 +291,14 @@ int filters_firMRFilter_test(const int npts, const double x[],
     // Filter 
     double *y = new double[npts];
     int ny;
+    auto timeStart = std::chrono::high_resolution_clock::now();
     ierr = firmr.apply(npts, x, npts, &ny, y);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
         return EXIT_FAILURE;
     }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
     double error = 0;
     for (int i=0; i<ncomp; i++)
     {
@@ -307,13 +309,79 @@ int filters_firMRFilter_test(const int npts, const double x[],
         RTSEIS_ERRMSG("Failed to apply upfirndn post-proc %.10e\n", error); 
         return EXIT_FAILURE;
     }
+    std::chrono::duration<double> tdif = timeEnd - timeStart;
+    fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
+            tdif.count());
     // Repeat for real-time 
     MultiRateFIRFilter firmrRT;
     ierr = firmrRT.initialize(upFactor, downFactor, nb, b,
                               RTSeis::ProcessingMode::REAL_TIME,
                               RTSeis::Precision::DOUBLE); 
-    //firmr = firmrRT; 
-printf("%d %d\n", firmr.estimateSpace(npts), npref);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize real-time filter");
+        return EXIT_FAILURE;
+    }
+    firmr = firmrRT; 
+    std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
+                                 1000, 1024, 1200, 2048, 4000, 4096, 5000});
+    for (int job=0; job<2; job++)
+    {   
+        for (size_t ip=0; ip<packetSize.size(); ip++)
+        {
+            timeStart = std::chrono::high_resolution_clock::now();
+            int nxloc = 0;
+            int nyloc = 0;
+            int nptsPass = 0;
+            while (nxloc < npts)
+            {
+                nptsPass = packetSize[ip];
+                if (job == 1)
+                {
+                     nptsPass = std::max(1, nptsPass + rand()%50 - 25);
+                }
+                nptsPass = std::min(nptsPass, npts - nxloc);
+                int nwork = npts+1-nyloc;
+                int nyDec = 0;
+                ierr = firmr.apply(nptsPass, &x[nxloc], nwork, &nyDec, &y[nyloc]);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply firmr filter");
+                    return EXIT_FAILURE;
+                }
+                nxloc = nxloc + nptsPass;
+                nyloc = nyloc + nyDec;
+            }
+            firmr.resetInitialConditions();
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            if (nyloc != ny)
+            {
+                RTSEIS_ERRMSG("Failed resampling %d %d",  nyloc, ny);
+                return EXIT_FAILURE;
+            }
+            for (int i=0; i<nyloc; i++) 
+            {
+                if (std::abs(yref[i] - y[i]) > 1.e-8)
+                {
+                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
+                                  i, y[i], yref[i]);
+                    return EXIT_FAILURE;
+                }
+            }
+            if (job == 0)
+            {    
+                fprintf(stdout,
+                        "Passed FIR multirate filter fixed packet size %4d in %.8e (s)\n",
+                        packetSize[ip], tdif.count());
+            }
+            else 
+            {
+                fprintf(stdout,
+                        "Passed FIR multirate filter random in %.8e (s)\n", tdif.count());
+            }
+        }
+    }
     delete[] y;
     free(yref);
     return EXIT_SUCCESS;
@@ -639,8 +707,9 @@ int filters_medianFilter_test(const int npts, const double x[],
     double yref5[8] = {1, 2, 4, 4, 5, 5, 5, 0};
     int ierr;
     MedianFilter median;
-    bool lrt = false;
-    ierr = median.initialize(3, lrt, RTSeis::Precision::DOUBLE);
+    ierr = median.initialize(3,
+                             RTSeis::ProcessingMode::POST_PROCESSING,
+                             RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
@@ -660,7 +729,9 @@ int filters_medianFilter_test(const int npts, const double x[],
             return EXIT_FAILURE;
         }
     }
-    ierr = median.initialize(5, lrt, RTSeis::Precision::DOUBLE);
+    ierr = median.initialize(5,
+                             RTSeis::ProcessingMode::POST_PROCESSING,
+                             RTSeis::Precision::DOUBLE);
     ierr = median.apply(8, xin, y8);
     for (int i=2; i<8-2; i++)
     {
@@ -679,7 +750,9 @@ int filters_medianFilter_test(const int npts, const double x[],
         RTSEIS_ERRMSG("%s", "Failed to load reference data");
         return EXIT_FAILURE;
     }
-    median.initialize(11, lrt, RTSeis::Precision::DOUBLE);
+    median.initialize(11,
+                      RTSeis::ProcessingMode::POST_PROCESSING,
+                      RTSeis::Precision::DOUBLE);
     auto timeStart = std::chrono::high_resolution_clock::now();
     double *y = new double[npts];
     ierr = median.apply(npts, x, y);
@@ -702,8 +775,10 @@ int filters_medianFilter_test(const int npts, const double x[],
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Now do the packetized tests
-    lrt = true;
-    median.initialize(11, lrt, RTSeis::Precision::DOUBLE);
+    MedianFilter medianrt = median;
+    medianrt.initialize(11,
+                        RTSeis::ProcessingMode::REAL_TIME,
+                        RTSeis::Precision::DOUBLE);
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (int job=0; job<2; job++)
@@ -721,7 +796,7 @@ int filters_medianFilter_test(const int npts, const double x[],
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);  
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = median.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                ierr = medianrt.apply(nptsPass, &x[nxloc], &y[nxloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply median filter");
@@ -729,7 +804,7 @@ int filters_medianFilter_test(const int npts, const double x[],
                 }
                 nxloc = nxloc + nptsPass;
             }
-            median.resetInitialConditions();
+            medianrt.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             for (int i=0; i<npts; i++)

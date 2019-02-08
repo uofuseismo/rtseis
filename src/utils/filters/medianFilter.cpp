@@ -8,118 +8,343 @@
 
 using namespace RTSeis::Utils::Filters;
 
-/*!
- * @defgroup rtseis_utils_filters_median Median Filter
- * @brief This is the core implementation for median filtering.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_filters
- */
-/*!
- * @brief Default constructor.
- * @ingroup rtseis_utils_filters_median
- */
-MedianFilter::MedianFilter(void)
+class MedianFilter::MedianFilterImpl
+{
+    public:
+        /// Default constructor.
+        MedianFilterImpl(void)
+        {
+            return;
+        }
+        /// Copy constructor.
+        MedianFilterImpl(const MedianFilterImpl &median)
+        {
+            *this = median;
+        }
+        /// (Deep) Copy operator
+        MedianFilterImpl& operator=(const MedianFilterImpl &median)
+        {
+            if (&median == this){return *this;}
+            if (!median.linit_){return *this;}
+            // Reinitialize the filter
+            int ierr = initialize(median.maskSize_, median.mode_,
+                                  median.precision_);
+            if (ierr != 0)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to initialize");
+                clear();
+                return *this;
+            }
+            // Now copy the filter states
+            if (bufferSize_ > 0)
+            {
+                ippsCopy_8u(median.pBuf_, pBuf_, bufferSize_);
+            }
+            if (nwork_ > 0)
+            {
+                ippsCopy_64f(median.zi_, zi_, nwork_);
+                if (median.precision_ == RTSeis::Precision::DOUBLE)
+                {
+                    ippsCopy_64f(median.dlysrc64_, dlysrc64_, nwork_);
+                    ippsCopy_64f(median.dlydst64_, dlydst64_, nwork_);
+                }
+                else
+                {
+                    ippsCopy_32f(median.dlysrc32_, dlysrc32_, nwork_);
+                    ippsCopy_32f(median.dlydst32_, dlydst32_, nwork_);
+                }
+            }
+            return *this;
+        }
+        /// Destructor
+        ~MedianFilterImpl(void)
+        {
+            clear();
+            return;
+        }
+        //====================================================================//
+        /// Clears the filter/releases the memory
+        void clear(void)
+        {
+            if (dlysrc64_ != nullptr){ippsFree(dlysrc64_);}
+            if (dlydst64_ != nullptr){ippsFree(dlydst64_);}
+            if (dlysrc32_ != nullptr){ippsFree(dlysrc32_);}
+            if (dlydst32_ != nullptr){ippsFree(dlydst32_);}
+            if (pBuf_     != nullptr){ippsFree(pBuf_);}
+            if (zi_       != nullptr){ippsFree(zi_);}
+            dlysrc64_ = nullptr;
+            dlydst64_ = nullptr;
+            dlysrc32_ = nullptr;
+            dlydst32_ = nullptr;
+            pBuf_ = nullptr;
+            zi_ = nullptr;
+            maskSize_ = 0;
+            bufferSize_ = 0;
+            mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+            precision_ = RTSeis::Precision::DOUBLE;
+            linit_ = false;
+            return;
+        }
+        /// Initializes the filter
+        int initialize(const int n,
+                       const RTSeis::ProcessingMode mode,
+                       const RTSeis::Precision precision)
+        {
+            clear();
+            maskSize_ = n; // This better be odd by this point
+            // Set the space
+            nwork_ = std::max(8, maskSize_ - 1);
+            zi_ = ippsMalloc_64f(nwork_);
+            ippsZero_64f(zi_, nwork_);
+            if (precision == RTSeis::Precision::DOUBLE)
+            {
+                IppStatus status = ippsFilterMedianGetBufferSize(maskSize_,
+                                                                 ipp64f,
+                                                                 &bufferSize_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error getting buffer size");
+                    clear();
+                    return -1;
+                }
+                dlysrc64_ = ippsMalloc_64f(nwork_);
+                ippsZero_64f(dlysrc64_, nwork_);
+                dlydst64_ = ippsMalloc_64f(nwork_);
+                ippsZero_64f(dlydst64_, nwork_);
+                pBuf_ = ippsMalloc_8u(bufferSize_);
+                ippsZero_8u(pBuf_, bufferSize_);
+            }
+            else
+            {
+                IppStatus status = ippsFilterMedianGetBufferSize(maskSize_,
+                                                                 ipp32f,
+                                                                 &bufferSize_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error getting buffer size");
+                    clear();
+                    return -1;
+                }
+                dlysrc32_ = ippsMalloc_32f(nwork_);
+                ippsZero_32f(dlysrc32_, nwork_);
+                dlydst32_ = ippsMalloc_32f(nwork_);
+                ippsZero_32f(dlydst32_, nwork_);
+                pBuf_ = ippsMalloc_8u(bufferSize_);
+                ippsZero_8u(pBuf_, bufferSize_);
+            }
+            precision_ = precision;
+            mode_ = mode;
+            linit_ = true;
+            return 0;
+        }
+        /// Determines if the module is initialized.
+        bool isInitialized(void) const
+        {
+            return linit_;
+        }
+        /// Determines the length of the initial conditions.
+        int getInitialConditionLength(void) const
+        {
+            int len = maskSize_ - 1;;
+            return len;
+        }
+        /// Gets the group delay.
+        int getGroupDelay(void) const
+        {
+            int grpDelay = maskSize_/2;
+            return grpDelay;
+        }
+        /// Set the initial conditions
+        int setInitialConditions(const int nz, const double zi[])
+        {
+            resetInitialConditions();
+            int nzRef = getInitialConditionLength();
+            if (nzRef != nz){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+            if (nzRef > 0){ippsCopy_64f(zi, zi_, nzRef);}
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {   
+                if (nzRef > 0){ippsCopy_64f(zi, dlysrc64_, nzRef);}
+            }
+            else
+            {
+                if (nzRef > 0){ippsConvert_64f32f(zi, dlysrc32_, nzRef);}
+            }   
+            return 0;
+        }
+        /// Resets the initial conditions
+        int resetInitialConditions(void)
+        {
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                if (nwork_ > 0){ippsCopy_64f(zi_, dlysrc64_, nwork_);}
+            }
+            else
+            {
+                if (nwork_ > 0){ippsConvert_64f32f(zi_, dlysrc32_, nwork_);}
+            }   
+            return 0;
+        }
+        /// Apply the filter
+        int apply(const int n, const double x[], double y[])
+        {
+            if (n <= 0){return 0;} // Nothing to do
+            if (precision_ == RTSeis::Precision::FLOAT)
+            {
+                Ipp32f *x32 = ippsMalloc_32f(n);
+                Ipp32f *y32 = ippsMalloc_32f(n);
+                ippsConvert_64f32f(x, x32, n);
+                int ierr = apply(n, x32, y32);
+                ippsFree(x32);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                    ippsFree(y32);
+                    return -1;
+                }
+                ippsConvert_32f64f(y32, y, n);
+                ippsFree(y32);
+                return 0;
+            }
+            IppStatus status;
+            if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+            {
+                status = ippsFilterMedian_64f(x, y, n, maskSize_,
+                                              dlysrc64_, dlydst64_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                    return -1;
+                }
+                if (maskSize_ > 1)
+                {
+                    ippsCopy_64f(dlydst64_, dlysrc64_, maskSize_-1);
+                }
+            }
+            else
+            {
+                status = ippsFilterMedian_64f(x, y, n, maskSize_,
+                                              dlysrc64_, NULL, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                    return -1;
+                }
+            }
+            return 0;
+        }
+        /// Apply the filter
+        int apply(const int n, const float x[], float y[])
+        {
+            if (n <= 0){return 0;} // Nothing to do
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                Ipp64f *x64 = ippsMalloc_64f(n);
+                Ipp64f *y64 = ippsMalloc_64f(n);
+                ippsConvert_32f64f(x, x64, n);
+                int ierr = apply(n, x64, y64);
+                ippsFree(x64);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                    ippsFree(y64);
+                    return -1;
+                }
+                ippsConvert_64f32f(y64, y, n);
+                ippsFree(y64);
+                return 0;
+            }
+            IppStatus status;
+            if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+            {
+                status = ippsFilterMedian_32f(x, y, n, maskSize_,
+                                              dlysrc32_, dlydst32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                    return -1;
+                }
+                if (maskSize_ > 1)
+                {
+                    ippsCopy_32f(dlydst32_, dlysrc32_, maskSize_-1);
+                }
+            }
+            else
+            {
+                status = ippsFilterMedian_32f(x, y, n, maskSize_,
+                                              dlysrc32_, NULL, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                    return -1;
+                }
+            }
+            return 0;
+        }
+    private:
+        /// Delay line source vector.  This has dimension [nwork_].
+        Ipp64f *dlysrc64_ = nullptr;
+        /// Delay line destination vector.  This has dimension [nwork_].
+        Ipp64f *dlydst64_ = nullptr;
+        /// Delay line source vector.  This has dimension [nwork_].
+        Ipp32f *dlysrc32_ = nullptr;
+        /// Delay line destination vector.  This has dimension [nwork_].
+        Ipp32f *dlydst32_ = nullptr;
+        /// Workspace for median filter.  This has dimension [bufferSize_].
+        Ipp8u *pBuf_ = nullptr;
+        /// A reference of the saved initial conditions.  This has 
+        /// dimension [nwork_] though only the first maskSize_  - 1
+        /// points are valid.
+        Ipp64f *zi_ = nullptr;
+        /// The median filter window length.
+        int maskSize_ = 0;
+        /// The workspace for the delay lines.
+        int nwork_ = 0;
+        /// The size of the workspace buffer.
+        int bufferSize_ = 0;
+        /// By default the module does post-procesing.
+        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        /// The default module implementation.
+        RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+        /// Flag indicating the module is initialized.
+        bool linit_ = false;
+
+};
+
+MedianFilter::MedianFilter(void) :
+    pMedian_(new MedianFilterImpl())
 {
     return;
 }
-/*!
- * @brief Default destructor.
- * @ingroup rtseis_utils_filters_median
- */
-MedianFilter::~MedianFilter(void)
-{
-    clear();
-    return;
-}
-/*!
- * @brief Copy constructor.
- * @param[in] median  Class from which to initialize.
- * @ingroup rtseis_utils_filters_median
- */
+
 MedianFilter::MedianFilter(const MedianFilter &median)
 {
     *this = median;
     return;
 }
-/*!
- * @brief Copy operator.
- * @param[in] median   Median filter class to copy.
- * @result A deep copy of the input class.
- * @ingroup rtseis_utils_filters_median
- */
+
 MedianFilter& MedianFilter::operator=(const MedianFilter &median)
 {
     if (&median == this){return *this;}
-    clear();
-    if (!median.linit_){return *this;}
-    // Reinitialize the filter
-    initialize(median.maskSize_, median.isRealTime(), median.getPrecision());
-    // Now copy the filter states
-    if (bufferSize_ > 0)
-    {
-        Ipp8u *pBufIn = static_cast<Ipp8u *> (median.pBuf_);
-        Ipp8u *pBufOut = static_cast<Ipp8u *> (pBuf_);
-        ippsCopy_8u(pBufIn, pBufOut, bufferSize_);
-    }
-    if (nwork_ > 0)
-    {
-        ippsCopy_64f(median.zi_, zi_, nwork_);
-        if (isDoublePrecision())
-        {
-            Ipp64f *dlysrcIn  = static_cast<Ipp64f *> (median.dlysrc_);
-            Ipp64f *dlysrcOut = static_cast<Ipp64f *> (dlysrc_);
-            ippsCopy_64f(dlysrcIn, dlysrcOut, nwork_);
-            Ipp64f *dlydstIn  = static_cast<Ipp64f *> (median.dlydst_);
-            Ipp64f *dlydstOut = static_cast<Ipp64f *> (dlydst_);
-            ippsCopy_64f(dlydstIn, dlydstOut, nwork_);
-        }
-        else
-        {
-            Ipp32f *dlysrcIn  = static_cast<Ipp32f *> (median.dlysrc_);
-            Ipp32f *dlysrcOut = static_cast<Ipp32f *> (dlysrc_);
-            ippsCopy_32f(dlysrcIn, dlysrcOut, nwork_); 
-            Ipp32f *dlydstIn  = static_cast<Ipp32f *> (median.dlydst_);
-            Ipp32f *dlydstOut = static_cast<Ipp32f *> (dlydst_);
-            ippsCopy_32f(dlydstIn, dlydstOut, nwork_);
-        }
-    }
+    if (pMedian_){pMedian_->clear();}
+    pMedian_ = std::unique_ptr<MedianFilterImpl>
+               (new MedianFilterImpl(*median.pMedian_));
     return *this;
 }
-/*!
- * @brief Clears the module and resets all parameters.
- * @ingroup rtseis_utils_filters_median
- */
-void MedianFilter::clear(void)
+
+MedianFilter::~MedianFilter(void)
 {
-    if (pBuf_ != nullptr){ippsFree(pBuf_);}
-    if (dlysrc_ != nullptr){ippsFree(dlysrc_);}
-    if (dlydst_ != nullptr){ippsFree(dlydst_);}
-    if (zi_ != nullptr){ippsFree(zi_);}
-    setPrecision(RTSeis::Precision::DOUBLE);
-    toggleRealTime(false);
-    pBuf_ = nullptr;
-    dlysrc_ = nullptr;
-    dlydst_ = nullptr;
-    zi_ = nullptr;
-    maskSize_ = 0;
-    bufferSize_ = 0;
-    linit_ = false;
+    clear();
     return;
 }
-/*!
- * @brief Initializes the median filter.
- * @param[in] n            The window size of the median filter.  This must 
- *                         be a positive and odd number.  If n is not add then
- *                         it's length will be increased by 1.
- * @param[in] lisRealTime  Flag indicating that this is for real-time
- *                         application.
- * @param[in] precision    Determines the precision of the underlying
- *                         median calculation. 
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_median
- */
+
+void MedianFilter::clear(void)
+{
+    pMedian_->clear();
+    return;
+}
+
 int MedianFilter::initialize(const int n,
-                             const bool lisRealTime,
+                             const RTSeis::ProcessingMode mode,
                              const RTSeis::Precision precision)
 {
     clear();
@@ -129,150 +354,73 @@ int MedianFilter::initialize(const int n,
         RTSEIS_ERRMSG("Mask size=%d must be postive", n);
         return -1;
     }
-    maskSize_ = n;
-    if (maskSize_%2 == 0)
+    int maskSize = n;
+    if (maskSize%2 == 0)
     {
-        maskSize_ = maskSize_ + 1;
+        maskSize = maskSize + 1;
         RTSEIS_WARNMSG("n=%d should be odd; setting to maskSize=%d",
-                       n, maskSize_);
+                       n, maskSize);
     }
-    // Set the space
-    nwork_ = std::max(8, maskSize_ - 1);
-    zi_ = ippsMalloc_64f(nwork_);
-    ippsZero_64f(zi_, nwork_);
-    if (precision == RTSeis::Precision::DOUBLE)
+    int ierr = pMedian_->initialize(maskSize, mode, precision);
+    if (ierr != 0)
     {
-        IppStatus status = ippsFilterMedianGetBufferSize(maskSize_, ipp64f,
-                                                         &bufferSize_);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Error getting buffer size");
-            return -1; 
-        }
-        Ipp64f *dlysrc = ippsMalloc_64f(nwork_);
-        Ipp64f *dlydst = ippsMalloc_64f(nwork_);
-        Ipp8u *pBuf = ippsMalloc_8u(bufferSize_);
-        ippsZero_64f(dlysrc, nwork_);
-        ippsZero_64f(dlydst, nwork_);
-        pBuf_   = pBuf;
-        dlysrc_ = dlysrc;
-        dlydst_ = dlydst;
+        RTSEIS_ERRMSG("%s", "Failed to initialized filter");
+        clear();
+        return -1;
     }
-    else
-    {
-        IppStatus status = ippsFilterMedianGetBufferSize(maskSize_, ipp32f,
-                                                         &bufferSize_);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Error getting buffer size");
-            return -1;
-        }
-        Ipp32f *dlysrc = ippsMalloc_32f(nwork_);
-        Ipp32f *dlydst = ippsMalloc_32f(nwork_);
-        ippsZero_32f(dlysrc, nwork_);
-        ippsZero_32f(dlydst, nwork_);
-        Ipp8u *pBuf = ippsMalloc_8u(bufferSize_);
-        pBuf_   = pBuf;
-        dlysrc_ = dlysrc;
-        dlydst_ = dlydst;
-    }
-    setPrecision(precision);
-    toggleRealTime(lisRealTime);
-    linit_ = true;
     return 0;
 }
-/*!
- * @brief Sets the initial conditions for the filter.  This should be called
- *        prior to filter application as it will reset the filter.
- * @param[in] nz   The median filter initial conditions.  This should be
- *                 equal to getInitialConditionLength().
- * @param[in] zi   The initial conditions.  This has dimension [nz].
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_median
- */
+
 int MedianFilter::setInitialConditions(const int nz, const double zi[])
 {
-    if (!linit_)
+    if (!pMedian_->isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
-    resetInitialConditions();
-    int nzRef = getInitialConditionLength();
+    int nzRef = pMedian_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
         if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
         if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
         return -1;
     }
-    ippsCopy_64f(zi, zi_, nzRef);
-    if (isDoublePrecision())
-    {
-        Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-        ippsCopy_64f(zi, dlysrc, nzRef);
-    }
-    else
-    {
-        Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-        ippsConvert_64f32f(zi, dlysrc, nzRef);
-    }
+    pMedian_->setInitialConditions(nz, zi);
     return 0;
 }
-/*!
- * @brief Resets the initial conditions on the source delay line to the
- *        default initial conditions or the initial conditions set 
- *        when MedianFilter::setInitialConditions() was called.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_median
- */
+
 int MedianFilter::resetInitialConditions(void)
 {
-    if (!linit_)
-    {   
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1; 
-    }
-    if (isDoublePrecision())
-    {
-        Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-        ippsCopy_64f(zi_, dlysrc, nwork_);
-    }
-    else
-    {
-        Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-        ippsConvert_64f32f(zi_, dlysrc, nwork_);
-    }
-    return 0;
-}
-/*!
- * @brief Utility routine to determine the initial condition length.
- * @retval A non-negative number is the length of the initial condition
- *         vector.
- * @retval 1 Indicates failure.
- * rtseis_utils_filters_median
- */
-int MedianFilter::getInitialConditionLength(void) const
-{
-    if (!linit_)
+    if (!pMedian_->isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
-    int len = maskSize_ - 1;
+    pMedian_->resetInitialConditions();
+    return 0;
+}
+
+bool MedianFilter::isInitialized(void) const
+{
+    bool linit = pMedian_->isInitialized();
+    return linit;
+}
+
+int MedianFilter::getInitialConditionLength(void) const
+{
+    if (!pMedian_->isInitialized())
+    {
+        RTSEIS_ERRMSG("%s", "Class not initialized");
+        return -1;
+    }
+    int len = pMedian_->getInitialConditionLength();
     return len;
 }
-/*!
- * @brief Appplies the median filter to the array x.
- * @param[in] n   Number of points in x.
- * @param[in] x   The signal to filter.  This has dimension [n].
- * @param[out] y  The filtered signal.  This has dimension [n].
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_median
- */
+
 int MedianFilter::apply(const int n, const double x[], double y[])
 {
     if (n <= 0){return 0;} // Nothing to do
-    if (!linit_)
+    if (!pMedian_->isInitialized())
     {   
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1; 
@@ -282,53 +430,19 @@ int MedianFilter::apply(const int n, const double x[], double y[])
         RTSEIS_ERRMSG("%s", "x is NULL");
         RTSEIS_ERRMSG("%s", "y is NULL");
     }
-    if (isFloatPrecision())
+    int ierr = pMedian_->apply(n, x, y);
+    if (ierr != 0)
     {
-        Ipp32f *x32 = ippsMalloc_32f(n);
-        Ipp32f *y32 = ippsMalloc_32f(n);
-        ippsConvert_64f32f(x, x32, n);
-        int ierr = apply(n, x32, y32);
-        ippsFree(x32);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
-            ippsFree(y32);
-            return -1;
-        }
-        ippsConvert_32f64f(y32, y, n);
-        ippsFree(y32);
-        return 0;
-    }
-    IppStatus status;
-    Ipp8u *pBuf = static_cast<Ipp8u *> (pBuf_);
-    Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-    Ipp64f *dlydst = nullptr;
-    if (isRealTime()){dlydst = static_cast<Ipp64f *> (dlydst_);}
-    status = ippsFilterMedian_64f(x, y, n, maskSize_,
-                                  dlysrc, dlydst, pBuf);
-    if (status != ippStsNoErr)
-    {
-        RTSEIS_ERRMSG("%s", "Error applying filter");
+        RTSEIS_ERRMSG("%s", "Failed to apply filter");
         return -1;
-    }
-    if (isRealTime() && maskSize_ > 1)
-    {
-        ippsCopy_64f(dlydst, dlysrc, maskSize_-1);
     }
     return 0;
 }
-/*!
- * @brief Appplies the median filter to the array x.
- * @param[in] n   Number of points in x.
- * @param[in] x   The signal to filter.  This has dimension [n].
- * @param[out] y  The filtered signal.  This has dimension [n].
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_median
- */
+
 int MedianFilter::apply(const int n, const float x[], float y[])
 {
     if (n <= 0){return 0;} // Nothing to do
-    if (!linit_)
+    if (!pMedian_->isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1; 
@@ -338,49 +452,17 @@ int MedianFilter::apply(const int n, const float x[], float y[])
         RTSEIS_ERRMSG("%s", "x is NULL");
         RTSEIS_ERRMSG("%s", "y is NULL");
     }
-    if (isDoublePrecision())
+    int ierr = pMedian_->apply(n, x, y);
+    if (ierr != 0)
     {
-        Ipp64f *x64 = ippsMalloc_64f(n);
-        Ipp64f *y64 = ippsMalloc_64f(n);
-        ippsConvert_32f64f(x, x64, n); 
-        int ierr = apply(n, x64, y64);
-        ippsFree(x64);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
-            ippsFree(y64);
-            return -1; 
-        }
-        ippsConvert_64f32f(y64, y, n); 
-        ippsFree(y64);
-        return 0;
-    }
-    IppStatus status;
-    Ipp8u *pBuf = static_cast<Ipp8u *> (pBuf_);
-    Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-    Ipp32f *dlydst = nullptr;
-    if (isRealTime()){dlydst = static_cast<Ipp32f *> (dlydst_);}
-    status = ippsFilterMedian_32f(x, y, n, maskSize_,
-                                  dlysrc, dlydst, pBuf);
-    if (status != ippStsNoErr)
-    {
-        RTSEIS_ERRMSG("%s", "Error applying filter");
-        return -1; 
-    }
-    if (isRealTime() && maskSize_ > 1)
-    {
-        ippsCopy_32f(dlydst, dlysrc, maskSize_-1);
+        RTSEIS_ERRMSG("%s", "Failed to apply filter");
+        return -1;
     }
     return 0;
 }
-/*!
- * @brief Returns the group delay of the filter.  Note, that this shift is
- *        required to get a correspondence to Matlab.
- * @result The group delay.
- * @ingroup rtseis_utils_filters_median
- */
+
 int MedianFilter::getGroupDelay(void) const
 {
-    int grpDelay = maskSize_/2;
+    int grpDelay = pMedian_->getGroupDelay();
     return grpDelay;
 }

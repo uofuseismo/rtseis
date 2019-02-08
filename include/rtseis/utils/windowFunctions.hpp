@@ -88,7 +88,7 @@ int bartlett(const int len, float window[]);
  *      Bessel function using an intrinsic.
  */
 int kaiser(const int len, double window[], const double beta = 0.5);
-int kaiser(const int len, double window[], const float beta = 0.5);
+int kaiser(const int len, float window[], const float beta = 0.5);
 
 /*!
  * @}

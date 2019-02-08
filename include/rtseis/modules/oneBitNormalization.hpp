@@ -76,7 +76,7 @@ class OneBitNormalizationParameters
         RTSeis::ProcessingMode getProcessingMode(void) const;
         /*!
          * @brief Determines the precision of the class.
-         * @result The precision with which the underlying copysign
+         * @result The precision with which the underlying sign
          *         operation will be performed.
          * @ingroup rtseis_modules_onebit_parameters
          */
@@ -98,13 +98,14 @@ class OneBitNormalizationParameters
 };
 /*!
  * @defgroup rtseis_modules_onebit One-Bit Normalization
- * @brief Computes the one-bit normalization of the data using the copysign
+ * @brief Computes the one-bit normalization of the data using the following
  *        \f[
- *          \mathop{copysign}(x)
+ *          \mathop{sign}(x)
  *        = \left \{
  *          \begin{array}{cc}
- *            +1 & x \ge +0 \\
- *            -1 & x \le -0
+ *            +1 & x > 0 \\
+ *             0 & x = 0 \\
+ *            -1 & x < 0
  *          \end{array}
  *          \right .
  *        \f].
@@ -150,7 +151,7 @@ class OneBitNormalization : OneBitNormalizationParameters
         int initialize(const OneBitNormalizationParameters &parameters);
         /*!
          * @brief Sets the initial conditions for the one-bit normalization.
-         *        Note, the copysign operation is applied to each sample
+         *        Note, the sign operation is applied to each sample
          *        so there are no initial conditions to set.
          * @result 0 indicates success.
          */
@@ -177,7 +178,7 @@ class OneBitNormalization : OneBitNormalizationParameters
         int apply(const int nx, const float  x[], float  y[]);
         /*!
          * @brief Resets the filter to the initial conditions specified
-         *        in setInitialConditions().  Note, the copysign operation
+         *        in setInitialConditions().  Note, the sign operation
          *        is applied each sample so there are no initial
          *        parameters to restore.
          * @result 0 indicates success.

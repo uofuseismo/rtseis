@@ -270,6 +270,7 @@ int OneBitNormalization::apply(const int nx, const double x[], double y[])
     for (int i=0; i<nx; i++)
     {
         y[i] = std::copysign(1.0, x[i]);
+        if (x[i] == 0){y[i] = 0;}
     }
     return 0;
 }
