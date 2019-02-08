@@ -369,7 +369,20 @@ class MultiRateFIRFilter::MultiRateFIRImpl
             if (n <= 0){return 0;} // Nothing to do
             if (precision_ == RTSeis::Precision::FLOAT)
             {
-
+                Ipp32f *x32 = ippsMalloc_32f(n);
+                Ipp32f *y32 = ippsMalloc_32f(ny);
+                ippsConvert_64f32f(x, x32, n);
+                int ierr = apply(n, x32, ny, len, y32);
+                ippsFree(x32);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                    ippsFree(y32);
+                    return -1;
+                }
+                ippsConvert_32f64f(y32, y, *len);
+                ippsFree(y32);
+                return 0;
             }
             // Compute output length
             int upFactor   = upFactor_;
@@ -488,7 +501,147 @@ class MultiRateFIRFilter::MultiRateFIRImpl
             downPhase_ = downPhaseNew;
             return 0;
          }
-       
+ 
+        /// Applies the filter
+        int apply(const int n, const float x[], const int ny,
+                  int *len, float y[])
+        {
+            if (n <= 0){return 0;} // Nothing to do
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                Ipp64f *x64 = ippsMalloc_64f(n);
+                Ipp64f *y64 = ippsMalloc_64f(ny);
+                ippsConvert_32f64f(x, x64, n); 
+                int ierr = apply(n, x64, ny, len, y64);
+                ippsFree(x64);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                    ippsFree(y64);
+                    return -1; 
+                }
+                ippsConvert_64f32f(y64, y, *len);
+                ippsFree(y64);
+                return 0;
+            }
+            // Compute output length
+            int upFactor   = upFactor_;
+            int downPhase  = downPhase_;
+            int downFactor = downFactor_;
+            int downPhaseNew = (downFactor + downPhase - n%downFactor)%downFactor;
+            *len = (upFactor*n + downFactor - 1 - downPhase)/downFactor;
+            // Get pointers
+            Ipp32f *pSrc = nullptr;
+            Ipp32f *pDst = nullptr;
+            bool lfree = false;
+            if (n + downFactor <= chunkSize_)
+            {
+                pSrc = pSrc32_;
+                pDst = pDst32_;
+            }   
+            else
+            {
+                pSrc = ippsMalloc_32f((n + downFactor)*downFactor_);
+                pDst = ippsMalloc_32f((n + downFactor)*upFactor_);
+                lfree = true;
+            }
+            ippsZero_32f(pSrc, (n + downFactor)*downFactor_);
+            ippsZero_32f(pDst, (n + downFactor)*upFactor_);
+            Ipp32f *dlysrc = pDlySrc32_;
+            Ipp32f *dlydst = pDlyDst32_;
+            int nUse = n;
+            int nprev = 0;
+            int nexcess = 0;
+            if (mode_ == RTSeis::ProcessingMode::POST_PROCESSING)
+            {
+                nUse = n;
+                ippsZero_32f(dlysrc, mbDly_);
+                *len = (upFactor*n + downFactor - 1 - downPhase)/downFactor;
+                ippsCopy_32f(x, pSrc, nUse);
+            }
+            else
+            {
+                // Get the straggler elements from the previous application
+                nprev = nExcess_;
+                if (nprev > 0){ippsCopy_32f(work32_, pSrc, nprev);}
+                int nNew = nprev + n; // Number of new samples
+                // It's possible that there's nothing to do
+                if (nNew/downFactor < 1)
+                {
+                    *len = 0;
+                    ippsCopy_32f(x, &pSrc[nprev], n);
+                    ippsCopy_32f(pSrc, work32_, nprev + n);
+                    nExcess_ = nprev + n;
+                    if (lfree)
+                    {
+                        ippsFree(pSrc);
+                        ippsFree(pDst);
+                    }
+                    return 0;
+                }
+                nUse = nNew - nNew%downFactor; // Number of samples to process
+                nexcess = (nprev + n) - nUse; // Number of excess samples
+                int nCopy = n - nexcess; // Number of samples to copy
+                nexcess = nNew - nUse;
+                if (nCopy > 0){ippsCopy_32f(x, &pSrc[nprev], nCopy);}
+                if (nUse%downFactor != 0)
+                {
+                    RTSEIS_ERRMSG("mod(nUse,downFactor) = mod(%d,%d) = %d != 0",
+                                  nUse, downFactor, nUse%downFactor);
+                }
+            }
+            *len = 0;
+            if (nUse/downFactor > 0)
+            {
+                *len = (upFactor*nUse + downFactor - 1 - downPhase)/downFactor;
+                if (*len > ny)
+                {
+                    RTSEIS_ERRMSG("ny=%d must be at least %d\n", ny, *len);
+                    return -2;
+                }
+                // Apply it
+                IppStatus status = ippsFIRMR_32f(pSrc, pDst,
+                                                 nUse/downFactor, pSpec32_,
+                                                 dlysrc, dlydst, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("Error in FIRMR with %d/%d=%d samples",
+                                 nUse, downFactor, nUse/downFactor);
+                    return -1;
+                }
+                ippsCopy_32f(pDst, y, *len);
+                if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+                {
+                    ippsCopy_32f(dlydst, dlysrc, nbDly_);
+                    ippsZero_32f(work32_, downFactor);
+                    if (nexcess > 0)
+                    {
+                        ippsCopy_32f(&x[n-nexcess], work32_, nexcess);
+                    }
+                    nExcess_ = nexcess;
+                }
+            }
+            // Nothing is coming back
+            else
+            {
+                *len = 0;
+                if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+                {
+                    RTSEIS_WARNMSG("%s", "Shouldn't be here\n");
+                    ippsCopy_32f(pSrc, work32_, nprev);
+                    ippsCopy_32f(&x[n-nexcess], &work32_[nprev], nexcess);
+                    nExcess_ = nexcess;
+                }
+            }
+            if (lfree)
+            {
+                ippsFree(pSrc);
+                ippsFree(pDst);
+            }
+            downPhase_ = downPhaseNew;
+            return 0;
+         }
+      
          /// Determines if the filter is initialized.
          bool isInitialized(void) const {return linit_;}          
 
