@@ -291,7 +291,7 @@ class Waveform :
         /*!< Command to apply. */
         Data::Command command_;
         /*!< Precision. */
-        enum rtseisPrecision_enum precision_ = RTSEIS_DOUBLE;
+        RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
         /*!< Command to apply. */
         enum rtseisCommand_enum job_ = RTSEIS_COMMAND_NONE;
 };
