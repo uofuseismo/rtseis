@@ -1,6 +1,6 @@
 #ifndef RTSEIS_UTILS_TRANSFORMS_HPP
 #define RTSEIS_UTILS_TRANSFORMS_HPP 1
-#include <cmath>
+#include <memory>
 #include <complex>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
@@ -208,33 +208,10 @@ namespace Transforms
              */
             void clear(void);
         private:
-            /*!< DFT/FFT handle.  This has dimension [specSize_]. */
-            void *ftHandle_ = nullptr;
-            /*!< Buffer for DFT/FFT.  This has dimension [bufferSize_]. */ 
-            void *ftBuffer_ = nullptr;
-            /*!< Workspace for input time to frequency domain signals or
-                 frequency to time domain signals.  This has dimension
-                 [nwork_]. */
-            void *work_ = nullptr;
-            /*!< The maximum length of the input signal. */
-            int length_ = 0;
-            /*!< The length of the Fourier transformed data. */
-            int lenft_ = 0; 
-            /*!< Workspace for temporary signals.  This equals
-                 2*std::max(length_, 2*lenft_).  */
-            int nwork_ = 0; 
-            /*!< The length of the DFT/FFT buffer. */
-            int bufferSize_ = 0;
-            /*!< The length of the DFT/FFT pointer. */
-            int specSize_ = 0;
-            /*!< Specified length of FFT is 2**order. */
-            int order_ = 0;
-            /*!< Flag indicating the FFT is to be used. */ 
-            bool ldoFFT_ = false;
-            /*!< Flag indicating the class is initialized. */
-            bool isInitialized_ = false;
-            /*!< The precision of the module. */
-            RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+            /*!< DFT imlementation. */
+            class DFTImpl;
+            /*!< PIMPL'd implementation. */
+            std::unique_ptr<DFTImpl> pDFT_;
     };
 
     /*!
