@@ -8,138 +8,405 @@
 
 using namespace RTSeis::Utils::Filters;
 
-/*!
- * @defgroup rtseis_utils_filters_sos Second Order Sections
- * @brief This is the core implementation for second order section (biquad)
- *        infinite impulse response filtering.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_filters
- */
-/*!
- * @brief Default constructor.
- * @ingroup rtseis_utils_filters_sos
- */
-SOSFilter::SOSFilter(void)
+class SOSFilter::SOSFilterImpl
+{
+    public:
+        /// Default constructor
+        SOSFilterImpl(void)
+        {
+            return;
+        }
+        /// Copy constructor
+        SOSFilterImpl(const SOSFilterImpl &sos)
+        {
+            *this = sos;
+        }
+        /// (Deep) copy operator
+        SOSFilterImpl& operator=(const SOSFilterImpl &sos)
+        {
+            if (&sos == this){return *this;}
+            if (!sos.linit_){return *this;}
+            // Reinitialize the filter
+            initialize(sos.nsections_, sos.bsRef_, sos.asRef_, 
+                       sos.mode_, sos.precision_);
+            // Now copy the filter states
+            if (bufferSize_ > 0)
+            {
+                ippsCopy_8u(sos.pBuf_, pBuf_, bufferSize_);
+            }
+            // Copy the initial conditions
+            if (nsections_ > 0){ippsCopy_64f(sos.zi_, zi_, 2*nsections_);}
+            // And the delay lines
+            if (nwork_ > 0)
+            {
+                if (precision_ == RTSeis::Precision::DOUBLE)
+                {
+                    ippsCopy_64f(sos.dlySrc64f_, dlySrc64f_, nwork_);
+                    ippsCopy_64f(sos.dlyDst64f_, dlyDst64f_, nwork_);
+                }
+                else
+                {
+                    ippsCopy_32f(sos.dlySrc32f_, dlySrc32f_, nwork_); 
+                    ippsCopy_32f(sos.dlyDst32f_, dlyDst32f_, nwork_);
+                }
+            }
+            return *this;
+        }
+        /// Default constructor
+        ~SOSFilterImpl(void)
+        {
+            clear();
+            return;
+        }
+        /// Clears the memory off the module
+        void clear(void)
+        {
+            if (pTaps64f_ != nullptr){ippsFree(pTaps64f_);}
+            if (dlySrc64f_ != nullptr){ippsFree(dlySrc64f_);}
+            if (dlyDst64f_ != nullptr){ippsFree(dlyDst64f_);}
+            if (pTaps32f_ != nullptr){ippsFree(pTaps32f_);}
+            if (dlySrc32f_ != nullptr){ippsFree(dlySrc32f_);}
+            if (dlyDst32f_ != nullptr){ippsFree(dlyDst64f_);}
+            if (pBuf_ != nullptr){ippsFree(pBuf_);}
+            if (bsRef_ != nullptr){ippsFree(bsRef_);}
+            if (asRef_ != nullptr){ippsFree(asRef_);} 
+            if (zi_ != nullptr){ippsFree(zi_);}
+            pState64f_ = nullptr;
+            pTaps64f_ = nullptr;
+            dlySrc64f_ = nullptr;
+            dlyDst64f_ = nullptr;
+            pState32f_ = nullptr;
+            pTaps32f_ = nullptr;
+            dlySrc32f_ = nullptr;
+            dlyDst32f_ = nullptr; 
+            pBuf_ = nullptr;
+            bsRef_ = nullptr;
+            asRef_ = nullptr;
+            zi_ = nullptr;
+            nsections_ = 0;
+            tapsLen_ = 0;
+            nwork_ = 0;
+            bufferSize_ = 0;
+            mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+            precision_ = RTSeis::Precision::DOUBLE;
+            linit_ = false;
+            return;
+        }
+        //====================================================================//
+        int initialize(const int ns,
+                       const double bs[],
+                       const double as[],
+                       const RTSeis::ProcessingMode mode,
+                       const RTSeis::Precision precision)
+        {
+            clear();
+            // Figure out sizes and copy the inputs
+            nsections_ = ns;
+            tapsLen_ = 6*nsections_;
+            nwork_ = std::max(128, 2*nsections_);
+            bsRef_ = ippsMalloc_64f(3*nsections_);
+            ippsCopy_64f(bs, bsRef_, 3*nsections_);
+            asRef_ = ippsMalloc_64f(3*nsections_);
+            ippsCopy_64f(as, asRef_, 3*nsections_);
+            zi_ = ippsMalloc_64f(2*nsections_);
+            ippsZero_64f(zi_, 2*nsections_);
+            IppStatus status;
+            if (precision == RTSeis::Precision::DOUBLE)
+            {
+                status = ippsIIRGetStateSize_BiQuad_64f(nsections_,
+                                                        &bufferSize_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to get state size");
+                    clear();
+                    return -1;
+                }
+                pBuf_ = ippsMalloc_8u(bufferSize_);
+                pTaps64f_ = ippsMalloc_64f(tapsLen_);
+                for (int i=0; i<nsections_; i++)
+                {
+                    pTaps64f_[6*i+0] = bs[3*i+0];
+                    pTaps64f_[6*i+1] = bs[3*i+1];
+                    pTaps64f_[6*i+2] = bs[3*i+2];
+                    pTaps64f_[6*i+3] = as[3*i+0];
+                    pTaps64f_[6*i+4] = as[3*i+1];
+                    pTaps64f_[6*i+5] = as[3*i+2];
+                }
+                dlySrc64f_ = ippsMalloc_64f(nwork_);
+                ippsZero_64f(dlySrc64f_, nwork_);
+                dlyDst64f_ = ippsMalloc_64f(nwork_);
+                ippsZero_64f(dlyDst64f_, nwork_);
+                status = ippsIIRInit_BiQuad_64f(&pState64f_, pTaps64f_,
+                                                nsections_,
+                                                dlySrc64f_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to initialized biquad filter");
+                    clear();
+                    return -1;
+                }
+            }
+            else
+            {
+                status = ippsIIRGetStateSize_BiQuad_32f(nsections_,
+                                                        &bufferSize_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to get state size");
+                    clear();
+                    return -1; 
+                }
+                pBuf_ = ippsMalloc_8u(bufferSize_);
+                pTaps32f_ = ippsMalloc_32f(tapsLen_);
+                for (int i=0; i<nsections_; i++)
+                {
+                    pTaps32f_[6*i+0] = static_cast<float> (bs[3*i+0]);
+                    pTaps32f_[6*i+1] = static_cast<float> (bs[3*i+1]);
+                    pTaps32f_[6*i+2] = static_cast<float> (bs[3*i+2]);
+                    pTaps32f_[6*i+3] = static_cast<float> (as[3*i+0]);
+                    pTaps32f_[6*i+4] = static_cast<float> (as[3*i+1]);
+                    pTaps32f_[6*i+5] = static_cast<float> (as[3*i+2]);
+                }
+                dlySrc32f_ = ippsMalloc_32f(nwork_);
+                ippsZero_32f(dlySrc32f_, nwork_);
+                dlyDst32f_ = ippsMalloc_32f(nwork_);
+                ippsZero_32f(dlyDst32f_, nwork_);
+                status = ippsIIRInit_BiQuad_32f(&pState32f_, pTaps32f_,
+                                                nsections_,
+                                                dlySrc32f_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to initialized biquad filter");
+                    clear();
+                    return -1;
+                }
+            }
+            mode_ = mode;
+            precision_ = precision;
+            linit_ = true;
+            return 0;
+        }
+        /// Determines if the module is initialized
+        bool isInitialized(void) const
+        {
+            return linit_;
+        }
+        /// Determines the length of the initial conditions
+        int getInitialConditionLength(void) const
+        {
+            return 2*nsections_;
+        }
+        /// Gets the number of sections
+        int getNumberOfSections(void) const
+        {
+            return nsections_;
+        }
+        /// Sets the initial conditions
+        int setInitialConditions(const int nz, const double zi[])
+        {
+            resetInitialConditions();
+            int nzRef = getInitialConditionLength();
+            if (nz != nzRef){RTSEIS_WARNMSG("%s", "Shouldn't be here");}
+            ippsCopy_64f(zi, zi_, nzRef);
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                ippsCopy_64f(zi_, dlySrc64f_, nzRef);
+            }
+            else
+            {
+                ippsConvert_64f32f(zi_, dlySrc32f_, nzRef);
+            }
+            return 0;
+        }
+        /// Resets the initial conditions
+        int resetInitialConditions(void)
+        {
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                ippsCopy_64f(zi_, dlySrc64f_, 2*nsections_);
+            }
+            else
+            {
+                ippsConvert_64f32f(zi_, dlySrc32f_, 2*nsections_);
+            }
+            return 0; 
+        } 
+        /// Applies the filter
+        int apply(const int n, const double x[], double y[])
+        {
+            if (n <= 0){return 0;}
+            if (precision_ == RTSeis::Precision::FLOAT)
+            {
+                Ipp32f *x32 = ippsMalloc_32f(n);
+                Ipp32f *y32 = ippsMalloc_32f(n);
+                ippsConvert_64f32f(x, x32, n);
+                int ierr = apply(n, x32, y32);
+                ippsFree(x32);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                    ippsFree(y32);
+                    return -1;
+                }
+                ippsConvert_32f64f(y32, y, n); 
+                ippsFree(y32);
+                return 0;
+            }
+            // Get a pointer to the filter state and set the initial conditions
+            IppStatus status = ippsIIRSetDlyLine_64f(pState64f_, dlySrc64f_);
+            if (status != ippStsNoErr)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to set delay line");
+                return -1;
+            }
+            // Apply the filters
+            status = ippsIIR_64f(x, y, n, pState64f_);
+            if (status != ippStsNoErr)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                return -1;
+            }
+            if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+            {
+                status = ippsIIRGetDlyLine_64f(pState64f_, dlyDst64f_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to get delay line");
+                    return -1;
+                }
+                ippsCopy_64f(dlyDst64f_, dlySrc64f_, 2*nsections_);
+            }
+            return 0;
+        }
+        /// Applies the filter
+        int apply(const int n, const float x[], float y[])
+        {
+            if (n <= 0){return 0;} 
+            if (precision_ == RTSeis::Precision::DOUBLE)
+            {
+                Ipp64f *x64 = ippsMalloc_64f(n);
+                Ipp64f *y64 = ippsMalloc_64f(n);
+                ippsConvert_32f64f(x, x64, n);
+                int ierr = apply(n, x64, y64);
+                ippsFree(x64);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                    ippsFree(y64);
+                    return -1; 
+                }
+                ippsConvert_64f32f(y64, y, n); 
+                ippsFree(y64);
+                return 0;
+            }
+            // Get a pointer to the filter state and set the initial conditions
+            IppStatus status = ippsIIRSetDlyLine_32f(pState32f_, dlySrc32f_);
+            if (status != ippStsNoErr)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to set delay line");
+                return -1;
+            }
+            // Apply the filters
+            status = ippsIIR_32f(x, y, n, pState32f_);
+            if (status != ippStsNoErr)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                return -1;
+            }
+            if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+            {
+                status = ippsIIRGetDlyLine_32f(pState32f_, dlyDst32f_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to get delay line");
+                    return -1;
+                }
+                ippsCopy_32f(dlyDst32f_, dlySrc32f_, 2*nsections_);
+            }
+            return 0;
+        }
+    private:
+        IppsIIRState_64f *pState64f_ = nullptr;
+        /// Filter taps.  This has dimension [tapsLen_].
+        Ipp64f *pTaps64f_ = nullptr;
+        /// Initial conditions. This has dimension [nwork_].
+        Ipp64f *dlySrc64f_ = nullptr;
+        /// Final conditions.  This has dimension [nwork_].
+        Ipp64f *dlyDst64f_ = nullptr;
+        /// Final conditions.  This has dimension [nwork_].
+        /// Handle on filter state. 
+        IppsIIRState_32f *pState32f_ = nullptr;
+        /// Filter taps.  This has dimension [tapsLen_].
+        Ipp32f *pTaps32f_ = nullptr;
+        /// Initial conditions. This has dimension [nwork_].
+        Ipp32f *dlySrc32f_ = nullptr;
+        /// Final conditions.  This has dimension [nwork_].
+        Ipp32f *dlyDst32f_ = nullptr;
+        /// The workspace buffer.
+        Ipp8u *pBuf_ = nullptr;
+        /// A copy of the numerator filter coefficients.  This has
+        /// dimension [3 x nsections_].
+        double *bsRef_ = nullptr;
+        /// A copy of the denominator filter coefficients.  This has
+        /// dimension [3 x nsections_].
+        double *asRef_ = nullptr; 
+        /// A copy of the initial conditions.  This has dimension
+        /// [2 x nsections_].
+        double *zi_ = nullptr;
+        /// The number of sections.
+        int nsections_ = 0;
+        /// The number of filter taps.  This equals 6*nsections_.
+        int tapsLen_ = 0;
+        /// Workspace for the delay lines.
+        int nwork_ = 0;
+        /// Size of workspace buffer.
+        int bufferSize_ = 0;
+        /// By default the module does post-procesing.
+        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        /// The default module implementation.
+        RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+        /// Flag indicating the module is intiialized
+        bool linit_ = false;
+};
+
+//============================================================================//
+
+SOSFilter::SOSFilter(void) :
+    pSOS_(new SOSFilterImpl())
 {
     return;
 }
-/*!
- * @brief Default destructor.
- * @ingroup rtseis_utils_filters_sos
- */
+
 SOSFilter::~SOSFilter(void)
 {
     clear();
     return;
 }
-/*!
- * @brief Releases memory and resets the filter.
- * @ingroup rtseis_utils_filters_sos
- */
+
 void SOSFilter::clear(void)
 {
-    if (pBuf_ != nullptr){ippsFree(pBuf_);}
-    if (pTaps_ != nullptr){ippsFree(pTaps_);}
-    if (dlysrc_ != nullptr){ippsFree(dlysrc_);}
-    if (dlydst_ != nullptr){ippsFree(dlydst_);}
-    if (bsRef_ != nullptr){ippsFree(bsRef_);}
-    if (asRef_ != nullptr){ippsFree(asRef_);}
-    if (zi_ != nullptr){ippsFree(zi_);}
-    pState_ = nullptr;
-    pBuf_ = nullptr;
-    pTaps_ = nullptr;
-    dlysrc_ = nullptr;
-    dlydst_ = nullptr;
-    bsRef_ = nullptr;
-    asRef_ = nullptr;
-    zi_ = nullptr;
-    setPrecision(RTSeis::Precision::DOUBLE);
-    toggleRealTime(false);
-    nsections_ = 0;
-    tapsLen_ = 0;
-    nwork_ = 0;
-    bufferSize_ = 0;
-    linit_ = false;
+    pSOS_->clear();
     return;
 }
-/*!
- * @brief Copy constructor.
- * @param[in] sos  Class from which to initialize.
- * @ingroup rtseis_utils_filters_sos
- */
+
 SOSFilter::SOSFilter(const SOSFilter &sos)
 {
     *this = sos;
     return;
 }
-/*!
- * @brief Copy operator.
- * @param[in] sos   SOS filter class to copy.
- * @result A deep copy of the input class.
- * @ingroup rtseis_utils_filters_sos
- */
+
 SOSFilter& SOSFilter::operator=(const SOSFilter &sos)
 {
     if (&sos == this){return *this;}
-    clear();
-    if (!sos.linit_){return *this;}
-    // Reinitialize the filter
-    initialize(sos.nsections_, sos.bsRef_, sos.asRef_, 
-               sos.isRealTime(), sos.getPrecision());
-    // Now copy the filter states
-    if (bufferSize_ > 0)
-    {
-        Ipp8u *pBufIn = static_cast<Ipp8u *> (sos.pBuf_);
-        Ipp8u *pBufOut = static_cast<Ipp8u *> (pBuf_);
-        ippsCopy_8u(pBufIn, pBufOut, bufferSize_);
-    }
-    // Copy the initial conditions
-    if (nsections_ > 0){ippsCopy_64f(sos.zi_, zi_, 2*nsections_);}
-    // And the delay lines
-    if (nwork_ > 0)
-    {
-        if (isDoublePrecision())
-        {
-            Ipp64f *dlysrcIn  = static_cast<Ipp64f *> (sos.dlysrc_);
-            Ipp64f *dlysrcOut = static_cast<Ipp64f *> (dlysrc_);
-            ippsCopy_64f(dlysrcIn, dlysrcOut, nwork_); 
-            Ipp64f *dlydstIn  = static_cast<Ipp64f *> (sos.dlydst_);
-            Ipp64f *dlydstOut = static_cast<Ipp64f *> (dlydst_);
-            ippsCopy_64f(dlydstIn, dlydstOut, nwork_);
-        }
-        else
-        {
-            Ipp32f *dlysrcIn  = static_cast<Ipp32f *> (sos.dlysrc_);
-            Ipp32f *dlysrcOut = static_cast<Ipp32f *> (dlysrc_);
-            ippsCopy_32f(dlysrcIn, dlysrcOut, nwork_); 
-            Ipp32f *dlydstIn  = static_cast<Ipp32f *> (sos.dlydst_);
-            Ipp32f *dlydstOut = static_cast<Ipp32f *> (dlydst_);
-            ippsCopy_32f(dlydstIn, dlydstOut, nwork_);
-        }
-    }
+    if (pSOS_){pSOS_->clear();}
+    pSOS_ = std::unique_ptr<SOSFilterImpl> (new SOSFilterImpl(*sos.pSOS_));
     return *this;
 }
-/*!
- * @brief Initializes the second order section filter.
- * @param[in] ns           The number of second order sections.
- * @param[in] bs           Numerator coefficients.  This is an array of
- *                         dimension [3 x ns] with leading dimension 3.
- *                         There is a further requirement that b[3*is]
- *                         for \f$ i_s=0,1,\cdots,n_s-1 \f$ not be zero.
- * @param[in] as           Denominator coefficients.  This is an array of
- *                         dimension [3 x ns] with leading dimension 3. 
- *                         There is a further requirement that a[3*is]
- *                         for \f$ i_s=0,1,\cdots,n_s-1 \f$ not be zero.
- * @param[in] lisRealTime  Flag indicating that this is for real-time
- *                         application.
- * @param[in] precision    Determines the precision of the underlying
- *                         filter application.
- * @ingroup rtseis_utils_filters_sos
- */
+
 int SOSFilter::initialize(const int ns,
                           const double bs[],
                           const double as[],
-                          const bool lisRealTime,
+                          const RTSeis::ProcessingMode mode,
                           const RTSeis::Precision precision)
 {
     clear();
@@ -165,174 +432,50 @@ int SOSFilter::initialize(const int ns,
             return -1;
         }
     }
-    // Figure out sizes and copy the inputs
-    nsections_ = ns;
-    tapsLen_ = 6*nsections_;
-    nwork_ = std::max(128, 2*nsections_);
-    bsRef_ = ippsMalloc_64f(3*nsections_);
-    ippsCopy_64f(bs, bsRef_, 3*nsections_);
-    asRef_ = ippsMalloc_64f(3*nsections_);
-    ippsCopy_64f(as, asRef_, 3*nsections_);
-    zi_ = ippsMalloc_64f(2*nsections_);
-    ippsZero_64f(zi_, 2*nsections_);
-    IppStatus status;
-    if (precision == RTSeis::Precision::DOUBLE)
+    int ierr = pSOS_->initialize(ns, bs, as, mode, precision);
+    if (ierr != 0)
     {
-        status = ippsIIRGetStateSize_BiQuad_64f(nsections_, &bufferSize_);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to get state size");
-            clear();
-            return -1;
-        }
-        IppsIIRState_64f *pState = nullptr; 
-        Ipp8u *pBuf = ippsMalloc_8u(bufferSize_);
-        Ipp64f *pTaps = ippsMalloc_64f(tapsLen_);
-        for (int i=0; i<nsections_; i++)
-        {
-            pTaps[6*i+0] = bs[3*i+0];
-            pTaps[6*i+1] = bs[3*i+1];
-            pTaps[6*i+2] = bs[3*i+2];
-            pTaps[6*i+3] = as[3*i+0];
-            pTaps[6*i+4] = as[3*i+1];
-            pTaps[6*i+5] = as[3*i+2];
-        }
-        Ipp64f *dlysrc = ippsMalloc_64f(nwork_);
-        ippsZero_64f(dlysrc, nwork_);
-        Ipp64f *dlydst = ippsMalloc_64f(nwork_);
-        ippsZero_64f(dlydst, nwork_);
-        status = ippsIIRInit_BiQuad_64f(&pState, pTaps, nsections_,
-                                        dlysrc, pBuf);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to initialized biquad filter");
-            clear();
-            return -1;
-        }
-        pState_ = pState;
-        pBuf_ = pBuf;
-        pTaps_ = pTaps;
-        dlysrc_ = dlysrc;
-        dlydst_ = dlydst;
+        RTSEIS_ERRMSG("%s", "Failed to initialize sos filter");
+        clear();
+        return -1;
     }
-    else
-    {
-        status = ippsIIRGetStateSize_BiQuad_32f(nsections_, &bufferSize_);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to get state size");
-            clear();
-            return -1;
-        }
-        IppsIIRState_32f *pState = nullptr;
-        Ipp8u *pBuf = ippsMalloc_8u(bufferSize_);
-        Ipp32f *pTaps = ippsMalloc_32f(tapsLen_);
-        for (int i=0; i<nsections_; i++)
-        {
-            pTaps[6*i+0] = static_cast<Ipp32f> (bs[3*i+0]);
-            pTaps[6*i+1] = static_cast<Ipp32f> (bs[3*i+1]);
-            pTaps[6*i+2] = static_cast<Ipp32f> (bs[3*i+2]);
-            pTaps[6*i+3] = static_cast<Ipp32f> (as[3*i+0]);
-            pTaps[6*i+4] = static_cast<Ipp32f> (as[3*i+1]);
-            pTaps[6*i+5] = static_cast<Ipp32f> (as[3*i+2]);
-        }
-        Ipp32f *dlysrc = ippsMalloc_32f(nwork_);
-        ippsZero_32f(dlysrc, nwork_);
-        Ipp32f *dlydst = ippsMalloc_32f(nwork_);
-        ippsZero_32f(dlydst, nwork_);
-        status = ippsIIRInit_BiQuad_32f(&pState, pTaps, nsections_,
-                                        dlysrc, pBuf);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to initialized biquad filter");
-            clear();
-            return -1;
-        }
-        pState_ = pState;
-        pBuf_ = pBuf;
-        pTaps_ = pTaps;
-        dlysrc_ = dlysrc;
-        dlydst_ = dlydst;
-    }
-    setPrecision(precision);
-    toggleRealTime(lisRealTime); 
-    linit_ = true;
     return 0;
 }
-/*!
- * @brief Sets the initial conditions for the filter.  This should be called
- *        prior to filter application as it will reset the filter.
- * @param[in] nz   The second order section filter initial conditions.
- *                 This should be equal to getInitialConditionLength().
- * @param[in] zi   The initial conditions.  This has dimension [nz].
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_sos
- */
+
 int SOSFilter::setInitialConditions(const int nz, const double zi[])
 {
-    if (!linit_)
+    if (!isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
     resetInitialConditions();
-    int nzRef = getInitialConditionLength();
+    int nzRef = pSOS_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
         if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
         if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
         return -1;
     }
-    ippsCopy_64f(zi, zi_, nzRef);
-    if (isDoublePrecision())
-    {
-        Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-        ippsCopy_64f(zi, dlysrc, nzRef);
-    }
-    else
-    {
-        Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-        ippsConvert_64f32f(zi, dlysrc, nzRef);
-    }
+    pSOS_->setInitialConditions(nz, zi);
     return 0;
 }
-/*!
- * @brief Resets the initial conditions on the source delay line to the
- *        default initial conditions or the initial conditions set 
- *        when SOSFilter::setInitialConditions() was called.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_sos
- */
+
 int SOSFilter::resetInitialConditions(void)
 {
-    if (!linit_)
+    if (!isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
-    if (isDoublePrecision())
-    {
-        Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-        ippsCopy_64f(zi_, dlysrc, 2*nsections_);
-    }
-    else
-    {
-        Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-        ippsConvert_64f32f(zi_, dlysrc, 2*nsections_);
-    }
+    pSOS_->resetInitialConditions();
     return 0;
 }
-/*!
- * @brief Applies the second order section filter to the data.
- * @param[in] n   Number of points in signals.
- * @param[in] x   The signal to filter.  This has dimension [n].
- * @param[out] y  The filtered signal.  This has dimension [n].
- * @ingroup rtseis_utils_filters_sos
- */
+
 int SOSFilter::apply(const int n, const double x[], double y[]) 
 {
     if (n <= 0){return 0;}
-    if (!linit_)
+    if (!isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
@@ -343,63 +486,19 @@ int SOSFilter::apply(const int n, const double x[], double y[])
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
         return -1;
     }
-    if (isFloatPrecision())
-    {
-        Ipp32f *x32 = ippsMalloc_32f(n);
-        Ipp32f *y32 = ippsMalloc_32f(n);
-        ippsConvert_64f32f(x, x32, n);
-        int ierr = apply(n, x32, y32);
-        ippsFree(x32);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
-            ippsFree(y32);
-            return -1;
-        }
-        ippsConvert_32f64f(y32, y, n);
-        ippsFree(y32);
-        return 0;
-    }
-    // Get a pointer to the filter state and set the initial conditions
-    IppsIIRState_64f *pState = static_cast<IppsIIRState_64f *> (pState_);
-    Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-    IppStatus status = ippsIIRSetDlyLine_64f(pState, dlysrc);
-    if (status != ippStsNoErr)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to set delay line");
-        return -1;
-    }
-    // Apply the filters
-    status = ippsIIR_64f(x, y, n, pState); 
-    if (status != ippStsNoErr)
-    {
+    int ierr = pSOS_->apply(n, x, y); 
+    if (ierr != 0)
+    {   
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1;
-    }
-    if (isRealTime())
-    {
-        Ipp64f *dlydst = static_cast<Ipp64f *> (dlydst_);
-        status = ippsIIRGetDlyLine_64f(pState, dlydst);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to get delay line");
-            return -1;
-        }
-        ippsCopy_64f(dlydst, dlysrc, 2*nsections_);
-    }
+        return -1; 
+    }   
     return 0;
 }
-/*!
- * @brief Applies the second order section filter to the data.
- * @param[in] n   Number of points in signals.
- * @param[in] x   The signal to filter.  This has dimension [n].
- * @param[out] y  The filtered signal.  This has dimension [n].
- * @ingroup rtseis_utils_filters_sos
- */
+
 int SOSFilter::apply(const int n, const float x[], float y[])
 {
     if (n <= 0){return 0;}
-    if (!linit_)
+    if (!isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
@@ -410,77 +509,36 @@ int SOSFilter::apply(const int n, const float x[], float y[])
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
         return -1;
     }
-    if (isDoublePrecision())
-    {
-        Ipp64f *x64 = ippsMalloc_64f(n);
-        Ipp64f *y64 = ippsMalloc_64f(n);
-        ippsConvert_32f64f(x, x64, n);
-        int ierr = apply(n, x64, y64);
-        ippsFree(x64);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
-            ippsFree(y64);
-            return -1;
-        }
-        ippsConvert_64f32f(y64, y, n);
-        ippsFree(y64);
-        return 0;
-    }
-    // Get a pointer to the filter state and set the initial conditions
-    IppsIIRState_32f *pState = static_cast<IppsIIRState_32f *> (pState_);
-    Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-    IppStatus status = ippsIIRSetDlyLine_32f(pState, dlysrc);
-    if (status != ippStsNoErr)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to set delay line");
-        return -1;
-    }
-    // Apply the filters
-    status = ippsIIR_32f(x, y, n, pState);
-    if (status != ippStsNoErr)
+    int ierr = pSOS_->apply(n, x, y);
+    if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
         return -1;
     }
-    if (isRealTime())
-    {
-        Ipp32f *dlydst = static_cast<Ipp32f *> (dlydst_);
-        status = ippsIIRGetDlyLine_32f(pState, dlydst);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to get delay line");
-            return -1;
-        }
-        ippsCopy_32f(dlydst, dlysrc, 2*nsections_);
-    }
     return 0;
 }
-/*!
- * @brief Returns the length of the initial conditions.
- * @result The length of the initial condtions array.
- * @ingroup rtseis_utils_filters_sos
- */
+
 int SOSFilter::getInitialConditionLength(void) const
 {
-    if (!linit_)
+    if (!isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
-    return 2*nsections_;
+    return pSOS_->getInitialConditionLength();
 }
-/*!
- * @brief Returns the number of sections in the filter.
- * @result The number of cascaded second order sections.
- * @ingroup rtseis_utils_filters_sos
- */
+
 int SOSFilter::getNumberOfSections(void) const
 {
-    if (!linit_)
+    if (!isInitialized())
     {
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
-    return nsections_;
+    return pSOS_->getNumberOfSections();
+}
+
+bool SOSFilter::isInitialized(void) const
+{
+    return pSOS_->isInitialized();
 }

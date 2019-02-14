@@ -566,8 +566,9 @@ int filters_sosFilter_test(const int npts, const double x[],
     std::fill(impulse, impulse+40, 0);
     impulse[0] = 1;
     SOSFilter sos;
-    bool lrt = false;
-    int ierr = sos.initialize(ns, bs7, as7, lrt, RTSeis::Precision::DOUBLE);
+    int ierr = sos.initialize(ns, bs7, as7,
+                              RTSeis::ProcessingMode::POST_PROCESSING,
+                              RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize sos");
@@ -607,8 +608,9 @@ int filters_sosFilter_test(const int npts, const double x[],
                            1.000000000000000, -1.704970593447777,  0.792206889942566,
                            1.000000000000000, -1.994269533089365,  0.994278822534674,
                            1.000000000000000, -1.997472946622339,  0.997483252685326};
-    lrt = false;
-    ierr = sos.initialize(ns, bs, as, lrt, RTSeis::Precision::DOUBLE);
+    ierr = sos.initialize(ns, bs, as,
+                          RTSeis::ProcessingMode::POST_PROCESSING,
+                          RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
@@ -637,13 +639,16 @@ int filters_sosFilter_test(const int npts, const double x[],
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Do packetized tests 
-    lrt = true;
-    ierr = sos.initialize(ns, bs, as, lrt, RTSeis::Precision::DOUBLE);
+    SOSFilter sosrt;
+    ierr = sosrt.initialize(ns, bs, as,
+                            RTSeis::ProcessingMode::REAL_TIME,
+                            RTSeis::Precision::DOUBLE);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
         return EXIT_FAILURE;
     }
+    sos = sosrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (int job=0; job<2; job++)

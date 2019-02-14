@@ -17,193 +17,6 @@ namespace Utils
  */    
 namespace Filters
 {
-    /*!
-     * @brief Defines the precision of the filter implementation.  In general,
-     *        both float and double precision filters are implemented.
-     * @ingroup rtseis_utils_filters
-     */
-    class Precision
-    {
-        public:
-            /*!
-             * @brief Default constructor.
-             * @param[in] precision  The implementation precision.  By default 
-             *                       the filters are applied in double
-             *                       precision.
-             */
-            Precision(
-                const RTSeis::Precision precision = RTSeis::Precision::DOUBLE) :
-                precision_(precision)
-            {
-                return;
-            }
-            /*!
-             * @brief Copy constructor.
-             * @param[in] precision  Precision class from which to initialize.
-             */
-            Precision(const Precision &precision)
-            {
-                *this = precision;
-            }
-            /*!
-             * @brief Default destructor.
-             */
-            ~Precision(void){return;}
-            /*!
-             * @brief Copy operator.
-             * @param[in] precision  Precision class to copy to this class.
-             * @result A deep copy of the input class.
-             */
-            Precision& operator=(const Precision &precision)
-            {
-                if (&precision == this){return *this;}
-                precision_ = precision.precision_;
-                return *this;
-            }
-            /*!
-             * @brief Sets the filter precision.
-             * @param[in] precision  The precision which the filter will
-             *                       be applied.
-             * @result 0 indicates success.
-             */
-            int setPrecision(const RTSeis::Precision precision)
-            {
-                precision_ = precision;
-                return 0;
-            }
-            /*!
-             * @brief Gets the filter precision.
-             * @result The precision of the filter to apply.
-             */
-            RTSeis::Precision getPrecision(void) const{return precision_;}
-            /*! 
-             * @brief Determines if the filter is for double precision.
-             * @retval True indicates a double floating point arithmetic filter
-             *         should be applied.
-             * @retval False indicates a double floating point arithmetic filter
-             *         should not be applied.
-             */
-            bool isDoublePrecision(void) const
-            {
-                if (precision_ == RTSeis::Precision::DOUBLE){return true;}
-                return false;
-            }
-            /*!
-             * @brief Determines if the filter is for single precision.
-             * @retval True indicates a single flaoting point arithmetic filter
-             *         should be applied.
-             * @retval False indicates a single floating point arithmetic filter
-             *         should not be applied.
-             */
-            bool isFloatPrecision(void) const
-            {
-                if (precision_ == RTSeis::Precision::FLOAT){return true;}
-                return false;
-            }
-            /*!
-             * @brief Prints the class contents to file.
-             * @param[in] fptr  File handle to which the contents of the class
-             *                  are printed.  By default this is stdout.
-             */ 
-/*
-            void print(FILE *fptr = stdout)
-            {
-                FILE *f = stdout;
-                if (fptr != nullptr){f = fptr;}
-                if (isDoublePrecision())
-                {
-                    fprintf(f, "Class is double precision\n");
-                }
-                else
-                {
-                    fprintf(f, "Class is float precision\n"); 
-                }
-            }
-*/
-        private: 
-            /*! The precision of the module. */
-            RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
-    };
-
-    /*!
-     * @brief Class to help a filter distinguish whether it should be applied
-     *        in a real-time or post-processing fashion.
-     * @ingroup rtseis_utils_filters
-     */
-    class RealTime
-    {
-        public:
-            /*!
-             * @brief Default constructor.
-             * @param[in] lrt   True indicates that this filter is for real-time
-             *                  application.
-             * @param[in] lrt   False indicates that this filter is for
-             *                  post-processing.  This is the default.
-             */
-            RealTime(const bool lrt = false) :
-                lrt_(lrt)
-            {
-                return;
-            }
-            /*!
-             * @brief Default destructor.
-             */
-            ~RealTime(void){return;}
-            /*!
-             * @brief Copy operator.
-             * @param[in] realTime  Real-time class to copy.
-             * @result A deep copy of the class.
-             */
-            RealTime &operator=(const RealTime realTime)
-            {
-                if (&realTime == this){return *this;}
-                lrt_ = realTime.lrt_;
-                return *this;
-            }
-            /*!
-             * @brief Enables/disables the class as being for real-time
-             *        processing.
-             * @param[in] lrt   True indicates that this filter is for real-time
-             *                  application.
-             * @param[in] lrt   False indicates that this filter is for
-             *                  post-processing.
-             */
-            void toggleRealTime(const bool lrt)
-            {
-                lrt_ = lrt;
-                return;
-            }
-            /*!
-             * @brief Returns if the class is for real-time processing.
-             * @retval True indicates that the class is for real-time
-             *         processing.
-             * @retval False indicates that the class is for post-processing.
-             */
-            bool isRealTime(void) const {return lrt_;}
-            /*!
-             * @brief Prints the contents of the class to a file.
-             * @param[in] fptr   File pointer to which this class will print its
-             *                   contents.  The default is stdout.
-             */
-/*
-            void print(FILE *fptr = stdout)
-            {
-                FILE *f = stdout;
-                if (fptr != nullptr){f = fptr;}
-                if (isRealTime())
-                {
-                    fprintf(f, "Class is for real-time processing\n");
-                }
-                else
-                {
-                    fprintf(f, "Class is for post-processing\n"); 
-                }
-            }
-*/
-        private:
-            /*! Flag indicating whether or not this is for real-time. */
-            bool lrt_ = false;
-    };
 
     /*!
      * @defgroup rtseis_utils_filters_downsample Downsample
@@ -211,7 +24,7 @@ namespace Filters
      * @copyright Ben Baker distributed under the MIT license.
      * @ingroup rtseis_utils_filters
      */
-    class Downsample : protected Precision, RealTime
+    class Downsample
     {
         public:
             /*!
@@ -408,22 +221,93 @@ namespace Filters
             std::unique_ptr<MedianFilterImpl> pMedian_;
     };
 
-    class SOSFilter : protected Precision, RealTime
+    /*!
+     * @defgroup rtseis_utils_filters_sos Second Order Sections
+     * @brief This is the core implementation for second order section (biquad)
+     *        infinite impulse response filtering.
+     * @copyright Ben Baker distributed under the MIT license.
+     * @ingroup rtseis_utils_filters
+     */
+    class SOSFilter
     {
         public:
+            /*!
+             * @brief Default constructor.
+             */
             SOSFilter(void);
-            ~SOSFilter(void);
+            /*!
+             * @brief A copy constructor.
+             * @param[in] sos  The SOS class from which to initialize.
+             */
             SOSFilter(const SOSFilter &sos);
+            /*!
+             * @brief Copy operator.
+             * @param[in] sos  The class to copy.
+             * @result A deep copy of the input SOS class.
+             */
             SOSFilter& operator=(const SOSFilter &sos);
+            /*!
+             * @brief Default destructor.
+             */
+            ~SOSFilter(void);
+            /*!
+             * @brief Initializes the second order section filter.
+             * @param[in] ns    The number of second order sections.
+             * @param[in] bs    Numerator coefficients.  This is an array of
+             *                  dimension [3 x ns] with leading dimension 3.
+             *                  There is a further requirement that b[3*is]
+             *                  for \f$ i_s=0,1,\cdots,n_s-1 \f$ not be zero.
+             * @param[in] as    Denominator coefficients.  This is an array of
+             *                  dimension [3 x ns] with leading dimension 3. 
+             *                  There is a further requirement that a[3*is]
+             *                  for \f$ i_s=0,1,\cdots,n_s-1 \f$ not be zero.
+             * @param[in] mode  The processing mode.  By default this
+             *                  is for post-processing.
+             * @param[in] precision   The precision of the filter.  By default
+             *                        this is double precision.
+             * @result 0 indicates success.
+             */
             int initialize(const int ns,
                            const double bs[],
                            const double as[],
-                           const bool lisRealTime = false,
+                           const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
                            const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+            /*!
+             * @brief Determines if the module is initialized.
+             * @retval True indicates that the module is initialized.
+             * @retval False indicates that the module is not initialized.
+             */
+            bool isInitialized(void) const;
+            /*!
+             * @brief Returns the length of the initial conditions.
+             * @result The length of the initial condtions array.
+             */
             int getInitialConditionLength(void) const;
+            /*!
+             * @brief Sets the initial conditions for the filter.  This should
+             *        be called prior to filter application as it will reset
+             *        the filter.
+             * @param[in] nz   The second order section filter initial
+             *                 conditions.  This should be equal to
+             *                 getInitialConditionLength().
+             * @param[in] zi   The initial conditions.  This has dimension [nz].
+             * @result 0 indicates success.
+             */
             int setInitialConditions(const int nz, const double zi[]);
+            /*!
+             * @brief Applies the second order section filter to the data.
+             * @param[in] n   Number of points in signals.
+             * @param[in] x   The signal to filter.  This has dimension [n].
+             * @param[out] y  The filtered signal.  This has dimension [n].
+             */
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);
+            /*!
+             * @brief Resets the initial conditions on the source delay line
+             *        to the default initial conditions or the initial
+             *        conditions set when SOSFilter::setInitialConditions()
+             *        was called.
+             */
             int resetInitialConditions(void);
             /*! 
              * @brief Clears the module and resets all parameters.
@@ -431,35 +315,10 @@ namespace Filters
             void clear(void);
             int getNumberOfSections(void) const;
         private:
-            /*!< The IIR filtering state. */
-            void *pState_ = nullptr;
-            /*!< A workspace buffer.  This has dimension [bufferSize_]. */
-            void *pBuf_ = nullptr;
-            /*!< The filter coefficients.  This has dimension [tapsLen_]. */
-            void *pTaps_ = nullptr;
-            /*!< Delay line source vector.  This has dimension [nwork_]. */
-            void *dlysrc_ = nullptr;
-            /*!< Delay line destination vector.  This has dimension [nwork_]. */
-            void *dlydst_ = nullptr;
-            /*!< A copy of the input filter numerator coefficients.  This
-                 has dimension [3 x nsections_]. */
-            double *bsRef_ = nullptr;
-            /*!< A copy of the input filter denominator coefficients.  This
-                 has dimension [3 x nsections_]. */
-            double *asRef_ = nullptr;
-            /*!< A copy of the initial conditions.  This has dimension
-                 [2*nsections_]. */
-            double *zi_ = nullptr;
-            /*!< The number of sections. */
-            int nsections_ = 0;
-            /*!< The number of filter taps. */
-            int tapsLen_ = 0;
-            /*!< The workspace for the delay lines. */
-            int nwork_ = 0; 
-            /*!< The size of the workspace buffer. */
-            int bufferSize_ = 0;
-            /*!< Flag indicating the module is initialized. */
-            bool linit_ = false;
+            /* Forward declaration of class for PIMPL. */
+            class SOSFilterImpl;
+            /* Pointer to the the filter implementation and parameters. */
+            std::unique_ptr<SOSFilterImpl> pSOS_;
     };
 
     /*!
