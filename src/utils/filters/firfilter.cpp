@@ -348,6 +348,8 @@ class FIRFilter::FIRImpl
         bool linit_ = false;
 };
 
+//============================================================================//
+
 FIRFilter::FIRFilter(void) :
     pFIR_(new FIRImpl())
 {
@@ -372,44 +374,6 @@ FIRFilter& FIRFilter::operator=(const FIRFilter &fir)
     if (pFIR_){pFIR_->clear();}
     pFIR_ = std::unique_ptr<FIRImpl> (new FIRImpl(*fir.pFIR_));
     return *this;
-/*
-    clear();
-    if (!fir.linit_){return *this;}
-    // Reinitialize the filter
-    initialize(fir.tapsLen_, fir.tapsRef_, fir.isRealTime(),
-               fir.getPrecision(), fir.implementation_);
-    // Now copy the filter states
-    if (bufferSize_ > 0)
-    {
-        Ipp8u *pBufIn = static_cast<Ipp8u *> (fir.pBuf_);
-        Ipp8u *pBufOut = static_cast<Ipp8u *> (pBuf_);
-        ippsCopy_8u(pBufIn, pBufOut, bufferSize_);
-    }
-    // Copy the initial conditions
-    if (order_ > 0){ippsCopy_64f(fir.zi_, zi_, order_);}
-    if (nwork_ > 0)
-    {
-        if (isDoublePrecision())
-        {
-            Ipp64f *dlysrcIn  = static_cast<Ipp64f *> (fir.dlysrc_);
-            Ipp64f *dlysrcOut = static_cast<Ipp64f *> (dlysrc_);
-            ippsCopy_64f(dlysrcIn, dlysrcOut, nwork_); 
-            Ipp64f *dlydstIn  = static_cast<Ipp64f *> (fir.dlydst_);
-            Ipp64f *dlydstOut = static_cast<Ipp64f *> (dlydst_);
-            ippsCopy_64f(dlydstIn, dlydstOut, nwork_);
-        }
-        else
-        {
-            Ipp32f *dlysrcIn  = static_cast<Ipp32f *> (fir.dlysrc_);
-            Ipp32f *dlysrcOut = static_cast<Ipp32f *> (dlysrc_);
-            ippsCopy_32f(dlysrcIn, dlysrcOut, nwork_); 
-            Ipp32f *dlydstIn  = static_cast<Ipp32f *> (fir.dlydst_);
-            Ipp32f *dlydstOut = static_cast<Ipp32f *> (dlydst_);
-            ippsCopy_32f(dlydstIn, dlydstOut, nwork_);
-        }
-    }
-    return *this;
-*/
 }
 
 int FIRFilter::initialize(const int nb, const double b[],
@@ -433,136 +397,14 @@ int FIRFilter::initialize(const int nb, const double b[],
         return -1;
     } 
     return 0;
-/*
-    // Figure out sizes and save some basic info
-    tapsLen_ = nb;
-    order_ = nb - 1;
-    nwork_ = std::max(128, order_+1);
-    tapsRef_ = ippsMalloc_64f(nb);
-    ippsCopy_64f(b, tapsRef_, nb);
-    zi_ = ippsMalloc_64f(std::max(1, order_));
-    ippsZero_64f(zi_, std::max(1, order_));
-    // Determine the algorithm type
-    IppAlgType algType = ippAlgDirect;
-    if (implementation == Implementation::FFT){algType = ippAlgFFT;}
-    // Initialize FIR filter
-    if (precision == RTSeis::Precision::DOUBLE)
-    {
-        Ipp64f *dlysrc = ippsMalloc_64f(nwork_);
-        Ipp64f *dlydst = ippsMalloc_64f(nwork_);
-        ippsZero_64f(dlysrc, nwork_);
-        ippsZero_64f(dlydst, nwork_);
-        Ipp64f *pTaps = ippsMalloc_64f(tapsLen_);
-        ippsZero_64f(pTaps, tapsLen_);
-        ippsCopy_64f(b, pTaps, nb);
-        IppStatus status = ippsFIRSRGetSize(tapsLen_, ipp64f,
-                                            &specSize_, &bufferSize_);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Error getting state size");
-            return -1;
-        }
-        IppsFIRSpec_64f *pFIRSpec
-            = reinterpret_cast<IppsFIRSpec_64f *> (ippsMalloc_8u(specSize_));
-        Ipp8u *pBuf = ippsMalloc_8u(bufferSize_);
-        status = ippsFIRSRInit_64f(pTaps, tapsLen_, algType, pFIRSpec); 
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Error initializing state structure");
-            return -1;
-        }
-        // Set pointers 
-        dlysrc_ = dlysrc;
-        dlydst_ = dlydst;
-        pTaps_ = pTaps;
-        pFIRSpec_ = pFIRSpec;
-        pBuf_ = pBuf;
-    }
-    else if (precision == RTSeis::Precision::FLOAT)
-    {
-        Ipp32f *dlysrc = ippsMalloc_32f(nwork_);
-        Ipp32f *dlydst = ippsMalloc_32f(nwork_);
-        ippsZero_32f(dlysrc, nwork_);
-        ippsZero_32f(dlydst, nwork_);
-        Ipp32f *pTaps = ippsMalloc_32f(tapsLen_);
-        ippsZero_32f(pTaps, tapsLen_);
-        ippsConvert_64f32f(b, pTaps, nb);
-        IppStatus status = ippsFIRSRGetSize(tapsLen_, ipp32f,
-                                            &specSize_, &bufferSize_);
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Error getting state size");
-            return -1; 
-        }
-        IppsFIRSpec_32f *pFIRSpec
-            = reinterpret_cast<IppsFIRSpec_32f *> (ippsMalloc_8u(specSize_));
-        Ipp8u *pBuf = ippsMalloc_8u(bufferSize_);
-        status = ippsFIRSRInit_32f(pTaps, tapsLen_, algType, pFIRSpec); 
-        if (status != ippStsNoErr)
-        {
-            RTSEIS_ERRMSG("%s", "Error initializing state structure");
-            return -1; 
-        }
-        // Set pointers 
-        dlysrc_ = dlysrc;
-        dlydst_ = dlydst;
-        pTaps_ = pTaps;
-        pFIRSpec_ = pFIRSpec;
-        pBuf_ = pBuf;
-    }
-    else
-    {
-        RTSEIS_ERRMSG("%s", "Invalid precision");
-        clear();
-        return -1;
-    }
-    implementation_ = implementation;
-    setPrecision(precision);
-    toggleRealTime(lisRealTime);
-    linit_ = true;
-*/
-    return 0;
 }
 
 void FIRFilter::clear(void)
 {
     pFIR_->clear();
-/*
-    if (pFIRSpec_ != nullptr){ippsFree(pFIRSpec_);}
-    if (pTaps_ != nullptr){ippsFree(pTaps_);}
-    if (dlysrc_ != nullptr){ippsFree(dlysrc_);}
-    if (dlydst_ != nullptr){ippsFree(dlydst_);}
-    if (pBuf_ != nullptr){ippsFree(pBuf_);}
-    if (tapsRef_ != nullptr){ippsFree(tapsRef_);}
-    if (zi_ != nullptr){ippsFree(zi_);}
-    pFIRSpec_ = nullptr;
-    pTaps_ = nullptr;
-    dlysrc_ = nullptr;
-    dlydst_ = nullptr;
-    pBuf_ = nullptr;
-    tapsRef_ = nullptr;
-    zi_ = nullptr;
-    setPrecision(RTSeis::Precision::DOUBLE);
-    toggleRealTime(false);
-    tapsLen_ = 0;
-    nwork_ = 0;
-    bufferSize_ = 0;
-    specSize_ = 0;
-    order_ = 0;
-    implementation_ = Implementation::DIRECT;
-    linit_ = false;
-*/
     return;
 }
-/*!
- * @brief Sets the initial conditions for the filter.  This should be called
- *        prior to filter application as it will reset the filter.
- * @param[in] nz   The FIR filter initial conditions.
- *                 This should be equal to getInitialConditionLength().
- * @param[in] zi   The initial conditions.  This has dimension [nz].
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_fir
- */
+ 
 int FIRFilter::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
@@ -579,31 +421,8 @@ int FIRFilter::setInitialConditions(const int nz, const double zi[])
     }
     pFIR_->setInitialConditions(nz, zi);
     return 0;
-/* 
-    if (nzRef > 0)
-    {
-        ippsCopy_64f(zi, zi_, nzRef);
-        if (isDoublePrecision())
-        {
-            Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-            ippsCopy_64f(zi, dlysrc, nzRef);
-        }
-        else
-        {
-            Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-            ippsConvert_64f32f(zi, dlysrc, nzRef);
-        }
-    }
-    return 0;
-*/
 }
-/*!
- * @brief Resets the initial conditions on the source delay line to the
- *        default initial conditions or the initial conditions set 
- *        when FIRFilter::setInitialConditions() was called.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_filters_fir
- */
+
 int FIRFilter::resetInitialConditions(void)
 {
     if (!isInitialized())
@@ -612,21 +431,6 @@ int FIRFilter::resetInitialConditions(void)
         return -1;
     }
     pFIR_->resetInitialConditions();
-/*
-    if (order_ > 0)
-    {
-        if (isDoublePrecision())
-        {
-            Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-            ippsCopy_64f(zi_, dlysrc, order_);
-        }
-        else
-        {
-            Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-            ippsConvert_64f32f(zi_, dlysrc, order_);
-        }
-    }
-*/
     return 0;
 }
 
@@ -651,37 +455,6 @@ int FIRFilter::apply(const int n, const double x[], double y[])
         return -1;
     }
     return 0;
-/*
-    if (isFloatPrecision())
-    {
-        Ipp32f *x32 = ippsMalloc_32f(n);
-        Ipp32f *y32 = ippsMalloc_32f(n);
-        ippsConvert_64f32f(x, x32, n); 
-        int ierr = apply(n, x32, y32);
-        ippsFree(x32);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
-            ippsFree(y32);
-            return -1; 
-        }
-        ippsConvert_32f64f(y32, y, n); 
-        ippsFree(y32);
-        return 0;
-    }
-    IppsFIRSpec_64f *pFIRSpec = static_cast<IppsFIRSpec_64f *> (pFIRSpec_);
-    Ipp64f *dlysrc = static_cast<Ipp64f *> (dlysrc_);
-    Ipp64f *dlydst = static_cast<Ipp64f *> (dlydst_);
-    Ipp8u *pBuf = static_cast<Ipp8u *> (pBuf_);
-    IppStatus status = ippsFIRSR_64f(x, y, n, pFIRSpec, dlysrc, dlydst, pBuf);
-    if (status != ippStsNoErr)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply FIR filter");
-        return -1;
-    }
-    if (isRealTime() && order_ > 0){ippsCopy_64f(dlydst, dlysrc, order_);}
-*/
-    return 0;
 }
 
 int FIRFilter::apply(const int n, const float x[], float y[])
@@ -705,37 +478,6 @@ int FIRFilter::apply(const int n, const float x[], float y[])
         return -1; 
     }   
     return 0;
-/*
-    if (isDoublePrecision())
-    {
-        Ipp64f *x64 = ippsMalloc_64f(n);
-        Ipp64f *y64 = ippsMalloc_64f(n);
-        ippsConvert_32f64f(x, x64, n); 
-        int ierr = apply(n, x64, y64);
-        ippsFree(x64);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
-            ippsFree(y64);
-            return -1; 
-        }
-        ippsConvert_64f32f(y64, y, n); 
-        ippsFree(y64);
-        return 0;
-    }
-    IppsFIRSpec_32f *pFIRSpec = static_cast<IppsFIRSpec_32f *> (pFIRSpec_);
-    Ipp32f *dlysrc = static_cast<Ipp32f *> (dlysrc_);
-    Ipp32f *dlydst = static_cast<Ipp32f *> (dlydst_);
-    Ipp8u *pBuf = static_cast<Ipp8u *> (pBuf_);
-    IppStatus status = ippsFIRSR_32f(x, y, n, pFIRSpec, dlysrc, dlydst, pBuf);
-    if (status != ippStsNoErr)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to apply FIR filter");
-        return -1;
-    }
-    if (isRealTime() && order_ > 0){ippsCopy_32f(dlydst, dlysrc, order_);}
-    return 0;
-*/
 }
 
 int FIRFilter::getInitialConditionLength(void) const

@@ -842,7 +842,6 @@ int filters_downsample_test(const int npts, const double x[])
     const int nq = 7;
     RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     // Call this in post-processing for a couple different decimation rates
-    bool lrt = false;
     srand(10245);
     Downsample downsample;
     double *y = static_cast<double *>
@@ -856,8 +855,9 @@ int filters_downsample_test(const int npts, const double x[])
         // Do a post-processing test
         memset(y, 0, static_cast<size_t> (npts)*sizeof(double));
         memset(yref, 0, static_cast<size_t> (npts)*sizeof(double));
-        lrt = false;
-        ierr = downsample.initialize(iq, lrt, precision); 
+        ierr = downsample.initialize(iq,
+                                     RTSeis::ProcessingMode::POST_PROCESSING,
+                                     precision); 
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Failed to intiialized downsample");
@@ -897,8 +897,9 @@ int filters_downsample_test(const int npts, const double x[])
         int nyref = ny;
         for (int iy=0; iy<ny; iy++){yref[iy] = y[iy];}
         // Do a real-time test
-        lrt = true; 
-        ierr = downsample.initialize(iq, lrt, precision);
+        ierr = downsample.initialize(iq,
+                                     RTSeis::ProcessingMode::REAL_TIME,
+                                     precision);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Failed to intiialized downsample");
