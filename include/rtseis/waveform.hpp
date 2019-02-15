@@ -22,13 +22,16 @@ class Command;
 
 class Command
 {
-    enum class FilterType
+    /*!
+     * @brief Defines the filter type.
+     */
+    enum FilterType
     {
         /*!< No action. */
         NONE = 0,
         /*!< Remove the mean from the data. */
         DEMEAN = 1,
-        /*!< Remove the trend fro the data. */
+        /*!< Remove the trend from the data. */
         DETREND = 2
     };
     public:
@@ -90,6 +93,10 @@ class Command
                 {
                     detrend_.clear();
                 }
+                else
+                {
+                    //RTSEIS_ERRMSG("%s", "Shouldn't be here");
+                }
             }
             filterType_ = FilterType::NONE;
         }
@@ -104,8 +111,7 @@ class Command
     friend class Waveform;
 };
 
-class Waveform : 
-    public RTSeis::Modules::Demean//, RTSeis::Modules::Detrend
+class Waveform //: public RTSeis::Modules::Demean//, RTSeis::Modules::Detrend
 {
     public:
         Waveform(void);
@@ -147,7 +153,7 @@ class Waveform :
             return 0;
         }
         /*!
-         * @brief Applies the demean command to the data.
+         * @brief Removes the DC gain (bias) from the data.
          * @result 0 indicates succes.
          * @ingroup rtseis_data_waveform
          */
@@ -171,7 +177,7 @@ class Waveform :
             return ierr;
         }
         /*!
-         * @brief Applies the detrend command to the data.
+         * @brief Removes a best-fitting line from the data.
          * @result 0 indicates succes.
          * @ingroup rtseis_data_waveform
          */
@@ -196,25 +202,57 @@ class Waveform :
             return ierr;
         }
         /*!
+         * @brief Lowpass filters the data.
+         * @param[in] corner  The corner frequency in Hz.
+         * @param[in] ftype   The filter type.
+         * @param[in] npoles  The number of poles.  Higher order filters
+         *                    will be more efficient but may be prove
+         *                    unstable.
+         * @param[in]
+         * @result 0 indicates success.
+         * @ingroup rtseis_data_waveform
+         */
+        int lowpass(const double corner,
+                    const int npoles) // = 2,
+//                    const RTSeis::Utils::FilterDesign::IIR::Prototype ftype)// = RTSeis::Utils::FilterDesign::IIR::Prototype::BESSEL)
+        {
+//            const RTSeis::Utils::FilterDesign::IIR::Bandtype btype
+//                = RTSeis::Utils::FilterDesign::IIR::Prototype::LOWPASS; 
+            double fnyq = 1.0/(2.0*dt_);
+            if (corner <= 0 || corner >= fnyq)
+            {
+                return -1;
+            }
+            if (npoles < 1)
+            {
+                return -1;
+            }
+            return 0;
+        }
+        /*!
          * @brief Sets the parameters for the demeaning.
          * @result 0 indicates success.
          * @ingroup rtseis_data_waveform
          */
+/*
         int setDemeanParameters(void)
         {
-            int ierr = RTSeis::Modules::Demean::setParameters(precision_);
+            int ierr = 0;//RTSeis::Modules::Demean::setParameters(precision_);
             return ierr;
         }
+*/
         /*!
          * @brief Sets the parameters for the detrending.
          * @result 0 indicates success.
          * @ingroup rtseis_data_waveform
          */
+/*
         int setDetrendParameters(const Modules::DetrendParameters &parameters)
         {
             detrend_.setParameters(parameters);
             return 0; //ierr;
         }
+*/
     private:
         int compute_(void)
         {
@@ -229,7 +267,7 @@ class Waveform :
             }
             else if (job_ == RTSEIS_COMMAND_DETREND)
             {
-                ierr = RTSeis::Modules::Demean::demean(nx_, xptr_, y_);
+                ierr = demean_.demean(nx_, xptr_, y_);
             }
             else
             {
@@ -282,6 +320,7 @@ class Waveform :
         std::string location_;
         /*!< Classes. */
         Modules::Detrend detrend_;
+        Modules::Demean demean_;
         /*!< Sampling period. */
         double dt_ = 0;
         /*!< Number of samples in input signal. */

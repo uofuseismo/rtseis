@@ -19,7 +19,7 @@
  * @result 0 indicates success.
  * @ingroup rtseis_utils_ipps
  */
-int RTSeis::Utils::IPPS::Div(
+int RTSeis::Utilities::IPPS::Div(
     std::vector<std::complex<double>> den,
     std::vector<std::complex<double>> num,
     std::vector<std::complex<double>> &res)
@@ -45,7 +45,7 @@ int RTSeis::Utils::IPPS::Div(
  * @result 0 indicates success.
  * @ingroup rtseis_utils_ipps
  */
-int RTSeis::Utils::IPPS::MulC(
+int RTSeis::Utilities::IPPS::MulC(
     const std::complex<double> val, std::vector<std::complex<double>> x)
 {
     int n = static_cast<int> (x.size());

@@ -8,7 +8,7 @@
 
 namespace RTSeis
 {
-namespace Utils
+namespace Utilities
 {
 namespace IPPS
 {

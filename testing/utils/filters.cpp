@@ -13,7 +13,7 @@
 #include "utils.hpp"
 #include <ipps.h>
 
-using namespace RTSeis::Utils::Filters;
+using namespace RTSeis::Utilities::Filters;
 static int readTextFile(int *npts, double *xPtr[],
                         const std::string fileName = "utils/data/gse2.txt");
 static int filters_downsample_test(const int npts, const double x[]);

@@ -15,7 +15,7 @@
 #include <ipps.h>
 #include <fftw/fftw3.h>
 
-using namespace RTSeis::Utils::Transforms;
+using namespace RTSeis::Utilities::Transforms;
 
 int transforms_nextPow2_test(void);
 int transforms_phase_test(void);

@@ -6,7 +6,7 @@
 #include "rtseis/utils/filters.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utils::Filters;
+using namespace RTSeis::Utilities::Filters;
 
 class SOSFilter::SOSFilterImpl
 {

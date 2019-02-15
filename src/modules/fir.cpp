@@ -118,22 +118,22 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     // Create normalized frequency
     double r = f0/fnyq;
     // Get the window
-    Utils::FilterDesign::FIR::Window windowPass;
+    Utilities::FilterDesign::FIR::Window windowPass;
     if (window == Window::HAMMING)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::HAMMING;
+        windowPass = Utilities::FilterDesign::FIR::Window::HAMMING;
     }
     else if (window == Window::BARTLETT)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::BARTLETT;
+        windowPass = Utilities::FilterDesign::FIR::Window::BARTLETT;
     }
     else if (window == Window::HANN)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::HANN;
+        windowPass = Utilities::FilterDesign::FIR::Window::HANN;
     }
     else if (window == Window::BLACKMAN_OPT)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::BLACKMAN_OPT;
+        windowPass = Utilities::FilterDesign::FIR::Window::BLACKMAN_OPT;
     }
     else
     {
@@ -145,8 +145,8 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     int ierr = 0;
     if (btype == Bandtype::LOWPASS)
     {
-        ierr = Utils::FilterDesign::FIR::FIR1Lowpass(order, r, pTaps,
-                                                     windowPass);
+        ierr = Utilities::FilterDesign::FIR::FIR1Lowpass(order, r, pTaps,
+                                                         windowPass);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Lowpass filter design failed");
@@ -155,8 +155,8 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     }
     else if (btype == Bandtype::HIGHPASS)
     {
-        ierr = Utils::FilterDesign::FIR::FIR1Highpass(order, r, pTaps,
-                                                      windowPass);
+        ierr = Utilities::FilterDesign::FIR::FIR1Highpass(order, r, pTaps,
+                                                          windowPass);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Highpass filter design failed");
@@ -223,22 +223,22 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     double r0 = f0/fnyq;
     double r1 = f0/fnyq;
     // Get the window
-    Utils::FilterDesign::FIR::Window windowPass;
+    Utilities::FilterDesign::FIR::Window windowPass;
     if (window == Window::HAMMING)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::HAMMING;
+        windowPass = Utilities::FilterDesign::FIR::Window::HAMMING;
     }
     else if (window == Window::BARTLETT)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::BARTLETT;
+        windowPass = Utilities::FilterDesign::FIR::Window::BARTLETT;
     }
     else if (window == Window::HANN)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::HANN;
+        windowPass = Utilities::FilterDesign::FIR::Window::HANN;
     }
     else if (window == Window::BLACKMAN_OPT)
     {
-        windowPass = Utils::FilterDesign::FIR::Window::BLACKMAN_OPT;
+        windowPass = Utilities::FilterDesign::FIR::Window::BLACKMAN_OPT;
     }
     else
     {
@@ -250,8 +250,8 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     int ierr = 0;
     if (btype == Bandtype::LOWPASS)
     {
-        ierr = Utils::FilterDesign::FIR::FIR1Lowpass(order, r0, pTaps,
-                                                     windowPass);
+        ierr = Utilities::FilterDesign::FIR::FIR1Lowpass(order, r0, pTaps,
+                                                         windowPass);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Lowpass filter design failed");
@@ -262,8 +262,8 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     }
     else if (btype == Bandtype::HIGHPASS)
     {
-        ierr = Utils::FilterDesign::FIR::FIR1Highpass(order, r0, pTaps,
-                                                      windowPass);
+        ierr = Utilities::FilterDesign::FIR::FIR1Highpass(order, r0, pTaps,
+                                                          windowPass);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Highpass filter design failed");
@@ -275,8 +275,8 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     else if (btype == Bandtype::BANDPASS)
     {
         double r[2] = {r0, r1};
-        ierr = Utils::FilterDesign::FIR::FIR1Bandpass(order, r, pTaps,
-                                                      windowPass);
+        ierr = Utilities::FilterDesign::FIR::FIR1Bandpass(order, r, pTaps,
+                                                          windowPass);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Bandpass filter design failed");
@@ -288,8 +288,8 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     else if (btype == Bandtype::BANDSTOP)
     {
         double r[2] = {r0, r1};
-        ierr = Utils::FilterDesign::FIR::FIR1Bandstop(order, r, pTaps,
-                                                      windowPass);
+        ierr = Utilities::FilterDesign::FIR::FIR1Bandstop(order, r, pTaps,
+                                                          windowPass);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Bandstop filter design failed");
@@ -316,7 +316,7 @@ int FIRParameters::designFromWindow(const int order, const double fs,
 
 FIRFilter::FIRFilter(const FIRParameters parms)
 {
-    Utils::Filters::FIRFilter *fir = firFilter_.get();
+    Utilities::Filters::FIRFilter *fir = firFilter_.get();
     fir->clear();
     return;
 }

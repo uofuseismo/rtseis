@@ -6,7 +6,7 @@
 #include "rtseis/utils/convolve.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utils::Math;
+using namespace RTSeis::Utilities::Math;
 
 int convolve_convolve_test(void);
 int convolve_correlate_test(void);

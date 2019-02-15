@@ -9,7 +9,7 @@
 #include <ipps.h>
 
 
-using namespace RTSeis::Utils::Transforms;
+using namespace RTSeis::Utilities::Transforms;
 
 #pragma omp declare simd
 static double rem(const double x, double y);

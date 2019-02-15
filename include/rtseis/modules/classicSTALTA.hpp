@@ -353,9 +353,9 @@ class ClassicSTALTA : ClassicSTALTAParameters
         bool isInitialized(void) const;
     private:
         /*!< Numerator FIR signal to keep track of the short-term average. */
-        RTSeis::Utils::Filters::FIRFilter firNum_;
+        RTSeis::Utilities::Filters::FIRFilter firNum_;
         /*!< Denominator FIR signal to keep track of the long-term average. */
-        RTSeis::Utils::Filters::FIRFilter firDen_;
+        RTSeis::Utilities::Filters::FIRFilter firDen_;
         /*!< Workspace array for holding input signal squared. */
         void *x2_ = nullptr;
         /*!< Workspace array for holding the numerator. */

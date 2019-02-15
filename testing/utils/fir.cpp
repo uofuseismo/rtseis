@@ -6,7 +6,7 @@
 #include "rtseis/log.h"
 #include "utils.hpp"
 
-using namespace RTSeis::Utils::FilterDesign;
+using namespace RTSeis::Utilities::FilterDesign;
 
 /*! Test FIR-window based filter design (fir1 in matlab). */
 int rtseis_test_utils_design_fir_fir1(void)

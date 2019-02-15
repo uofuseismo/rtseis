@@ -11,8 +11,8 @@
 #include "rtseis/utils/ipps.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utils::FilterDesign;
-using namespace RTSeis::Utils::Math;
+using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::Utilities::Math;
 
 static int getNextWorstRealPoleIndex(const std::vector<bool> pmask,
                                      const std::vector<bool> isreal_pole,

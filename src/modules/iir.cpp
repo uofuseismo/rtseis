@@ -100,7 +100,7 @@ int IIRParameters::design(
 int IIRParameters::setCustomFilter(const ZPK zpk)
 {
     resetFilterDesign();
-    int ierr = RTSeis::Utils::FilterDesign::IIR::zpk2tf(zpk, ba_);
+    int ierr = RTSeis::Utilities::FilterDesign::IIR::zpk2tf(zpk, ba_);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to convert filter to transfer fn");

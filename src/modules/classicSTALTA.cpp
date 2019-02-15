@@ -293,7 +293,7 @@ ClassicSTALTA::ClassicSTALTA(const ClassicSTALTAParameters parameters)
     RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING;
     if (lrt){mode = RTSeis::ProcessingMode::REAL_TIME;}
     int ierr = firNum_.initialize(nsta, xsta, mode, parms_.getPrecision(),
-                    RTSeis::Utils::Filters::FIRFilter::Implementation::DIRECT);
+                 RTSeis::Utilities::Filters::FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to set numerator FIR filter");
@@ -317,7 +317,7 @@ ClassicSTALTA::ClassicSTALTA(const ClassicSTALTAParameters parameters)
     xdiv = 1.0/static_cast<double> (nlta);
     ippsSet_64f(xdiv, xlta, nlta);
     ierr = firDen_.initialize(nlta, xlta, mode, parms_.getPrecision(),
-                  RTSeis::Utils::Filters::FIRFilter::Implementation::DIRECT);
+                 RTSeis::Utilities::Filters::FIRFilter::Implementation::DIRECT);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize denominator");

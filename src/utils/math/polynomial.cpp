@@ -9,7 +9,7 @@
 #include "rtseis/log.h"
 #include <mkl_lapacke.h>
 
-using namespace::RTSeis::Utils::Math;
+using namespace::RTSeis::Utilities::Math;
 
 /*!
  * @defgroup rtseis_utils_polynomial Polynomial

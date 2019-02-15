@@ -6,7 +6,7 @@
 #include "rtseis/log.h"
 #include "rtseis/utils/filters.hpp"
 
-using namespace RTSeis::Utils::Filters;
+using namespace RTSeis::Utilities::Filters;
 
 class FIRFilter::FIRImpl
 {

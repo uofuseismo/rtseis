@@ -9,14 +9,14 @@
 
 namespace RTSeis
 {
-namespace Utils
+namespace Utilities
 {
 namespace FilterDesign
 {
 
 namespace IIR
 {
-    enum class Prototype
+    enum Prototype
     {
         /*!
          * @brief Defines the analog prototype for the IIR filter design.
@@ -27,7 +27,7 @@ namespace IIR
         CHEBYSHEV1  = 2, /*!< Chebyshev I filter design. */
         CHEBYSHEV2  = 3  /*!< Chebyshev II filter design. */
     };
-    enum class Bandtype
+    enum Bandtype
     {
         /*!
          * @brief Defines the bandtype for the IIR filter design.
@@ -38,7 +38,7 @@ namespace IIR
         BANDPASS = 2, /*!< Bandpass filter. */
         BANDSTOP = 3  /*!< Bandstop filter. */
     };
-    enum class Pairing
+    enum Pairing
     {
         /*!
          * @brief Pairing strategy when converting a ZPK filter to an 

@@ -8,7 +8,7 @@
 #include "rtseis/log.h"
 #include <ipps.h>
 
-using namespace::RTSeis::Utils::Math;
+using namespace::RTSeis::Utilities::Math;
 
 /*!
  * @defgroup rtseis_utils_convolve Convolution and Correlation

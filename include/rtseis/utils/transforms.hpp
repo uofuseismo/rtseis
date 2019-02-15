@@ -7,7 +7,7 @@
 
 namespace RTSeis
 {
-namespace Utils
+namespace Utilities
 {
 
 /*!

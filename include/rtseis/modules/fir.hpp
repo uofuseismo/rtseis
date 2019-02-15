@@ -111,7 +111,7 @@ class FIRFilter
     public:
          FIRFilter(const FIRParameters parms);
     private:
-         std::unique_ptr<Utils::Filters::FIRFilter> firFilter_;
+         std::unique_ptr<Utilities::Filters::FIRFilter> firFilter_;
 
 };
 

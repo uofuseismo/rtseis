@@ -6,7 +6,7 @@
 #include "rtseis/log.h"
 #include "utils.hpp"
 
-using namespace RTSeis::Utils::Math;
+using namespace RTSeis::Utilities::Math;
 
 int polynomial_poly_test(void);
 int polynomial_roots_test(void);

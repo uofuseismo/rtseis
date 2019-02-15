@@ -4,7 +4,7 @@
 #include "rtseis/utils/design.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utils::FilterDesign::IIR;
+using namespace RTSeis::Utilities::FilterDesign::IIR;
 
 /*!
  * @defgroup rtseis_utils_design_iir_ap Analog Prototype

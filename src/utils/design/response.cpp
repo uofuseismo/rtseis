@@ -9,7 +9,7 @@
 #include "rtseis/log.h"
 #include <ipps.h>
 
-using namespace RTSeis::Utils::FilterDesign;
+using namespace RTSeis::Utilities::FilterDesign;
 
 /*!
  * @defgroup rtseis_utils_design_response Response

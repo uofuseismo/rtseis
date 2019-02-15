@@ -7,7 +7,7 @@
 #include "rtseis/log.h"
 #include <ipps.h>
 
-using namespace RTSeis::Utils::FilterDesign;
+using namespace RTSeis::Utilities::FilterDesign;
 
 static IppWinType classifyWindow(const FIR::Window window);
 /*!

@@ -6,7 +6,7 @@
 #include "rtseis/utils/design.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utils::FilterDesign;
+using namespace RTSeis::Utilities::FilterDesign;
 
 int rtseis_test_utils_design_freqs(void)
 {
