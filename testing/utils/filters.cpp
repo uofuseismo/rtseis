@@ -25,6 +25,9 @@ static int filters_medianFilter_test(const int npts, const double x[],
                                      const std::string fileName);
 static int filters_sosFilter_test(const int npts, const double x[],
                                   const std::string fileName);
+int filters_iirFilter_test(const int npts, const double x[],
+                           const std::string fileName1,
+                           const std::string fileName2);
 int filters_iiriirFilter_test(const int npts, const double x[],
                               const std::string fileName);
 
@@ -48,6 +51,15 @@ int rtseis_test_utils_filters(void)
         RTSEIS_ERRMSG("%s", "Failed downsampler test");
         return EXIT_FAILURE;
     }
+    // Apply the IIR filter
+    ierr = filters_iirFilter_test(npts, x,
+                                  dataDir + "iirReference1.txt",
+                                  dataDir + "iirReference2.txt");
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed iir filter test");
+        return EXIT_FAILURE;
+    } 
     // Apply the zero-phase IIR filter
     ierr = filters_iiriirFilter_test(npts, x,
                                      dataDir + "iiriirReference.txt"); 
@@ -91,7 +103,282 @@ int rtseis_test_utils_filters(void)
     return EXIT_SUCCESS;
 }
 //============================================================================//
+int filters_iirFilter_test(const int npts, const double x[],
+                           const std::string fileName1,
+                           const std::string fileName2)
+{
+    fprintf(stdout, "Testing IIR filter...\n");
+    // Hardwire a high-order butterworth filter
+    int na = 9;
+    int nb = 9;
+    const double b[9] = {0.000401587491686,
+                         0.0,
+                        -0.001606349966746,
+                         0.0,
+                         0.002409524950119,
+                         0.0,
+                        -0.001606349966746,
+                         0.0,
+                         0.000401587491686};
+    const double a[9] = {1.000000000000000,
+                        -7.185226122700763,
+                        22.615376628798678,
+                       -40.733465892344896,
+                        45.926605646620146,
+                       -33.196326377161412,
+                        15.023103545324197,
+                        -3.891997997268024,
+                         0.441930568732716};
+    int nb2 = 5;
+    int na2 = 5;
+    // [b,a] = signal.iirfilter(2, [0.5/200, 10/200], btype='band', ftype='butter')
+    const double b2[5] = {0.005028154401050966,
+                          0.0,
+                         -0.010056308802101932,
+                          0.0,
+                          0.005028154401050966};
+    const double a2[5] = {1.0,
+                         -3.787291923503399,
+                          5.384566634300907,
+                         -3.407019620837378,
+                          0.8097462844356603};
 
+    // Load a reference solution
+    double *yref1 = nullptr;
+    double *yref2 = nullptr;
+    int npref = 0; 
+    int ierr = readTextFile(&npref, &yref1, fileName1);
+    if (ierr != 0 || npts != npref)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to load reference data");
+        return EXIT_FAILURE;
+    }
+    ierr = readTextFile(&npref, &yref2, fileName2);
+    if (ierr != 0 || npts != npref)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to load reference data 2");
+        return EXIT_FAILURE;
+    }
+    // Compute the zero-phase IIR filter alternative
+    IIRFilter iir;
+    IIRFilter iir_slow;
+    ierr = iir.initialize(nb, b, na, a,
+                          RTSeis::ProcessingMode::POST_PROCESSING,
+                          RTSeis::Precision::DOUBLE,
+                          IIRFilter::Implementation::DF2_FAST);
+    if (ierr != 0)
+    {    
+        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+        return EXIT_FAILURE;
+    }
+    ierr = iir_slow.initialize(nb, b, na, a,
+                               RTSeis::ProcessingMode::POST_PROCESSING,
+                               RTSeis::Precision::DOUBLE,
+                               IIRFilter::Implementation::DF2_SLOW);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize slow filter");
+        return EXIT_FAILURE;
+    }
+    double *yref = new double[npts];
+    double *yref_slow = new double[npts];
+    double *y1 = new double[npts];
+    double *y2 = new double[npts];
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    ierr = iir.apply(npts, x, y1);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to filter signal");
+        return EXIT_FAILURE;
+    }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    double error = 0;
+    for (int i=0; i<npts; i++)
+    {
+        error = std::max(std::pow(y1[i] - yref1[i], 2), error);
+    }
+    error = error/static_cast<double> (npts);
+    if (error > 3.e-2)
+    {
+        RTSEIS_ERRMSG("Failed matlab test1: %e\n", error);
+        return EXIT_FAILURE;
+    }
+    std::chrono::duration<double> tdif = timeEnd - timeStart;
+    fprintf(stdout, "Fast reference solution 1 computation time %.8lf (s)\n",
+            tdif.count());
+    std::copy(y1, y1+npts, yref);
+    // Repeat for slow
+    timeStart = std::chrono::high_resolution_clock::now();
+    ierr = iir_slow.apply(npts, x, y2);
+    timeEnd = std::chrono::high_resolution_clock::now();
+    error = 0; 
+    for (int i=0; i<npts; i++) 
+    {
+        error = std::max(std::pow(y2[i] - yref1[i], 2), error);
+    }
+    error = error/static_cast<double> (npts);
+    if (error > 1.e-10)
+    {
+        RTSEIS_ERRMSG("Failed matlab test1 slow: %e\n", error);
+        return EXIT_FAILURE;
+    }
+    tdif = timeEnd - timeStart;
+    fprintf(stdout, "Slow reference solution 1 computation time %.8lf (s)\n",
+            tdif.count());
+    std::copy(y2, y2+npts, yref_slow);
+    // Try a lower order filter - Note the difference in accuracy.
+    // I think the filter is a little unstable.
+    IIRFilter iir2;
+    ierr = iir2.initialize(nb2, b2, na2, a2,
+                           RTSeis::ProcessingMode::POST_PROCESSING,
+                           RTSeis::Precision::DOUBLE,
+                           IIRFilter::Implementation::DF2_FAST);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+        return EXIT_FAILURE;
+    }
+    timeStart = std::chrono::high_resolution_clock::now();
+    ierr = iir2.apply(npts, x, y2);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to filter signal");
+        return EXIT_FAILURE;
+    }
+    timeEnd = std::chrono::high_resolution_clock::now();
+    error = 0;
+    for (int i=0; i<npts; i++)
+    {
+        error = std::max(std::pow(y2[i] - yref2[i], 2), error); 
+    }
+    if (error > 1.e-12)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute filter 2");
+        return EXIT_FAILURE;
+    }
+    tdif = timeEnd - timeStart;
+    fprintf(stdout, "Fast reference solution 2 computation time %.8lf (s)\n",
+            tdif.count());
+    // Do a real-time test of high-order filter
+    IIRFilter iirrt;
+    ierr = iirrt.initialize(nb, b, na, a,
+                            RTSeis::ProcessingMode::REAL_TIME,
+                            RTSeis::Precision::DOUBLE,
+                            IIRFilter::Implementation::DF2_FAST);
+    iir = iirrt;
+    std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
+                                 1000, 1024, 1200, 2048, 4000, 4096, 5000});
+    for (int job=0; job<2; job++)
+    {
+        for (size_t ip=0; ip<packetSize.size(); ip++)
+        {
+            timeStart = std::chrono::high_resolution_clock::now();
+            int nxloc = 0;
+            int nptsPass = 0;
+            while (nxloc < npts)
+            {
+                nptsPass = packetSize[ip];
+                if (job == 1)
+                {
+                     nptsPass = std::max(1, nptsPass + rand()%50 - 25);
+                }
+                nptsPass = std::min(nptsPass, npts - nxloc);
+                ierr = iir.apply(nptsPass, &x[nxloc], &y1[nxloc]);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply iir filter");
+                    return EXIT_FAILURE;
+                }
+                nxloc = nxloc + nptsPass;
+            }
+            iir.resetInitialConditions();
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            for (int i=0; i<npts; i++)
+            {
+                if (std::abs(yref[i] - y1[i]) > 1.e-12)
+                {
+                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
+                                  i, yref[i], y1[i]);
+                    return EXIT_FAILURE;
+                }
+            }
+            if (job == 0)
+            {
+                fprintf(stdout,
+                        "Passed IIR filter fixed packet size %4d in %.8e (s)\n",
+                        packetSize[ip], tdif.count());
+            }
+            else
+            {
+                fprintf(stdout,
+                        "Passed IIR filter random in %.8e (s)\n", tdif.count());
+            }
+        }
+    }
+    // Retry this for the slow filter implementation
+    ierr = iir_slow.initialize(nb, b, na, a,
+                               RTSeis::ProcessingMode::REAL_TIME,
+                               RTSeis::Precision::DOUBLE,
+                               IIRFilter::Implementation::DF2_SLOW);
+    iir = iir_slow;
+    for (int job=0; job<2; job++)
+    {    
+        for (size_t ip=0; ip<packetSize.size(); ip++)
+        {
+            timeStart = std::chrono::high_resolution_clock::now();
+            int nxloc = 0; 
+            int nptsPass = 0; 
+            while (nxloc < npts)
+            {
+                nptsPass = packetSize[ip];
+                if (job == 1)
+                {
+                     nptsPass = std::max(1, nptsPass + rand()%50 - 25); 
+                }
+                nptsPass = std::min(nptsPass, npts - nxloc);
+                ierr = iir.apply(nptsPass, &x[nxloc], &y1[nxloc]);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to apply iir filter");
+                    return EXIT_FAILURE;
+                }
+                nxloc = nxloc + nptsPass;
+            }
+            iir.resetInitialConditions();
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            for (int i=0; i<npts; i++) 
+            {
+                if (std::abs(yref_slow[i] - y1[i]) > 1.e-12)
+                {
+                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
+                                  i, yref_slow[i], y1[i]);
+                    return EXIT_FAILURE;
+                }
+            }
+            if (job == 0)
+            {
+                fprintf(stdout,
+                        "Passed IIR slow filter fixed packet size %4d in %.8e (s)\n",
+                        packetSize[ip], tdif.count());
+            }
+            else
+            {
+                fprintf(stdout,
+                        "Passed IIR slow filter random in %.8e (s)\n", tdif.count());
+            }
+        }
+    }
+
+    free(yref1);
+    free(yref2);
+    delete[] yref;
+    delete[] yref_slow;
+    delete[] y1;
+    delete[] y2;
+    return EXIT_SUCCESS;
+}
 //============================================================================//
 int filters_iiriirFilter_test(const int npts, const double x[],
                               const std::string fileName)
@@ -522,7 +809,7 @@ int filters_firFilter_test(const int npts, const double x[],
                         "Passed FIR filter random in %.8e (s)\n", tdif.count());
             }
         }
-     }
+    }
     delete[] y;
     free(yref);
     return EXIT_SUCCESS;

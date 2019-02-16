@@ -63,7 +63,6 @@ class IIRFilter::IIRFilterImpl
                 ippsCopy_32f(iir.pDlySrc32f_, pDlySrc32f_, nbDly_);
                 ippsCopy_32f(iir.pDlyDst32f_, pDlyDst32f_, nbDly_);
             }
-            lnextBlock_ = iir.lnextBlock_; 
             return *this;
         }
         /// Releases memory on the module
@@ -110,7 +109,6 @@ class IIRFilter::IIRFilterImpl
             implementation_ = IIRFilter::Implementation::DF2_FAST;
             mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
             precision_ = RTSeis::Precision::DOUBLE;
-            lnextBlock_ = false;
             linit_ = false;
             return;
         }
@@ -127,6 +125,7 @@ class IIRFilter::IIRFilterImpl
             IppStatus status;
             IIRFilter::Implementation impUse = implementation;
             // IPP changed implementation in 2018.  I'm not supporting it.
+            // High order IIR filters aren't a good idea.
             #if IPP_VERSION_MAJOR < 2019
             impUse = IIRFilter::Implementation::DF2_SLOW;
             #endif
@@ -201,9 +200,18 @@ class IIRFilter::IIRFilterImpl
                     // Initialize the filter
                     status = ippsIIRInit_64f(&pIIRState64f_, pTaps64f_, order_,
                                              pDlySrc64f_, pBuf_);
+
                     if (status != ippStsNoErr)
                     {
                         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+                        clear();
+                        return -1;
+                    }
+                    // Set the delay line
+                    status = ippsIIRSetDlyLine_64f(pIIRState64f_, pBufIPP64f_);
+                    if (status != ippStsNoErr)
+                    {
+                        RTSEIS_ERRMSG("%s", "Failed to set delay line");
                         clear();
                         return -1;
                     }
@@ -259,6 +267,14 @@ class IIRFilter::IIRFilterImpl
                         clear();
                         return -1;
                     }
+                    // Set the delay line
+                    status = ippsIIRSetDlyLine_32f(pIIRState32f_, pBufIPP32f_);
+                    if (status != ippStsNoErr)
+                    {
+                        RTSEIS_ERRMSG("%s", "Failed to set delay line");
+                        clear();
+                        return -1;
+                    }
                 }
                 else
                 {
@@ -308,17 +324,18 @@ class IIRFilter::IIRFilterImpl
             if (precision_ == RTSeis::Precision::DOUBLE)
             {
                 ippsCopy_64f(zi_, pBufIPP64f_, nzRef); 
+                ippsIIRSetDlyLine_64f(pIIRState64f_, pBufIPP64f_);
             }
             else
             {
                 ippsConvert_64f32f(zi_, pBufIPP32f_, nzRef);
+                ippsIIRSetDlyLine_32f(pIIRState32f_, pBufIPP32f_);
             }
             return 0;
         } 
         /// Resets the initial conditions
         int resetInitialConditions(void)
         {
-            lnextBlock_ = false;
             if (precision_ == RTSeis::Precision::DOUBLE)
             {
                 ippsZero_64f(pBufIPP64f_, bufIPPLen_);
@@ -328,6 +345,7 @@ class IIRFilter::IIRFilterImpl
                 {
                     ippsCopy_64f(zi_, pDlySrc64f_, order_);
                 }
+                ippsIIRSetDlyLine_64f(pIIRState64f_, pBufIPP64f_);
             }
             else
             {
@@ -338,6 +356,7 @@ class IIRFilter::IIRFilterImpl
                 {
                     ippsConvert_64f32f(zi_, pDlySrc32f_, order_);
                 }
+                ippsIIRSetDlyLine_32f(pIIRState32f_, pBufIPP32f_);
             }
             return 0;
         } 
@@ -363,19 +382,6 @@ class IIRFilter::IIRFilterImpl
                 return 0;
             }
             IppStatus status;
-            if (lnextBlock_)
-            {
-                status = ippsIIRSetDlyLine_64f(pIIRState64f_, pBufIPP64f_);
-                if (status != ippStsNoErr)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to set delay line");
-                    return -1;
-                }
-                if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
-                {
-                    lnextBlock_ = true;
-                }
-            }
             if (implementation_ == Implementation::DF2_FAST)
             {
                 status = ippsIIR_64f(x, y, n, pIIRState64f_);
@@ -383,6 +389,10 @@ class IIRFilter::IIRFilterImpl
                 {
                     RTSEIS_ERRMSG("%s", "Failed to set delay line");
                     return -1;
+                }
+                if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+                {
+                    ippsIIRGetDlyLine_64f(pIIRState64f_, pBufIPP64f_);
                 }
             }
             else
@@ -413,19 +423,6 @@ class IIRFilter::IIRFilterImpl
                 return 0;
             }
             IppStatus status;
-            if (lnextBlock_)
-            {
-                status = ippsIIRSetDlyLine_32f(pIIRState32f_, pBufIPP32f_);
-                if (status != ippStsNoErr)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to set delay line");
-                    return -1;
-                }
-                if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
-                {
-                    lnextBlock_ = true;
-                }
-            }
             if (implementation_ == Implementation::DF2_FAST)
             {
                 status = ippsIIR_32f(x, y, n, pIIRState32f_);
@@ -433,6 +430,10 @@ class IIRFilter::IIRFilterImpl
                 {
                     RTSEIS_ERRMSG("%s", "Failed to set delay line");
                     return -1;
+                }
+                if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+                {
+                    ippsIIRGetDlyLine_32f(pIIRState32f_, pBufIPP32f_);
                 }
             }
             else
@@ -574,8 +575,6 @@ class IIRFilter::IIRFilterImpl
         RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         /// Precision of filter application
         RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
-        /// Flag indicating we're moving onto the next processing block
-        bool lnextBlock_ = false;
         /// Flag indicating the module is initialized
         bool linit_ = false;
 };
