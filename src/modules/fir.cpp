@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 #include <ipps.h>
-#include "rtseis/utils/ipps.hpp"
+#include "rtseis/utilities/ipps.hpp"
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/modules/fir.hpp"

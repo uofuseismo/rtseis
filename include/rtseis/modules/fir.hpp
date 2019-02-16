@@ -3,9 +3,8 @@
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
-#include "rtseis/utils/design.hpp"
-#include "rtseis/utils/filters.hpp"
-//#include "rtseis/utils/ipps.hpp"
+#include "rtseis/utilities/design.hpp"
+#include "rtseis/utilities/filters.hpp"
 #include <memory>
 
 class IPPSFIRFilter;

@@ -1,7 +1,8 @@
 #ifndef RTSEIS_MODULES_ONEBIT_HPP
 #define RTSEIS_MODULES_ONEBIT_HPP 1
-#include "rtseis/config.h"
 #include <memory>
+#include <exception>
+#include "rtseis/config.h"
 #include "rtseis/enums.h"
 
 namespace RTSeis
@@ -10,12 +11,12 @@ namespace Modules
 {
 
 /*!
- * @defgroup rtseis_modules_onebit_parameters Parameters
+ * @class OneBitNormalizationParameters oneBitNormalization.hpp "include/rtseis/modules/oneBitNormalization.hpp"
  * @brief Defines the parameters for the one-bit normalization module.
  * @ingroup rtseis_modules_onebit
  * @copyright Ben Baker distributed under the MIT license.
  */
-class OneBitNormalizationParameters
+class OneBitNormalizationParameters : public std::exception
 {
     public:
         /*!
@@ -24,7 +25,6 @@ class OneBitNormalizationParameters
          *                  post-processing or real-time processing.
          * @param[in] precision  Defines the precision.  By default this
          *                       is double precision.
-         * @ingroup rtseis_modules_onebit_parameters
          */
         OneBitNormalizationParameters(
             const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
@@ -33,71 +33,54 @@ class OneBitNormalizationParameters
          * @brief Copy assignement operator.
          * @param[in] parameters  Parameters class to copy.
          * @result A deep copy of the input parameters.
-         * @ingroup rtseis_modules_onebit_parameters
          */
         OneBitNormalizationParameters& operator=(const OneBitNormalizationParameters &parameters);
         /*! 
          * @brief Copy constructor.
          * @param[in] parameters  Parameters class to initialize from.
-         * @ingroup rtseis_modules_onebit_parameters
          */
         OneBitNormalizationParameters(const OneBitNormalizationParameters &parameters);
         /*!
          * @brief Default destructor.
-         * @ingroup rtseis_modules_onebit_parameters 
          */
         ~OneBitNormalizationParameters(void);
         /*!
          * @brief Clears variables in class and restores defaults.
          *        This class will have to be re-initialized to use again.
-         * @ingroup rtseis_modules_onebit_parameters
          */
-        virtual void clear(void);
+        void clear(void);
         /*!
          * @brief Determines if the class parameters are valid and can be
          *        used to initialize the one-bit normalization processing.
          * @retval True indicates that the parameters are valid.
          * @retval False indicates that the parameters are invalid.
-         * @ingroup rtseis_modules_onebit_parameters
          */
         bool isValid(void) const;
         /*!
          * @brief Enables the class as being for real-time application or not.
          * @param[in] mode  Defines the processing mode as for post-processing
          *                  or real-time application.
-         * @ingroup rtseis_modules_onebit_parameters
          */
         void setProcessingMode(const RTSeis::ProcessingMode mode);
         /*!
          * @brief Determines if the class is for post-processing or
          *        real-time processing.
-         * @ingroup rtseis_modules_onebit_parameters
          */
         RTSeis::ProcessingMode getProcessingMode(void) const;
         /*!
          * @brief Determines the precision of the class.
          * @result The precision with which the underlying sign
          *         operation will be performed.
-         * @ingroup rtseis_modules_onebit_parameters
          */
         RTSeis::Precision getPrecision(void) const;
     private:
+        /*! Forward declaration of implementation */
         class OneBitVars;
+        /*! PIMPL'd implementation. */
         std::unique_ptr<OneBitVars> pImpl_;
-        /*!< Validates the parameters. */
-        //void validate_(void);
-        /*!< Default precision. */
-        //const RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
-        /*!< The precision of the module. */
-        //RTSeis::Precision precision_ = defaultPrecision_; 
-        /*!< Flag indicating this module is for real-time. */
-        //RTSeis::ProcessingMode processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-        /*!< Flag indicating these parameters are valid for initializing
-             the one-bit normalization structure. */
-        //bool isValid_ = true;
 };
 /*!
- * @defgroup rtseis_modules_onebit One-Bit Normalization
+ * @class OneBitNormalization oneBitNormalization.hpp "include/rtseis/modules/oneBitNormalization.hpp"
  * @brief Computes the one-bit normalization of the data using the following
  *        \f[
  *          \mathop{sign}(x)
@@ -112,7 +95,7 @@ class OneBitNormalizationParameters
  * @ingroup rtseis_modules
  * @copyright Ben Baker distributed under the MIT license.
  */
-class OneBitNormalization : OneBitNormalizationParameters
+class OneBitNormalization : public std::exception
 {
     public:
         /*!
@@ -166,15 +149,7 @@ class OneBitNormalization : OneBitNormalizationParameters
          * @result 0 indicates success.
          */
         int apply(const int nx, const double x[], double y[]);
-        /*!
-         * @brief Applies the one-bit normalization.
-         * @param[in] nx   Number of points in signal.
-         * @param[in] x    Signal to one-bit normalized.  This is an array of
-         *                 dimension [nx].
-         * @param[out] y   The one-bit normalized signal.  This has
-         *                 dimension [nx].
-         * @result 0 indicates success.
-         */
+        /*! @copydoc apply */
         int apply(const int nx, const float  x[], float  y[]);
         /*!
          * @brief Resets the filter to the initial conditions specified
@@ -188,7 +163,7 @@ class OneBitNormalization : OneBitNormalizationParameters
          * @brief Clears variables in class and restores defaults.
          *        This class will have to be re-initialized to use again.
          */
-        void clear(void) override;
+        void clear(void);
         /*!
          * @brief Determines if the class is for real-time application.
          * @retval If true then the class is for real-time application.

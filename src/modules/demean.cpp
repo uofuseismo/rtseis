@@ -20,8 +20,9 @@ class Demean::DemeanImpl
         DemeanImpl(const DemeanImpl &demean)
         {
             *this = demean;
+            return;
         }
-        /// Copy operator
+        /// Deep copy operator
         DemeanImpl& operator=(const DemeanImpl &demean)
         {
             if (&demean == this){return *this;}
@@ -51,7 +52,7 @@ class Demean::DemeanImpl
             return;
         }
         /// Removes mean from data
-        int demean(const int nx, const double x[], double y[])
+        int apply(const int nx, const double x[], double y[])
         {
             mean_ = 0;
             if (nx <= 0){return 0;}
@@ -60,7 +61,7 @@ class Demean::DemeanImpl
             return 0;
         }
         /// Removes mean from data
-        int demean(const int nx, const float x[], float y[])
+        int apply(const int nx, const float x[], float y[])
         {
             mean_ = 0;
             if (nx <= 0){return 0;} 
@@ -147,6 +148,13 @@ Demean::Demean(const Demean &demean)
     return;
 }
 
+Demean::Demean(const DemeanParameters &parameters) :
+    pDemean_(new DemeanImpl())
+{
+    setParameters(parameters);
+    return;
+}
+
 Demean& Demean::operator=(const Demean &demean)
 {
     if (&demean == this){return *this;}
@@ -167,41 +175,42 @@ void Demean::clear(void)
     return;
 }
 
-int Demean::setParameters(const DemeanParameters &parameters)
+void Demean::setParameters(const DemeanParameters &parameters)
 {
     clear();
     if (!parameters.isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Invalid parameters");
-        return -1;
+        RTSEIS_THROW_IA("%s", "Parameters not correctly initialized");
     }
     pDemean_->setParameters(parameters);
-    return 0;
+    return;
 }
 
-int Demean::demean(const int nx, const double x[], double y[])
+void Demean::apply(const int nx, const double x[], double y[])
 {
     pDemean_->setMean(0);
-    if (nx <= 0){return 0;}
+    if (nx <= 0){return;}
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
+        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
+        throw std::invalid_argument("Invalid input");
     }
-    pDemean_->demean(nx, x, y);
-    return 0;
+    pDemean_->apply(nx, x, y);
+    return;
 }
 
-int Demean::demean(const int nx, const float x[], float y[])
+void Demean::apply(const int nx, const float x[], float y[])
 {
     pDemean_->setMean(0);
-    if (nx <= 0){return 0;} // Nothing to do
+    if (nx <= 0){return;} // Nothing to do
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
+        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
+        throw std::invalid_argument("Invalid input");
     }
-    pDemean_->demean(nx, x, y);
-    return 0;
+    pDemean_->apply(nx, x, y);
+    return;
 }
 

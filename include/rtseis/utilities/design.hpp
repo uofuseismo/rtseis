@@ -1,9 +1,9 @@
 #ifndef RTSEIS_UTILS_DESIGN_HPP
 #define RTSEIS_UTILS_DESIGN_HPP 1
 #include "rtseis/config.h"
-#include "rtseis/utils/zpk.hpp"
-#include "rtseis/utils/ba.hpp"
-#include "rtseis/utils/sos.hpp"
+#include "rtseis/utilities/zpk.hpp"
+#include "rtseis/utilities/ba.hpp"
+#include "rtseis/utilities/sos.hpp"
 #include <complex>
 #include <vector>
 

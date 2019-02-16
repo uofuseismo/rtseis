@@ -31,6 +31,14 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed one-bit normalization test");
 
+    ierr = rtseis_test_modules_demean();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed demean");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed demean");
+
     ierr = rtseis_test_modules_detrend();
     if (ierr != EXIT_SUCCESS)
     {

@@ -51,6 +51,23 @@
 };
 #endif
 
+#ifndef RTSEIS_THROW_IA
+#define RTSEIS_THROW_IA(fmt, ...) \
+{ \
+   if (rtseis_utils_verbosity_printError()) {\
+       char errMsg[RTSEIS_MAXMSG_LEN]; \
+       memset(errMsg, 0, RTSEIS_MAXMSG_LEN*sizeof(char)); \
+       sprintf(errMsg, "%s[ERROR]: (%s:%s:line=%d) ", ANSI_COLOR_RED, __FILE__, __func__, __LINE__ );\
+       do \
+       {  \
+           snprintf(&errMsg[strlen(errMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
+       } while(0); \
+       sprintf(errMsg, "%s%s\n", errMsg, ANSI_COLOR_RESET); \
+       throw std::invalid_argument(errMsg); \
+   } \
+};
+#endif
+
 #ifndef RTSEIS_WARNMSG 
 #define RTSEIS_WARNMSG(fmt, ...) \
 { \

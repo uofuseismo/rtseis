@@ -3,7 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utils/transforms.hpp"
+#include "rtseis/utilities/transforms.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 

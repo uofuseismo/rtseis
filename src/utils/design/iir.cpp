@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
-#include "rtseis/utils/design.hpp"
-#include "rtseis/utils/polynomial.hpp"
-#include "rtseis/utils/ipps.hpp"
+#include "rtseis/utilities/design.hpp"
+#include "rtseis/utilities/polynomial.hpp"
+#include "rtseis/utilities/ipps.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterDesign;

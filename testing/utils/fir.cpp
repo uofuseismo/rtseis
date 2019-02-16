@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #define RTSEIS_LOGGING 1
 #include <cmath>
-#include "rtseis/utils/design.hpp"
+#include "rtseis/utilities/design.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 

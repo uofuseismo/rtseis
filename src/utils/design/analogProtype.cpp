@@ -1,7 +1,7 @@
 #define RTSEIS_LOGGING 1
 #include <vector>
 #include <cmath>
-#include "rtseis/utils/design.hpp"
+#include "rtseis/utilities/design.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterDesign::IIR;

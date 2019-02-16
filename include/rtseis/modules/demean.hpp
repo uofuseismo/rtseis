@@ -1,6 +1,7 @@
 #ifndef RTSEIS_MODULES_DEMEAN_HPP
 #define RTSEIS_MODULES_DEMEAN_HPP 1
 #include <memory>
+#include <exception>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 
@@ -10,18 +11,19 @@ namespace Modules
 {
 
 /*!
- * @defgroup rtseis_modules_demean_parameters Parameters
+ * @class DemeanParameters demean.hpp "include/rtseis/modules/demean.hpp"
  * @brief Defines the parameters for the demean module.
  * @ingroup rtseis_modules_demean
  * @copyright Ben Baker distributed under the MIT license.
  */
-class DemeanParameters
+class DemeanParameters : public std::exception
 {
     public:
         /*!
          * @brief Default construtor.
          * @param[in] precision  Defines the precision.  By default this is
          *                       double.
+         * @throw std::invalid_argument If precision is not supported.
          */
         DemeanParameters(const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         /*!
@@ -67,12 +69,12 @@ class DemeanParameters
 };
 
 /*!
- * @defgroup rtseis_modules_demean Demean
+ * @class Demean demean.hpp "include/rtseis/modules/demean.hpp"
  * @brief Removes the mean from the data.
  * @ingroup rtseis_modules
  * @copyright Ben Baker distributed under the MIT license.
  */
-class Demean
+class Demean : public std::exception
 {
     public:
         /*!
@@ -84,6 +86,12 @@ class Demean
          * @param[in] demean   Demean class from which to initialize.
          */
         Demean(const Demean &demean);
+        /*!
+         * @brief Constructs a demean command from the parameters.
+         * @param[in] parameters  The demean parameters.
+         * @throw std::invalid_argument If the parameters are invalid.
+         */
+        Demean(const DemeanParameters &parameters); 
         /*!
          * @brief Copy assignment operator.
          * @param[in] demean   Demean class to copy.
@@ -98,9 +106,9 @@ class Demean
          * @brief Sets the parameters for the demean function.
          * @param[in] parameters  An initialized parameters class from which
          *                        to initialize the demean class.
-         * @result 0 indicates success.
+         * @throw std::invalid_argument If the parameters are invalid.
          */
-        int setParameters(const DemeanParameters &parameters);
+        void setParameters(const DemeanParameters &parameters);
         /*!
          * @brief Removes the mean from the data.
          * @param[in] nx   Number of points in x.
@@ -108,10 +116,11 @@ class Demean
          *                 of dimension [nx].
          * @param[out] y   The demeaned version of x.  This is an array of
          *                 dimension [nx].
-         * @result 0 indicates success.
+         * @throw std::invalid_argument If the parameters are invalid.
          */
-        int demean(const int nx, const double x[], double y[]);
-        int demean(const int nx, const float  x[], float  y[]);
+        void apply(const int nx, const double x[], double y[]);
+        /*! @copydoc apply */ 
+        void apply(const int nx, const float  x[], float  y[]);
         /*!
          * @brief Clears the memory and restores the defaults.
          */

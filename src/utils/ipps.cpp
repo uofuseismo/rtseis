@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utils/ipps.hpp"
+#include "rtseis/utilities/ipps.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 

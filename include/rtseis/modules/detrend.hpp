@@ -1,6 +1,7 @@
 #ifndef RTSEIS_MODULES_DETREND_HPP
 #define RTSEIS_MODULES_DETREND_HPP 1
 #include <memory>
+#include <exception>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 
@@ -8,14 +9,20 @@ namespace RTSeis
 {
 namespace Modules
 {
+
+/*!
+ * @defgroup Detrend
+ * Removes a best-fitting trend line from the data.
+ * @{
+ */
  
 /*!
- * @defgroup rtseis_modules_detrend_parameters Parameters
+ * @class DetrendParameters detrend.hpp "include/rtseis/modules/detrend.hpp"
  * @brief Defines the parameters for the detrend module.
  * @ingroup rtseis_modules_detrend
  * @copyright Ben Baker distributed under the MIT license.
  */
-class DetrendParameters
+class DetrendParameters : public std::exception
 {
     public:
         /*!
@@ -68,12 +75,12 @@ class DetrendParameters
 };
 
 /*!
- * @defgroup rtseis_modules_detrend Detrend
+ * @class Detrend detrend.hpp "include/rtseis/modules/detrend.hpp"
  * @brief Removes the trend from the data.
  * @ingroup rtseis_modules
  * @copyright Ben Baker distributed under the MIT license.
  */
-class Detrend
+class Detrend : public std::exception
 {
     public:
         /*!
@@ -88,6 +95,7 @@ class Detrend
         /*!
          * @brief Initializes from the detrend parameters.
          * @param[in] parameters  Parameters from which to initialize.
+         * @throws std::invalid_error if parameters are invalid.
          */
         Detrend(const DetrendParameters &parameters);
         /*!
@@ -104,20 +112,23 @@ class Detrend
          * @brief Sets the parameters for the detrend class.
          * @param[in] parameters  Parameters to set.
          * @result 0 indicates success.
+         * @throws std::invalid_error if parameters is invalid.
          */
-        int setParameters(const DetrendParameters &parameters);
+        void setParameters(const DetrendParameters &parameters);
         /*!
          * @brief Removes the trend from the data by fitting a best-fitting
          *        line.
-         * @param[in] nx   Number of points in x.
+         * @param[in] nx   Number of points in x.  This must be at least 2.
          * @param[in] x    Signal from which to remove trend.  This is an
          *                 array of dimension [nx].
          * @param[out] y   The detrended version of x.  This is an array of
          *                 dimension [nx].
-         * @result 0 indicates success.
+         * @throws std::invalid_error if the arguments are invalid.
          */
-        int detrend(const int nx, const double x[], double y[]);
-        int detrend(const int nx, const float  x[], float  y[]);
+        void apply(const int nx, const double x[], double y[]);
+        /*! @copydoc apply */
+        void apply(const int nx, const float  x[], float  y[]);
+        /*! @} */
         /*!
          * @brief Releases the memory and restores the defaults.
          */
@@ -128,6 +139,8 @@ class Detrend
         /// PIMPL'd implementation
         std::unique_ptr<DetrendImpl> pDetrend_;
 };
+
+/** @} */
 
 
 };

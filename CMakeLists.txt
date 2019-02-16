@@ -46,14 +46,14 @@ ELSE()
 ENDIF()
 
 IF (RTSEIS_WRAP_PYTHON)
-   FIND_PACKAGE(Boost COMPONENTS python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
+   #FIND_PACKAGE(Boost COMPONENTS python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
    FIND_PACKAGE(PythonInterp 3)
    FIND_PACKAGE(PythonLibs 3 REQUIRED)
    MESSAGE(STATUS "PYTHON_LIBRARIES = ${PYTHON_LIBRARIES}")
    MESSAGE(STATUS "PYTHON_EXECUTABLE = ${PYTHON_EXECUTABLE}")
    MESSAGE(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
-   MESSAGE(STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
-   MESSAGE(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+   #MESSAGE(STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
+   #MESSAGE(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 
    FIND_PACKAGE(pybind11 REQUIRED)
 ENDIF()
@@ -63,13 +63,14 @@ INCLUDE_DIRECTORIES(
    ${IPP_INCLUDE_DIR}
    ${MKL_INCLUDE_DIR}
    ${PYTHON_INCLUDE_DIRS}
-   ${Boost_INCLUDE_DIRS} 
-   ${CJSON_INCLUDE_DIR})
+   #${Boost_INCLUDE_DIRS} 
+   #${CJSON_INCLUDE_DIR}
+   )
 
 ADD_SUBDIRECTORY(include)
 
 SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY} ${CJSON_LIBRARY})
-SET(LIBALL_PYTHON rtseis_shared ${LIBALL} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+SET(LIBALL_PYTHON rtseis_shared ${LIBALL} ${PYTHON_LIBRARIES}) #${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
@@ -86,6 +87,7 @@ SET(UTILS_SRCS
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
     src/utils/filters/firfilterMR.cpp
+    src/utils/filters/iirFilter.cpp
     src/utils/filters/iiriirFilter.cpp
     src/utils/filters/medianFilter.cpp
     src/utils/filters/sos.cpp
@@ -106,8 +108,10 @@ SET(MODULES_SRCS
     src/modules/classicSTALTA.cpp
     src/modules/fir.cpp
     src/modules/iir.cpp)
-SET(DATA_SRCS src/data/waveform.cpp)
-SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS})
+#SET(DATA_SRCS src/data/waveform.cpp)
+SET(PROCESSING_SRCS 
+    src/processing/singleChannel/postProcessing.cpp)
+SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
 
 ADD_LIBRARY(rtseis_shared SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})

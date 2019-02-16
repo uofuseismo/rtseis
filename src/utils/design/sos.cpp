@@ -1,7 +1,7 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
 #include <algorithm>
-#include "rtseis/utils/sos.hpp"
+#include "rtseis/utilities/sos.hpp"
 #include "rtseis/log.h"
 
 /*!

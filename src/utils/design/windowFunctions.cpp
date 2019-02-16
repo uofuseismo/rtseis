@@ -3,7 +3,7 @@
 #include <ipps.h>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utils/windowFunctions.hpp"
+#include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities;

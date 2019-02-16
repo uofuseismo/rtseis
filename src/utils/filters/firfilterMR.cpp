@@ -3,7 +3,7 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/utils/filters.hpp"
+#include "rtseis/utilities/filters.hpp"
 
 using namespace RTSeis::Utilities::Filters;
 

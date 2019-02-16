@@ -2,7 +2,7 @@
 #define RTSEIS_MODULES_CLASSICSTALTA_HPP 1
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
-#include "rtseis/utils/filters.hpp"
+#include "rtseis/utilities/filters.hpp"
 
 namespace RTSeis
 {

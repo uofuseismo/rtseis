@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
-#include "rtseis/utils/design.hpp"
+#include "rtseis/utilities/design.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterDesign;

@@ -7,7 +7,7 @@
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/modules/classicSTALTA.hpp"
-#include "rtseis/utils/filters.hpp"
+#include "rtseis/utilities/filters.hpp"
 #include <ipps.h>
 
 using namespace RTSeis::Modules;

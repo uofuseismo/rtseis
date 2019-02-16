@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
-#include "rtseis/utils/windowFunctions.hpp"
+#include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::WindowFunctions;

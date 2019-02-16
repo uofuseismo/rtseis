@@ -3,9 +3,9 @@
 #define RTSEIS_LOGGING 1
 #include <vector>
 #include <cmath>
-#include "rtseis/utils/design.hpp"
-#include "rtseis/utils/polynomial.hpp"
-#include "rtseis/utils/ipps.hpp"
+#include "rtseis/utilities/design.hpp"
+#include "rtseis/utilities/polynomial.hpp"
+#include "rtseis/utilities/ipps.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 

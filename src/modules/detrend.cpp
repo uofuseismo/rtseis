@@ -55,7 +55,7 @@ class Detrend::DetrendImpl
             return 0;
         }
         /// Removes the trend from data
-        int detrend(const int nx, const double x[], double y[])
+        int apply(const int nx, const double x[], double y[])
         {
             b0_ = 0;
             b1_ = 0;
@@ -69,7 +69,7 @@ class Detrend::DetrendImpl
             return 0;
         } 
         /// Removes the trend from data
-        int detrend(const int nx, const float x[], float y[])
+        int apply(const int nx, const float x[], float y[])
         {
             b0_ = 0;
             b1_ = 0;
@@ -252,9 +252,7 @@ Detrend::Detrend(const Detrend &detrend)
 Detrend::Detrend(const DetrendParameters &parameters) : 
     pDetrend_(new DetrendImpl())
 {
-    clear();
-    int ierr = setParameters(parameters);
-    if (ierr != 0){clear();}
+    setParameters(parameters);
     return;
 }
 
@@ -279,44 +277,45 @@ void Detrend::clear(void)
     return;
 }
 
-int Detrend::setParameters(const DetrendParameters &parameters)
+void Detrend::setParameters(const DetrendParameters &parameters)
 {
     pDetrend_->clear();
     if (!parameters.isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Detrend parameters are malformed");
-        return -1;
+        RTSEIS_THROW_IA("%s", "Detrend parameters are malformed");
     }
     pDetrend_->setParameters(parameters);
-    return 0;
+    return;
 }
 
-int Detrend::detrend(const int nx, const double x[], double y[])
+void Detrend::apply(const int nx, const double x[], double y[])
 {
     pDetrend_->setIntercept(0);
     pDetrend_->setSlope(0);
-    if (nx <= 0){return 0;} // Nothing to do
+    if (nx <= 0){return;} // Nothing to do
     if (nx < 2 || x == nullptr || y == nullptr)
     {
-        if (nx < 2){RTSEIS_ERRMSG("%s", "At least 2 points required");}
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
+        if (nx < 2){RTSEIS_THROW_IA("%s", "At least 2 points required");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
+        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
+        throw std::invalid_argument("Invalid argument");
     }
-    pDetrend_->detrend(nx, x, y);
-    return 0;
+    pDetrend_->apply(nx, x, y);
+    return;
 }
 
-int Detrend::detrend(const int nx, const float x[], float y[])
+void Detrend::apply(const int nx, const float x[], float y[])
 {
     pDetrend_->setIntercept(0);
     pDetrend_->setSlope(0);
-    if (nx <= 0){return 0;} // Nothing to do
+    if (nx <= 0){return;} // Nothing to do
     if (nx < 2 || x == nullptr || y == nullptr)
     {
-        if (nx < 2){RTSEIS_ERRMSG("%s", "At least 2 points required");}
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is null");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is null");}
+        if (nx < 2){RTSEIS_THROW_IA("%s", "At least 2 points required");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
+        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
+        throw std::invalid_argument("Invalid argument");
     }
-    pDetrend_->detrend(nx, x, y);
-    return 0;
+    pDetrend_->apply(nx, x, y);
+    return;
 }

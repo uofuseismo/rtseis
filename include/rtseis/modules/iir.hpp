@@ -3,7 +3,7 @@
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
-#include "rtseis/utils/design.hpp"
+#include "rtseis/utilities/design.hpp"
 
 namespace RTSeis
 {
