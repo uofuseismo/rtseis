@@ -12,6 +12,356 @@
 
 using namespace RTSeis::Modules;
 
+class ClassicSTALTA::ClassicSTALTAImpl
+{
+    public:
+        /// Default constructor
+        ClassicSTALTAImpl(void)
+        {
+            return;
+        }
+        /// Copy constructor
+        ClassicSTALTAImpl(const ClassicSTALTAImpl &stalta)
+        { 
+            *this = stalta;
+            return;
+        }
+        /// Classic destructor
+        ~ClassicSTALTAImpl(void) 
+        {
+            clear();
+            return;
+        }
+        /// Copy assignment operator
+        ClassicSTALTAImpl& operator=(const ClassicSTALTAImpl &stalta)
+        {
+            if (&stalta == this){return *this;} 
+            clear();
+            if (!stalta.linit_){return *this;}
+            firNum_ = stalta.firNum_;
+            firDen_ = stalta.firDen_;
+            nsta_ = stalta.nsta_;
+            nlta_ = stalta.nlta_;
+            chunkSize_ = stalta.chunkSize_;
+            mode_ = stalta.mode_;
+            precision_ = stalta.precision_;
+            linit_ = stalta.linit_;
+            if (chunkSize_ > 0)
+            {
+                if (precision_ == RTSeis::Precision::DOUBLE)
+                {
+                    x264f_   = ippsMalloc_64f(chunkSize_);
+                    ippsCopy_64f(stalta.x264f_, x264f_, chunkSize_);
+                    ynum64f_ = ippsMalloc_64f(chunkSize_);
+                    ippsCopy_64f(stalta.ynum64f_, ynum64f_, chunkSize_);
+                    yden64f_ = ippsMalloc_64f(chunkSize_);
+                    ippsCopy_64f(stalta.yden64f_, yden64f_, chunkSize_);
+                }
+                else
+                {
+                    x232f_   = ippsMalloc_32f(chunkSize_);
+                    ippsCopy_32f(stalta.x232f_, x232f_, chunkSize_);
+                    ynum32f_ = ippsMalloc_32f(chunkSize_);
+                    ippsCopy_32f(stalta.ynum32f_, ynum32f_, chunkSize_);
+                    yden32f_ = ippsMalloc_32f(chunkSize_);
+                    ippsCopy_32f(stalta.yden32f_, yden32f_, chunkSize_);
+                }
+            }
+            return *this;
+        }
+        /// Releases memory on the module
+        void clear(void)
+        {
+            firNum_.clear();
+            firDen_.clear();
+            if (x264f_ != nullptr){ippsFree(x264f_);}
+            if (ynum64f_ != nullptr){ippsFree(ynum64f_);}
+            if (yden64f_ != nullptr){ippsFree(yden64f_);}
+            if (x232f_ != nullptr){ippsFree(x232f_);}
+            if (ynum32f_ != nullptr){ippsFree(ynum32f_);}
+            if (yden32f_ != nullptr){ippsFree(yden32f_);}
+            x264f_ = nullptr;
+            ynum64f_ = nullptr;
+            yden64f_ = nullptr;
+            x232f_ = nullptr;
+            ynum32f_ = nullptr;
+            yden32f_ = nullptr;
+            chunkSize_ = 1024;
+            nsta_ = 0;
+            nlta_ = 0;
+            mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+            precision_ = RTSeis::Precision::DOUBLE;
+            linit_ = false;
+            return;
+        }
+        //--------------------------------------------------------------------//
+        int initialize(const int nsta, const int nlta,
+                       const int chunkSize,
+                       const RTSeis::ProcessingMode mode,
+                       const RTSeis::Precision precision)
+        {
+            clear();
+            // Set constants
+            nsta_ = nsta;
+            nlta_ = nlta;
+            chunkSize_ = chunkSize;
+            // Set the short-term averaging filter coefficients
+            Ipp64f *xsta = ippsMalloc_64f(nsta_);
+            double xdiv = 1.0/static_cast<double> (nsta_);
+            ippsSet_64f(xdiv, xsta, nsta_);
+            int ierr = firNum_.initialize(nsta_, xsta, mode, precision);
+            if (ierr != 0)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to set numerator FIR filter");
+                ippsFree(xsta);
+                clear();
+                return -1;
+            }
+            // Set the initial conditions to 0
+            ippsSet_64f(0, xsta, nsta_);
+            ierr = firNum_.setInitialConditions(nsta_-1, xsta); 
+            ippsFree(xsta);
+            if (ierr != 0)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to set numerator ics");
+                clear();
+                return -1;
+            }
+            // Set the long-term averaging filter coefficients
+            Ipp64f *xlta = ippsMalloc_64f(nlta_);
+            xdiv = 1.0/static_cast<double> (nlta_);
+            ippsSet_64f(xdiv, xlta, nlta_);
+            ierr = firDen_.initialize(nlta_, xlta, mode, precision);
+            if (ierr != 0)
+            {
+                 RTSEIS_ERRMSG("%s", "Failed to initialize denominator");
+                 ippsFree(xlta);
+                 clear();
+                 return -1;
+            }
+            // Set the initial conditions to something large
+            double xset = DBL_MAX/static_cast<double> (nlta_)/4.0; 
+            if (precision == RTSeis::Precision::FLOAT)
+            {
+                 xset = FLT_MAX/static_cast<double> (nlta_)/4.0;
+            }
+            ippsSet_64f(xset, xlta, nlta_);
+            ierr = firDen_.setInitialConditions(nlta_-1, xlta);
+            ippsFree(xlta);
+            if (ierr != 0)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to set denominator ics");
+                clear();
+                return -1;
+            }
+            // Initialize workspace
+            if (precision == RTSeis::Precision::DOUBLE)
+            {
+                x264f_   = ippsMalloc_64f(chunkSize_);
+                ynum64f_ = ippsMalloc_64f(chunkSize_);
+                yden64f_ = ippsMalloc_64f(chunkSize_);
+            } 
+            else
+            {
+                x232f_   = ippsMalloc_32f(chunkSize_);
+                ynum32f_ = ippsMalloc_32f(chunkSize_);
+                yden32f_ = ippsMalloc_32f(chunkSize_);
+            }
+            mode_ = mode;
+            precision_ = precision;
+            linit_ = true;
+            return 0;
+        } 
+        /// Determines if the module is initialized
+        bool isInitialized(void) const
+        {
+            return linit_;
+        }
+        /// Gets length of the numerator initial conditons
+        int getNumeratorInitialConditionLength(void) const
+        {
+            return firNum_.getInitialConditionLength();
+        }
+        /// Gets length of the denominator initial conditons
+        int getDenominatorInitialConditionLength(void) const
+        {
+            return firDen_.getInitialConditionLength();
+        }
+        /// Sets the initial conditions
+        int setInitialConditions(const int nzNum, const double zNum[],
+                                 const int nzDen, const double zDen[])
+        {
+            resetInitialConditions(); 
+            // Set the initial conditions
+            int nzNumRef = getNumeratorInitialConditionLength();
+            int nzDenRef = getDenominatorInitialConditionLength();
+            if (nzNumRef != nzNum){RTSEIS_ERRMSG("%s", "Shouldn't happen");}
+            if (nzDenRef != nzDen){RTSEIS_ERRMSG("%s", "Shouldn't happen");}
+            // Set numerator initial conditions
+            int ierr = firNum_.setInitialConditions(nzNumRef, zNum);
+            if (ierr != 0)
+            {
+                 RTSEIS_ERRMSG("%s", "Failed to set numerator ics");
+                 return -1;
+            }
+            ierr = firDen_.setInitialConditions(nzDenRef, zDen);
+            if (ierr != 0)
+            {
+                RTSEIS_ERRMSG("%s", "Failed to set denominator ics");
+                return -1;
+            }
+            return 0;
+        }
+        /// Resets the initial conditions
+        int resetInitialConditions(void)
+        {
+            firNum_.resetInitialConditions();
+            firDen_.resetInitialConditions();
+            return 0;
+        }
+        /// Applies the STA/LTA
+        int apply(const int nx, const double x[], double y[])
+        {
+            if (nx <= 0){return 0;} // Nothing to do
+            for (int i=0; i<nx; i=i+chunkSize_)
+            {
+                int nloc = std::min(chunkSize_, nx - i);
+                // Compute the squared signal
+                ippsSqr_64f(&x[i], x264f_, nloc);
+                // Compute the numerator average 
+                int ierr = firNum_.apply(nloc, x264f_, ynum64f_);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to filter numerator");
+                    return -1;
+                }
+                // Compute the denominator average
+                ierr = firDen_.apply(nloc, x264f_, yden64f_);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to filter denominator");
+                    return -1;
+                }
+                // Pointwise division
+                IppStatus status = ippsDiv_64f(yden64f_, ynum64f_, &y[i], nloc);
+                if (status != ippStsNoErr)
+                {
+                    // Division by zero error can be handled.  This means the
+                    // the numerator must be 0 as well - so we force the division
+                    // 0/0 = 0.  The head is that a dead signal won't trigger.
+                    if (status == ippStsDivByZero)
+                    {
+                       RTSEIS_WARNMSG("%s", "Division by zero detected");
+                       // if |yden| < DBL_MIN then y = 0
+                       status = ippsThreshold_LTAbsVal_64f(yden64f_, &y[i],
+                                                           nloc,
+                                                           DBL_MIN, 0.0);
+                    }
+                    // Unrecoverable error
+                    if (status != ippStsNoErr)
+                    {
+                        RTSEIS_ERRMSG("%s", "Error computing ynum/yden");
+                        return -1;
+                    }
+                }
+            }
+            // Reset the initial conditions for post-processing
+            if (mode_ != RTSeis::ProcessingMode::REAL_TIME)
+            {
+                resetInitialConditions();
+            }
+            return 0;
+        }
+        /// Applies the STA/LTA
+        int apply(const int nx, const float x[], float y[])
+        {
+            if (nx <= 0){return 0;} // Nothing to do
+            for (int i=0; i<nx; i=i+chunkSize_)
+            {
+                int nloc = std::min(chunkSize_, nx - i);
+                // Compute the squared signal
+                ippsSqr_32f(&x[i], x232f_, nloc);
+                // Compute the numerator average 
+                int ierr = firNum_.apply(nloc, x232f_, ynum32f_);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to filter numerator");
+                    return -1;
+                }
+                // Compute the denominator average
+                ierr = firDen_.apply(nloc, x232f_, yden32f_);
+                if (ierr != 0)
+                {
+                    RTSEIS_ERRMSG("%s", "Failed to filter denominator");
+                    return -1;
+                }
+                // Pointwise division
+                IppStatus status = ippsDiv_32f(yden32f_, ynum32f_, &y[i], nloc);
+                if (status != ippStsNoErr)
+                {
+                    // Division by zero error can be handled.  This means the
+                    // the numerator must be 0 as well - so we force the division
+                    // 0/0 = 0.  The head is that a dead signal won't trigger.
+                    if (status == ippStsDivByZero)
+                    {
+                        RTSEIS_WARNMSG("%s", "Division by zero detected");
+                        // if |yden| < DBL_MIN then y = 0
+                        status = ippsThreshold_LTAbsVal_32f(yden32f_, &y[i],
+                                                            nloc,
+                                                            FLT_MIN, 0.0f);
+                    }
+                    // Unrecoverable error
+                    if (status != ippStsNoErr)
+                    {
+                        RTSEIS_ERRMSG("%s", "Error computing ynum/yden");
+                        return -1;
+                    }
+                }
+            }
+            // Reset the initial conditions for post-processing
+            if (mode_ != RTSeis::ProcessingMode::REAL_TIME)
+            {
+                resetInitialConditions();
+            }
+            return 0;
+        }
+    private:
+        /// Tabulates the numerator short-term average
+        RTSeis::Utilities::Filters::FIRFilter firNum_;
+        /// Tabulates the denominator long-term average
+        RTSeis::Utilities::Filters::FIRFilter firDen_;
+        /// The characteristic function.  This has dimension [chunkSize_].
+        Ipp64f *x264f_ = nullptr;
+        /// Workspace array for holding numerator.  This has
+        /// dimension [chunkSize_].
+        Ipp64f *ynum64f_ = nullptr;
+        /// Workspace array for hodling denominator.  This has
+        /// dimension [chunkSize_].
+        Ipp64f *yden64f_ = nullptr;
+        /// The characteristic function.  This has dimension [chunkSize_].
+        Ipp32f *x232f_ = nullptr;
+        /// Workspace array for holding numerator.  This has
+        /// dimension [chunkSize_].
+        Ipp32f *ynum32f_ = nullptr;
+        /// Workspace array for hodling denominator.  This has
+        /// dimension [chunkSize_].
+        Ipp32f *yden32f_ = nullptr;
+        /// The number of points in the STA window
+        int nsta_ = 0;
+        /// The number of points in the LTA window
+        int nlta_ = 0;
+        /// Workspace for numerator and denominators 
+        int chunkSize_ = 1024;
+        /// The processing mode
+        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        /// The precision of th emodule
+        RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+        /// Flag indicating the class is initialized
+        bool linit_ = false;
+};
+
+//============================================================================//
+
 ClassicSTALTAParameters::ClassicSTALTAParameters(void)
 {
     return;
@@ -265,7 +615,8 @@ void ClassicSTALTAParameters::validate_(void)
 //                                 End Parameters                             //
 //============================================================================//
 
-ClassicSTALTA::ClassicSTALTA(void)
+ClassicSTALTA::ClassicSTALTA(void) :
+    pSTALTA_(new ClassicSTALTAImpl())
 {
     clear();
 }
