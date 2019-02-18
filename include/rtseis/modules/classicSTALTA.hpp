@@ -1,5 +1,6 @@
 #ifndef RTSEIS_MODULES_CLASSICSTALTA_HPP
 #define RTSEIS_MODULES_CLASSICSTALTA_HPP 1
+#include <memory>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 #include "rtseis/utilities/filters.hpp"
@@ -247,7 +248,7 @@ class ClassicSTALTAParameters
  * @ingroup rtseis_modules
  * @copyright Ben Baker distributed under the MIT license.
  */
-class ClassicSTALTA : ClassicSTALTAParameters
+class ClassicSTALTA
 {
      public:
         /*!
@@ -262,7 +263,7 @@ class ClassicSTALTA : ClassicSTALTAParameters
          *                        the classic STA/LTA.
          * @ingroup rtseis_modules_cSTALTA
          */
-        ClassicSTALTA(const ClassicSTALTAParameters parameters);
+        ClassicSTALTA(const ClassicSTALTAParameters &parameters);
         /*!
          * @brief Copy constructor.
          * @param[in] cstalta  A Classic STA/LTA class from which this
@@ -344,7 +345,7 @@ class ClassicSTALTA : ClassicSTALTAParameters
          *        This class will have to be re-initialized to use again.
          * @ingroup rtseis_modules_cSTALTA
          */
-        void clear() override;
+        void clear(void);
         /*!
          * @brief Determines if the class is for real-time application.
          * @retval If true then the class is for real-time application.
@@ -352,21 +353,8 @@ class ClassicSTALTA : ClassicSTALTAParameters
          */
         bool isInitialized(void) const;
     private:
-        /*!< Numerator FIR signal to keep track of the short-term average. */
-        RTSeis::Utilities::Filters::FIRFilter firNum_;
-        /*!< Denominator FIR signal to keep track of the long-term average. */
-        RTSeis::Utilities::Filters::FIRFilter firDen_;
-        /*!< Workspace array for holding input signal squared. */
-        void *x2_ = nullptr;
-        /*!< Workspace array for holding the numerator. */
-        void *ynum_ = nullptr;
-        /*!< Workspace array for holding the denominator. */
-        void *yden_ = nullptr; 
-        /*!< The STA/LTA parameters. */
-        ClassicSTALTAParameters parms_;
-        /*!< Flag indicating the module is intialized. */
-        bool isInitialized_ = false;
-        
+        class ClassicSTALTAImpl;
+        std::unique_ptr<ClassicSTALTAImpl> pSTALTA_;
 };
 
 };

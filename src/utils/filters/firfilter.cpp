@@ -385,8 +385,8 @@ int FIRFilter::initialize(const int nb, const double b[],
     // Checks
     if (nb < 1 || b == nullptr)
     {
-        if (nb < 1){RTSEIS_ERRMSG("%s", "No b coefficients\n");}
-        if (b == nullptr){RTSEIS_ERRMSG("%s", "b is NULL\n");}
+        if (nb < 1){RTSEIS_ERRMSG("%s", "No b coefficients");}
+        if (b == nullptr){RTSEIS_ERRMSG("%s", "b is NULL");}
         return -1; 
     }
     int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
