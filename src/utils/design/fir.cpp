@@ -97,22 +97,24 @@ int FIR::FIR1Highpass(const int order, const double r,
     return 0;
 }
 
-int FIR::FIR1Bandpass(const int order, const double r[2],
+int FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
                       std::vector<double> &taps,
                       const Window window)
 {
     taps.clear();
     // Check inputs
-    if (order < 4 || r[0] <= 0.0 || r[0] >= 1.0 || r[1] < r[0])
+    const double r0 = r.first;
+    const double r1 = r.second;
+    if (order < 4 || r0 <= 0.0 || r0 >= 1.0 || r1 < r0)
     {
         if (order < 4){RTSEIS_ERRMSG("order=%d must be at least 4", order);}
-        if (r[0] < 0.0 || r[0] >= 1.0)
+        if (r0 < 0.0 || r0 >= 1.0)
         {
-            RTSEIS_ERRMSG("r[0]=%f must be in range (0,1)", r[0]);
+            RTSEIS_ERRMSG("r.first=%f must be in range (0,1)", r0);
         }
-        if (r[1] < r[0])
+        if (r1 < r0)
         {
-            RTSEIS_ERRMSG("r[1]=%lf < r[0]=%lf", r[0], r[1]);
+            RTSEIS_ERRMSG("r.second=%lf < r.first=%lf", r0, r1);
         }
         if ((int) window < 0 || (int) window > 3)
         {
@@ -121,8 +123,8 @@ int FIR::FIR1Bandpass(const int order, const double r[2],
     }
     IppWinType winType = classifyWindow(window);
     IppBool doNormal = ippTrue; // Normalize filter coefficients
-    double rLo = r[0]/2.0;      // IPP uses 0.5 as Nyquist
-    double rHi = r[1]/2.0;      // Ipp uses 0.5 as Nyquist
+    double rLo = r0/2.0;        // IPP uses 0.5 as Nyquist
+    double rHi = r1/2.0;        // Ipp uses 0.5 as Nyquist
     int tapsLen = order + 1;    // Length of filter is order + 1
     int bufSize;
     IppStatus status = ippsFIRGenGetBufferSize(tapsLen, &bufSize);
@@ -148,22 +150,24 @@ int FIR::FIR1Bandpass(const int order, const double r[2],
     return 0;
 }
 
-int FIR::FIR1Bandstop(const int order, const double r[2],
+int FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
                       std::vector<double> &taps,
                       const Window window)
 {
     taps.clear();
     // Check inputs
-    if (order < 4 || r[0] <= 0.0 || r[0] >= 1.0 || r[1] < r[0])
+    const double r0 = r.first;
+    const double r1 = r.second;
+    if (order < 4 || r0 <= 0.0 || r0 >= 1.0 || r1 < r0)
     {
         if (order < 4){RTSEIS_ERRMSG("order=%d must be at least 4", order);}
-        if (r[0] < 0.0 || r[0] >= 1.0)
+        if (r0 < 0.0 || r0 >= 1.0)
         {
-            RTSEIS_ERRMSG("r[0]=%f must be in range (0,1)", r[0]);
+            RTSEIS_ERRMSG("r.first=%f must be in range (0,1)", r0);
         }
-        if (r[1] < r[0])
+        if (r1 < r0)
         {
-            RTSEIS_ERRMSG("r[1]=%lf < r[0]=%lf", r[0], r[1]);
+            RTSEIS_ERRMSG("r.second=%lf < r.first=%lf", r0, r1);
         }
         if ((int) window < 0 || (int) window > 3)
         {
@@ -172,8 +176,8 @@ int FIR::FIR1Bandstop(const int order, const double r[2],
     }
     IppWinType winType = classifyWindow(window);
     IppBool doNormal = ippTrue; // Normalize filter coefficients
-    double rLo = r[0]/2.0;      // IPP uses 0.5 as Nyquist
-    double rHi = r[1]/2.0;      // Ipp uses 0.5 as Nyquist
+    double rLo = r0/2.0;        // IPP uses 0.5 as Nyquist
+    double rHi = r1/2.0;        // Ipp uses 0.5 as Nyquist
     int tapsLen = order + 1;    // Length of filter is order + 1
     int bufSize;
     IppStatus status = ippsFIRGenGetBufferSize(tapsLen, &bufSize);

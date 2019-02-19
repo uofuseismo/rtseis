@@ -31,14 +31,10 @@ namespace IIR
      */
     enum Prototype
     {
-        /*!< Butterworth filter design. */
-        BUTTERWORTH,
-        /*!< Bessel filter design. */
-        BESSEL,
-        /*!< Chebyshev I filter design. */
-        CHEBYSHEV1,
-        /*!< Chebyshev II filter design. */
-        CHEBYSHEV2
+        BUTTERWORTH, /*!< Butterworth filter design. */
+        BESSEL,      /*!< Bessel filter design. */
+        CHEBYSHEV1,  /*!< Chebyshev I filter design. */
+        CHEBYSHEV2   /*!< Chebyshev II filter design. */
     };
     /*!
      * @brief Defines the bandtype for the IIR filter design.
@@ -46,22 +42,18 @@ namespace IIR
      */
     enum Bandtype
     {
-        /*!< Lowpass filter. */
-        LOWPASS,
-        /*!< Highpass filter. */
-        HIGHPASS,
-        /*!< Bandpass filter. */
-        BANDPASS,
-        /*!< Bandstop filter. */
-        BANDSTOP
+        LOWPASS,  /*!< Lowpass filter. */
+        HIGHPASS, /*!< Highpass filter. */
+        BANDPASS, /*!< Bandpass filter. */
+        BANDSTOP  /*!< Bandstop filter. */
     };
+    /*! 
+     * @brief Pairing strategy when converting a ZPK filter to an 
+     *        SOS filter.
+     * @ingroup rtseis_utils_design_iir
+     */
     enum Pairing
     {
-        /*!
-         * @brief Pairing strategy when converting a ZPK filter to an 
-         *        SOS filter.
-         * @ingroup rtseis_utils_design_iir
-         */ 
         NEAREST = 0,  /*!< This attempts to minimize the peak gain. */
         KEEP_ODD = 1  /*!< This attempts to minimize the peak gain
                            subject to the constraint that odd-order

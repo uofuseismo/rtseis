@@ -24,14 +24,12 @@ namespace Response
 {
     /*!
      * @brief Computes the complex frequency response H(s) of an analog filter
-     *
      *        \f[
      *           H(s)
      *         = \frac{B(s)}{A(s)}
      *         = \frac{b[0]s^{n_b} + b[1]s^{n_b-1} + ... + b[nb-1]s + b[nb-1]}
      *                {a[0]s^{n_a} + a[1]s^{n_a-1} + ... + a[na-1]s + a[na-1]}
      *        \f]
-     *
      *        given the numerator ande denomiantor coefficients at
      *        angular frequencies, w.
      *
@@ -55,7 +53,6 @@ namespace Response
      *         = \frac{b[0] + b[1]z^{-1} + b[2]z^{-2} + ... + b[nb-1]z^{-n_b}}
      *                {a[0] + a[1]z^{-1} + a[2]z^{-2} + ... + a[na-1]z^{-n_a}}
      *        \f]
-     *
      *        given the numerator and denominator coefficients at normalized
      *        angular frequencies, w.
      *
@@ -72,17 +69,15 @@ namespace Response
      */
     int freqz(const BA &ba, const std::vector<double> &w,
               std::vector<std::complex<double>> &h);
-    int freqz(const BA &ba, const std::vector<double> &w,
-              std::vector<std::complex<double>> &h);
     /*!
      * @brief Computes the group delay of a filter.  The group delay
      *        is a measure of the average delay of the filter as a function
      *        of frequency.  
      *        \f[
-     *            \tau_g(\omega) =-\frac{d \theta(\omega}}{d \omega}
-     *        \f$.
+     *            \tau_g(\omega) =-\frac{d \theta(\omega)}{d \omega}
+     *        \f].
      *        where \f$ \theta(\omega) \f$ is the argument of the transfer
-     *        function \f$ H(z) = H(e^{i\omega}} \f$.
+     *        function \f$ H(z) = H(e^{i\omega}) \f$.
      * @param[in] ba   The transfer function defining the digital filter.
      * @param[in] w    The normalized frequencies at which to evaluate the group
      *                 delay.  In this case, 0 is the zero frequency and
@@ -90,6 +85,7 @@ namespace Response
      * @param[out] gd  The group delay in samples.  This will have dimension
      *                 [w.size()].
      * @result 0 indicates success.
+     * @ingroup rtseis_utils_design_response
      */
      int groupDelay(const BA &ba, const std::vector<double> &w,
                     std::vector<double> &gd);

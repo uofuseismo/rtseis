@@ -794,6 +794,10 @@ INPUT                  = README.md \
                          INSTALL.md \
                          include/rtseis/modules/oneBitNormalization.hpp \
                          include/rtseis/modules/classicSTALTA.h \
+                         include/rtseis/utilities/analogPrototype.hpp \
+                         include/rtseis/utilities/fir.hpp \
+                         include/rtseis/utilities/iir.hpp \
+                         include/rtseis/utilities/response.hpp \
                          include/rtseis/utilities/filters.hpp \
                          include/rtseis/utilities/transforms.hpp \
                          include/rtseis/modules/detrend.hpp \

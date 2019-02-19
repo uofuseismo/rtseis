@@ -272,7 +272,7 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     }
     else if (btype == Bandtype::BANDPASS)
     {
-        double r[2] = {r0, r1};
+        std::pair<double,double> r(r0, r1);
         ierr = Utilities::FilterDesign::FIR::FIR1Bandpass(order, r, pTaps,
                                                           windowPass);
         if (ierr != 0)
@@ -285,7 +285,7 @@ int FIRParameters::designFromWindow(const int order, const double fs,
     }
     else if (btype == Bandtype::BANDSTOP)
     {
-        double r[2] = {r0, r1};
+        std::pair<double,double> r(r0, r1);
         ierr = Utilities::FilterDesign::FIR::FIR1Bandstop(order, r, pTaps,
                                                           windowPass);
         if (ierr != 0)

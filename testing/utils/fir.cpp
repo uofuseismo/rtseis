@@ -96,7 +96,9 @@ int rtseis_test_utils_design_fir_fir1(void)
         }
     }
     // Test 3
-    order = 11; double r2[2] = {0.2, 0.8};
+    std::pair<double,double> r2;
+    order = 11;
+    r2 = std::make_pair(0.2, 0.8);
     ierr = FIR::FIR1Bandpass(order, r2, ptaps, FIR::Window::BARTLETT); 
     if (ierr != 0)
     {
@@ -118,7 +120,7 @@ int rtseis_test_utils_design_fir_fir1(void)
     }
     // Test 4
     order = 20;
-    r2[0] = 0.15; r2[1] = 0.85;
+    r2 = std::make_pair(0.15, 0.85);
     ierr = FIR::FIR1Bandstop(order, r2, ptaps, FIR::Window::BLACKMAN_OPT);
     if (ierr != 0)  
     {
