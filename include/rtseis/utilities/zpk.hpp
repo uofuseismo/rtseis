@@ -1,15 +1,18 @@
 #ifndef RTSEIS_UTILS_ZPK_HPP
 #define RTSEIS_UTILS_ZPK_HPP 1
-#include "rtseis/config.h"
 #include <complex>
 #include <vector>
+#include "rtseis/config.h"
+
+namespace RTSeis
+{
 
 class ZPK
 {
     public:
         ZPK(void);
-        ZPK(const std::vector<std::complex<double>> zeros,
-            const std::vector<std::complex<double>> poles,
+        ZPK(const std::vector<std::complex<double>> &zeros,
+            const std::vector<std::complex<double>> &poles,
             const double k);
         ZPK &operator=(const ZPK &zpk);
         bool operator==(const ZPK &zpk) const;
@@ -24,9 +27,9 @@ class ZPK
         int getNumberOfPoles(void) const;
         int getNumberOfZeros(void) const;
         void setPoles(const size_t n, std::complex<double> poles[]);
-        void setPoles(const std::vector<std::complex<double>> poles);
+        void setPoles(const std::vector<std::complex<double>> &poles);
         void setZeros(const size_t n, std::complex<double> zeros[]);
-        void setZeros(const std::vector<std::complex<double>> zeros);
+        void setZeros(const std::vector<std::complex<double>> &zeros);
         std::vector<std::complex<double>> getPoles(void) const;
         std::vector<std::complex<double>> getZeros(void) const;
         void setEqualityTolerance(const double tol = 1.e-12);
@@ -41,6 +44,8 @@ class ZPK
         const double defaultTol_ = 1.e-12;
         /*!< Tolerance in checking equality. */
         double tol_ = defaultTol_;
+};
+
 };
 
 #endif

@@ -3,10 +3,11 @@
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
-#include "rtseis/utilities/design.hpp"
 
 namespace RTSeis
 {
+class BA;
+class ZPK;
 namespace Modules
 {
 
@@ -65,8 +66,8 @@ class IIRParameters
                                       const Bandtype btype,
                                       const Prototype ftype,
                                       const double ripple = 5);
-        int setCustomFilter(const ZPK zpk);
-        int setCustomFilter(const BA ba);
+        int setCustomFilter(const ZPK &zpk);
+        int setCustomFilter(const BA &ba);
         BA getFilter(void) const;
         void clear(void); 
         void resetFilterDesign(void);

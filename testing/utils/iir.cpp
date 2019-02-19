@@ -3,9 +3,14 @@
 #include <string>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
-#include "rtseis/utilities/design.hpp"
+#include "rtseis/utilities/ba.hpp"
+#include "rtseis/utilities/zpk.hpp"
+#include "rtseis/utilities/sos.hpp"
+#include "rtseis/utilities/iir.hpp"
+#include "rtseis/utilities/analogPrototype.hpp"
 #include "rtseis/log.h"
 
+using namespace RTSeis;
 using namespace RTSeis::Utilities::FilterDesign;
 
 /*!< IIR SOS analog prototype design. */
@@ -21,7 +26,7 @@ int rtseis_test_utils_design_zpk2sos(void)
     const std::vector<double> asRef1({
          1.,        -1.47967422,  0.55582154,
          1.,        -1.70096433,  0.78849974});
-    SOS sosRef1(2, bsRef1, asRef1);
+    RTSeis::SOS sosRef1(2, bsRef1, asRef1);
     const std::vector<double> bsRefEll({
          0.0014154,   0.00248707,  0.0014154,
          1.,          0.72965193,  1.,

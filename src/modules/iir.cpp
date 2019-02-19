@@ -5,6 +5,9 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
+#include "rtseis/utilities/iir.hpp"
+#include "rtseis/utilities/ba.hpp"
+#include "rtseis/utilities/zpk.hpp"
 #include "rtseis/modules/iir.hpp"
 #include "rtseis/ippsHelper.h"
 
@@ -97,7 +100,7 @@ int IIRParameters::design(
  * @ingroup 0 indicates success.
  * @ingroup rtseis_modules_iir_parameters
  */
-int IIRParameters::setCustomFilter(const ZPK zpk)
+int IIRParameters::setCustomFilter(const ZPK &zpk)
 {
     resetFilterDesign();
     int ierr = RTSeis::Utilities::FilterDesign::IIR::zpk2tf(zpk, ba_);
@@ -117,7 +120,7 @@ int IIRParameters::setCustomFilter(const ZPK zpk)
  * @result 0 indicates success.
  * @ingroup rtseis_modules_iir_parameters
  */
-int IIRParameters::setCustomFilter(const BA ba)
+int IIRParameters::setCustomFilter(const BA &ba)
 {
     resetFilterDesign();
     if (ba.getNumberOfNumeratorCoefficients() < 1)
@@ -264,7 +267,7 @@ bool IIRParameters::getIsRealTime(void) const
  * @result The IIR filter.
  * @ingroup rtseis_modules_iir_parameters
  */
-BA IIRParameters::getFilter(void) const
+RTSeis::BA IIRParameters::getFilter(void) const
 {
    return ba_;
 }

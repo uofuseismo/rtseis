@@ -3,7 +3,8 @@
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
-#include "rtseis/utilities/design.hpp"
+#include "rtseis/utilities/ba.hpp"
+#include "rtseis/utilities/fir.hpp"
 #include "rtseis/utilities/filters.hpp"
 #include <memory>
 

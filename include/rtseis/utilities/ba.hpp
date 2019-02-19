@@ -1,15 +1,18 @@
 #ifndef RTSEIS_UTILS_BA_HPP
 #define RTSEIS_UTILS_BA_HPP 1
-#include "rtseis/config.h"
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
+#include "rtseis/config.h"
+
+namespace RTSeis
+{
 
 class BA
 {
     public:
         BA(void);
-        BA(const std::vector<double> firTaps);
-        BA(const std::vector<double> b, const std::vector<double> a);
+        BA(const std::vector<double> &firTaps);
+        BA(const std::vector<double> &b, const std::vector<double> &a);
         BA(const BA &ba);
         BA &operator=(const BA &ba);
         bool operator==(const BA &ba) const;
@@ -20,9 +23,9 @@ class BA
         int getNumberOfNumeratorCoefficients(void) const;
         int getNumberOfDenominatorCoefficients(void) const;
         void setNumeratorCoefficients(const size_t n, double b[]);
-        void setNumeratorCoefficients(const std::vector<double> b);
+        void setNumeratorCoefficients(const std::vector<double> &b);
         void setDenominatorCoefficients(const size_t n, double a[]);
-        void setDenominatorCoefficients(const std::vector<double> a);
+        void setDenominatorCoefficients(const std::vector<double> &a);
         std::vector<double> getNumeratorCoefficients(void) const;
         std::vector<double> getDenominatorCoefficients(void) const;
         void setEqualityTolerance(const double tol = 1.e-12);
@@ -39,6 +42,7 @@ class BA
         double tol_ = defaultTol_;
         /*!< Determines if the filter is an FIR filter. */
         bool isFIR_ = false;
+};
 };
 
 #endif

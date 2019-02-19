@@ -3,11 +3,9 @@
 #include <cstring>
 #include <cstdint>
 #include <ipps.h>
-#include "rtseis/utilities/ipps.hpp"
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/modules/fir.hpp"
-#include "rtseis/ippsHelper.h"
 
 using namespace RTSeis::Modules;
 

@@ -3,9 +3,11 @@
 #include <string>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
-#include "rtseis/utilities/design.hpp"
+#include "rtseis/utilities/response.hpp"
+#include "rtseis/utilities/ba.hpp"
 #include "rtseis/log.h"
 
+using namespace RTSeis;
 using namespace RTSeis::Utilities::FilterDesign;
 
 int rtseis_test_utils_design_freqs(void)
@@ -16,12 +18,12 @@ int rtseis_test_utils_design_freqs(void)
     std::vector<double> as({1.00000000e+00,   8.57530241e+00,   1.57767906e+02,
                             7.98628595e+02,   4.76375068e+03,   7.98628595e+03,
                             1.57767906e+04,   8.57530241e+03,   1.00000000e+04});
-    BA ba(bs, as);
+    RTSeis::BA ba(bs, as);
     std::vector<double> bz({0.056340000000000, -0.000935244000000,
                            -0.000935244000000,  0.056340000000000});
     std::vector<double> az({1.000000000000000, -2.129100000000000,
                             1.783386300000000, -0.543463100000000});
-    BA baz(bz, az);
+    RTSeis::BA baz(bz, az);
     // make solutions for freqs
     std::vector<std::complex<double>> href1; href1.resize(nw);
     href1[0] = std::complex<double> (+0.03488577413550,-0.02699025100928);
@@ -176,5 +178,59 @@ int rtseis_test_utils_design_freqs(void)
             return EXIT_FAILURE;
         }
     }
+    return EXIT_SUCCESS;
+}
+
+int rtseis_test_utils_design_groupDelay(void)
+{
+    const int nf = 20;
+    const std::vector<double> b({4.88711377891e-05, 0.000195484551156,
+                                 0.000293226826734, 0.000195484551156,
+                                 4.88711377891e-05});
+    const std::vector<double> a({1.0, -3.77274406567, 5.43219217707,
+                                 -3.53522638245, 0.877168775657});
+    const std::vector<double> gdR({5.85741709682, 5.86011546331, 5.86821742633,
+                                   5.88174360001, 5.90072841926, 5.92522025663,
+                                   5.95528158551, 5.99098918908, 6.03243441439,
+                                   6.07972347054, 6.13297776959, 6.19233430846,
+                                   6.25794608936, 6.32998257563, 6.40863017903,
+                                   6.49409277321, 6.58659222689, 6.68636894831,
+                                   6.79368243081, 6.90881178634});
+    BA ba(b, a);
+    std::vector<double> w(nf);
+    double di = ((2*M_PI)/180)/static_cast<double> (nf - 1);
+    for (int i=0; i<nf; i++)
+    {
+        w[i] =  0 + di*static_cast<double> (i);
+    }
+    std::vector<double> gd;
+    int ierr = Response::groupDelay(ba, w, gd);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute group delay");
+        return EXIT_FAILURE;
+    }
+    for (int i=0; i<nf; i++)
+    {
+        if (std::abs(gd[i] - gdR[i]) > 1.e-7)
+        {
+            RTSEIS_ERRMSG("Failed to compute gd %lf %lf", gd[i], gdR[i]);
+            return EXIT_FAILURE;
+        }
+    }
+/*
+    // group_delay((b, a), 20, whole=True)
+    ierr = Response::groupDelay(ba, gd, 20, true);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute group delay");
+        return EXIT_FAILURE;
+    }
+    for (int i=0; i<20; i++)
+    {
+        printf("%lf\n", gd[i]);
+    }
+getchar();
+*/
     return EXIT_SUCCESS;
 }

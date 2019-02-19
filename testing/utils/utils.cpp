@@ -78,10 +78,18 @@ int main()
     ierr = rtseis_test_utils_design_freqs();
     if (ierr != EXIT_SUCCESS)
     {
-         RTSEIS_ERRMSG("%s", "Failed freqs/freqz test");
-         return EXIT_FAILURE;
+        RTSEIS_ERRMSG("%s", "Failed freqs/freqz test");
+        return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed freqs/freqz test");
+
+    ierr = rtseis_test_utils_design_groupDelay();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed groupDelay test");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed groupDelay test"); 
 
     ierr = rtseis_test_utils_filters();
     if (ierr != EXIT_SUCCESS)

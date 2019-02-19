@@ -1,14 +1,17 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <float.h>
-#define RTSEIS_LOGGING 1
+#include <cstdio>
+#include <cstdlib>
+#include <cfloat>
 #include <vector>
 #include <algorithm>
 #include <numeric>
 #include <cmath>
-#include "rtseis/utilities/design.hpp"
+#define RTSEIS_LOGGING 1
+#include "rtseis/utilities/iir.hpp"
+#include "rtseis/utilities/sos.hpp"
+#include "rtseis/utilities/zpk.hpp"
+#include "rtseis/utilities/ba.hpp"
+#include "rtseis/utilities/analogPrototype.hpp"
 #include "rtseis/utilities/polynomial.hpp"
-#include "rtseis/utilities/ipps.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterDesign;
@@ -33,42 +36,7 @@ static int cmplxreal(const std::vector<std::complex<double>> z,
                      std::vector<std::complex<double>> &p,
                      std::vector<bool> &isreal,
                      const double *tolIn = nullptr);
-/*!
- * @defgroup rtseis_utils_design_iir IIR Design
- * @brief Utility functions for IIR filter design.  This code is originally
- *        from ISTI's ISCL and has been modified to conform with C++.
- *        Function names have also been changed to conform with rtseis's
- *        naming conventions.
- * @copyright ISTI distributed under the Apache 2 license.
- * @ingroup rtseis_utils_design
- */
 
-/*!
- * @param[in] Convenience function to design a digital or analog filter from
- *            an analog prototype.
- * @param[in] n        Order of filter to design.
- * @param[in] W        A scalar or length-2 array defining the critical
- *                     frequencies.  For digital filters, these are normalized
- *                     frequencies in the range [0,1] where 1 is the Nyquist
- *                     frequency in pi radians/sample (thereby making Wn
- *                     half-cycles per sample.)   For analog filters, Wn is the
- *                     angular frequency in rad/s.
- * @param[in] rp       For Chebyshev I filters this specifies the maximum ripple
- *                     in the passband in decibels.
- * @param[in] rs       For Chebyshev II filters this specifies the minimum
- *                     attenutation in the stop band in decibels.
- * @param[in] btype    The type of filter, e.g., lowpass, highpass, bandpass,
- *                     or bandstop.
- * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel, 
- *                     Chebyshev1, or Chebyshev2.
- * @param[out] sos     The corresponding IIR filter as a cascaded series of
- *                     second order sections.
- * @param[in] lanlaog  If true then this designs an analog filter.  The
- *                     default is a digital filter.
- * @param[in] pairing  Defines the pairing strategy.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
 int IIR::iirfilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,
@@ -94,31 +62,7 @@ int IIR::iirfilter(const int n, const double *W,
      }
      return 0;
 }
-/*!
- * @param[in] Convenience function to design a digital or analog filter from
- *            an analog prototype.
- * @param[in] n        Order of filter to design.
- * @param[in] W        A scalar or length-2 array defining the critical
- *                     frequencies.  For digital filters, these are normalized
- *                     frequencies in the range [0,1] where 1 is the Nyquist
- *                     frequency in pi radians/sample (thereby making Wn
- *                     half-cycles per sample.)   For analog filters, Wn is the
- *                     angular frequency in rad/s.
- * @param[in] rp       For Chebyshev I filters this specifies the maximum ripple
- *                     in the passband in decibels.
- * @param[in] rs       For Chebyshev II filters this specifies the minimum
- *                     attenutation in the stop band in decibels.
- * @param[in] btype    The type of filter, e.g., lowpass, highpass, bandpass,
- *                     or bandstop.
- * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel, 
- *                     Chebyshev1, or Chebyshev2.
- * @param[out] ba      The corresponding filter specified in terms of 
- *                     feedforward and feedback coefficients.
- * @param[in] lanlaog  If true then this designs an analog filter.  The
- *                     default is a digital filter.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
+
 int IIR::iirfilter(const int n, const double *W, 
                    const double rp, const double rs, 
                    const Bandtype btype,
@@ -143,31 +87,7 @@ int IIR::iirfilter(const int n, const double *W,
      }
      return 0;
 }
-/*!
- * @param[in] Convenience function to design a digital or analog filter from
- *            an analog prototype.
- * @param[in] n        Order of filter to design.
- * @param[in] W        A scalar or length-2 array defining the critical
- *                     frequencies.  For digital filters, these are normalized
- *                     frequencies in the range [0,1] where 1 is the Nyquist
- *                     frequency in pi radians/sample (thereby making Wn
- *                     half-cycles per sample.)   For analog filters, Wn is the
- *                     angular frequency in rad/s.
- * @param[in] rp       For Chebyshev I filters this specifies the maximum ripple
- *                     in the passband in decibels.
- * @param[in] rs       For Chebyshev II filters this specifies the minimum
- *                     attenutation in the stop band in decibels.
- * @param[in] btype    The type of filter, e.g., lowpass, highpass, bandpass,
- *                     or bandstop.
- * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel, 
- *                     Chebyshev1, or Chebyshev2.
- * @param[out] zpk     The corresonding filter stored in zero, pole, and gain
- *                     format.
- * @param[in] lanlaog  If true then this designs an analog filter.  The
- *                     default is a digital filter.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
+
 int IIR::iirfilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,
@@ -313,17 +233,8 @@ int IIR::iirfilter(const int n, const double *W,
     }
     return 0;
 }
-/*!
- * @brief Convert a filter specified as zeros, poles, and a gain to 
- *        a filter consisting of cascaded second order sections.
- * @param[in] zpk      ZPK filter to convert to second order sections.
- * @param[out] sos     The corresponding filter stored as cascaded
- *                     section order sections.
- * @param[in] pairint  The pairing strategy.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
-int IIR::zpk2sos(const ZPK zpk, SOS &sos, const Pairing pairing)
+
+int IIR::zpk2sos(const ZPK &zpk, SOS &sos, const Pairing pairing)
 {
     sos.clear();
     ZPK zpkWork = zpk;
@@ -335,7 +246,7 @@ int IIR::zpk2sos(const ZPK zpk, SOS &sos, const Pairing pairing)
         RTSEIS_WARNMSG("sos will simply scale data by %lf", k); 
         std::vector<double> bs({k, 0, 0});
         std::vector<double> as({1, 0, 0});
-        sos = SOS(1, bs, as);
+        sos = RTSeis::SOS(1, bs, as);
         return 0;
     }
     // Get sizes and handles to zeros and poles
@@ -625,17 +536,8 @@ int IIR::zpk2sos(const ZPK zpk, SOS &sos, const Pairing pairing)
     }
     return 0;
 }
-/*!
- * @brief Computes the polynomial transfer function from a pole-zero
- *        representation.
- * @param[in] zpk  Input transfer function specified in terms of zeros,
- *                 poles, and gain.
- * @param[out] ba  Corresponding transfer function specified in terms of
- *                 numerator and denominator coefficients.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
-int IIR::zpk2tf(const ZPK zpk, BA &ba)
+
+int IIR::zpk2tf(const ZPK &zpk, BA &ba)
 {
     ba.clear();
     double k = zpk.getGain();
@@ -682,21 +584,7 @@ int IIR::zpk2tf(const ZPK zpk, BA &ba)
     ba = BA(b, a);
     return 0;
 }
-/*!
- * @brief Converts an analog filter to a digital filter using hte bilinear
- *        transform.  This works by transforming a set of poles and zeros from
- *        the s-plane to the digital z-plane using Tustin's method, which
- *        substitutes \f$ s = \frac{z-1}{z+1} \f$ threby maintaining the
- *        the shape of the freuqency response.
- *
- * @param[in] zpk     The analog zeros, poles, and gain to transform to the
- *                    z-plane.
- * @param[in] fs      The sampling rate in Hz.  Note, that pre-warping is
- *                    performed in this function.
- * @param[out] zpkbl  The bilinear-transformed variant of zpk.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
+
 int IIR::zpkbilinear(const ZPK zpk, const double fs, ZPK &zpkbl)
 {
     zpkbl.clear();
@@ -751,17 +639,8 @@ int IIR::zpkbilinear(const ZPK zpk, const double fs, ZPK &zpkbl)
     zpkbl = ZPK(z_bl, p_bl, k_bl);
     return 0;
 }
-/*!
- * @brief Transforms a lowpass filter prototype to a bandpass filter.
- *        The passband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.
- * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency in rad/s.
- * @param[in] bw       The desired passband width in rad/s.
- * @param[out] zpkOut  The corresponding bandpass filter.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
-int IIR::zpklp2bp(const ZPK zpkIn, const double w0,
+
+int IIR::zpklp2bp(const ZPK &zpkIn, const double w0,
                   const double bw, ZPK &zpkOut)
 {
     zpkOut.clear();
@@ -820,17 +699,8 @@ int IIR::zpklp2bp(const ZPK zpkIn, const double w0,
     zpkOut = ZPK(z_bp, p_bp, k_bp);
     return 0;
 }
-/*!
- * @brief Transforms a lowpass filter prototype to a bandstop filter.
- *        The stopband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.
- * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency in rad/s.
- * @param[in] bw       The desired stopband width in rad/s.
- * @param[out] zpkOut  The corresponding stopband filter.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
-int IIR::zpklp2bs(const ZPK zpkIn, const double w0,
+
+int IIR::zpklp2bs(const ZPK &zpkIn, const double w0,
                   const double bw, ZPK &zpkOut)
 {
     zpkOut.clear();
@@ -904,15 +774,8 @@ int IIR::zpklp2bs(const ZPK zpkIn, const double w0,
     zpkOut = ZPK(z_bs, p_bs, k_bs);
     return 0;
 }
-/*!
- * @brief Converts a lowpass filter prototype to a different cutoff frequency.
- * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency (rad/s).
- * @param[out] zpkOut  The corresponding lowpass filter.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design
- */
-int IIR::zpklp2lp(const ZPK zpkIn, const double w0, ZPK &zpkOut)
+
+int IIR::zpklp2lp(const ZPK &zpkIn, const double w0, ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
@@ -948,15 +811,8 @@ int IIR::zpklp2lp(const ZPK zpkIn, const double w0, ZPK &zpkOut)
     zpkOut = ZPK(z_lp, p_lp, k_lp);
     return 0;
 }
-/*!
- * @brief Converts a lowpass filter prototype to a highpss filter.
- * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency (rad/s).
- * @param[out] zpkOut  The corresponding highpass filter.
- * @result 0 indicates success. 
- * @ingroup rtseis_utils_design
- */
-int IIR::zpklp2hp(const ZPK zpkIn, const double w0, ZPK &zpkOut)
+
+int IIR::zpklp2hp(const ZPK &zpkIn, const double w0, ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();

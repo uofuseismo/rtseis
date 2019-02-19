@@ -1,37 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
-#define RTSEIS_LOGGING 1
+#include <cstdio>
+#include <cstdlib>
 #include <vector>
 #include <cmath>
-#include "rtseis/utilities/design.hpp"
+#define RTSEIS_LOGGING 1
+#include "rtseis/utilities/fir.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
 using namespace RTSeis::Utilities::FilterDesign;
 
 static IppWinType classifyWindow(const FIR::Window window);
-/*!
- * @defgroup rtseis_utils_design_fir FIR Design
- * @brief Utility functions for FIR filter design.  This code is originally
- *        from ISTI's ISPL and has been modified to conform with C++.
- *        Function names have also been changed to conform with rtseis's
- *        naming conventions.
- * @copyright ISTI distributed under the Apache 2 license.
- * @ingroup rtseis_utils_design
- */
 
-
-/*!
- * @brief Designs an FIR lowpass filter using the window method.
- * @param[in] order   Order of filter.  The number of taps is order + 1.
- *                    This must be at least 4.
- * @param[in] r       The normalized cutoff frequency where 1 is the Nyquist.
- * @param[out] taps   The filter coefficients the FIR lowpass filter.
- *                    has dimension [order+1].
- * @param[in] window  FIR window design.  The default is a Hamming window.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design_fir
- */
 int FIR::FIR1Lowpass(const int order, const double r,
                      std::vector<double> &taps,
                      const Window window)
@@ -74,17 +53,7 @@ int FIR::FIR1Lowpass(const int order, const double r,
     ippsFree(pTaps);
     return 0;
 }
-/*!
- * @brief Designs an FIR highpass filter using the window method.
- * @param[in] order   Order of filter.  The number of taps is order + 1.
- *                    This must be at least 4.
- * @param[in] r       The normalized cutoff frequency where 1 is the Nyquist.
- * @param[out] taps   The filter coefficients the FIR highpass filter.
- *                    has dimension [order+1].
- * @param[in] window  FIR window design.  The default is a Hamming window.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design_fir
- */
+
 int FIR::FIR1Highpass(const int order, const double r,
                       std::vector<double> &taps,
                       const Window window)
@@ -127,19 +96,7 @@ int FIR::FIR1Highpass(const int order, const double r,
     ippsFree(pTaps);
     return 0;
 }
-/*!
- * @brief Designs an FIR bandpass filter using the window method.
- * @param[in] order   Order of filter.  The number of taps is order + 1.
- *                    This must be at least 4.
- * @param[in] r       Normalized low cutoff frequency and high cutoff
- *                    frequencies where 1 is the Nyquist.  This is an array
- *                    with dimension [2].
- * @param[out] taps   The filter coefficients the FIR bandpass filter.
- *                    This has dimension [order+1].
- * @param[in] window  FIR window design.  The default is a Hamming window.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design_fir
- */
+
 int FIR::FIR1Bandpass(const int order, const double r[2],
                       std::vector<double> &taps,
                       const Window window)
@@ -190,19 +147,7 @@ int FIR::FIR1Bandpass(const int order, const double r[2],
     ippsFree(pTaps);
     return 0;
 }
-/*!
- * @brief Designs an FIR bandstop (notch) filter using the window method.
- * @param[in] order   Order of filter.  The number of taps is order + 1.
- *                    This must be at least 4.
- * @param[in] r       Normalized low cutoff frequency and high cutoff
- *                    frequencies where 1 is the Nyquist.  This is an array
- *                    with dimension [2].
- * @param[out] taps   The filter coefficients the FIR bandpass filter.
- *                    has dimension [order+1].
- * @param[in] window  FIR window design.  The default is a Hamming window.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design_fir
- */
+
 int FIR::FIR1Bandstop(const int order, const double r[2],
                       std::vector<double> &taps,
                       const Window window)
@@ -253,6 +198,7 @@ int FIR::FIR1Bandstop(const int order, const double r[2],
     ippsFree(pTaps);
     return 0;
 }
+
 /*!
  * @brief Utility function to return the IPP window from the given
  *        design window.

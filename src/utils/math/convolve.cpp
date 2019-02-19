@@ -3,7 +3,6 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
 #include <vector>
-#include "rtseis/utilities/design.hpp"
 #include "rtseis/utilities/convolve.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>

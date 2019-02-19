@@ -1,37 +1,23 @@
-#include <stdio.h>
-#include <stdlib.h>
-#define RTSEIS_LOGGING 1
+#include <cstdio>
+#include <cstdlib>
 #include <vector>
 #include <cmath>
-#include "rtseis/utilities/design.hpp"
+#include <cfloat>
+#include <algorithm>
+#define RTSEIS_LOGGING 1
+#include "rtseis/utilities/response.hpp"
+#include "rtseis/utilities/vectorMath.hpp"
+#include "rtseis/utilities/ba.hpp"
 #include "rtseis/utilities/polynomial.hpp"
-#include "rtseis/utilities/ipps.hpp"
+#include "rtseis/utilities/convolve.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
+using namespace RTSeis::Utilities;
+using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterDesign;
 
-/*!
- * @defgroup rtseis_utils_design_response Response
- * @brief Utility functions for looking at the response of a filter.
- *        This code is originally from ISTI's ISCL and has been modified
- *        to conform with C++.  Function names have also been changed to
- *        conform with rtseis's naming conventions.
- * @copyright ISTI distributed under the Apache 2 license.
- * @ingroup rtseis_utils_design
- */
-
-/*!
- * @brief Tabulates the frequency response of an analog filter.
- * @param[in] ba     The transfer function defining the analog filter.
- * @param[in] w      The angular frequencies (rad/s) at which to tabulate the
- *                   response.
- * @param[out] h     The frequency repsonse, \f$ H(i \omega) \f$, tabulated at
- *                   the angular frequencies.  This has dimension [w.size()].
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design_response
- */
-int Response::freqs(const BA ba, const std::vector<double> w,
+int Response::freqs(const BA &ba, const std::vector<double> &w,
                     std::vector<std::complex<double>> &h)
 {
     size_t nw = w.size();
@@ -89,7 +75,7 @@ int Response::freqs(const BA ba, const std::vector<double> w,
         return -1;
     }
     // Compute the transfer function
-    ierr = IPPS::Div(hsDen, hsNum, h);
+    ierr = RTSeis::Utilities::Math::Vector::divide(hsDen, hsNum, h);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Division failed");
@@ -97,31 +83,8 @@ int Response::freqs(const BA ba, const std::vector<double> w,
     }
     return 0;
 }
-/*!
- * @brief Computes the complex frequency response H(z) of a digital filter
- *
- *        \f[
- *           H(z)
- *         = \frac{B(z)}{A(z)}
- *         = \frac{b[0] + b[1]z^{-1} + b[2]z^{-2} + ... + b[nb-1]z^{-nb}}
- *                {a[0] + a[1]z^{-1} + a[2]z^{-2} + ... + a[na-1]z^{-na}}
- *        \f]
- * 
- *        given the numerator and denominator coefficients at normalized
- *        angular frequencies, w.
- *
- * @param[in] ba   The transfer function defining the digital filter.
- * @param[in] w    The normalized angular frequencies at which to evaluate
- *                 the transfer function.  Values should be in the range
- *                 \f$ \omega \in [0, \pi] \f$ where \f$ 0 \f$ is the zero
- *                 frequency and \f$ \pi \f$ is the Nyquist frequency.
- * @param[out] h   The frequency repsonse, \f$ H(z) \f$, tabulated at the
- *                 normalized angular frequencies.  This has dimension
- *                 [w.size()].
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design_response
- */
-int Response::freqz(const BA ba, const std::vector<double> w,
+
+int Response::freqz(const BA &ba, const std::vector<double> &w,
                     std::vector<std::complex<double>> &h) 
 {
     size_t nw = w.size();
@@ -193,11 +156,140 @@ int Response::freqz(const BA ba, const std::vector<double> w,
         return -1;
     }
     // Compute the transfer function: H = Num/Den
-    ierr = IPPS::Div(hzDen, hzNum, h); 
+    ierr = RTSeis::Utilities::Math::Vector::divide(hzDen, hzNum, h); 
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Division failed");
         return -1;
+    }
+    return 0;
+}
+
+/*
+int Response::groupDelay(const BA &ba,
+                         std::vector<double> &gd,
+                         const int n,
+                         const bool lwhole)
+{
+    gd.resize(0);
+    if (n < 0)
+    {
+        RTSEIS_ERRMSG("%s", "n must be positive");
+        return -1;
+    }
+    if (n == 0){return 0;}
+    if (fs <= 0)
+    {
+        RTSEIS_ERRMSG("fs = %lf must be postiive", fs);
+        return -1;
+    }
+    // Discretize
+    std::vector<double> w(n);
+    double di = M_PI/static_cast<double> (n);
+    if (lwhole){di = (2*M_PI)/static_cast<double> (n);}
+    if (n == 1)
+    {
+        w[0] = di;
+    }
+    else
+    {
+        #pragma omp simd
+        for (int i=0; i<n; i++)
+        {
+            w[i] = di*static_cast<double> (i);
+        }
+    }
+    int ierr = groupDelay(ba, w, gd);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute group delay");
+        return -1;
+    }
+    return 0;
+}
+*/
+
+int Response::groupDelay(const BA &ba,
+                         const std::vector<double> &w,
+                         std::vector<double> &gd)
+{
+    gd.resize(0);
+    // Nothing to do
+    if (w.size() == 0){return 0;}
+    // Get handles on data
+    std::vector<double> b = ba.getNumeratorCoefficients();
+    std::vector<double> a = ba.getDenominatorCoefficients();
+    if (b.size() < 1 || a.size() < 1)
+    {
+        if (b.size() < 1){RTSEIS_ERRMSG("%s", "No elements in b");}
+        if (a.size() < 1){RTSEIS_ERRMSG("%s", "No elements in a");}
+        return -1;
+    }
+    // B/A = b[0]/A + b[1]/A + ... = b[0]*conj(A) + ... = b*conj(a)
+    int ierr;
+    std::vector<double> c;
+    // Correlation is convolution, however, a is reversed.
+    ierr = Math::Convolve::correlate(b, a, c,
+                                     Math::Convolve::Mode::FULL,
+                                     Math::Convolve::Implementation::DIRECT);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute convolution");
+        return -1;
+    }
+    // Differentiate b*conj(a).  Note, that the order is reversed to conform
+    // to polyval.
+    int nc = static_cast<int> (c.size());
+    std::vector<std::complex<double>> zc(nc);
+    std::vector<std::complex<double>> zcr(nc);
+    for (int i=0; i<c.size(); i++)
+    {
+        zc[ nc-1-i] = std::complex<double> (c[i], 0);
+        // Differentiate with power rule
+        zcr[nc-1-i] = std::complex<double> (c[i]*static_cast<double> (i), 0);
+    }
+    std::vector<std::complex<double>> z(w.size());
+    #pragma omp simd
+    for (size_t i=0; i<w.size(); i++)
+    {
+        std::complex<double> arg(0,-w[i]);
+        z[i] = std::exp(arg);
+    }
+    // Evaluate the numerator and denominator polynomials at angular frequencies
+    std::vector<std::complex<double>> num;
+    ierr = Math::Polynomial::polyval(zcr, z, num);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute numerator");
+        return -1;
+    }
+    std::vector<std::complex<double>> den;
+    ierr = Math::Polynomial::polyval(zc, z, den);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute numerator");
+        return -1; 
+    }
+    // Check for singular elements
+    for (size_t i=0; i<w.size(); i++)
+    {
+        if (std::abs(den[i]) < 10*DBL_EPSILON)
+        {
+            RTSEIS_WARNMSG("Group delay is singular at %lf", w[i]);
+            num[i] = std::complex<double> (0, 0);
+            den[i] = std::complex<double> (1, 0);
+        }
+    }
+    // Divide gd = num/den
+    std::vector<std::complex<double>> zgd;
+    Math::Vector::divide(den, num, zgd);
+    // Take real part and shift
+    gd.resize(zgd.size());
+    double shift = static_cast<double> (a.size() - 1);
+    #pragma omp simd
+    for (int i=0; i<static_cast<int> (gd.size()); i++)
+    {
+        gd[i] = std::real(zgd[i]) - shift;
     }
     return 0;
 }

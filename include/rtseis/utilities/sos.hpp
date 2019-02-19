@@ -1,8 +1,11 @@
 #ifndef RTSEIS_UTILS_SOS_HPP
 #define RTSEIS_UTILS_SOS_HPP 1
-#include "rtseis/config.h"
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
+#include "rtseis/config.h"
+
+namespace RTSeis
+{
 
 class SOS
 {
@@ -10,8 +13,8 @@ class SOS
         SOS(void);
         SOS(const SOS &sos);
         SOS(const int ns,
-            const std::vector<double> bs,
-            const std::vector<double> as);
+            const std::vector<double> &bs,
+            const std::vector<double> &as);
         SOS &operator=(const SOS &sos);
         bool operator==(const SOS &sos) const;
         bool operator!=(const SOS &sos) const;
@@ -19,8 +22,8 @@ class SOS
         void print(FILE *fout = stdout);
         void clear(void);
         int setSecondOrderSections(const int ns,
-                                   const std::vector<double> bs,
-                                   const std::vector<double> as);
+                                   const std::vector<double> &bs,
+                                   const std::vector<double> &as);
         std::vector<double> getNumeratorCoefficients(void) const;
         std::vector<double> getDenominatorCoefficients(void) const;
         int getNumberOfSections(void) const;
@@ -36,6 +39,8 @@ class SOS
         const double defaultTol_ = 1.e-12;
         /*!< Tolerance in checking equality. */
         double tol_ = defaultTol_;
+};
+
 };
 
 #endif

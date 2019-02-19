@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_POLYNOMIAL_HPP
-#define RTSEIS_UTILS_POLYNOMIAL_HPP 1
+#ifndef RTSEIS_UTILS_CONVOLVE_HPP
+#define RTSEIS_UTILS_CONVOLVE_HPP 1
 #include "rtseis/config.h"
 #include <complex>
 #include <vector>

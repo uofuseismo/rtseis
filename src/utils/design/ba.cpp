@@ -3,6 +3,8 @@
 #include "rtseis/utilities/ba.hpp"
 #include "rtseis/log.h"
 
+using namespace RTSeis;
+
 /*!
  * @defgroup rtseis_utils_design_iir_ba BA
  * @brief Utility functions for holding a transfer function in 
@@ -27,7 +29,7 @@ BA::BA(void)
  * @param[in] a     The denomiantor coefficients.
  * @ingroup rtseis_utils_design_iir_ba
  */
-BA::BA(const std::vector<double> b, const std::vector<double> a)
+BA::BA(const std::vector<double> &b, const std::vector<double> &a)
 {
     clear();
     setNumeratorCoefficients(b);
@@ -40,7 +42,7 @@ BA::BA(const std::vector<double> b, const std::vector<double> a)
  * @param[in] firTaps   The FIR coefficients.
  * @ingroup rtseis_utils_design_iir_ba
  */
-BA::BA(const std::vector<double> firTaps)
+BA::BA(const std::vector<double> &firTaps)
 {
     clear();
     setNumeratorCoefficients(firTaps);
@@ -204,7 +206,7 @@ void BA::setNumeratorCoefficients(const size_t n, double b[])
  * @param[in] b   Numerator coefficients to set on the transfer function.
  * @ingroup rtseis_utils_design_iir_ba
  */
-void BA::setNumeratorCoefficients(const std::vector<double> b)
+void BA::setNumeratorCoefficients(const std::vector<double> &b)
 {
     b_ = b;
     return;
@@ -242,7 +244,7 @@ void BA::setDenominatorCoefficients(const size_t n, double a[])
  * @param[in] b   Numerator coefficients to set on the transfer function.
  * @ingroup rtseis_utils_design_iir_ba
  */
-void BA::setDenominatorCoefficients(const std::vector<double> a)
+void BA::setDenominatorCoefficients(const std::vector<double> &a)
 {
     isFIR_ = false;
     if (a.size() > 0)

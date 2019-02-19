@@ -62,7 +62,7 @@ INCLUDE_DIRECTORIES(
    ${CMAKE_CURRENT_SOURCE_DIR}/include
    ${IPP_INCLUDE_DIR}
    ${MKL_INCLUDE_DIR}
-   ${PYTHON_INCLUDE_DIRS}
+   #${PYTHON_INCLUDE_DIRS}
    #${Boost_INCLUDE_DIRS} 
    #${CJSON_INCLUDE_DIR}
    )
@@ -75,7 +75,6 @@ SET(LIBALL_PYTHON rtseis_shared ${LIBALL} ${PYTHON_LIBRARIES}) #${Boost_LIBRARIE
 SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
     src/utils/verbosity.c
-    src/utils/ipps.cpp
     src/utils/design/response.cpp
     src/utils/design/iir.cpp
     src/utils/design/fir.cpp
@@ -93,6 +92,7 @@ SET(UTILS_SRCS
     src/utils/filters/sos.cpp
     src/utils/math/convolve.cpp
     src/utils/math/polynomial.cpp
+    src/utils/math/vectorMath.cpp
     src/utils/transforms/dft.cpp
     src/utils/transforms/dftUtils.cpp)
 SET(IPPS_SRCS

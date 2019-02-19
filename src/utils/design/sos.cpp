@@ -4,6 +4,8 @@
 #include "rtseis/utilities/sos.hpp"
 #include "rtseis/log.h"
 
+using namespace RTSeis;
+
 /*!
  * @defgroup rtseis_utils_design_iir_sos SOS
  * @brief Utility functions for holding a transfer function as 
@@ -30,8 +32,8 @@ SOS::SOS(void)
  * @ingroup rtseis_utils_design_iir_sos
  */
 SOS::SOS(const int ns,
-         const std::vector<double> bs,
-         const std::vector<double> as)
+         const std::vector<double> &bs,
+         const std::vector<double> &as)
 {
     clear();
     setSecondOrderSections(ns, bs, as);
@@ -153,8 +155,8 @@ void SOS::print(FILE *fout)
  * @ingroup rtseis_utils_design_iir_sos
  */
 int SOS::setSecondOrderSections(const int ns,
-                                const std::vector<double> bs,
-                                const std::vector<double> as)
+                                const std::vector<double> &bs,
+                                const std::vector<double> &as)
 {
     clear();
     if (ns < 1)

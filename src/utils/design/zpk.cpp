@@ -4,6 +4,8 @@
 #include "rtseis/utilities/zpk.hpp"
 #include "rtseis/log.h"
 
+using namespace RTSeis;
+
 /*!
  * @defgroup rtseis_utils_design_iir_zpk ZPK
  * @brief Utility functions for holding a transfer function in 
@@ -28,8 +30,8 @@ ZPK::ZPK(void)
  * @param[in] k       Gain to set.
  * @ingroup rtseis_utils_design_iir_zpk 
  */
-ZPK::ZPK(const std::vector<std::complex<double>> zeros,
-         const std::vector<std::complex<double>> poles,
+ZPK::ZPK(const std::vector<std::complex<double>> &zeros,
+         const std::vector<std::complex<double>> &poles,
          const double k)
 {
     clear();
@@ -256,7 +258,7 @@ void ZPK::setPoles(const size_t n, std::complex<double> poles[])
  * @param[in] poles  The poles to set on the transfer function.
  * @ingroup rtseis_utils_design_iir_zpk
  */
-void ZPK::setPoles(const std::vector<std::complex<double>> poles)
+void ZPK::setPoles(const std::vector<std::complex<double>> &poles)
 {
     p_ = poles;
     return;
@@ -287,7 +289,7 @@ void ZPK::setZeros(const size_t n, std::complex<double> zeros[])
  * @param[in] zeros  The zeros to set on the transfer function.
  * @ingroup rtseis_utils_design_iir_zpk
  */
-void ZPK::setZeros(const std::vector<std::complex<double>> zeros)
+void ZPK::setZeros(const std::vector<std::complex<double>> &zeros)
 {
     z_ = zeros;
     return;
