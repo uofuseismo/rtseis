@@ -1,41 +1,20 @@
-#include <stdio.h>
-#include <stdlib.h>
-#define RTSEIS_LOGGING 1
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <vector>
-#include "rtseis/utilities/convolve.hpp"
+#define RTSEIS_LOGGING 1
+#include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
 using namespace::RTSeis::Utilities::Math;
 
-/*!
- * @defgroup rtseis_utils_convolve Convolution and Correlation
- * @brief Utility functions for convolution and correlation.
- *        This code is originally from ISTI's ISCL and has been
- *        modified to conform with C++.  Function names have also been
- *        changed to conform with rtseis's naming convention.
- * @copyright ISTI distributed under the Apache 2 license.
- * @ingroup rtseis_utils
- */
 
 static IppEnum getImplementation(const Convolve::Implementation implementation);
 static std::pair<int,int> computeTrimIndices(
     const Convolve::Mode mode,
     const int n1, const int n2);
 
-/*!
- * @brief Computes the convolution \f$ c[k] = \sum_n a[n] b[n-k] \f$.
- * @param[in] a               First array in convolution.  This has length [m].
- * @param[in] b               Second array in convolution.  This has length [n].
- * @param[out] c              The resulting convolution.
- * @param[in] mode            Defines the convolution mode which can be
- *                            FULL, VALID, or SAME.  The default is FULL.
- * @param[in] implementation  Defines the implementation type.  This can
- *                            be AUTO, DIRECT, or FFT.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_convolve
- */
 int Convolve::convolve(const std::vector<double> a,
                        const std::vector<double> b,
                        std::vector<double> &c,
@@ -100,18 +79,7 @@ int Convolve::convolve(const std::vector<double> a,
     ippsFree(pDst);
     return 0;
 }
-/*!
- * @brief Computes the correlation \f$ c[k] = \sum_n a[n] b[n+k] \f$.
- * @param[in] a               First array in correlation.  This has length [m].
- * @param[in] b               Second array in correlation.  This has length [n].
- * @param[out] c              The resulting correlation.
- * @param[in] mode            Defines the correlation mode which can be
- *                            FULL, VALID, or SAME.  The default is FULL.
- * @param[in] implementation  Defines the implementation type.  This can
- *                            be AUTO, DIRECT, or FFT.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_convolve
- */
+
 int Convolve::correlate(const std::vector<double> a,
                         const std::vector<double> b,
                         std::vector<double> &c, 
@@ -181,18 +149,7 @@ int Convolve::correlate(const std::vector<double> a,
     ippsFree(pDst);
     return 0;
 }
-/*!
- * @brief Computes the autocorrelation \f$ c[k] = \sum_n a[n] a[n+k] \f$.
- * @ingroup rtseis_utils_convolve
- * @param[in] a               Array to autocorrelation.  This has length [m].
- * @param[out] c              The resulting autocorrelation.
- * @param[in] mode            Defines the correlation mode which can be
- *                            FULL, VALID, or SAME.  The default is FULL.
- * @param[in] implementation  Defines the implementation type.  This can
- *                            be AUTO, DIRECT, or FFT.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_convolve
- */
+
 int Convolve::autocorrelate(const std::vector<double> a,
                             std::vector<double> &c, 
                             const Convolve::Mode mode,

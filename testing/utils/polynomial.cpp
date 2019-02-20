@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <string>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/polynomial.hpp"
+#include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 

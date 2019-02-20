@@ -10,7 +10,7 @@
 #endif
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/utilities/vectorMath.hpp"
+#include "rtseis/utilities/math/vectorMath.hpp"
 #include <ipps.h>
 
 using namespace RTSeis::Utilities::Math::Vector;

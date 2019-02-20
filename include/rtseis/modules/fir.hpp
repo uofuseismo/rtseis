@@ -3,15 +3,24 @@
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
 #include "rtseis/ippsHelper.h"
-#include "rtseis/utilities/ba.hpp"
-#include "rtseis/utilities/fir.hpp"
-#include "rtseis/utilities/filters.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/filterImplementations/filters.hpp"
 #include <memory>
 
 class IPPSFIRFilter;
 
+
 namespace RTSeis
 {
+
+namespace Utilities
+{
+namespace FilterRepresentations
+{
+class BA;
+};
+};
 
 namespace Modules
 {
@@ -68,7 +77,7 @@ class FIRParameters
                              const double f0, const double f1,
                              const Bandtype btype,
                              const Window window = Window::HAMMING);
-        BA getFilter(void) const{return ba_;}
+        //BA getFilter(void) const{return ba_;}
         FIRParameters(const FIRParameters &parameters);
         ~FIRParameters(void);
         void clear(void);
@@ -87,7 +96,7 @@ class FIRParameters
         /*!< By default this is for post-processing. */
         const bool lrtDefault_ = false;
         /*!< The filter taps (coefficients) defining the FIR filter. */
-        BA ba_;
+        Utilities::FilterRepresentations::BA ba_;
         /*!< The filter prototype. */
         Window window_ = defaultWindow_;
         /*!< The filter bandtype. */

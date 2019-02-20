@@ -8,7 +8,7 @@
 #include <complex>
 #include <vector>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/filters.hpp"
+#include "rtseis/utilities/filterImplementations/filters.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 #include <ipps.h>

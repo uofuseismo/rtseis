@@ -2,7 +2,7 @@
 #include <cstdlib>
 #define RTSEIS_LOGGING 1
 #include <cmath>
-#include "rtseis/utilities/fir.hpp"
+#include "rtseis/utilities/design/fir.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 

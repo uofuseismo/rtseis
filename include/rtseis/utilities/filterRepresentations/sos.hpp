@@ -6,7 +6,10 @@
 
 namespace RTSeis
 {
-
+namespace Utilities
+{
+namespace FilterRepresentations
+{
 class SOS
 {
     public:
@@ -39,8 +42,9 @@ class SOS
         const double defaultTol_ = 1.e-12;
         /*!< Tolerance in checking equality. */
         double tol_ = defaultTol_;
-};
-
-};
+}; // End SOS
+}; // End FilterRepresentations
+}; // End Utilities
+}; // End RTSeis
 
 #endif

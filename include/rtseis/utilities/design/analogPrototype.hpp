@@ -6,9 +6,12 @@
 
 namespace RTSeis
 {
-class ZPK;
 namespace Utilities
 {
+namespace FilterRepresentations
+{
+class ZPK;
+};
 namespace FilterDesign
 {
 namespace IIR
@@ -16,10 +19,7 @@ namespace IIR
 /*!
  * @defgroup rtseis_utils_design_iir_ap Analog Prototype
  * @brief Utility functions for analog prototype IIR filter design.
- *        This code is originally from ISTI's ISCL and has been
- *        modified to conform with C++.  Function names have also been
- *        changed to conform with rtseis's naming convention.
- * @copyright ISTI distributed under the Apache 2 license.
+ * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_design_iir
  */
 namespace AnalogPrototype
@@ -32,7 +32,7 @@ namespace AnalogPrototype
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir_ap
      */
-    int bessel(const int n, ZPK &zpk);
+    int bessel(const int n, FilterRepresentations::ZPK &zpk);
     /*!
      * @brief Computes an n'th order analog prototype Butterworth filter design.
      * @param[in] n      Order.  This must be positive.
@@ -41,7 +41,7 @@ namespace AnalogPrototype
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir_ap
      */
-    int butter(const int n, ZPK &zpk);
+    int butter(const int n, FilterRepresentations::ZPK &zpk);
     /*!
      * @brief Computes an n'th order Chebyshev I filter with \f$ r_p \f$
      *        decibels of ripple in the passband.  This is based on the
@@ -54,7 +54,7 @@ namespace AnalogPrototype
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir_ap
      */
-    int cheb1ap(const int n, const double rp, ZPK &zpk);
+    int cheb1ap(const int n, const double rp, FilterRepresentations::ZPK &zpk);
     /*!
      * @brief Computes an n'th order Chebyshev II filter with \f$ r_s \f$
      *        decibels of ripple in the stopband.  This is based on the
@@ -67,7 +67,7 @@ namespace AnalogPrototype
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir_ap
      */
-    int cheb2ap(const int n, const double rs, ZPK &zpk);
+    int cheb2ap(const int n, const double rs, FilterRepresentations::ZPK &zpk);
 }; // End analog prototype
 }; // End IIR
 }; // End FilterDesign

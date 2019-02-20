@@ -1,13 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cfloat>
 #include <vector>
 #include <cmath>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/modules/classicSTALTA.hpp"
-#include "rtseis/utilities/filters.hpp"
+#include "rtseis/utilities/filterImplementations/filters.hpp"
 #include <ipps.h>
 
 using namespace RTSeis::Modules;

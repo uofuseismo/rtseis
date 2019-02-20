@@ -6,7 +6,10 @@
 
 namespace RTSeis
 {
-
+namespace Utilities
+{
+namespace FilterRepresentations
+{
 class ZPK
 {
     public:
@@ -44,8 +47,9 @@ class ZPK
         const double defaultTol_ = 1.e-12;
         /*!< Tolerance in checking equality. */
         double tol_ = defaultTol_;
-};
-
-};
+}; // End ZPK
+}; // End Representations
+}; // End Utilities
+}; // End RTSeis
 
 #endif

@@ -5,7 +5,7 @@
 #include <ippversion.h>
 #include <ippcore.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/filters.hpp"
+#include "rtseis/utilities/filterImplementations/filters.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::Filters;

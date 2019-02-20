@@ -6,14 +6,20 @@
 #include <numeric>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/iir.hpp"
-#include "rtseis/utilities/sos.hpp"
-#include "rtseis/utilities/zpk.hpp"
-#include "rtseis/utilities/ba.hpp"
-#include "rtseis/utilities/analogPrototype.hpp"
-#include "rtseis/utilities/polynomial.hpp"
+#include "rtseis/utilities/design/iir.hpp"
+#include "rtseis/utilities/design/analogPrototype.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/utilities/filterRepresentations/zpk.hpp"
+#include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/log.h"
 
+/*
+ This source code is originally from ISTI's ISCL and is distrubted under the
+ Apache 2 license.  It has been heavily modified to conform to C++.
+*/
+
+using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 using namespace RTSeis::Utilities::Math;
 
@@ -46,7 +52,7 @@ int IIR::iirfilter(const int n, const double *W,
                    const Pairing pairing)
 {
      sos.clear();
-     ZPK zpk;
+     FilterRepresentations::ZPK zpk;
      int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, lanalog);
      if (ierr != 0)
      {
@@ -67,11 +73,11 @@ int IIR::iirfilter(const int n, const double *W,
                    const double rp, const double rs, 
                    const Bandtype btype,
                    const Prototype ftype,
-                   BA &ba,
+                   FilterRepresentations::BA &ba,
                    const bool lanalog)
 {
      ba.clear();
-     ZPK zpk;
+     FilterRepresentations::ZPK zpk;
      int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, lanalog);
      if (ierr != 0)
      {
@@ -92,7 +98,7 @@ int IIR::iirfilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,
                    const Prototype ftype,
-                   ZPK &zpk,
+                   FilterRepresentations::ZPK &zpk,
                    const bool lanalog)
 {
     zpk.clear();
@@ -149,7 +155,7 @@ int IIR::iirfilter(const int n, const double *W,
     }
     // Create the analog prototype
     int ierr;
-    ZPK zpkAp;
+    FilterRepresentations::ZPK zpkAp;
     if (ftype == Prototype::BUTTERWORTH)
     {
         ierr = AnalogPrototype::butter(n, zpkAp);
@@ -191,7 +197,7 @@ int IIR::iirfilter(const int n, const double *W,
         }
     }
     // Transform to lowpass, bandpass, highpass, or bandstop 
-    ZPK zpktf;
+    FilterRepresentations::ZPK zpktf;
     if (btype == Bandtype::LOWPASS)
     {
         ierr = IIR::zpklp2lp(zpkAp, warped[0], zpktf);
@@ -234,7 +240,8 @@ int IIR::iirfilter(const int n, const double *W,
     return 0;
 }
 
-int IIR::zpk2sos(const ZPK &zpk, SOS &sos, const Pairing pairing)
+int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
+                 FilterRepresentations::SOS &sos, const Pairing pairing)
 {
     sos.clear();
     ZPK zpkWork = zpk;
@@ -246,7 +253,7 @@ int IIR::zpk2sos(const ZPK &zpk, SOS &sos, const Pairing pairing)
         RTSEIS_WARNMSG("sos will simply scale data by %lf", k); 
         std::vector<double> bs({k, 0, 0});
         std::vector<double> as({1, 0, 0});
-        sos = RTSeis::SOS(1, bs, as);
+        sos = FilterRepresentations::SOS(1, bs, as);
         return 0;
     }
     // Get sizes and handles to zeros and poles
@@ -483,7 +490,8 @@ int IIR::zpk2sos(const ZPK &zpk, SOS &sos, const Pairing pairing)
         std::vector<std::complex<double>> ztemp({z1, z2});
         double ktemp = 1;
         if (is == nSections - 1){ktemp = k;}
-        ZPK zpkTemp = ZPK(ztemp, ptemp, ktemp);
+        FilterRepresentations::ZPK zpkTemp
+             = FilterRepresentations::ZPK(ztemp, ptemp, ktemp);
         BA baTemp;
         int ierr = zpk2tf(zpkTemp, baTemp);  
         if (ierr != 0)
@@ -528,7 +536,7 @@ int IIR::zpk2sos(const ZPK &zpk, SOS &sos, const Pairing pairing)
         }
     }
     // Finally pack the second order sections
-    sos = SOS(nSections, bs, as);
+    sos = FilterRepresentations::SOS(nSections, bs, as);
     if (sos.getNumberOfSections() == 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to pack sos");
@@ -537,7 +545,8 @@ int IIR::zpk2sos(const ZPK &zpk, SOS &sos, const Pairing pairing)
     return 0;
 }
 
-int IIR::zpk2tf(const ZPK &zpk, BA &ba)
+int IIR::zpk2tf(const FilterRepresentations::ZPK &zpk,
+                FilterRepresentations::BA &ba)
 {
     ba.clear();
     double k = zpk.getGain();
@@ -581,11 +590,12 @@ int IIR::zpk2tf(const ZPK &zpk, BA &ba)
 #endif
     for (size_t i=0; i<az.size(); i++){a[i] = std::real(az[i]);}
     // Pack into a transfer function struct
-    ba = BA(b, a);
+    ba = FilterRepresentations::BA(b, a);
     return 0;
 }
 
-int IIR::zpkbilinear(const ZPK zpk, const double fs, ZPK &zpkbl)
+int IIR::zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,
+                     FilterRepresentations::ZPK &zpkbl)
 {
     zpkbl.clear();
     size_t nzeros = zpk.getNumberOfZeros();
@@ -636,12 +646,12 @@ int IIR::zpkbilinear(const ZPK zpk, const double fs, ZPK &zpkbl)
     std::complex<double> zk = znum/zden;
     double k = zpk.getGain();
     double k_bl = k*std::real(zk);
-    zpkbl = ZPK(z_bl, p_bl, k_bl);
+    zpkbl = FilterRepresentations::ZPK(z_bl, p_bl, k_bl);
     return 0;
 }
 
-int IIR::zpklp2bp(const ZPK &zpkIn, const double w0,
-                  const double bw, ZPK &zpkOut)
+int IIR::zpklp2bp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                  const double bw, FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
@@ -696,12 +706,12 @@ int IIR::zpklp2bp(const ZPK &zpkIn, const double w0,
     // Cancel out gain change from frequency scaling
     double k = zpkIn.getGain();
     double k_bp = k*std::pow(bw,npoles-nzeros); //k*bw*bw^degree
-    zpkOut = ZPK(z_bp, p_bp, k_bp);
+    zpkOut = FilterRepresentations::ZPK(z_bp, p_bp, k_bp);
     return 0;
 }
 
-int IIR::zpklp2bs(const ZPK &zpkIn, const double w0,
-                  const double bw, ZPK &zpkOut)
+int IIR::zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                  const double bw, FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
@@ -771,11 +781,12 @@ int IIR::zpklp2bs(const ZPK &zpkIn, const double w0,
     double k = zpkIn.getGain();
     std::complex<double> zdiv =  zprod/pprod;
     double k_bs = k*std::real(zdiv);
-    zpkOut = ZPK(z_bs, p_bs, k_bs);
+    zpkOut = FilterRepresentations::ZPK(z_bs, p_bs, k_bs);
     return 0;
 }
 
-int IIR::zpklp2lp(const ZPK &zpkIn, const double w0, ZPK &zpkOut)
+int IIR::zpklp2lp(const FilterRepresentations::ZPK &zpkIn,
+                  const double w0, FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
@@ -808,11 +819,12 @@ int IIR::zpklp2lp(const ZPK &zpkIn, const double w0, ZPK &zpkOut)
     double k = zpkIn.getGain(); 
     int ndeg = npoles - nzeros;
     double k_lp = k*std::pow(w0, ndeg);
-    zpkOut = ZPK(z_lp, p_lp, k_lp);
+    zpkOut = FilterRepresentations::ZPK(z_lp, p_lp, k_lp);
     return 0;
 }
 
-int IIR::zpklp2hp(const ZPK &zpkIn, const double w0, ZPK &zpkOut)
+int IIR::zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                  FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
@@ -856,7 +868,7 @@ int IIR::zpklp2hp(const ZPK &zpkIn, const double w0, ZPK &zpkOut)
     double k = zpkIn.getGain();
     std::complex<double> zt = zprod/pprod;
     double k_hp = k*std::real(zt);
-    zpkOut = ZPK(z_hp, p_hp, k_hp);
+    zpkOut = FilterRepresentations::ZPK(z_hp, p_hp, k_hp);
     return 0;
 }
 //============================================================================//

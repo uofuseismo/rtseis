@@ -3,7 +3,7 @@
 #include <string>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
-#include "rtseis/utilities/convolve.hpp"
+#include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::Math;

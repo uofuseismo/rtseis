@@ -3,13 +3,14 @@
 #include <vector>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/zpk.hpp"
-#include "rtseis/utilities/analogPrototype.hpp"
+#include "rtseis/utilities/filterRepresentations/zpk.hpp"
+#include "rtseis/utilities/design/analogPrototype.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterDesign::IIR;
+using namespace RTSeis::Utilities::FilterRepresentations;
 
-int AnalogPrototype::butter(const int n, ZPK &zpk)
+int AnalogPrototype::butter(const int n, FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
     if (n < 1 || n > 25)
@@ -34,7 +35,8 @@ int AnalogPrototype::butter(const int n, ZPK &zpk)
     return 0;
 }
 
-int AnalogPrototype::cheb1ap(const int n, const double rp, ZPK &zpk)
+int AnalogPrototype::cheb1ap(const int n, const double rp,
+                             FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
     if (n < 1)
@@ -79,7 +81,8 @@ int AnalogPrototype::cheb1ap(const int n, const double rp, ZPK &zpk)
     return 0;
 }
 
-int AnalogPrototype::cheb2ap(const int n, const double rs, ZPK &zpk)
+int AnalogPrototype::cheb2ap(const int n, const double rs,
+                             FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
     if (n < 1)
@@ -165,7 +168,7 @@ int AnalogPrototype::cheb2ap(const int n, const double rs, ZPK &zpk)
     return 0;
 }
 
-int AnalogPrototype::bessel(const int n, ZPK &zpk)
+int AnalogPrototype::bessel(const int n, FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
     if (n < 1)

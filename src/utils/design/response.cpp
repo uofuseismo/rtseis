@@ -5,17 +5,21 @@
 #include <cfloat>
 #include <algorithm>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/response.hpp"
-#include "rtseis/utilities/vectorMath.hpp"
-#include "rtseis/utilities/ba.hpp"
-#include "rtseis/utilities/polynomial.hpp"
-#include "rtseis/utilities/convolve.hpp"
+#include "rtseis/utilities/design/response.hpp"
+#include "rtseis/utilities/math/vectorMath.hpp"
+#include "rtseis/utilities/math/polynomial.hpp"
+#include "rtseis/utilities/math/convolve.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
-using namespace RTSeis::Utilities;
-using namespace RTSeis::Utilities;
+/*
+ This source code is originally from ISTI's ISCL which is distributed under the
+ Apache 2 license.  It has been heavily modified to conform to C++.
+*/
+
 using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::Utilities::FilterRepresentations;
 
 int Response::freqs(const BA &ba, const std::vector<double> &w,
                     std::vector<std::complex<double>> &h)
@@ -242,7 +246,7 @@ int Response::groupDelay(const BA &ba,
     int nc = static_cast<int> (c.size());
     std::vector<std::complex<double>> zc(nc);
     std::vector<std::complex<double>> zcr(nc);
-    for (int i=0; i<c.size(); i++)
+    for (int i=0; i<static_cast<int>(c.size()); i++)
     {
         zc[ nc-1-i] = std::complex<double> (c[i], 0);
         // Differentiate with power rule

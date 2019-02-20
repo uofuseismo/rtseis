@@ -6,19 +6,19 @@
 
 namespace RTSeis
 {
-class BA;
 namespace Utilities
 {
+namespace FilterRepresentations
+{
+class BA;
+};
 namespace FilterDesign
 {
 /*!
  * @defgroup rtseis_utils_design_response Response
  * @brief Utility functions for analyzing the response of a filter.
- *        This code is originally from ISTI's ISCL and has been modified
- *        to conform with C++.  Function names have also been changed to
- *        conform with rtseis's naming conventions.
- * @copyright ISTI distributed under the Apache 2 license.
- * @ingroup rtseis_utils_design
+ * @copyright Ben Baker distributed under the MIT license.
+ * @ingroup rtseis_utils_filterDesign
  */
 namespace Response
 {
@@ -42,7 +42,7 @@ namespace Response
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_response
      */
-    int freqs(const BA &ba, const std::vector<double> &w,
+    int freqs(const FilterRepresentations::BA &ba, const std::vector<double> &w,
               std::vector<std::complex<double>> &h);
     /*!
      * @brief Computes the complex frequency response H(z) of a digital filter
@@ -67,7 +67,7 @@ namespace Response
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_response
      */
-    int freqz(const BA &ba, const std::vector<double> &w,
+    int freqz(const FilterRepresentations::BA &ba, const std::vector<double> &w,
               std::vector<std::complex<double>> &h);
     /*!
      * @brief Computes the group delay of a filter.  The group delay
@@ -87,7 +87,8 @@ namespace Response
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_response
      */
-     int groupDelay(const BA &ba, const std::vector<double> &w,
+     int groupDelay(const FilterRepresentations::BA &ba,
+                    const std::vector<double> &w,
                     std::vector<double> &gd);
 
 

@@ -1,9 +1,9 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
-#include "rtseis/utilities/ba.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis;
+using namespace RTSeis::Utilities::FilterRepresentations;
 
 /*!
  * @defgroup rtseis_utils_design_iir_ba BA

@@ -3,11 +3,12 @@
 #include <string>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
-#include "rtseis/utilities/response.hpp"
-#include "rtseis/utilities/ba.hpp"
+#include "rtseis/utilities/design/response.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis;
+using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 
 int rtseis_test_utils_design_freqs(void)
@@ -18,12 +19,12 @@ int rtseis_test_utils_design_freqs(void)
     std::vector<double> as({1.00000000e+00,   8.57530241e+00,   1.57767906e+02,
                             7.98628595e+02,   4.76375068e+03,   7.98628595e+03,
                             1.57767906e+04,   8.57530241e+03,   1.00000000e+04});
-    RTSeis::BA ba(bs, as);
+    BA ba(bs, as);
     std::vector<double> bz({0.056340000000000, -0.000935244000000,
                            -0.000935244000000,  0.056340000000000});
     std::vector<double> az({1.000000000000000, -2.129100000000000,
                             1.783386300000000, -0.543463100000000});
-    RTSeis::BA baz(bz, az);
+    BA baz(bz, az);
     // make solutions for freqs
     std::vector<std::complex<double>> href1; href1.resize(nw);
     href1[0] = std::complex<double> (+0.03488577413550,-0.02699025100928);

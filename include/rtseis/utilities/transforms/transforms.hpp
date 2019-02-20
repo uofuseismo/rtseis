@@ -97,8 +97,6 @@ namespace Transforms
              *                       on applying the transform the trailing 
              *                       28 samples of the input signal will be
              *                       zero-padded.
-             * @param[in] dt         The sampling period in seconds.  This 
-             *                       cannot be negative. 
              * @param[in] ldoFFT     This is an override to force the FFT to
              *                       be applied.  If true then length will
              *                       be padded so that it is a power of 2.
@@ -136,7 +134,7 @@ namespace Transforms
              */
             int forwardTransform(const int n,
                                  const double x[],
-                                 const int maxx,
+                                 const int maxy,
                                  std::complex<double> y[]);
             /*!
              * @brief Inverse transforms complex-valued frequency domian signal

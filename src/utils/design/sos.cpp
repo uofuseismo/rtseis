@@ -1,10 +1,10 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
 #include <algorithm>
-#include "rtseis/utilities/sos.hpp"
+#include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis;
+using namespace RTSeis::Utilities::FilterRepresentations;
 
 /*!
  * @defgroup rtseis_utils_design_iir_sos SOS

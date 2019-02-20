@@ -6,8 +6,11 @@
 
 namespace RTSeis
 {
+namespace Utilities::FilterRepresentations
+{
 class BA;
 class ZPK;
+};
 namespace Modules
 {
 
@@ -66,9 +69,9 @@ class IIRParameters
                                       const Bandtype btype,
                                       const Prototype ftype,
                                       const double ripple = 5);
-        int setCustomFilter(const ZPK &zpk);
-        int setCustomFilter(const BA &ba);
-        BA getFilter(void) const;
+        int setCustomFilter(const FilterRepresentations::ZPK &zpk);
+        int setCustomFilter(const FilterRepresentations::BA &ba);
+        //BA getFilter(void) const;
         void clear(void); 
         void resetFilterDesign(void);
         // Functions you probably shouldn't use
@@ -95,7 +98,7 @@ class IIRParameters
         /*!< The filter design must result in a digital filter. */
         const bool lanalog_ = false;
         /*!< The transfer function defining the filter. */
-        BA ba_;
+        Utilties::FilterRepresentations::BA ba_;
         /*!< The filter prototype. */
         Prototype prototype_ = defaultPrototype_;
         /*!< The filter bandtype. */

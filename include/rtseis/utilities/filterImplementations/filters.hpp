@@ -11,15 +11,16 @@ namespace Utilities
 
 /*!
  * @defgroup rtseis_utils_filters Filter Implementations
- * @brief These are the core filter implementations to be used by higher
- *        level modules.
+ * @brief These are the core real-time and post-processing 
+ *        filter implementations to be used by higher-level modules.
  * @copyright Ben Baker distributed under the MIT license.
+ * @ingroup rtseis_utils
  */    
 namespace Filters
 {
 
     /*!
-     * @class Downsample filters.hpp "include/rtseis/utilities/filters.hpp"
+     * @class Downsample filters.hpp "include/rtseis/utilities/filterImplementations/filters.hpp"
      * @brief This is the core implementation for downsampling a signal.
      * @copyright Ben Baker distributed under the MIT license.
      * @ingroup rtseis_utils_filters
@@ -89,6 +90,7 @@ namespace Filters
              */
             int setInitialConditions(const int phase);
             /*!
+             * @{
              * @brief Applies the downsampler to the data.
              * @param[in] nx       The number data points in x.
              * @param[in] x        The signal to downsample.
@@ -101,10 +103,11 @@ namespace Filters
              *                     are defined.
              * @result 0 indicates success.
              */
-            int apply(const int n, const double x[],
+            int apply(const int nx, const double x[],
                       const int ny, int *nyDown, double y[]);
-            int apply(const int n, const float x[],
+            int apply(const int nx, const float x[],
                       const int ny, int *nyDown, float y[]);
+            /*! @} */
             /*!
              * @brief Resets the initial conditions to the phase set in 
              *        setInitialConditions.  If setInitialConditions was not
@@ -195,6 +198,7 @@ namespace Filters
              */
             int setInitialConditions(const int nz, const double zi[]);
             /*!
+             * @{
              * @brief Appplies the median filter to the array x.
              * @param[in] n   Number of points in x.
              * @param[in] x   The signal to filter.  This has dimension [n].
@@ -203,6 +207,7 @@ namespace Filters
              */
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);
+            /*! @} */
             /*!
              * @brief Resets the initial conditions on the source delay line to
              *        the default initial conditions or the initial conditions
@@ -222,7 +227,7 @@ namespace Filters
     };
 
     /*!
-     * @defgroup rtseis_utils_filters_sos Second Order Sections
+     * @class SOSFilter filters.hpp "include/rtseis/utilities/filters.hpp"
      * @brief This is the core implementation for second order section (biquad)
      *        infinite impulse response filtering.
      * @copyright Ben Baker distributed under the MIT license.
@@ -295,6 +300,7 @@ namespace Filters
              */
             int setInitialConditions(const int nz, const double zi[]);
             /*!
+             * @{
              * @brief Applies the second order section filter to the data.
              * @param[in] n   Number of points in signals.
              * @param[in] x   The signal to filter.  This has dimension [n].
@@ -302,6 +308,7 @@ namespace Filters
              */
             int apply(const int n, const double x[], double y[]);
             int apply(const int n, const float x[], float y[]);
+            /*! @} */
             /*!
              * @brief Resets the initial conditions on the source delay line
              *        to the default initial conditions or the initial
@@ -313,6 +320,11 @@ namespace Filters
              * @brief Clears the module and resets all parameters.
              */
             void clear(void);
+            /*!
+             * @brief Gets the number of second order sections in the filter.
+             * @result On successful exit this will be a positive number that
+             *         represents the number of second order sections.
+             */
             int getNumberOfSections(void) const;
         private:
             /* Forward declaration of class for PIMPL. */
@@ -335,13 +347,15 @@ namespace Filters
              */
             enum Implementation
             {
-                /*!< Direct-form implementation. */
-                DIRECT = 0,
-                /*!< FFT overlap and add implementation. */
-                FFT = 1,
-                /*!< The implementation will decide between 
-                     DIRECT or FFT. */
-                AUTO = 2
+                DIRECT, /*!< Direct-form implementation.  This is 
+                             advantageous for relatively short filters.  */
+                FFT,    /*!< FFT overlap and add implementation.  This is
+                             advantageous for relatively long filters
+                             i.e., when \f$ \log_2 L < N \f$ where
+                             \f$ L \f$ is the signal length \f$ N \f$ is
+                             the number of taps. */
+                AUTO    /*!< The implementation will decide
+                             between DIRECT or FFT based. */
             };
         public:
             /*!
@@ -372,16 +386,7 @@ namespace Filters
              *                  is for post-processing.
              * @param[in] precision   The precision of the filter.  By default
              *                        this is double precision.
-             * @param[in] implementation  Defines the implementation.  This can
-             *                            specify Implementation::DIRECT form
-             *                            for direct form implementation,
-             *                            Implementation::FFT for an FFT-based
-             *                            overlap-add implementation which 
-             *                            can be advantageous when
-             *                            \f$ \log_2 L < N \f$ where \f$ L \f$
-             *                            is the signal length and \f N \f$
-             *                            the number of filter taps, or, auto
-             *                            to let the computer decide.
+             * @param[in] implementation  Defines the implementation.
              *                            The default is to use the direct form.
              * @result 0 indicates success.
              */
@@ -441,17 +446,15 @@ namespace Filters
              */
             void clear(void);
         private:
-            /* Forward of class for PIMPL. */
             class FIRImpl;
-            /* Pointer to the the filter implementation and parameters. */
             std::unique_ptr<FIRImpl> pFIR_;
     };
 
     /*!
      * @class MultiRateFIRFilter filters.hpp "include/rtseis/utilities/filters.hpp"
-     * @brief Implements the multi-rate finite impulse response filters. 
-     *        This allows for upsampling and/or downsampling while
-     *        filtering.  Note, that this behaves slightly differently
+     * @brief Implements the multi-rate finite impulse response filters.  
+     *        This allows for upsampling and/or downsampling while filtering.
+     * @note  Realize that this module behaves slightly differently
      *        than Matlab.  When the upsample factor is greater than 1
      *        then the FIR filter will be implicitly multiplied 
      *        by the upsampling factor.  Compare this with Matlab where
@@ -483,6 +486,7 @@ namespace Filters
              */
             ~MultiRateFIRFilter(void);
             /*!
+             * @{
              * @brief Initializes the multi-rate filtering.
              * @param[in] upFactor    The upsampling factor.  This will insert
              *                        upFactor - 1 zeros to the signal prior to
@@ -497,9 +501,6 @@ namespace Filters
              * @param[in] nb          The number of FIR filter coefficients.
              * @param[in] b           The FIR filter coefficients.  This is
              *                        an array of dimension [nb].
-             * @param[in] chunkSize   This is an optional tuning parameter.
-             *                        The internal workspace size will be
-             *                        max(upFactor, downFactor)*chunkSize.
              * @param[in] mode        The processing mode.  By default this
              *                        is for post-processing.
              * @param[in] precision   The precision of the filter.  By default
@@ -512,6 +513,10 @@ namespace Filters
                                = RTSeis::ProcessingMode::POST_PROCESSING,
                            const RTSeis::Precision precision
                                = RTSeis::Precision::DOUBLE);
+            /*!
+             * @copydoc initialize
+             * @param[in] chunkSize   This is an optional tuning parameter.
+             */
             int initialize(const int upFactor, const int downFactor,
                            const int nb, const double b[],
                            const int chunkSize,
@@ -519,6 +524,7 @@ namespace Filters
                                = RTSeis::ProcessingMode::POST_PROCESSING,
                            const RTSeis::Precision precision 
                                = RTSeis::Precision::DOUBLE);
+            /* @} */
             /*!
              * @brief Determines if the module is initialized.
              * @retval True indicates that the module is initialized.
@@ -566,6 +572,7 @@ namespace Filters
              */
             int estimateSpace(const int n) const;
             /*!
+             * @{
              * @brief Applies the multi-rate filter to the signal.
              * @param[in] n       Number of points in the signal.
              * @param[in] x       The signal to filter.  This has dimension [n].
@@ -579,9 +586,9 @@ namespace Filters
              */
             int apply(const int n, const double x[],
                       const int nywork, int *ny, double y[]);
-            /*!< @copydoc apply */
             int apply(const int n, const float x[],
                       const int nywork, int *ny, float y[]);
+            /*! @} */
             /*!
              * @brief Resets the initial conditions to those set in
              *        setInitialConditions().
@@ -595,9 +602,7 @@ namespace Filters
              */
             void clear(void);
         private:
-            /* Forward of class for PIMPL. */
             class MultiRateFIRImpl;
-            /* Pointer to the the filter implementation and parameters. */
             std::unique_ptr<MultiRateFIRImpl> pFIR_;
              
     };

@@ -6,6 +6,10 @@
 
 namespace RTSeis
 {
+namespace Utilities
+{
+namespace FilterRepresentations
+{
 
 class BA
 {
@@ -42,7 +46,9 @@ class BA
         double tol_ = defaultTol_;
         /*!< Determines if the filter is an FIR filter. */
         bool isFIR_ = false;
-};
-};
+}; // End BA
+}; // End FilterRepresentations
+}; // End Utilities
+}; // End RTSeis
 
 #endif

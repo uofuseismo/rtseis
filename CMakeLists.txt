@@ -105,9 +105,7 @@ SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp
     src/modules/oneBitNormalization.cpp
-    src/modules/classicSTALTA.cpp
-    src/modules/fir.cpp
-    src/modules/iir.cpp)
+    src/modules/classicSTALTA.cpp)
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
     src/processing/singleChannel/postProcessing.cpp)

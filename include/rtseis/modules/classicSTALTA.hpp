@@ -3,7 +3,6 @@
 #include <memory>
 #include "rtseis/config.h"
 #include "rtseis/enums.h"
-#include "rtseis/utilities/filters.hpp"
 
 namespace RTSeis
 {
@@ -61,7 +60,7 @@ class ClassicSTALTAParameters
          * @param[in] ltaWin  The long-term average window duration in 
          *                    seconds.  This must be greater than the STA
          *                    window length plus the half sampling period
-         *                    i.e., \f$ LTA \gt STA + \frac{\Delta T}{2} \f$.
+         *                    i.e., \f$ LTA > STA + \frac{\Delta T}{2} \f$.
          * @param[in] dt      The sampling period in seconds.  This must be
          *                    positive.
          * @param[in] mode    Indicates whether or not this is for real-time.

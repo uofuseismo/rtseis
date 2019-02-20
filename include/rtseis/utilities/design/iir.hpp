@@ -6,22 +6,22 @@
 
 namespace RTSeis
 {
-class SOS;
-class BA;
-class ZPK;
 namespace Utilities
 {
+namespace FilterRepresentations
+{
+class BA;
+class SOS;
+class ZPK;
+};
 namespace FilterDesign
 {
 
 /*!
  * @defgroup rtseis_utils_design_iir IIR Design
- * @brief Utility functions for IIR filter design.  This code is originally
- *        from ISTI's ISCL and has been modified to conform with C++.
- *        Function names have also been changed to conform with rtseis's
- *        naming conventions.
- * @copyright ISTI distributed under the Apache 2 license.
- * @ingroup rtseis_utils_design
+ * @brief Utility functions for IIR filter design.
+ * @copyright Ben Baker distributed under the MIT license.
+ * @ingroup rtseis_utils_filterDesign
  */
 namespace IIR
 {
@@ -79,7 +79,7 @@ namespace IIR
      *                     Chebyshev1, or Chebyshev2.
      * @param[out] ba      The corresponding IIR filter specified in terms
      *                     of numerator and denominator coefficients.
-     * @param[in] lanlaog  If true then this designs an analog filter.  The
+     * @param[in] lanalog  If true then this designs an analog filter.  The
      *                     default is a digital filter.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
@@ -88,7 +88,7 @@ namespace IIR
                   const double rp, const double rs,
                   const Bandtype btype,
                   const Prototype ftype,
-                  BA &ba,
+                  FilterRepresentations::BA &ba,
                   const bool lanalog = false);
     /*!
      * @brief Convenience function to design a digital or analog filter from
@@ -110,7 +110,7 @@ namespace IIR
      *                     Chebyshev1, or Chebyshev2.
      * @param[out] zpk     The corresponding IIR filter specified in terms
      *                     of zeros, poles, and gain.
-     * @param[in] lanlaog  If true then this designs an analog filter.  The
+     * @param[in] lanalog  If true then this designs an analog filter.  The
      *                     default is a digital filter.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
@@ -119,7 +119,7 @@ namespace IIR
                   const double rp, const double rs,
                   const Bandtype btype,
                   const Prototype ftype,
-                  ZPK &zpk,
+                  FilterRepresentations::ZPK &zpk,
                   const bool lanalog = false);
     /*!
      * @brief Convenience function to design a digital or analog filter from
@@ -141,7 +141,7 @@ namespace IIR
      *                     Chebyshev1, or Chebyshev2.
      * @param[out] sos     The corresponding IIR filter as a cascaded series of
      *                     second order sections.
-     * @param[in] lanlaog  If true then this designs an analog filter.  The
+     * @param[in] lanalog  If true then this designs an analog filter.  The
      *                     default is a digital filter.
      * @param[in] pairing  Defines the pairing strategy.
      * @result 0 indicates success.
@@ -151,7 +151,7 @@ namespace IIR
                    const double rp, const double rs,
                    const Bandtype btype,
                    const Prototype ftype,
-                   SOS &sos,
+                   FilterRepresentations::SOS &sos,
                    const bool lanalog,
                    const Pairing pairing = Pairing::NEAREST);
     /*!
@@ -160,11 +160,12 @@ namespace IIR
      * @param[in] zpk      ZPK filter to convert to second order sections.
      * @param[out] sos     The corresponding filter stored as cascaded
      *                     section order sections.
-     * @param[in] pairint  The pairing strategy.
+     * @param[in] pairing  The pairing strategy.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
-    int zpk2sos(const ZPK &zpk, SOS &sos,
+    int zpk2sos(const FilterRepresentations::ZPK &zpk,
+                FilterRepresentations::SOS &sos,
                 const Pairing pairing = Pairing::NEAREST);
     /*! 
      * @brief Computes the polynomial transfer function from a pole-zero
@@ -176,7 +177,8 @@ namespace IIR
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
-    int zpk2tf(const ZPK &zpk, BA &ba);
+    int zpk2tf(const FilterRepresentations::ZPK &zpk,
+               FilterRepresentations::BA &ba);
     /*!
      * @brief Converts a lowpass filter prototype to a different cutoff
      *        frequency.
@@ -186,7 +188,8 @@ namespace IIR
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
-    int zpklp2lp(const ZPK &zpkIn, const double w0, ZPK &zpkOut);
+    int zpklp2lp(const FilterRepresentations::ZPK &zpkIn,
+                 const double w0, FilterRepresentations::ZPK &zpkOut);
     /*!
      * @brief Converts a lowpass filter prototype to a highpss filter.
      * @param[in] zpkIn    Input lowpass filter prototype to convert.
@@ -195,7 +198,8 @@ namespace IIR
      * @result 0 indicates success. 
      * @ingroup rtseis_utils_design_iir
      */
-    int zpklp2hp(const ZPK &zpkIn, const double w0, ZPK &zpkOut);
+    int zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                 FilterRepresentations::ZPK &zpkOut);
     /*!
      * @brief Transforms a lowpass filter prototype to a bandpass filter.
      *        The passband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.
@@ -206,8 +210,9 @@ namespace IIR
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
-    int zpklp2bp(const ZPK &zpkIn, const double w0,
-                 const double bw, ZPK &zpkOut);
+    int zpklp2bp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                 const double bw, 
+                 FilterRepresentations::ZPK &zpkOut);
     /*!
      * @brief Transforms a lowpass filter prototype to a bandstop filter.
      *        The stopband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.
@@ -218,8 +223,8 @@ namespace IIR
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
-    int zpklp2bs(const ZPK &zpkIn, const double w0,
-                 const double bw, ZPK &zpkOut);
+    int zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                 const double bw, FilterRepresentations::ZPK &zpkOut);
     /*!
      * @brief Converts an analog filter to a digital filter using hte bilinear
      *        transform.  This works by transforming a set of poles and zeros
@@ -235,7 +240,8 @@ namespace IIR
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
-    int zpkbilinear(const ZPK zpk, const double fs, ZPK &zpkbl);
+    int zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,
+                    FilterRepresentations::ZPK &zpkbl);
 }; /* End IIR */
 
 }; /* End FilterDesign */

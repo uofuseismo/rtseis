@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ipps.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
+#include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/utilities/filterImplementations/filters.hpp"
 #include "rtseis/log.h"
-#include "rtseis/utilities/filters.hpp"
 
 using namespace RTSeis::Utilities::Filters;
 
