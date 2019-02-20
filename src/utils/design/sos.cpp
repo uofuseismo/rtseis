@@ -1,36 +1,18 @@
-#define RTSEIS_LOGGING 1
 #include <cmath>
 #include <algorithm>
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
+#define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterRepresentations;
 
-/*!
- * @defgroup rtseis_utils_design_iir_sos SOS
- * @brief Utility functions for holding a transfer function as 
- *        a cascaded series of second order sections.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_design
- */
 
-/*!
- * @brief Default constructor. 
- * @ingroup rtseis_utils_design_iir_sos
- */
 SOS::SOS(void)
 {
     clear();
     return;
 }
-/*!
- * @brief Constructs an SOS class from the given second order sections.
- * @param[in] ns      Number of sections.
- * @param[in] zeros   Zeros to set.
- * @param[in] poles   Poles to set.
- * @param[in] k       Gain to set.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 SOS::SOS(const int ns,
          const std::vector<double> &bs,
          const std::vector<double> &as)
@@ -39,11 +21,7 @@ SOS::SOS(const int ns,
     setSecondOrderSections(ns, bs, as);
     return;
 }
-/*!
- * @brief Copy operator.
- * @param[in] sos  SOS filter to copy.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 SOS& SOS::operator=(const SOS &sos)
 {
     if (&sos == this){return *this;}
@@ -54,13 +32,7 @@ SOS& SOS::operator=(const SOS &sos)
     tol_ = sos.tol_;
     return *this;
 }
-/*!
- * @brief Equality operator.
- * @param sos  Class to compare to this class.
- * @result True indicates that sos equals this class to within a given
- *         tolerance.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 bool SOS::operator==(const SOS &sos) const
 {
     if (bs_.size() != sos.bs_.size()){return false;}
@@ -76,40 +48,24 @@ bool SOS::operator==(const SOS &sos) const
     }
     return true;
 }
-/*!
- * @brief Inequality operator.
- * @param[in] sos  Class to compare to this class.
- * @result True indicates that sos does not equal this class to within a
- *         given tolerance.
- * @ingroup rtseis_utils_design_iir_sos 
- */
+
 bool SOS::operator!=(const SOS &sos) const
 {
     return !(*this == sos);
 }
-/*!
- * @brief Copy constructor.
- * @param[in] sos  SOS filter from which to copy.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 SOS::SOS(const SOS &sos)
 {
    *this = sos;
    return;
 }
-/*!
- * @brief Default destructor.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 SOS::~SOS(void)
 {
     clear();
     return;
 }
-/*!
- * @brief Clears the class.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 void SOS::clear(void)
 {
     bs_.clear();
@@ -118,12 +74,7 @@ void SOS::clear(void)
     tol_ = defaultTol_;
     return;
 }
-/*!
- * @brief Prints the SOS structure.
- * @param[in] fout   File handle to print to.  If fout is NULL then this
- *                   will print to stdout.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 void SOS::print(FILE *fout)
 {
     FILE *f = stdout;
@@ -142,18 +93,7 @@ void SOS::print(FILE *fout)
     }
     return;
 }
-/*!
- * @brief Sets the second order sections on the class.
- * @param[in] ns   The number of second order sections.
- * @param[in] bs   The numerator coefficients.  This has dimension [3 x ns]
- *                 with leading order 3.  Futhermore, the \f$ b[3 i_s] \f$
- *                 cannot be 0 for \f$ i=1,2, \cdots n_s \f$.
- * @param[in] as   The denominator coefficients.  This has dimension [3 x ns]
- *                 with leading order 3.  Futhermore, the \f$ b[3 i_s] \f$
- *                 cannot be 0 for \f$ i=1,2, \cdots n_s \f$.
- * @result 0 indicates success.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 int SOS::setSecondOrderSections(const int ns,
                                 const std::vector<double> &bs,
                                 const std::vector<double> &as)
@@ -197,42 +137,22 @@ int SOS::setSecondOrderSections(const int ns,
     as_ = as;
     return 0;
 }
-/*!
- * @brief Returns the numerator coefficients of the SOS filter.
- * @brief A vector holding the numerator coefficients.  This has dimension
- *        [3 x ns] with leading dimension 3 where ns is given by
- *        SOS::getNumberOfSections().
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 std::vector<double> SOS::getNumeratorCoefficients(void) const
 {
     return bs_;
 }
-/*!
- * @brief Gets the denominator coefficients of the SOS filter.
- * @brief A vector holding the denominator coefficients.  This has dimension
- *        [3 x ns] wiht leading dimension 3 where ns is given by
- *        SOS::getNumberOfSections().
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 std::vector<double> SOS::getDenominatorCoefficients(void) const
 {
     return as_;
 }
-/*!
- * @brief Returns the number of sections.
- * @result The number of second order sections.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 int SOS::getNumberOfSections(void) const
 {
     return ns_;
 }
-/*!
- * @brief Sets the tolerance in the equality.
- * @param[in] tol   Tolerance.
- * @ingroup rtseis_utils_design_iir_sos
- */
+
 void SOS::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
