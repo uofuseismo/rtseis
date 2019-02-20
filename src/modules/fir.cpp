@@ -7,6 +7,7 @@
 #include "rtseis/log.h"
 #include "rtseis/modules/fir.hpp"
 
+using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Modules;
 
 /*!
@@ -167,7 +168,7 @@ int FIRParameters::designFromWindow(const int order, const double fs,
         return -1;
     }
     // Save the filter design
-    ba_ = BA(pTaps);
+    ba_ = Utilities::FilterRepresentations::BA(pTaps);
     window_ = window;
     bandtype_ = btype;
     w0_[0] = f0;
@@ -302,7 +303,7 @@ int FIRParameters::designFromWindow(const int order, const double fs,
         return -1;
     }
     // Save the filter design
-    ba_ = BA(pTaps);
+    ba_ = Utilities::FilterRepresentations::BA(pTaps);
     window_ = window;
     bandtype_ = btype;
     fs_ = fs;

@@ -3,9 +3,9 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/utilities/filterImplementations/filters.hpp"
+#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
 
-using namespace RTSeis::Utilities::Filters;
+using namespace RTSeis::Utilities::FilterImplementations;
 
 class MultiRateFIRFilter::MultiRateFIRImpl
 {

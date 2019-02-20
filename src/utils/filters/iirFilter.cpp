@@ -5,10 +5,10 @@
 #include <ippversion.h>
 #include <ippcore.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/filterImplementations/filters.hpp"
+#include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utilities::Filters;
+using namespace RTSeis::Utilities::FilterImplementations;
 
 class IIRFilter::IIRFilterImpl
 {

@@ -8,12 +8,18 @@
 #include <complex>
 #include <vector>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/filterImplementations/filters.hpp"
+#include "rtseis/utilities/filterImplementations/downsample.hpp"
+#include "rtseis/utilities/filterImplementations/iirFilter.hpp"
+#include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
+#include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
+#include "rtseis/utilities/filterImplementations/medianFilter.hpp"
+#include "rtseis/utilities/filterImplementations/sosFilter.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 #include <ipps.h>
 
-using namespace RTSeis::Utilities::Filters;
+using namespace RTSeis::Utilities::FilterImplementations;
 static int readTextFile(int *npts, double *xPtr[],
                         const std::string fileName = "utils/data/gse2.txt");
 static int filters_downsample_test(const int npts, const double x[]);

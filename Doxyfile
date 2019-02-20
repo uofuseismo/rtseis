@@ -798,7 +798,13 @@ INPUT                  = include/rtseis/modules/oneBitNormalization.hpp \
                          include/rtseis/utilities/design/response.hpp \
                          include/rtseis/utilities/math/convolve.hpp \
                          include/rtseis/utilities/math/polynomial.hpp \
-                         include/rtseis/utilities/filterImplementations/filters.hpp \
+                         include/rtseis/utilities/filterImplementations/downsample.hpp \
+                         include/rtseis/utilities/filterImplementations/firFilter.hpp \
+                         include/rtseis/utilities/filterImplementations/iirFilter.hpp \
+                         include/rtseis/utilities/filterImplementations/iiriirFilter.hpp \
+                         include/rtseis/utilities/filterImplementations/medianFilter.hpp \
+                         include/rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp \
+                         include/rtseis/utilities/filterImplementations/sosFilter.hpp \
                          include/rtseis/utilities/filterRepresentations/ba.hpp \
                          include/rtseis/utilities/filterRepresentations/sos.hpp \
                          include/rtseis/utilities/filterRepresentations/zpk.hpp \

@@ -5,13 +5,14 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/utilities/iir.hpp"
-#include "rtseis/utilities/ba.hpp"
-#include "rtseis/utilities/zpk.hpp"
+#include "rtseis/utilities/design/iir.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/utilities/filterRepresentations/zpk.hpp"
 #include "rtseis/modules/iir.hpp"
 #include "rtseis/ippsHelper.h"
 
 using namespace RTSeis::Modules;
+using namespace RTSeis::Utilities::FilterRepresentations;
 
 /*!
  * @defgroup rtseis_modules_iir IIR
@@ -100,7 +101,7 @@ int IIRParameters::design(
  * @ingroup 0 indicates success.
  * @ingroup rtseis_modules_iir_parameters
  */
-int IIRParameters::setCustomFilter(const ZPK &zpk)
+int IIRParameters::setCustomFilter(const Utilities::FilterRepresentations::ZPK &zpk)
 {
     resetFilterDesign();
     int ierr = RTSeis::Utilities::FilterDesign::IIR::zpk2tf(zpk, ba_);
