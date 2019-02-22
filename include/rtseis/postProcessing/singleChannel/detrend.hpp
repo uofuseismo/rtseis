@@ -1,5 +1,5 @@
-#ifndef RTSEIS_MODULES_DETREND_HPP
-#define RTSEIS_MODULES_DETREND_HPP 1
+#ifndef RTSEIS_POSTPROCESSING_SC_DETREND
+#define RTSEIS_POSTPROCESSING_SC_DETREND 1
 #include <memory>
 #include <exception>
 #include "rtseis/config.h"
@@ -7,19 +7,20 @@
 
 namespace RTSeis
 {
-namespace Modules
+namespace PostProcessing
 {
-
-/*!
- * @defgroup Detrend
- * Removes a best-fitting trend line from the data.
- * @{
- */
+namespace SingleChannel
+{
  
 /*!
- * @class DetrendParameters detrend.hpp "include/rtseis/modules/detrend.hpp"
+ * @defgroup rtseis_postprocessing_sc_detrend Detrend
+ * @brief Utilities for removing a best-fitting trend line from the data.
+ * @ingroup rtseis_postprocessing_sc
+ */
+/*!
+ * @class DetrendParameters detrend.hpp "include/rtseis/processing/singleChannel/detrend.hpp"
  * @brief Defines the parameters for the detrend module.
- * @ingroup rtseis_modules_detrend
+ * @ingroup rtseis_postprocessing_sc_detrend
  * @copyright Ben Baker distributed under the MIT license.
  */
 class DetrendParameters : public std::exception
@@ -68,16 +69,14 @@ class DetrendParameters : public std::exception
           */
         bool isInitialized(void) const;
     private:
-        RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
-        RTSeis::Precision precision_ = defaultPrecision_;
-        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-        bool linit_ = true; // This module is always ready to roll
+        class DetrendParms;
+        std::unique_ptr<DetrendParms> pDetrendParmsImpl_; 
 };
 
 /*!
- * @class Detrend detrend.hpp "include/rtseis/modules/detrend.hpp"
+ * @class Detrend detrend.hpp "include/rtseis/processing/singleChannel/detrend.hpp"
  * @brief Removes the trend from the data.
- * @ingroup rtseis_modules
+ * @ingroup rtseis_postprocessing_sc_detrend
  * @copyright Ben Baker distributed under the MIT license.
  */
 class Detrend : public std::exception
@@ -140,10 +139,9 @@ class Detrend : public std::exception
         std::unique_ptr<DetrendImpl> pDetrend_;
 };
 
-/** @} */
 
-
-};
-};
+}; // End sc
+}; // End pp
+}; // End rtseis
 
 #endif

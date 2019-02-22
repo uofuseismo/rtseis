@@ -7,13 +7,20 @@
 
 namespace RTSeis
 {
-namespace Modules
+namespace PostProcessing
+{
+namespace SingleChannel
 {
 
 /*!
- * @class DemeanParameters demean.hpp "include/rtseis/modules/demean.hpp"
+ * @defgroup rtseis_postprocessing_sc_demean Demean
+ * @brief Utilities for removing the mean from a signal.
+ * @ingroup rtseis_postprocessing_sc 
+ */
+/*!
+ * @class DemeanParameters demean.hpp "include/rtseis/processing/singleChannel/demean.hpp"
  * @brief Defines the parameters for the demean module.
- * @ingroup rtseis_modules_demean
+ * @ingroup rtseis_postprocessing_sc_demean
  * @copyright Ben Baker distributed under the MIT license.
  */
 class DemeanParameters : public std::exception
@@ -23,7 +30,7 @@ class DemeanParameters : public std::exception
          * @brief Default construtor.
          * @param[in] precision  Defines the precision.  By default this is
          *                       double.
-         * @throw std::invalid_argument If precision is not supported.
+         * @throw std::invalid_argument if precision is not supported.
          */
         DemeanParameters(const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
         /*!
@@ -62,16 +69,14 @@ class DemeanParameters : public std::exception
          */
         bool isInitialized(void) const;
     private:
-        RTSeis::Precision defaultPrecision_ = RTSeis::Precision::DOUBLE;
-        RTSeis::Precision precision_ = defaultPrecision_;
-        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-        bool linit_ = true; // This module is always ready to roll
+        class DemeanParms;
+        std::unique_ptr<DemeanParms> pDemeanParmsImpl_;
 };
 
 /*!
- * @class Demean demean.hpp "include/rtseis/modules/demean.hpp"
+ * @class Demean demean.hpp "include/rtseis/processing/singleChannel/demean.hpp"
  * @brief Removes the mean from the data.
- * @ingroup rtseis_modules
+ * @ingroup rtseis_postprocessing_sc_demean
  * @copyright Ben Baker distributed under the MIT license.
  */
 class Demean : public std::exception
@@ -89,7 +94,7 @@ class Demean : public std::exception
         /*!
          * @brief Constructs a demean command from the parameters.
          * @param[in] parameters  The demean parameters.
-         * @throw std::invalid_argument If the parameters are invalid.
+         * @throw std::invalid_argument if the parameters are invalid.
          */
         Demean(const DemeanParameters &parameters); 
         /*!
@@ -106,7 +111,7 @@ class Demean : public std::exception
          * @brief Sets the parameters for the demean function.
          * @param[in] parameters  An initialized parameters class from which
          *                        to initialize the demean class.
-         * @throw std::invalid_argument If the parameters are invalid.
+         * @throw std::invalid_argument if the parameters are invalid.
          */
         void setParameters(const DemeanParameters &parameters);
         /*!
@@ -116,7 +121,7 @@ class Demean : public std::exception
          *                 of dimension [nx].
          * @param[out] y   The demeaned version of x.  This is an array of
          *                 dimension [nx].
-         * @throw std::invalid_argument If the parameters are invalid.
+         * @throw std::invalid_argument if the parameters are invalid.
          */
         void apply(const int nx, const double x[], double y[]);
         /*! @copydoc apply */ 
@@ -126,13 +131,11 @@ class Demean : public std::exception
          */
         void clear(void);
     private:
-        /// Forward declaration of implemenation.
         class DemeanImpl;
-        /// PIMPL'd implementation
         std::unique_ptr<DemeanImpl> pDemean_;
+}; // End class
+
 };
-
-
 };
 };
 
