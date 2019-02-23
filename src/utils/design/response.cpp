@@ -79,7 +79,7 @@ int Response::freqs(const BA &ba, const std::vector<double> &w,
         return -1;
     }
     // Compute the transfer function
-    ierr = RTSeis::Utilities::Math::Vector::divide(hsDen, hsNum, h);
+    ierr = Math::VectorMath::divide(hsDen, hsNum, h);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Division failed");
@@ -160,7 +160,7 @@ int Response::freqz(const BA &ba, const std::vector<double> &w,
         return -1;
     }
     // Compute the transfer function: H = Num/Den
-    ierr = RTSeis::Utilities::Math::Vector::divide(hzDen, hzNum, h); 
+    ierr = Math::VectorMath::divide(hzDen, hzNum, h); 
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Division failed");
@@ -286,7 +286,7 @@ int Response::groupDelay(const BA &ba,
     }
     // Divide gd = num/den
     std::vector<std::complex<double>> zgd;
-    Math::Vector::divide(den, num, zgd);
+    Math::VectorMath::divide(den, num, zgd);
     // Take real part and shift
     gd.resize(zgd.size());
     double shift = static_cast<double> (a.size() - 1);

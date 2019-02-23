@@ -13,9 +13,7 @@
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include <ipps.h>
 
-using namespace RTSeis::Utilities::Math::Vector;
-
-int RTSeis::Utilities::Math::Vector::divide(
+int RTSeis::Utilities::Math::VectorMath::divide(
     const std::vector<std::complex<double>> &den,
     const std::vector<std::complex<double>> &num,
     std::vector<std::complex<double>> &res)
@@ -49,8 +47,9 @@ int RTSeis::Utilities::Math::Vector::divide(
 #endif
     return 0;
 }
+//============================================================================//
 
-int RTSeis::Utilities::Math::Vector::real(
+int RTSeis::Utilities::Math::VectorMath::real(
     const std::vector<std::complex<double>> &z,
     std::vector<double> &r)
 {
@@ -68,3 +67,42 @@ int RTSeis::Utilities::Math::Vector::real(
     }   
     return 0;
 }
+
+//============================================================================//
+template<typename T> int RTSeis::Utilities::Math::VectorMath::copysign(
+    const  std::vector<T> x, std::vector<T> &y)
+{
+    int nx = static_cast<int> (x.size());
+    y.resize(nx);
+    if (nx <= 0){return 0;}
+    int ierr = copysign(nx, x.data(), y.data());
+    if (ierr != 0){y.resize(0);}
+    return ierr;
+}
+
+template<typename T> int RTSeis::Utilities::Math::VectorMath::copysign(
+    const int n, const T x[], T y[])
+{
+    if (n <= 0){return 0;}
+    if (x == nullptr || y == nullptr)
+    {
+        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
+        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        return -1;
+    }
+    constexpr T one = 1;
+    #pragma omp simd
+    for (int i=0; i<n; i++){y[i] = std::copysign(one, x[i]);}
+    return 0;
+}
+// Instantiate the templates in the library
+template int RTSeis::Utilities::Math::VectorMath::copysign<double>(
+    const std::vector<double> x, std::vector<double> &y);
+template int RTSeis::Utilities::Math::VectorMath::copysign<double>(
+    const int n, const double x[], double y[]);
+template int RTSeis::Utilities::Math::VectorMath::copysign<float>(
+    const std::vector<float> x, std::vector<float> &y);
+template int RTSeis::Utilities::Math::VectorMath::copysign<float>(
+    const int n, const float x[], float y[]);
+
+//============================================================================//

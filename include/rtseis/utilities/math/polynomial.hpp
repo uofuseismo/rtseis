@@ -63,6 +63,10 @@ namespace Polynomial
      */
     int poly(const std::vector<std::complex<double>> &p,
              std::vector<std::complex<double>> &y);
+    /*!
+     * @copydoc poly
+     * @ingroup rtseis_utils_math_polynomial
+     */
     int poly(const std::vector<double> &p,
              std::vector<double> &y);
     /*! @} */
@@ -89,6 +93,10 @@ namespace Polynomial
     int polyval(const std::vector<double> &p,
                 const std::vector<double> &x,
                 std::vector<double> &y);
+    /*!
+     * @copydoc polyval
+     * @ingroup rtseis_utils_math_polynomial
+     */
     int polyval(const std::vector<std::complex<double>> &p,
                 const std::vector<std::complex<double>> &x,
                 std::vector<std::complex<double>> &y);

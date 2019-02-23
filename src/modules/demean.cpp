@@ -4,9 +4,24 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/modules/demean.hpp"
+#include "rtseis/postProcessing/singleChannel/demean.hpp"
 
-using namespace RTSeis::Modules;
+using namespace RTSeis::PostProcessing::SingleChannel;
+
+class DemeanParameters::DemeanParms
+{
+    public:
+        void clear(void)
+        {
+            precision_ = RTSeis::Precision::DOUBLE;
+            mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+            linit_ = true;
+            return;
+        }
+        RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        bool linit_ = true; // This module is always ready to roll
+};
 
 class Demean::DemeanImpl
 {
@@ -83,10 +98,9 @@ class Demean::DemeanImpl
 };
 
 DemeanParameters::DemeanParameters(const RTSeis::Precision precision) :
-    precision_(precision),
-    mode_(RTSeis::ProcessingMode::POST_PROCESSING),
-    linit_(true)
+    pDemeanParmsImpl_(new DemeanParms())
 {
+    pDemeanParmsImpl_->precision_ = precision;
     return;
 }
 
@@ -100,9 +114,9 @@ DemeanParameters&
     DemeanParameters::operator=(const DemeanParameters &parameters)
 {
     if (&parameters == this){return *this;}
-    precision_ = parameters.precision_;
-    mode_ = parameters.mode_;
-    linit_ = parameters.linit_;
+    if (pDemeanParmsImpl_){pDemeanParmsImpl_->clear();}
+    pDemeanParmsImpl_ = std::unique_ptr<DemeanParms>
+                        (new DemeanParms(*parameters.pDemeanParmsImpl_));
     return *this;
 }
 
@@ -114,25 +128,23 @@ DemeanParameters::~DemeanParameters(void)
 
 void DemeanParameters::clear(void)
 {
-    precision_ = defaultPrecision_;
-    mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-    linit_ = true; // Demeaning is always ready to roll
+    pDemeanParmsImpl_->clear();
     return;
 }
 
 RTSeis::Precision DemeanParameters::getPrecision(void) const
 {
-    return precision_;
+    return pDemeanParmsImpl_->precision_;
 }
 
 RTSeis::ProcessingMode DemeanParameters::getProcessingMode(void) const
 {
-    return mode_;
+    return pDemeanParmsImpl_->mode_;
 }
 
 bool DemeanParameters::isInitialized(void) const
 {
-    return linit_;
+    return pDemeanParmsImpl_->linit_;
 }
 //============================================================================//
 

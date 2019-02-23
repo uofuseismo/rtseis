@@ -90,13 +90,13 @@ class Demean : public std::exception
          * @brief Copy constructor.
          * @param[in] demean   Demean class from which to initialize.
          */
-        Demean(const Demean &demean);
+        explicit Demean(const Demean &demean);
         /*!
          * @brief Constructs a demean command from the parameters.
          * @param[in] parameters  The demean parameters.
          * @throw std::invalid_argument if the parameters are invalid.
          */
-        Demean(const DemeanParameters &parameters); 
+        explicit Demean(const DemeanParameters &parameters); 
         /*!
          * @brief Copy assignment operator.
          * @param[in] demean   Demean class to copy.

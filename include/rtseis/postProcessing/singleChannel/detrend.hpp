@@ -90,13 +90,13 @@ class Detrend : public std::exception
          * @brief Copy constructor.
          * @param[in] detrend  Detrend class from which to initialize.
          */
-        Detrend(const Detrend &detrend);
+        explicit Detrend(const Detrend &detrend);
         /*!
          * @brief Initializes from the detrend parameters.
          * @param[in] parameters  Parameters from which to initialize.
          * @throws std::invalid_error if parameters are invalid.
          */
-        Detrend(const DetrendParameters &parameters);
+        explicit Detrend(const DetrendParameters &parameters);
         /*!
          * @brief Copy assignment operator.
          * @param[in] detrend  Detrend class to copy to this class.

@@ -5,9 +5,23 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
-#include "rtseis/modules/detrend.hpp"
+#include "rtseis/postProcessing/singleChannel/detrend.hpp"
 
-using namespace RTSeis::Modules;
+using namespace RTSeis::PostProcessing::SingleChannel;
+
+class DetrendParameters::DetrendParms
+{
+    public:
+        void clear(void)
+        {
+            precision_ = RTSeis::Precision::DOUBLE;
+            mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+            linit_ = true;
+        } 
+        RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        bool linit_ = true; // This module is always ready to roll
+};
 
 class Detrend::DetrendImpl
 {
@@ -184,10 +198,9 @@ class Detrend::DetrendImpl
 //============================================================================//
 
 DetrendParameters::DetrendParameters(const RTSeis::Precision precision) :
-    precision_(precision),
-    mode_(RTSeis::ProcessingMode::POST_PROCESSING),
-    linit_(true)
+    pDetrendParmsImpl_(new DetrendParms())
 {
+    pDetrendParmsImpl_->precision_ = precision;
     return;
 }
 
@@ -201,9 +214,9 @@ DetrendParameters&
     DetrendParameters::operator=(const DetrendParameters &parameters)
 {
     if (&parameters == this){return *this;}
-    precision_ = parameters.precision_;
-    mode_ = parameters.mode_;
-    linit_ = parameters.linit_;
+    if (pDetrendParmsImpl_){pDetrendParmsImpl_->clear();}
+    pDetrendParmsImpl_ = std::unique_ptr<DetrendParms>
+                         (new DetrendParms(*parameters.pDetrendParmsImpl_));
     return *this;
 }
 
@@ -215,25 +228,23 @@ DetrendParameters::~DetrendParameters(void)
 
 void DetrendParameters::clear(void)
 {
-    precision_ = defaultPrecision_;
-    mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-    linit_ = true; // Detrending is always ready to roll
+    pDetrendParmsImpl_->clear();
     return;
 }
 
 RTSeis::Precision DetrendParameters::getPrecision(void) const
 {
-    return precision_;
+    return pDetrendParmsImpl_->precision_;
 }
 
 RTSeis::ProcessingMode DetrendParameters::getProcessingMode(void) const
 {
-    return mode_;
+    return pDetrendParmsImpl_->mode_;
 }
 
 bool DetrendParameters::isInitialized(void) const
 {
-    return linit_;
+    return pDetrendParmsImpl_->linit_;
 }
 //============================================================================//
 Detrend::Detrend(void) :

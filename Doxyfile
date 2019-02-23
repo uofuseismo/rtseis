@@ -798,6 +798,7 @@ INPUT                  = include/rtseis/modules/oneBitNormalization.hpp \
                          include/rtseis/utilities/design/response.hpp \
                          include/rtseis/utilities/math/convolve.hpp \
                          include/rtseis/utilities/math/polynomial.hpp \
+                         include/rtseis/utilities/math/vectorMath.hpp \
                          include/rtseis/utilities/filterImplementations/downsample.hpp \
                          include/rtseis/utilities/filterImplementations/firFilter.hpp \
                          include/rtseis/utilities/filterImplementations/iirFilter.hpp \
@@ -809,8 +810,9 @@ INPUT                  = include/rtseis/modules/oneBitNormalization.hpp \
                          include/rtseis/utilities/filterRepresentations/sos.hpp \
                          include/rtseis/utilities/filterRepresentations/zpk.hpp \
                          include/rtseis/utilities/transforms/transforms.hpp \
-                         include/rtseis/modules/detrend.hpp \
-                         include/rtseis/modules/demean.hpp \
+                         include/rtseis/postProcessing/singleChannel/waveform.hpp \
+                         include/rtseis/postProcessing/singleChannel/demean.hpp \
+                         include/rtseis/postProcessing/singleChannel/detrend.hpp \
                          doc/INSTALL.doc \
                          doc/Utilities.doc \
                          doc/Math.doc \

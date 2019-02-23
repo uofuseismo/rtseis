@@ -1,9 +1,6 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.2 FATAL_ERROR)
-
-PROJECT(RTSeis)
-ENABLE_LANGUAGE(C)
-ENABLE_LANGUAGE(CXX)
-ENABLE_TESTING()
+cmake_minimum_required(VERSION 3.6)
+project(RTSeis VERSION 1.1.1 LANGUAGES C CXX)
+enable_testing()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
@@ -20,30 +17,43 @@ SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
-INCLUDE(FindOpenMP QUIET)
+##########################################################################################
+#                        Define the compiler standard and OpenMP                         #
+##########################################################################################
+include(FindOpenMP QUIET)
 IF (OPENMP_FOUND)
-   MESSAGE("OpenMP Found")
-   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+   message("OpenMP found")
+   string(APPEND CMAKE_C_FLAGS   " ${OpenMP_C_FLAGS}")
+   string(APPEND CMAKE_CXX_FLAGS " ${OpenMP_CXX_FLAGS}")
 ENDIF()
 
 INCLUDE(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
 IF (COMPILER_SUPPORTS_CXX17)
-   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+   #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+   #SET(CMAKE_CXX_STANDARD 17)
+   MESSAGE("Using CXX 17")
 ELSE()
    CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
    IF (COMPILER_SUPPORTS_CXX14)
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+      #SET(CMAKE_CXX_STANDARD 14)
    ELSE()
       CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
       IF (COMPILER_SUPPORTS_CXX11)
-         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+         #SET(CMAKE_CXX_STANDARD 11)
       ELSE()
          MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
       ENDIF()
    ENDIF()
 ENDIF()
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+message("Compling with CXX Flags: ${CMAKE_CXX_FLAGS}")
+
+#######################################################################################
 
 IF (RTSEIS_WRAP_PYTHON)
    #FIND_PACKAGE(Boost COMPONENTS python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
@@ -62,15 +72,15 @@ INCLUDE_DIRECTORIES(
    ${CMAKE_CURRENT_SOURCE_DIR}/include
    ${IPP_INCLUDE_DIR}
    ${MKL_INCLUDE_DIR}
+   ${BOOST_INCLUDEDIR}
    #${PYTHON_INCLUDE_DIRS}
-   #${Boost_INCLUDE_DIRS} 
    #${CJSON_INCLUDE_DIR}
    )
 
 ADD_SUBDIRECTORY(include)
 
 SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY} ${CJSON_LIBRARY})
-SET(LIBALL_PYTHON rtseis_shared ${LIBALL} ${PYTHON_LIBRARIES}) #${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+SET(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES}) #${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
@@ -93,6 +103,7 @@ SET(UTILS_SRCS
     src/utils/math/convolve.cpp
     src/utils/math/polynomial.cpp
     src/utils/math/vectorMath.cpp
+    src/utils/normalization/signBit.cpp
     src/utils/transforms/dft.cpp
     src/utils/transforms/dftUtils.cpp)
 SET(IPPS_SRCS
@@ -111,15 +122,22 @@ SET(PROCESSING_SRCS
     src/processing/singleChannel/postProcessing.cpp)
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
 
-ADD_LIBRARY(rtseis_shared SHARED ${SRCS})
-TARGET_LINK_LIBRARIES(rtseis_shared ${LIBALL})
-#IF (RTSEIS_WRAP_PYTHON)
-#   ADD_LIBRARY(pyrtseis MODULE python/pyrtseis.cpp)
-#   TARGET_LINK_LIBRARIES(pyrtseis PRIVATE pybind11::module)
-#   #PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
-#   #TARGET_LINK_LIBRARIES(rtseis_python
-#   #                      rtseis_shared ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
-#ENDIF()
+# cmake -DBUILD_SHARED_LIBS=YES /path/to/source
+set(BUILD_SHARED_LIBS YES)
+add_library(rtseis SHARED ${SRCS})
+target_link_libraries(rtseis
+                      PRIVATE ${MKL_LIBRARY} ${IPP_LIBRARY})
+#TARGET_COMPILE_FEATURES(rtseis PUBLIC CXX_STD_14)
+#SET_TARGET_PROPERTIES(rtseis PROPERTIES
+#                      CXX_STANDARD_REQUIRED YES
+#                      CXX_EXTENSIONS NO)
+IF (RTSEIS_WRAP_PYTHON)
+   add_library(pyrtseis MODULE python/pyrtseis.cpp)
+   target_link_libraries(pyrtseis PRIVATE pybind11::module rtseis)
+   #PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
+   #TARGET_LINK_LIBRARIES(rtseis_python
+   #                      rtseis ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+ENDIF()
 
 #########################################################################################
 #                                        Unit Tests                                     #
@@ -140,9 +158,10 @@ ADD_EXECUTABLE(testModules
                testing/modules/detrend.cpp
                testing/modules/classicSTALTA.cpp
                testing/modules/oneBitNormalization.cpp)
-
-TARGET_LINK_LIBRARIES(testUtils   rtseis_shared ${LIBALL})
-TARGET_LINK_LIBRARIES(testModules rtseis_shared ${LIBALL})
+TARGET_LINK_LIBRARIES(testUtils   PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+TARGET_LINK_LIBRARIES(testModules PRIVATE rtseis)
+#SET_PROPERTY(TARGET testUtils   PROPERTY CXX_STANDARD 17)
+#SET_PROPERTY(TARGET testModules PROPERTY CXX_STANDARD 17)
 ADD_TEST(NAME utils
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testUtils)
@@ -179,7 +198,7 @@ INCLUDE(CPack)
 #------------------------------------------------------------------------------#
 #                              Configuration Details                           #
 #------------------------------------------------------------------------------#
-SET_PROPERTY(TARGET rtseis_shared PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+SET_PROPERTY(TARGET rtseis PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 SET(RTSeis_LIBRARY sspl)
 SET(INCLUDE_INSTALL_DIR include/)
 SET(LIB_INSTALL_DIR lib/)

@@ -11,7 +11,7 @@ namespace Utilities
 namespace Math 
 {
 /*!
- * @defgroup rtseis_utils_math_convolve Convolution and Correlation
+ * @defgroup rtseis_utils_math_convolve Convolve
  * @brief Utility functions for convolution and correlation.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_math
@@ -24,6 +24,7 @@ namespace Convolve
      *        implemented in the time or frequency domain.  This allows the
      *        user to choose between circumstances when one domain leads 
      *        to a more efficient implementation than the other.
+     * @ingroup rtseis_utils_math_convolve
      */
     enum Implementation
     {
@@ -34,6 +35,7 @@ namespace Convolve
     /*!
      * @brief This defines the nature of the convolution or correlation
      *        and the consequence with respect to edge effects.
+     * @ingroup rtseis_utils_math_convolve
      */
     enum Mode
     {

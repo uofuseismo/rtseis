@@ -3,12 +3,12 @@
 #include <math.h>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#include "rtseis/modules/demean.hpp"
-#include "rtseis/modules/detrend.hpp"
+#include "rtseis/postProcessing/singleChannel/demean.hpp"
+#include "rtseis/postProcessing/singleChannel/detrend.hpp"
 #include "rtseis/log.h"
 #include "modules.hpp"
 
-using namespace RTSeis::Modules;
+using namespace RTSeis::PostProcessing::SingleChannel;
 
 
 int rtseis_test_modules_detrend(void)
