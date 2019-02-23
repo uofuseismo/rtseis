@@ -19,6 +19,14 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed window test");
 
+    ierr = rtseis_test_utils_normalization();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed normalization");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed normalization test");
+
     ierr = rtseis_test_utils_convolve();
     if (ierr != EXIT_SUCCESS)
     {   

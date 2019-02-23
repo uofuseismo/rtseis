@@ -115,7 +115,6 @@ SET(IPPS_SRCS
 SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp
-    src/modules/oneBitNormalization.cpp
     src/modules/classicSTALTA.cpp)
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
@@ -131,12 +130,13 @@ target_link_libraries(rtseis
 #SET_TARGET_PROPERTIES(rtseis PROPERTIES
 #                      CXX_STANDARD_REQUIRED YES
 #                      CXX_EXTENSIONS NO)
+set(RTSEIS_WRAP_PYTHON NO)
 IF (RTSEIS_WRAP_PYTHON)
    add_library(pyrtseis MODULE python/pyrtseis.cpp)
    target_link_libraries(pyrtseis PRIVATE pybind11::module rtseis)
-   #PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
-   #TARGET_LINK_LIBRARIES(rtseis_python
-   #                      rtseis ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+   ##PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
+   ##TARGET_LINK_LIBRARIES(rtseis_python
+   ##                      rtseis ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 ENDIF()
 
 #########################################################################################
@@ -152,12 +152,12 @@ ADD_EXECUTABLE(testUtils
                testing/utils/response.cpp
                testing/utils/filters.cpp
                testing/utils/transforms.cpp
+               testing/utils/normalization.cpp
                testing/utils/windowFunctions.cpp)
 ADD_EXECUTABLE(testModules
                testing/modules/modules.cpp
                testing/modules/detrend.cpp
-               testing/modules/classicSTALTA.cpp
-               testing/modules/oneBitNormalization.cpp)
+               testing/modules/classicSTALTA.cpp)
 TARGET_LINK_LIBRARIES(testUtils   PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
 TARGET_LINK_LIBRARIES(testModules PRIVATE rtseis)
 #SET_PROPERTY(TARGET testUtils   PROPERTY CXX_STANDARD 17)

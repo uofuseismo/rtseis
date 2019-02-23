@@ -15,6 +15,7 @@ int rtseis_test_utils_design_iir(void);
 int rtseis_test_utils_design_fir_fir1(void);
 int rtseis_test_utils_design_freqs(void);
 int rtseis_test_utils_design_groupDelay(void);
+int rtseis_test_utils_normalization(void);
 int rtseis_test_utils_windowFunctions(void);
 
 int rtseis_test_utils_filters(void);

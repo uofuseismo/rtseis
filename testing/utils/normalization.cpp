@@ -1,42 +1,53 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
 #include <cmath>
 #include <vector>
 #include <chrono>
 #define RTSEIS_LOGGING 1
-#include "rtseis/modules/oneBitNormalization.hpp"
+#include "utils.hpp"
+#include "rtseis/utilities/normalization/signBit.hpp"
 #include "rtseis/log.h"
-#include "modules.hpp"
 
-using namespace RTSeis::Modules;
+using namespace RTSeis::Utilities::Normalization;
 
+static int test_normalization_signBit(void);
 
-int rtseis_test_modules_oneBitNormalization(void)
+int rtseis_test_utils_normalization(void)
 {
-    // Set the defaults
-    OneBitNormalizationParameters ppParms(RTSeis::ProcessingMode::POST_PROCESSING,
-                                          RTSeis::Precision::DOUBLE);
-    OneBitNormalizationParameters rtParms = ppParms;
-    rtParms.setProcessingMode(RTSeis::ProcessingMode::REAL_TIME);
-    OneBitNormalization oneBit(ppParms);
+    int ierr;
+    ierr = test_normalization_signBit();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed sign bit normalization");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed signbit");
+    return EXIT_SUCCESS;
+}
+
+int test_normalization_signBit(void)
+{
+    fprintf(stdout, "%s: Testing signBit...\n", __func__);
+    SignBit signBit;
+    signBit.initialize();
     // Create a random signal
     int npts = 6500;
     double *x = new double[npts];
     for (int i=0; i<npts; i++)
-    {
+    {   
         x[i] = (static_cast<double> (rand())/RAND_MAX - 0.5)*100;
-    }
+    }   
     double *y = new double[npts];
     double *yref = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    int ierr = oneBit.apply(npts, x, y);
+    int ierr = signBit.apply(npts, x, y); 
     auto timeEnd = std::chrono::high_resolution_clock::now();
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
         return EXIT_FAILURE;
-    }
+    }   
     for (int i=0; i<npts; i++)
     {
         double sign =-1;
@@ -47,17 +58,17 @@ int rtseis_test_modules_oneBitNormalization(void)
             RTSEIS_ERRMSG("Failed to compute sign %lf %lf %lf",
                           x[i], sign, y[i]);
             return EXIT_FAILURE;
-        }
-    }
+        }   
+    }   
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
+    SignBit signBitRT = signBit; 
     // Do a real-time test
-    oneBit = OneBitNormalization(rtParms);
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (int job=0; job<2; job++)
-    {   
+    {
         for (size_t ip=0; ip<packetSize.size(); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
@@ -71,7 +82,7 @@ int rtseis_test_modules_oneBitNormalization(void)
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = oneBit.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                ierr = signBitRT.apply(nptsPass, &x[nxloc], &y[nxloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply onebit filter");
@@ -79,9 +90,18 @@ int rtseis_test_modules_oneBitNormalization(void)
                 }
                 nxloc = nxloc + nptsPass;
             }
-            oneBit.resetInitialConditions();
+            signBitRT.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
+            for (int i=0; i<npts; i++)
+            {
+                if (std::abs(yref[i] - y[i]) > 1.e-10)
+                {
+                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
+                                  i, y[i], yref[i]);
+                    return EXIT_FAILURE;
+                }
+            }
             for (int i=0; i<npts; i++)
             {
                 if (std::abs(yref[i] - y[i]) > 1.e-10)
@@ -94,7 +114,7 @@ int rtseis_test_modules_oneBitNormalization(void)
             if (job == 0)
             {
                 fprintf(stdout,
-                        "Passed oneBit filter fixed packet size %4d in %.8e (s)\n",
+                        "Passed signBit filter fixed packet size %4d in %.8e (s)\n",
                         packetSize[ip], tdif.count());
             }
             else
@@ -107,5 +127,5 @@ int rtseis_test_modules_oneBitNormalization(void)
     delete[] x;
     delete[] y;
     delete[] yref;
-    return EXIT_SUCCESS; 
+    return EXIT_SUCCESS;
 }

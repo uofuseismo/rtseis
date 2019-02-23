@@ -23,14 +23,6 @@ int main()
         return EXIT_FAILURE;
     }
 
-    ierr = rtseis_test_modules_oneBitNormalization();
-    if (ierr != EXIT_SUCCESS)
-    {
-        RTSEIS_ERRMSG("%s", "Failed one-bit normalization");
-        return EXIT_FAILURE;
-    }
-    RTSEIS_INFOMSG("%s", "Passed one-bit normalization test");
-
     ierr = rtseis_test_modules_demean();
     if (ierr != EXIT_SUCCESS)
     {
