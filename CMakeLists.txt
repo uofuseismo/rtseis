@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
-project(RTSeis VERSION 1.1.1 LANGUAGES C CXX)
+project(RTSeis VERSION 0.1.1 LANGUAGES C CXX)
 enable_testing()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
