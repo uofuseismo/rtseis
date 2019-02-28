@@ -3,9 +3,11 @@
 #define RTSEIS_LOGGING 1
 #include <cmath>
 #include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 
+using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterDesign;
 
 /*! Test FIR-window based filter design (fir1 in matlab). */
@@ -52,15 +54,17 @@ int rtseis_test_utils_design_fir_fir1(void)
                                0.004359748553493,  0.000000000000000,
                               -0.000380306566042, -0.000000000000000,
                                0});
+    FilterRepresentations::FIR fir;
     std::vector<double> ptaps;
     // Test 1
     order = 13; r = 0.6; 
-    int ierr = FIR::FIR1Lowpass(order, r, ptaps, FIR::Window::HAMMING);
+    int ierr = FIR::FIR1Lowpass(order, r, fir, FIR::Window::HAMMING);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to generate lowpass filter");
         return EXIT_FAILURE;
     }
+    ptaps = fir.getFilterTaps();
     if (ptaps.size() != ref1.size())
     {
         RTSEIS_ERRMSG("%s", "Inconsistent sizes");
@@ -76,12 +80,13 @@ int rtseis_test_utils_design_fir_fir1(void)
     }
     // Test 2
     order = 16; r = 0.45;
-    ierr = FIR::FIR1Highpass(order, r, ptaps, FIR::Window::HANN);
+    ierr = FIR::FIR1Highpass(order, r, fir, FIR::Window::HANN);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to generate highpass filter");
         return EXIT_FAILURE;
     }
+    ptaps = fir.getFilterTaps();
     if (ptaps.size() != ref2.size())
     {
         RTSEIS_ERRMSG("%s", "Inconsistent sizes");
@@ -99,12 +104,13 @@ int rtseis_test_utils_design_fir_fir1(void)
     std::pair<double,double> r2;
     order = 11;
     r2 = std::make_pair(0.2, 0.8);
-    ierr = FIR::FIR1Bandpass(order, r2, ptaps, FIR::Window::BARTLETT); 
+    ierr = FIR::FIR1Bandpass(order, r2, fir, FIR::Window::BARTLETT); 
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to generate bandpass filter");
         return EXIT_FAILURE;
     }
+    ptaps = fir.getFilterTaps();
     if (ptaps.size() != ref3.size())
     {
         RTSEIS_ERRMSG("%s", "Inconsistent sizes");
@@ -121,12 +127,13 @@ int rtseis_test_utils_design_fir_fir1(void)
     // Test 4
     order = 20;
     r2 = std::make_pair(0.15, 0.85);
-    ierr = FIR::FIR1Bandstop(order, r2, ptaps, FIR::Window::BLACKMAN_OPT);
+    ierr = FIR::FIR1Bandstop(order, r2, fir, FIR::Window::BLACKMAN_OPT);
     if (ierr != 0)  
     {
         RTSEIS_ERRMSG("%s", "Failed to generate bandstop filter");
         return EXIT_FAILURE;
     }
+    ptaps = fir.getFilterTaps();
     if (ptaps.size() != ref4.size())
     {
         RTSEIS_ERRMSG("%s", "Inconsistent sizes");

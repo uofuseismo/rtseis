@@ -4,18 +4,20 @@
 #include <cmath>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
+using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterDesign;
 
 static IppWinType classifyWindow(const FIR::Window window);
 
 int FIR::FIR1Lowpass(const int order, const double r,
-                     std::vector<double> &taps,
+                     FilterRepresentations::FIR &fir,
                      const Window window)
 {
-    taps.clear();
+    fir.clear();
     // Check inputs
     if (order < 4 || r <= 0.0 || r >= 1.0)
     {
@@ -43,7 +45,7 @@ int FIR::FIR1Lowpass(const int order, const double r,
                                    doNormal, pBuffer);
     if (status == ippStsNoErr)
     {
-        taps.assign(pTaps, pTaps+static_cast<size_t> (tapsLen));
+        fir.setFilterTaps(static_cast<size_t> (tapsLen), pTaps);
     }
     else
     {
@@ -55,10 +57,10 @@ int FIR::FIR1Lowpass(const int order, const double r,
 }
 
 int FIR::FIR1Highpass(const int order, const double r,
-                      std::vector<double> &taps,
+                      FilterRepresentations::FIR &fir,
                       const Window window)
 {
-    taps.clear();
+    fir.clear();
     // Check inputs
     if (order < 4 || r <= 0.0 || r >= 1.0)
     {   
@@ -86,7 +88,7 @@ int FIR::FIR1Highpass(const int order, const double r,
                                     doNormal, pBuffer);
     if (status == ippStsNoErr)
     {
-        taps.assign(pTaps, pTaps+static_cast<size_t> (tapsLen));
+        fir.setFilterTaps(static_cast<size_t> (tapsLen), pTaps);
     }
     else
     {
@@ -98,10 +100,10 @@ int FIR::FIR1Highpass(const int order, const double r,
 }
 
 int FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
-                      std::vector<double> &taps,
+                      FilterRepresentations::FIR &fir,
                       const Window window)
 {
-    taps.clear();
+    fir.clear();
     // Check inputs
     const double r0 = r.first;
     const double r1 = r.second;
@@ -139,7 +141,7 @@ int FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
                                     doNormal, pBuffer);
     if (status == ippStsNoErr)
     {
-        taps.assign(pTaps, pTaps+static_cast<size_t> (tapsLen));
+        fir.setFilterTaps(static_cast<size_t> (tapsLen), pTaps);
     }
     else
     {
@@ -151,10 +153,10 @@ int FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
 }
 
 int FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
-                      std::vector<double> &taps,
+                      FilterRepresentations::FIR &fir,
                       const Window window)
 {
-    taps.clear();
+    fir.clear();
     // Check inputs
     const double r0 = r.first;
     const double r1 = r.second;
@@ -192,7 +194,7 @@ int FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
                                     doNormal, pBuffer);
     if (status == ippStsNoErr)
     {
-        taps.assign(pTaps, pTaps+static_cast<size_t> (tapsLen));
+        fir.setFilterTaps(static_cast<size_t> (tapsLen), pTaps);
     }
     else
     {

@@ -7,6 +7,10 @@ namespace RTSeis
 {
 namespace Utilities
 {
+namespace FilterRepresentations
+{
+class FIR;
+}
 /*!
  * @defgroup rtseis_utils_filterDesign Filter Design
  * @brief Utility functions for FIR and IIR filter design.
@@ -39,14 +43,14 @@ namespace FIR
      *                    This must be at least 4.
      * @param[in] r       The normalized cutoff frequency where 1 is
      *                    the Nyquist.
-     * @param[out] taps   The filter coefficients the FIR lowpass filter.
-     *                    has dimension [order+1].
+     * @param[out] fir    The FIR lowpass filter corresponding to the
+     *                    design parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_fir
      */
     int FIR1Lowpass(const int order, const double r,
-                    std::vector<double> &taps,
+                    FilterRepresentations::FIR &fir,
                     const Window window = Window::HAMMING);
     /*!
      * @brief Designs an FIR highpass filter using the window method.
@@ -54,14 +58,14 @@ namespace FIR
      *                    This must be at least 4.
      * @param[in] r       The normalized cutoff frequency where 1 is
      *                    the Nyquist.
-     * @param[out] taps   The filter coefficients the FIR highpass filter.
-     *                    has dimension [order+1].
+     * @param[out] fir    The highpass filter corresponding to the 
+     *                    design parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_fir
      */
     int FIR1Highpass(const int order, const double r,
-                     std::vector<double> &taps,
+                     FilterRepresentations::FIR &fir,
                      const Window window = Window::HAMMING);
     /*!
      * @brief Designs an FIR bandpass filter using the window method.
@@ -71,14 +75,14 @@ namespace FIR
      *                    frequencies where 1 is the Nyquist.  Here,
      *                    r.first is the low cutoff and r.second is the
      *                    high cutoff.
-     * @param[out] taps   The filter coefficients the FIR bandpass filter.
-     *                    This has dimension [order+1].
+     * @param[out] fir    The bandpass filter corresponding to the design
+     *                    parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_fir
      */
     int FIR1Bandpass(const int order, const std::pair<double,double> &r,
-                     std::vector<double> &taps,
+                     FilterRepresentations::FIR &fir,
                      const Window window = Window::HAMMING);
     /*! 
      * @brief Designs an FIR bandstop (notch) filter using the window method.
@@ -88,14 +92,14 @@ namespace FIR
      *                    frequencies where 1 is the Nyquist.  Here,
      *                    r.first is the low cutoff and r.second is the
      *                    high cutoff.
-     * @param[out] taps   The filter coefficients the FIR bandpass filter.
-     *                    has dimension [order+1].
+     * @param[out] fir    The bnadstop filter corresponding to the design
+     *                    parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_fir
      */
     int FIR1Bandstop(const int order, const std::pair<double,double> &r,
-                     std::vector<double> &taps,
+                     FilterRepresentations::FIR &fir,
                      const Window window = Window::HAMMING);
 }; /* End FIR */
 
