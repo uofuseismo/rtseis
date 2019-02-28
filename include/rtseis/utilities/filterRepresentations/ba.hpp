@@ -18,8 +18,8 @@ namespace FilterRepresentations
 
 /*!
  * @class BA ba.hpp "include/rtseis/utilities/filterRepresentations/ba.hpp"
- * @brief Represents a filter in terms of numerator and denominator
- *        coefficients.
+ * @brief Represents an infinite impulse resonse filter in terms of
+ *        numerator and denominator coefficients.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_fr
  */

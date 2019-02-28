@@ -12,7 +12,7 @@ namespace FilterRepresentations
 {
 /*!
  * @class FIR fir.hpp "include/rtseis/utilities/filterRepresentations/fir.hpp"
- * @brief Represents an FIR filter in terms of filter taps.
+ * @brief Represents a finite impulse response filter in terms of filter taps.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_fr
  */

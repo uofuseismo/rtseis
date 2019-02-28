@@ -12,8 +12,8 @@ namespace FilterRepresentations
 {
 /*!
  * @class SOS sos.hpp "include/rtseis/utilities/filterRepresentations/sos.hpp"
- * @brief Represents a filter in terms of a series of cascaded
- *        second-order-sections.
+ * @brief Represents an infinite impulse response filter in terms of a
+ *        series of cascaded second-order-sections.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_fr
  */

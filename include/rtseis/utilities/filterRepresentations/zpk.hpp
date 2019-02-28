@@ -12,7 +12,8 @@ namespace FilterRepresentations
 {
 /*!
  * @class ZPK zpk.hpp "include/rtseis/utilities/filterRepresentations/zpk.hpp"
- * @brief Represents a filter in terms of zeros, poles, and a gain.
+ * @brief Represents an infinite impulse response filter in terms of
+ *        zeros, poles, and a gain.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_fr
  */
