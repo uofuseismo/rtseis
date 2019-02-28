@@ -21,33 +21,33 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 #                        Define the compiler standard and OpenMP                         #
 ##########################################################################################
 include(FindOpenMP QUIET)
-IF (OPENMP_FOUND)
+if (OPENMP_FOUND)
    message("OpenMP found")
    string(APPEND CMAKE_C_FLAGS   " ${OpenMP_C_FLAGS}")
    string(APPEND CMAKE_CXX_FLAGS " ${OpenMP_CXX_FLAGS}")
-ENDIF()
+endif()
 
-INCLUDE(CheckCXXCompilerFlag)
+include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
-IF (COMPILER_SUPPORTS_CXX17)
+if (COMPILER_SUPPORTS_CXX17)
    #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
    #SET(CMAKE_CXX_STANDARD 17)
-   MESSAGE("Using CXX 17")
-ELSE()
+   message("Using CXX 17")
+else()
    CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
-   IF (COMPILER_SUPPORTS_CXX14)
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+   if (COMPILER_SUPPORTS_CXX14)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
       #SET(CMAKE_CXX_STANDARD 14)
-   ELSE()
+   else()
       CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-      IF (COMPILER_SUPPORTS_CXX11)
-         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+      if (COMPILER_SUPPORTS_CXX11)
+         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
          #SET(CMAKE_CXX_STANDARD 11)
-      ELSE()
-         MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-      ENDIF()
-   ENDIF()
-ENDIF()
+      else()
+         message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+      endif()
+   endif()
+endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -88,11 +88,12 @@ SET(UTILS_SRCS
     src/utils/design/response.cpp
     src/utils/design/iir.cpp
     src/utils/design/fir.cpp
-    src/utils/design/ba.cpp
-    src/utils/design/sos.cpp
-    src/utils/design/zpk.cpp
     src/utils/design/analogProtype.cpp
     src/utils/design/windowFunctions.cpp
+    src/utils/filterRepresentations/ba.cpp
+    src/utils/filterRepresentations/fir.cpp
+    src/utils/filterRepresentations/sos.cpp
+    src/utils/filterRepresentations/zpk.cpp
     src/utils/filters/downsample.cpp
     src/utils/filters/firfilter.cpp
     src/utils/filters/firfilterMR.cpp

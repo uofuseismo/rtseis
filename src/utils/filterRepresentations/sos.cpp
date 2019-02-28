@@ -6,18 +6,31 @@
 
 using namespace RTSeis::Utilities::FilterRepresentations;
 
+#define DEFAULT_TOL 1.e-12
 
-SOS::SOS(void)
+struct SOS::SOSImpl
 {
-    clear();
+    /// Numerator coefficients
+    std::vector<double> bs;
+    /// Denominator coefficients
+    std::vector<double> as;
+    /// Number of sections
+    int ns = 0;
+    /// Equality tolerance
+    double tol = DEFAULT_TOL;
+};
+
+SOS::SOS(void) :
+    pImpl_(new SOSImpl())
+{
     return;
 }
 
 SOS::SOS(const int ns,
          const std::vector<double> &bs,
-         const std::vector<double> &as)
+         const std::vector<double> &as) :
+    pImpl_(new SOSImpl())
 {
-    clear();
     setSecondOrderSections(ns, bs, as);
     return;
 }
@@ -25,26 +38,32 @@ SOS::SOS(const int ns,
 SOS& SOS::operator=(const SOS &sos)
 {
     if (&sos == this){return *this;}
-    clear();
-    bs_ = sos.bs_;
-    as_ = sos.as_;
-    ns_ = sos.ns_;
-    tol_ = sos.tol_;
+    pImpl_ = std::unique_ptr<SOSImpl> (new SOSImpl());
+    pImpl_->bs  = sos.pImpl_->bs;
+    pImpl_->as  = sos.pImpl_->as;
+    pImpl_->ns  = sos.pImpl_->ns;
+    pImpl_->tol = sos.pImpl_->tol;
     return *this;
 }
 
 bool SOS::operator==(const SOS &sos) const
 {
-    if (bs_.size() != sos.bs_.size()){return false;}
-    if (as_.size() != sos.as_.size()){return false;}
-    if (ns_ != sos.ns_){return false;}
-    for (size_t i=0; i<bs_.size(); i++)
+    if (pImpl_->bs.size() != sos.pImpl_->bs.size()){return false;}
+    if (pImpl_->as.size() != sos.pImpl_->as.size()){return false;}
+    if (pImpl_->ns != sos.pImpl_->ns){return false;}
+    for (size_t i=0; i<pImpl_->bs.size(); i++)
     {
-        if (std::abs(bs_[i] - sos.bs_[i]) > tol_){return false;}
+        if (std::abs(pImpl_->bs[i] - sos.pImpl_->bs[i]) > pImpl_->tol)
+        {
+            return false;
+        }
     }
-    for (size_t i=0; i<as_.size(); i++)
+    for (size_t i=0; i<pImpl_->as.size(); i++)
     {
-        if (std::abs(as_[i] - sos.as_[i]) > tol_){return false;}
+        if (std::abs(pImpl_->as[i] - sos.pImpl_->as[i]) > pImpl_->tol)
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -68,10 +87,10 @@ SOS::~SOS(void)
 
 void SOS::clear(void)
 {
-    bs_.clear();
-    as_.clear();
-    ns_ = 0;
-    tol_ = defaultTol_;
+    pImpl_->bs.clear();
+    pImpl_->as.clear();
+    pImpl_->ns = 0;
+    pImpl_->tol = DEFAULT_TOL;
     return;
 }
 
@@ -80,16 +99,16 @@ void SOS::print(FILE *fout)
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
     fprintf(f, "Numerator sections\n");
-    for (int i=0; i<ns_; i++)
+    for (int i=0; i<pImpl_->ns; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
-                bs_[3*i], bs_[3*i+1], bs_[3*i+2]);
+                pImpl_->bs[3*i], pImpl_->bs[3*i+1], pImpl_->bs[3*i+2]);
     }
     fprintf(f, "Denominator sections\n");
-    for (int i=0; i<ns_; i++)
+    for (int i=0; i<pImpl_->ns; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
-                as_[3*i], as_[3*i+1], as_[3*i+2]);
+                pImpl_->as[3*i], pImpl_->as[3*i+1], pImpl_->as[3*i+2]);
     }
     return;
 }
@@ -132,30 +151,30 @@ int SOS::setSecondOrderSections(const int ns,
         }
     }
     // It all checks out
-    ns_ = ns;
-    bs_ = bs;
-    as_ = as;
+    pImpl_->ns = ns;
+    pImpl_->bs = bs;
+    pImpl_->as = as;
     return 0;
 }
 
 std::vector<double> SOS::getNumeratorCoefficients(void) const
 {
-    return bs_;
+    return pImpl_->bs;
 }
 
 std::vector<double> SOS::getDenominatorCoefficients(void) const
 {
-    return as_;
+    return pImpl_->as;
 }
 
 int SOS::getNumberOfSections(void) const
 {
-    return ns_;
+    return pImpl_->ns;
 }
 
 void SOS::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
-    tol_ = tol;
+    pImpl_->tol = tol;
     return;
 }

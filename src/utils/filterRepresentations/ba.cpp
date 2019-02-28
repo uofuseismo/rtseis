@@ -5,37 +5,39 @@
 
 using namespace RTSeis::Utilities::FilterRepresentations;
 
-BA::BA(void)
+#define DEFAULT_TOL 1.e-12
+
+struct BA::BAImpl
 {
-    clear();
+    /// Numerator coefficients
+    std::vector<double> b; 
+    /// Denominator coefficients 
+    std::vector<double> a; 
+    /// Default tolerance
+    double tol = DEFAULT_TOL;
+};
+
+BA::BA(void) :
+    pImpl_(new BAImpl())
+{
     return;
 }
 
-BA::BA(const std::vector<double> &b, const std::vector<double> &a)
+BA::BA(const std::vector<double> &b, const std::vector<double> &a) :
+    pImpl_(new BAImpl())
 {
-    clear();
     setNumeratorCoefficients(b);
     setDenominatorCoefficients(a);
     return;
 }
 
-BA::BA(const std::vector<double> &firTaps)
-{
-    clear();
-    setNumeratorCoefficients(firTaps);
-    std::vector<double> a({1});
-    setDenominatorCoefficients(a); 
-    return;
-}
-
-BA& BA:: operator=(const BA &ba)
+BA& BA::operator=(const BA &ba)
 {
     if (&ba == this){return *this;}
-    clear();
-    b_ = ba.b_;
-    a_ = ba.a_;
-    tol_ = ba.tol_;
-    isFIR_ = ba.isFIR_;
+    pImpl_ = std::unique_ptr<BAImpl> (new BAImpl());
+    pImpl_->b   = ba.pImpl_->b;
+    pImpl_->a   = ba.pImpl_->a;
+    pImpl_->tol = ba.pImpl_->tol;
     return *this;
 }
 
@@ -53,17 +55,22 @@ BA::~BA(void)
 
 bool BA::operator==(const BA &ba) const
 {
-    if (b_.size() != ba.b_.size()){return false;}
-    if (a_.size() != ba.a_.size()){return false;}
-    for (size_t i=0; i<b_.size(); i++)
+    if (pImpl_->b.size() != ba.pImpl_->b.size()){return false;}
+    if (pImpl_->a.size() != ba.pImpl_->a.size()){return false;}
+    for (size_t i=0; i<pImpl_->b.size(); i++)
     {
-        if (std::abs(b_[i] - ba.b_[i]) > tol_){return false;}
+        if (std::abs(pImpl_->b[i] - pImpl_->b[i]) > pImpl_->tol)
+        {
+            return false;
+        }
     }
-    for (size_t i=0; i<a_.size(); i++)
+    for (size_t i=0; i<pImpl_->a.size(); i++)
     {
-        if (std::abs(a_[i] - ba.a_[i]) > tol_){return false;}
+        if (std::abs(pImpl_->a[i] - pImpl_->a[i]) > pImpl_->tol)
+        {
+            return false;
+        }
     }
-    if (isFIR_ != ba.isFIR_){return false;}
     return true;
 }
 
@@ -76,24 +83,17 @@ void BA::print(FILE *fout)
 {
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
-    if (!isFIR())
+    fprintf(f, "Numerator Coefficients:\n");
+    for (size_t i=0; i<pImpl_->b.size(); i++)
     {
-        fprintf(f, "Numerator Coefficients:\n");
+        fprintf(f, "%+.16lf\n", pImpl_->b[i]);
     }
-    else
-    {
-        fprintf(f, "FIR Coefficients:\n");
-    }
-    for (size_t i=0; i<b_.size(); i++)
-    {
-        fprintf(f, "%+.16lf\n", b_[i]);
-    }
-    if (!isFIR())
+    if (pImpl_->a.size() > 0)
     {
         fprintf(f, "Denominator Coefficients:\n");
-        for (size_t i=0; i<a_.size(); i++)
+        for (size_t i=0; i<pImpl_->a.size(); i++)
         {
-            fprintf(f, "%+.16lf\n", a_[i]);
+            fprintf(f, "%+.16lf\n", pImpl_->a[i]);
         }
     }
     return;
@@ -101,21 +101,20 @@ void BA::print(FILE *fout)
 
 void BA::clear(void)
 {
-    b_.clear();
-    a_.clear();
-    tol_ = defaultTol_;
-    isFIR_ = false;
+    pImpl_->b.clear();
+    pImpl_->a.clear();
+    pImpl_->tol = DEFAULT_TOL;
     return;
 }
 
 int BA::getNumberOfNumeratorCoefficients(void) const
 {
-    return static_cast<int> (b_.size());
+    return static_cast<int> (pImpl_->b.size());
 }
 
 int BA::getNumberOfDenominatorCoefficients(void) const
 {
-    return static_cast<int> (a_.size());
+    return static_cast<int> (pImpl_->a.size());
 }
 
 void BA::setNumeratorCoefficients(const size_t n, double b[])
@@ -123,77 +122,62 @@ void BA::setNumeratorCoefficients(const size_t n, double b[])
     if (n > 0 && b == nullptr)
     {
         RTSEIS_ERRMSG("%s", "b is null");
-        b_.resize(0);
+        pImpl_->b.resize(0);
         return;
     }
-    b_.resize(n);
-    for (size_t i=0; i<n; i++)
-    {
-        b_[i] = b[i];
-    }
+    pImpl_->b.resize(n);
+    std::copy(b, b+n, pImpl_->b.begin());
     return;
 }
 
 void BA::setNumeratorCoefficients(const std::vector<double> &b)
 {
-    b_ = b;
+    pImpl_->b = b;
     return;
 }
 
 void BA::setDenominatorCoefficients(const size_t n, double a[])
 {
-    isFIR_ = false;
     if (n > 0 && a == nullptr)
     {
         RTSEIS_ERRMSG("%s", "a is null");
-        a_.resize(0);
+        pImpl_->a.resize(0);
         return;
     }
     if (n > 0 && a[0] == 0){RTSEIS_WARNMSG("%s", "a[0] = 0");}
-    a_.resize(n);
-    for (size_t i=0; i<n; i++)
-    {
-        a_[i] = a[i];
-    }
-    if (a_.size() == 1)
-    {
-        if (std::abs(a_[0] - 1) < 1.e-14){isFIR_ = true;}
-    }
+    pImpl_->a.resize(n);
+    std::copy(a, a+n, pImpl_->a.begin());
     return;
 }
 
 void BA::setDenominatorCoefficients(const std::vector<double> &a)
 {
-    isFIR_ = false;
-    if (a.size() > 0)
+    if (pImpl_->a.size() > 0)
     {
         if (a[0] == 0){RTSEIS_WARNMSG("%s", "a[0] = 0");}
     }
-    a_ = a;
-    if (a_.size() == 1)
-    {
-        if (std::abs(a_[0] - 1) < 1.e-14){isFIR_ = true;}
-    }
+    pImpl_->a = a;
     return;
 }
 
 std::vector<double> BA::getNumeratorCoefficients(void) const
 {
-    return b_;
+    return pImpl_->b;
 }
 
 std::vector<double> BA::getDenominatorCoefficients(void) const
 {
-    return a_;
+    return pImpl_->a;
 }
 
 void BA::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
-    tol_ = tol;
+    pImpl_->tol = tol;
     return;
 }
 
+/*
 bool BA::isZeroDenominator(void) const
 {
     for (size_t i=0; i<a_.size(); i++)
@@ -207,3 +191,4 @@ bool BA::isFIR(void) const
 {
     return isFIR_;
 }
+*/

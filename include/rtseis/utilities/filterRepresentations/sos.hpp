@@ -2,7 +2,7 @@
 #define RTSEIS_UTILS_FR_SOS_HPP 1
 #include <cstdio>
 #include <vector>
-#include "rtseis/config.h"
+#include <memory>
 
 namespace RTSeis
 {
@@ -119,16 +119,8 @@ class SOS
          */
         void setEqualityTolerance(const double tol = 1.e-12);
     private:
-        /*!< The numerator sections. */
-        std::vector<double> bs_; 
-        /*!< The denominator sections. */
-        std::vector<double> as_; 
-        /*!< The number of sections. */
-        int ns_ = 0; 
-        /*!< Default tolerance. */
-        const double defaultTol_ = 1.e-12;
-        /*!< Tolerance in checking equality. */
-        double tol_ = defaultTol_;
+        class SOSImpl;
+        std::unique_ptr<SOSImpl> pImpl_;
 }; // End SOS
 }; // End FilterRepresentations
 }; // End Utilities

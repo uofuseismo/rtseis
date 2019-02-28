@@ -2,7 +2,7 @@
 #define RTSEIS_UTILS_FR_BA_HPP 1
 #include <cstdio>
 #include <vector>
-#include "rtseis/config.h"
+#include <memory>
 
 namespace RTSeis
 {
@@ -30,7 +30,6 @@ class BA
          * @brief Default constructor.
          */ 
         BA(void);
-        explicit BA(const std::vector<double> &firTaps);
         /*!
          * @brief Constructs a transfer function class from the given numerator
          *        and denminator coefficients.
@@ -127,26 +126,13 @@ class BA
          * @result The denominator coefficients.
          */
         std::vector<double> getDenominatorCoefficients(void) const;
-        void setEqualityTolerance(const double tol = 1.e-12);
         /*!
-         * @brief Convenience function to determine if all denominator
-         *        coefficients are 0.
-         * @retval True indicates that all denominator coefficients are 0.
-         * @retval False indicates that all denominator coefficients are not 0.
+         * @brief Sets the equality tolerance.
          */
-        bool isZeroDenominator(void) const;
-        bool isFIR(void) const;
+        void setEqualityTolerance(const double tol = 1.e-12);
     private:
-        /*!< Default tolerance. */
-        const double defaultTol_ = 1.e-12;
-        /*!< The numerator coefficients. */
-        std::vector<double> b_;
-        /*!< The denoninator coefficients. */
-        std::vector<double> a_;
-        /*!< Tolerance in checking equality. */
-        double tol_ = defaultTol_;
-        /*!< Determines if the filter is an FIR filter. */
-        bool isFIR_ = false;
+        class BAImpl;
+        std::unique_ptr<BAImpl> pImpl_;
 }; // End BA
 }; // End FilterRepresentations
 }; // End Utilities

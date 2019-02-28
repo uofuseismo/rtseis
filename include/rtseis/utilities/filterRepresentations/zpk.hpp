@@ -1,8 +1,8 @@
-#ifndef RTSEIS_UTILS_ZPK_HPP
-#define RTSEIS_UTILS_ZPK_HPP 1
+#ifndef RTSEIS_UTILS_FR_ZPK_HPP
+#define RTSEIS_UTILS_FR_ZPK_HPP 1
 #include <complex>
 #include <vector>
-#include "rtseis/config.h"
+#include <memory>
 
 namespace RTSeis
 {
@@ -150,16 +150,8 @@ class ZPK
          */
         void setEqualityTolerance(const double tol = 1.e-12);
     private:
-        /*!< The zeros. */
-        std::vector<std::complex<double>> z_;
-        /*!< The poles. */
-        std::vector<std::complex<double>> p_;
-        /*!< The gain. */
-        double k_ = 0;
-        /*!< Default tolerance. */
-        const double defaultTol_ = 1.e-12;
-        /*!< Tolerance in checking equality. */
-        double tol_ = defaultTol_;
+        class ZPKImpl;
+        std::unique_ptr<ZPKImpl> pImpl_;
 }; // End ZPK
 }; // End Representations
 }; // End Utilities

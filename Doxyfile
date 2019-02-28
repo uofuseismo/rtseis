@@ -795,9 +795,7 @@ INPUT                  = include/rtseis/modules/classicSTALTA.hpp \
                          include/rtseis/utilities/design/fir.hpp \
                          include/rtseis/utilities/design/iir.hpp \
                          include/rtseis/utilities/design/response.hpp \
-                         include/rtseis/utilities/math/convolve.hpp \
-                         include/rtseis/utilities/math/polynomial.hpp \
-                         include/rtseis/utilities/math/vectorMath.hpp \
+                         include/rtseis/utilities/math/ \
                          include/rtseis/utilities/filterImplementations/downsample.hpp \
                          include/rtseis/utilities/filterImplementations/firFilter.hpp \
                          include/rtseis/utilities/filterImplementations/iirFilter.hpp \
@@ -805,10 +803,9 @@ INPUT                  = include/rtseis/modules/classicSTALTA.hpp \
                          include/rtseis/utilities/filterImplementations/medianFilter.hpp \
                          include/rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp \
                          include/rtseis/utilities/filterImplementations/sosFilter.hpp \
-                         include/rtseis/utilities/filterRepresentations/ba.hpp \
-                         include/rtseis/utilities/filterRepresentations/sos.hpp \
-                         include/rtseis/utilities/filterRepresentations/zpk.hpp \
+                         include/rtseis/utilities/filterRepresentations/ \
                          include/rtseis/utilities/transforms/transforms.hpp \
+                         include/rtseis/utilities/normalization/signBit.hpp \
                          include/rtseis/postProcessing/singleChannel/waveform.hpp \
                          include/rtseis/postProcessing/singleChannel/demean.hpp \
                          include/rtseis/postProcessing/singleChannel/detrend.hpp \
