@@ -6,6 +6,9 @@
 #ifndef RTSEIS_UTILS_MATH_CONVOLVE_HPP
 #include "rtseis/utilities/math/convolve.hpp"
 #endif
+#ifndef RTSEIS_POSTPROCESSING_SC_TAPER
+#include "rtseis/postProcessing/singleChannel/taper.hpp"
+#endif
 
 namespace RTSeis
 {
@@ -66,7 +69,7 @@ class Waveform : public std::exception
          * @param[in] implementation  Defines the implementation type.
          * @throws std::invalid_argument if s is empty.
          */
-        void convolve(const std::vector<double> s,
+        void convolve(const std::vector<double> &s,
               const RTSeis::Utilities::Math::Convolve::Mode mode = RTSeis::Utilities::Math::Convolve::Mode::FULL,
               const RTSeis::Utilities::Math::Convolve::Implementation implementation = RTSeis::Utilities::Math::Convolve::Implementation::AUTO);
         /*!
@@ -79,6 +82,20 @@ class Waveform : public std::exception
          *        then computing \f$ y - (a x + b) \f$.
          */
         void detrend(void);
+        /*!
+         * @brief Tapers the ends of a signal.
+         * @param[in] pct  The percentage of the signal to which the taper will
+         *                 be applied.  For example, 5 percent indicates that
+         *                 the first 2.5 and final 2.5 percent of the signal
+         *                  will be tapered. 
+         * @param[in] window  Defines the window function used to generate
+         *                    the taper.
+         * @note The SAC tapering convention is used where the first and final
+         *       samples of the tapered signal are set to 0.
+         * @throw std::invalid_argument if the parameters are invalid.
+         */
+        void taper(const double pct = 5,
+                   const TaperParameters::Type window = TaperParameters::Type::HAMMING);
     private:
         class DataImpl;
         std::unique_ptr<DataImpl> pData_;

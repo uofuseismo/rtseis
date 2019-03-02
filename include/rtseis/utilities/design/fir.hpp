@@ -1,7 +1,6 @@
 #ifndef RTSEIS_UTILS_DESIGN_FIR_HPP
 #define RTSEIS_UTILS_DESIGN_FIR_HPP 1
-#include <vector>
-#include "rtseis/config.h"
+#include <utility>
 
 namespace RTSeis
 {

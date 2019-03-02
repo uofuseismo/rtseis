@@ -98,6 +98,9 @@ int SignBit::apply(const int nx, const double x[], double y[])
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
         return -1;
     }
+#ifdef __INTEL_COMPILER
+    #pragma forceinline
+#endif
     RTSeis::Utilities::Math::VectorMath::copysign(nx, x, y);
     return 0;
 }
@@ -115,6 +118,9 @@ int SignBit::apply(const int nx, const float x[], float y[])
         if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
         return -1; 
     }
+#ifdef __INTEL_COMPILER
+    #pragma forceinline
+#endif
     RTSeis::Utilities::Math::VectorMath::copysign(nx, x, y);
     return 0;
 }

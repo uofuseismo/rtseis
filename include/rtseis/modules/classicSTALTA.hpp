@@ -129,7 +129,7 @@ class ClassicSTALTAParameters
          *        This class will have to be re-initialized to use again.
          * @ingroup rtseis_modules_cSTALTA_parameters
          */
-        virtual void clear(void);
+        void clear(void);
         /*!
          * @brief Determines if the class parameters are valid and can be
          *        used to initialize the STA/LTA processing.

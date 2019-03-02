@@ -15,8 +15,8 @@ static std::pair<int,int> computeTrimIndices(
     const Convolve::Mode mode,
     const int n1, const int n2);
 
-int Convolve::convolve(const std::vector<double> a,
-                       const std::vector<double> b,
+int Convolve::convolve(const std::vector<double> &a,
+                       const std::vector<double> &b,
                        std::vector<double> &c,
                        const Convolve::Mode mode,
                        const Convolve::Implementation implementation)
@@ -80,8 +80,8 @@ int Convolve::convolve(const std::vector<double> a,
     return 0;
 }
 
-int Convolve::correlate(const std::vector<double> a,
-                        const std::vector<double> b,
+int Convolve::correlate(const std::vector<double> &a,
+                        const std::vector<double> &b,
                         std::vector<double> &c, 
                         const Convolve::Mode mode,
                         const Convolve::Implementation implementation)
@@ -150,7 +150,7 @@ int Convolve::correlate(const std::vector<double> a,
     return 0;
 }
 
-int Convolve::autocorrelate(const std::vector<double> a,
+int Convolve::autocorrelate(const std::vector<double> &a,
                             std::vector<double> &c, 
                             const Convolve::Mode mode,
                             const Convolve::Implementation implementation)

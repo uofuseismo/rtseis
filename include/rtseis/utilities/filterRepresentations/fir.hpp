@@ -2,7 +2,6 @@
 #define RTSEIS_UTILS_FR_FIR_HPP 1
 #include <vector>
 #include <memory>
-#include "rtseis/config.h"
 
 namespace RTSeis
 {

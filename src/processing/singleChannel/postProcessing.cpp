@@ -3,11 +3,13 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <memory>
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
 #include "rtseis/postProcessing/singleChannel/detrend.hpp"
 #include "rtseis/postProcessing/singleChannel/demean.hpp"
+#include "rtseis/postProcessing/singleChannel/taper.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 
 using namespace RTSeis::PostProcessing::SingleChannel;
@@ -100,7 +102,7 @@ void Waveform::getData(std::vector<double> &y)
 }
 
 void Waveform::convolve(
-    const std::vector<double> s,
+    const std::vector<double> &s,
     const Utilities::Math::Convolve::Mode mode,
     const Utilities::Math::Convolve::Implementation implementation)
 {
@@ -144,8 +146,6 @@ void Waveform::demean(void)
         pData_->resizeOutputData(len);
         double  *y = pData_->getOutputDataPointer();
         demean.apply(len, x, y);
-        x = nullptr;
-        y = nullptr;
     }
     catch (const std::invalid_argument &ia)
     {
@@ -170,7 +170,24 @@ void Waveform::detrend(void)
     pData_->resizeOutputData(len);
     double  *y = pData_->getOutputDataPointer();
     detrend.apply(len, x, y); 
-    x = nullptr;
-    y = nullptr;
+    return;
+}
+
+void Waveform::taper(const double pct,
+                     const TaperParameters::Type window)
+{
+    int len = pData_->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    // Taper the data
+    TaperParameters parms(pct, window, RTSeis::Precision::DOUBLE);
+    Taper taper(parms);
+    const double *x = pData_->getInputDataPointer();
+    pData_->resizeOutputData(len);
+    double  *y = pData_->getOutputDataPointer();
+    taper.apply(len, x, y);
     return;
 }

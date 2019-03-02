@@ -1,7 +1,6 @@
 #ifndef RTSEIS_UTILS_FILTER_IIR_HPP
 #define RTSEIS_UTILS_FILTER_IIR_HPP 1
 #include <memory>
-#include "rtseis/config.h"
 #include "rtseis/enums.h"
 
 namespace RTSeis

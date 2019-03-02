@@ -47,6 +47,7 @@ int RTSeis::Utilities::Math::VectorMath::divide(
 #endif
     return 0;
 }
+
 //============================================================================//
 
 int RTSeis::Utilities::Math::VectorMath::real(
@@ -70,7 +71,7 @@ int RTSeis::Utilities::Math::VectorMath::real(
 
 //============================================================================//
 template<typename T> int RTSeis::Utilities::Math::VectorMath::copysign(
-    const  std::vector<T> x, std::vector<T> &y)
+    const  std::vector<T> &x, std::vector<T> &y)
 {
     int nx = static_cast<int> (x.size());
     y.resize(nx);
@@ -97,12 +98,32 @@ template<typename T> int RTSeis::Utilities::Math::VectorMath::copysign(
 }
 // Instantiate the templates in the library
 template int RTSeis::Utilities::Math::VectorMath::copysign<double>(
-    const std::vector<double> x, std::vector<double> &y);
+    const std::vector<double> &x, std::vector<double> &y);
 template int RTSeis::Utilities::Math::VectorMath::copysign<double>(
     const int n, const double x[], double y[]);
 template int RTSeis::Utilities::Math::VectorMath::copysign<float>(
-    const std::vector<float> x, std::vector<float> &y);
+    const std::vector<float> &x, std::vector<float> &y);
 template int RTSeis::Utilities::Math::VectorMath::copysign<float>(
     const int n, const float x[], float y[]);
 
 //============================================================================//
+
+template<typename T> bool RTSeis::Utilities::Math::VectorMath::isSorted(
+    const std::vector<T> &x)
+{
+    bool lsorted = true;
+#ifdef __INTEL_COMPILER
+    //lsorted = std::is_sorted(pstl::execution::unseq, x.begin(), x.end(),
+    //                           std::less_equal<T>());
+    lsorted = std::is_sorted(x.begin(), x.end());//, std::less_equal<T>());
+#else
+    lsorted = std::is_sorted(x.begin(), x.end());
+#endif
+    return lsorted;
+}
+template bool RTSeis::Utilities::Math::VectorMath::isSorted<double>(
+    const std::vector<double> &x);
+template bool RTSeis::Utilities::Math::VectorMath::isSorted<float>(
+    const std::vector<float> &x);
+template bool RTSeis::Utilities::Math::VectorMath::isSorted<int>(
+    const std::vector<int> &x);

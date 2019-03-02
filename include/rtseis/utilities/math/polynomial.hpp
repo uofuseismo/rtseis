@@ -2,7 +2,6 @@
 #define RTSEIS_UTILS_POLYNOMIAL_HPP 1
 #include <complex>
 #include <vector>
-#include "rtseis/config.h"
 
 namespace RTSeis
 {

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <exception>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
@@ -13,10 +14,18 @@ int windowFunctions_blackman_test(void);
 int windowFunctions_hann_test(void);
 int windowFunctions_kaiser_test(void);
 int windowFunctions_hamming_test(void);
+int windowFunctions_sine_test(void);
 
 int rtseis_test_utils_windowFunctions(void)
 {
     int ierr;
+
+    ierr = windowFunctions_sine_test();
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed sine test");
+        return EXIT_FAILURE;
+    }
 
     ierr = windowFunctions_hamming_test();
     if (ierr != 0)
@@ -58,7 +67,7 @@ int rtseis_test_utils_windowFunctions(void)
 
 int windowFunctions_bartlett_test(void)
 {
-    double win20[20], win19[19];
+    std::vector<double> win20, win19; //double win20[20], win19[19];
     const double w20[20] = {
                    0, 0.105263157894737, 0.210526315789474,
                    0.315789473684211,  0.421052631578947,   0.526315789473684,
@@ -75,10 +84,13 @@ int windowFunctions_bartlett_test(void)
                 0.666666666666667, 0.555555555555556,   0.444444444444444,
                 0.333333333333333,  0.222222222222222, 0.111111111111111,
                    0};
-    int ierr = bartlett(20, win20);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute bartlett20");
+        bartlett(20, win20);
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<20; i++)
@@ -89,10 +101,13 @@ int windowFunctions_bartlett_test(void)
             return EXIT_FAILURE;
         }
     }
-    ierr = bartlett(19, win19);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute bartlett19");
+        bartlett(19, win19);
+    }
+    catch (std::exception &e)
+    {   
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<19; i++)
@@ -108,7 +123,7 @@ int windowFunctions_bartlett_test(void)
 
 int windowFunctions_hann_test(void)
 {
-    double win20[20], win19[19];
+    std::vector<double> win20, win19; //double win20[20], win19[19];
     const double w20[20] = {0,
    0.027091379149683,
    0.105429745301803,
@@ -149,10 +164,13 @@ int windowFunctions_hann_test(void)
    0.030153689607046,
                    0
                    };
-    int ierr = hann(20, win20);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute hann20");
+        hann(20, win20);
+    }
+    catch (std::exception &e)
+    {   
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<20; i++)
@@ -163,10 +181,13 @@ int windowFunctions_hann_test(void)
             return EXIT_FAILURE;
         }
     }
-    ierr = hann(19, win19);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute hann19");
+        hann(19, win19);
+    }
+    catch (std::exception &e)
+    {   
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<19; i++)
@@ -182,7 +203,7 @@ int windowFunctions_hann_test(void)
 
 int windowFunctions_kaiser_test(void)
 {
-    double win20[20], win19[19];
+    std::vector<double> win20, win19; //double win20[20], win19[19];
     // beta = 2.5
     const double k20[20] = {0.303966229415369, 0.406333120777527,
                             0.511011861080447, 0.614155742009957,
@@ -205,16 +226,18 @@ int windowFunctions_kaiser_test(void)
                             0.436709600995736, 0.288508741610676,
                             0.166678217276960, 0.078225306346850,
                             0.023422141030647};
-    int ierr;
 #if __cplusplus > 201402L
     double tol = 1.e-14;
 #else
     double tol = 1.e-6;
 #endif
-    ierr = kaiser(20, win20, 2.5);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute kaiser20");
+        kaiser(20, win20, 2.5);
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<20; i++)
@@ -225,10 +248,13 @@ int windowFunctions_kaiser_test(void)
             return EXIT_FAILURE;
         }
     }
-    ierr = kaiser(19, win19, 5.5);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute kaiser19");
+        kaiser(19, win19, 5.5);
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<19; i++)
@@ -244,7 +270,7 @@ int windowFunctions_kaiser_test(void)
 
 int windowFunctions_blackman_test(void)
 {
-    double win20[20], win19[19];
+    std::vector<double> win20, win19; //double win20[20], win19[19];
     const double w20[20] = { 0,
    0.010222619901394,
    0.045068584273067,
@@ -284,10 +310,13 @@ int windowFunctions_blackman_test(void)
    0.050869632653865,
    0.011437245056564,
                    0};
-    int ierr = blackman(20, win20);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute blackman20");
+        blackman(20, win20);
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<20; i++)
@@ -298,10 +327,13 @@ int windowFunctions_blackman_test(void)
             return EXIT_FAILURE;
         }
     }
-    ierr = blackman(19, win19);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute blackman19");
+        blackman(19, win19);
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<19; i++)
@@ -317,7 +349,7 @@ int windowFunctions_blackman_test(void)
 
 int windowFunctions_hamming_test(void)
 {
-    double win20[20], win19[19];
+    std::vector<double> win20, win19; //double win20[20], win19[19];
     const double w20[20] = {0.080000000000000,
    0.104924068817708,
    0.176995365677659,
@@ -358,10 +390,13 @@ int windowFunctions_hamming_test(void)
    0.107741394438482,
    0.080000000000000};
  
-    int ierr = hamming(20, win20);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute hamming20");
+        hamming(20, win20);
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<20; i++)
@@ -372,10 +407,13 @@ int windowFunctions_hamming_test(void)
             return EXIT_FAILURE;
         }
     }
-    ierr = hamming(19, win19);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute hamming19");
+        hamming(19, win19);
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<19; i++)
@@ -386,5 +424,76 @@ int windowFunctions_hamming_test(void)
             return EXIT_FAILURE;
         }
     }
+    return EXIT_SUCCESS;
+}
+
+int windowFunctions_sine_test(void)
+{
+    const double w20[20] = {0.07845909572784494,
+0.2334453638559054,
+0.3826834323650898,
+0.5224985647159488,
+0.6494480483301837,
+0.7604059656000309,
+0.8526401643540922,
+0.9238795325112867,
+0.9723699203976766,
+0.996917333733128,
+0.996917333733128,
+0.9723699203976767,
+0.9238795325112867,
+0.8526401643540923,
+0.760405965600031,
+0.6494480483301838,
+0.5224985647159489,
+0.3826834323650899,
+0.23344536385590553,
+0.07845909572784507};
+    const double w19[19] = { 0.08257934547233232,
+0.24548548714079912,
+0.4016954246529694,
+0.5469481581224268,
+0.6772815716257411,
+0.7891405093963936,
+0.879473751206489,
+0.9458172417006346,
+0.9863613034027223,
+1.0,
+0.9863613034027224,
+0.9458172417006346,
+0.8794737512064891,
+0.7891405093963936,
+0.6772815716257411,
+0.5469481581224268,
+0.4016954246529698,
+0.2454854871407995,
+0.08257934547233267};
+    std::vector<double> win20, win19;
+    try 
+    {   
+        sine(20, win20);
+        sine(19, win19);
+    }
+    catch (std::exception &e) 
+    {   
+        RTSEIS_ERRMSG("Failed to compute bartlett20 %s", e.what());
+        return EXIT_FAILURE;
+    }
+    for (int i=0; i<20; i++)
+    {
+        if (std::abs(w20[i] - win20[i]) > 1.e-14)
+        {
+            RTSEIS_ERRMSG("Error in w20 %lf %lf", w20[i], win20[i]);
+            return EXIT_FAILURE;
+        }
+    }
+    for (int i=0; i<19; i++)
+    {   
+        if (std::abs(w19[i] - win19[i]) > 1.e-14)
+        {
+            RTSEIS_ERRMSG("Error in w19 %lf %lf", w19[i], win19[i]);
+            return EXIT_FAILURE;
+        }
+    } 
     return EXIT_SUCCESS;
 }

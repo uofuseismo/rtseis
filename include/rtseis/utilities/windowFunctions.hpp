@@ -1,6 +1,6 @@
 #ifndef RTSEIS_UTILS_WINDOWFUNCTIONS_HPP
 #define RTSEIS_UTILS_WINDOWFUNCTIONS_HPP 1
-#include "rtseis/config.h"
+#include <vector>
 
 namespace RTSeis
 {
@@ -20,23 +20,24 @@ namespace WindowFunctions
  *            w_n = 0.54 - 0.46 \cos \left ( \frac{2 \pi n}{L - 1} \right )
  *        \f$
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Hamming window.  This has dimension [len].
- * @result 0 indicates success.
+ * @param[out] window  The Hamming window.
+ * @throws std::invalid_argument if len is not positive.
  */
-int hamming(const int len, double window[]);
-int hamming(const int len, float window[]);
+void hamming(const int len, std::vector<double> &window);
+void hamming(const int len, std::vector<float>  &window);
 
 /*!
  * @brief Creates a Hann window which is defined as
  *        \f$
  *            w_n = 0.5 - 0.5 \cos \left ( \frac{2 \pi n}{L - 1} \right )
  *        \f$
- * @param[in] len      The window length.  This must be postiive.
- * @param[out] window  The Hanning window.  This has dimension [len].
+ * @param[in] len      The window length.  This must be positive.
+ * @param[out] window  The Hanning window. 
  * @result 0 indicates success.
+ * @throws std::invalid_argment if len is not positive.
  */
-int hann(const int len, double window[]);
-int hann(const int len, float window[]);
+void hann(const int len, std::vector<double> &window);
+void hann(const int len, std::vector<float>  &window);
 /*!
  * @brief Creates a Blackman window which is defined as
  *        \f$ 
@@ -46,11 +47,25 @@ int hann(const int len, float window[]);
  *         + 0.08 \cos \left ( \frac{4 \pi n}{L-1} \right )
  *        \f$
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Blackman window.  This has dimension [len].
- * @result 0 indicates success.
+ * @param[out] window  The Blackman window.
+ * @throws std::invalid_argument if len is not positive.
  */
-int blackman(const int len, double window[]);
-int blackman(const int len, float window[]);
+void blackman(const int len, std::vector<double> &window);
+void blackman(const int len, std::vector<float>  &window);
+/*!
+ * @brief Creates a sine window which is defined as
+ *        \f$
+ *           w_n = \sin
+ *                 \left (
+ *                   \frac{\pi}{L} \left (n + \frac{1}{2} \right )
+  *                \right )
+ *        \f$.
+ * @param[in] len     the window length.  This must be positive.
+ * @param[out] window  The sine window.
+ * @throws std::invalid_argument if len is not postiive.
+ */
+void sine(const int len, std::vector<double> &window);
+void sine(const int len, std::vector<float>  &window);
 /*!
  * @brief Creates a Bartlett window which is defined as
  *        \f$
@@ -62,11 +77,11 @@ int blackman(const int len, float window[]);
  *                 \right . 
  *        \f$
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Bartlett window.  This has dimension [len].
+ * @param[out] window  The Bartlett window.
  * @result 0 indicates success.
  */
-int bartlett(const int len, double window[]);
-int bartlett(const int len, float window[]);
+void bartlett(const int len, std::vector<double> &window);
+void bartlett(const int len, std::vector<float>  &window);
 /*!
  * @brief Creates a Kaiser window which is defined as
  *        \f$
@@ -81,14 +96,16 @@ int bartlett(const int len, float window[]);
  * @param[in] beta     An optional parameter that controls the sidelobe 
  *                     attenuation of the Fourier transform window.  The
  *                     default is \f$ \beta = 0.5 \f$.
- * @result 0 indicates success.
+ * @throws std::invalid_argument if len is negative or beta is negative. 
  * @bug For whatever reason IPP does not adequately compute Bessel functions.
  *      If using a C++14 or lesser compiler then the Kaiser window accuracy
  *      will only be valid to 6 digits.  C++17 will compute a high-accuracy
  *      Bessel function using an intrinsic.
  */
-int kaiser(const int len, double window[], const double beta = 0.5);
-int kaiser(const int len, float window[], const float beta = 0.5);
+void kaiser(const int len, std::vector<double> &window,
+            const double beta = 0.5);
+void kaiser(const int len, std::vector<float>  &window,
+            const float beta = 0.5f);
 
 /*!
  * @}

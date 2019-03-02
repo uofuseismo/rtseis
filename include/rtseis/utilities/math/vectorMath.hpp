@@ -2,7 +2,6 @@
 #define RTSEIS_UTILITIES_VECTORMATH_HPP 1
 #include <complex>
 #include <vector>
-#include "rtseis/config.h"
 
 namespace RTSeis
 {
@@ -77,10 +76,17 @@ template<typename T> int copysign(const int n, const T x[], T y[]);
  *                dimension [x.size()].
  * @ingroup rtseis_utils_math_vm_copysign
  */
-template<typename T> int copysign(const std::vector<T> x, std::vector<T> &y);
+template<typename T> int copysign(const std::vector<T> &x, std::vector<T> &y);
 
-
-
+/*!
+ * defgroup rtseis_utilties_math_vm_isSorted isSorted
+ * @ingroup rtseis_utils_math_vm
+ * @brief Determines if the vector is sorted in increasing order.
+ * @param[in] x  The array to determine if is sorted or not.
+ * @retval True indicates that x is sorted in increasing order.
+ * @retval False indicates that x is not sorted in increasing order.
+ */
+template<typename T> bool isSorted(const std::vector<T> &x);
 
 };
 }; // End Math

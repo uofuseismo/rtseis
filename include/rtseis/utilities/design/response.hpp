@@ -2,7 +2,6 @@
 #define RTSEIS_UTILS_DESIGN_RESPONSE_HPP 1
 #include <complex>
 #include <vector>
-#include "rtseis/config.h"
 
 namespace RTSeis
 {

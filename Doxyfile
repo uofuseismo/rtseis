@@ -806,9 +806,7 @@ INPUT                  = include/rtseis/modules/classicSTALTA.hpp \
                          include/rtseis/utilities/filterRepresentations/ \
                          include/rtseis/utilities/transforms/transforms.hpp \
                          include/rtseis/utilities/normalization/signBit.hpp \
-                         include/rtseis/postProcessing/singleChannel/waveform.hpp \
-                         include/rtseis/postProcessing/singleChannel/demean.hpp \
-                         include/rtseis/postProcessing/singleChannel/detrend.hpp \
+                         include/rtseis/postProcessing/singleChannel/ \
                          doc/INSTALL.doc \
                          doc/Utilities.doc \
                          doc/Math.doc \

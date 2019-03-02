@@ -1,6 +1,5 @@
 #ifndef RTSEIS_UTILS_FR_SOS_HPP
 #define RTSEIS_UTILS_FR_SOS_HPP 1
-#include <cstdio>
 #include <vector>
 #include <memory>
 

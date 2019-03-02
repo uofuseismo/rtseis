@@ -2,7 +2,6 @@
 #define RTSEIS_UTILS_MATH_CONVOLVE_HPP 1
 #include <complex>
 #include <vector>
-#include "rtseis/config.h"
 
 namespace RTSeis
 {
@@ -66,8 +65,8 @@ namespace Convolve
      * @result 0 indicates success.
      * @ingroup rtseis_utils_math_convolve
      */
-    int convolve(const std::vector<double> a,
-                 const std::vector<double> b,
+    int convolve(const std::vector<double> &a,
+                 const std::vector<double> &b,
                  std::vector<double> &c,
                  const Mode mode = Mode::FULL,
                  const Implementation implementation = Implementation::AUTO);
@@ -81,8 +80,8 @@ namespace Convolve
      * @result 0 indicates success.
      * @ingroup rtseis_utils_math_convolve
      */
-    int correlate(const std::vector<double> a,
-                  const std::vector<double> b,
+    int correlate(const std::vector<double> &a,
+                  const std::vector<double> &b,
                   std::vector<double> &c, 
                   const Mode mode = Mode::FULL,
                   const Implementation implementation = Implementation::AUTO);
@@ -95,7 +94,7 @@ namespace Convolve
      * @result 0 indicates success.
      * @ingroup rtseis_utils_math_convolve
      */
-    int autocorrelate(const std::vector<double> a,
+    int autocorrelate(const std::vector<double> &a,
                       std::vector<double> &c, 
                       const Mode mode = Convolve::Mode::FULL,
                       const Implementation implementation = Implementation::AUTO);
