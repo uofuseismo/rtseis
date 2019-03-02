@@ -147,6 +147,7 @@ ADD_EXECUTABLE(testUtils
                testing/utils/utils.cpp
                testing/utils/polynomial.cpp
                testing/utils/convolve.cpp
+               testing/utils/interpolate.cpp
                testing/utils/fir.cpp
                testing/utils/iir.cpp
                testing/utils/response.cpp

@@ -96,7 +96,7 @@ void RTSeis::Utilities::Math::Interpolate::interpft(
     // It's pre-zero padded so inverse transform
     ippsDFTInv_CCSToR_64f(pDst, yint.data(), pDFTInverseSpec, pBuf);
     // Remove scaling from FFT
-    double xscal = 1.0/static_cast<double> (npts);
+    double xscal = static_cast<double> (npnew)/static_cast<double> (npts);
     ippsMulC_64f_I(xscal, yint.data(), npnew);
     // Clean up
     ippsFree(pBuf);

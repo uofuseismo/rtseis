@@ -807,7 +807,7 @@ INPUT                  = include/rtseis/modules/classicSTALTA.hpp \
                          include/rtseis/utilities/transforms/transforms.hpp \
                          include/rtseis/utilities/normalization/signBit.hpp \
                          include/rtseis/postProcessing/singleChannel/ \
-                         doc/INSTALL.doc \
+                         doc/INSTALL.md \
                          doc/Utilities.doc \
                          doc/Math.doc \
                          doc/FilterDesign.doc
