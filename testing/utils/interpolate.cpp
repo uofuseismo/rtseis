@@ -37,9 +37,8 @@ int test_interpolation_interpft(void)
     {
         double x = static_cast<double> (i)*dx;
         f[i] = std::pow(std::sin(x), 2)*std::cos(x);
-    }   
+    }
     std::vector<double> fnew;
-    //double dy = 3.0*M_PI/static_cast<double> (npnew - 1);
     try
     {
         RTSeis::Utilities::Math::Interpolate::interpft(f, npnew, fnew);
@@ -55,6 +54,20 @@ int test_interpolation_interpft(void)
         if (std::abs(fnew[i*iskip] - f[i]) > 1.e-12)
         {
             RTSEIS_ERRMSG("ft interp failed %lf %lf", f[i], fnew[i*iskip]);
+            return EXIT_FAILURE;
+        }
+    }
+    double dy = dx/7.;
+    int j = 0;
+    
+    for (int i=0; i<npnew; i++)
+    {
+        double x = static_cast<double> (i)*dy;
+        double ftrue = std::pow(std::sin(x), 2)*std::cos(x);
+        if (std::abs(ftrue - fnew[i]) > 1.e-1)
+        {
+            RTSEIS_ERRMSG("Failed more aggressive check %lf %lf %lf %lf\n",
+                          x, ftrue, fnew[i], ftrue - fnew[i]);
             return EXIT_FAILURE;
         }
     }
