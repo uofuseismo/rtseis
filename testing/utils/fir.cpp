@@ -58,10 +58,13 @@ int rtseis_test_utils_design_fir_fir1(void)
     std::vector<double> ptaps;
     // Test 1
     order = 13; r = 0.6; 
-    int ierr = FIR::FIR1Lowpass(order, r, fir, FIR::Window::HAMMING);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to generate lowpass filter");
+        FIR::FIR1Lowpass(order, r, fir, FIR::Window::HAMMING);
+    }
+    catch (std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to generate lowpass filter %s", ia.what());
         return EXIT_FAILURE;
     }
     ptaps = fir.getFilterTaps();
@@ -80,10 +83,13 @@ int rtseis_test_utils_design_fir_fir1(void)
     }
     // Test 2
     order = 16; r = 0.45;
-    ierr = FIR::FIR1Highpass(order, r, fir, FIR::Window::HANN);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to generate highpass filter");
+        FIR::FIR1Highpass(order, r, fir, FIR::Window::HANN);
+    }
+    catch (std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to generate highpass filter %s", ia.what());
         return EXIT_FAILURE;
     }
     ptaps = fir.getFilterTaps();
@@ -104,10 +110,13 @@ int rtseis_test_utils_design_fir_fir1(void)
     std::pair<double,double> r2;
     order = 11;
     r2 = std::make_pair(0.2, 0.8);
-    ierr = FIR::FIR1Bandpass(order, r2, fir, FIR::Window::BARTLETT); 
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to generate bandpass filter");
+        FIR::FIR1Bandpass(order, r2, fir, FIR::Window::BARTLETT); 
+    }
+    catch (std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to generate bandpass filter %s", ia.what());
         return EXIT_FAILURE;
     }
     ptaps = fir.getFilterTaps();
@@ -127,10 +136,13 @@ int rtseis_test_utils_design_fir_fir1(void)
     // Test 4
     order = 20;
     r2 = std::make_pair(0.15, 0.85);
-    ierr = FIR::FIR1Bandstop(order, r2, fir, FIR::Window::BLACKMAN_OPT);
-    if (ierr != 0)  
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to generate bandstop filter");
+        FIR::FIR1Bandstop(order, r2, fir, FIR::Window::BLACKMAN_OPT);
+    }
+    catch (std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to generate bandstop filter %s", ia.what());
         return EXIT_FAILURE;
     }
     ptaps = fir.getFilterTaps();

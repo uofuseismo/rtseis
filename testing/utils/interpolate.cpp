@@ -58,8 +58,6 @@ int test_interpolation_interpft(void)
         }
     }
     double dy = dx/7.;
-    int j = 0;
-    
     for (int i=0; i<npnew; i++)
     {
         double x = static_cast<double> (i)*dy;
@@ -71,5 +69,11 @@ int test_interpolation_interpft(void)
             return EXIT_FAILURE;
         }
     }
+    return EXIT_SUCCESS;
+}
+
+int test_interpolation_interp1d(void)
+{
+    RTSeis::Utilities::Math::Interpolate::Interp1D interp1d;
     return EXIT_SUCCESS;
 }

@@ -45,12 +45,12 @@ namespace FIR
      * @param[out] fir    The FIR lowpass filter corresponding to the
      *                    design parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any arguments are incorrect.
      * @ingroup rtseis_utils_design_fir
      */
-    int FIR1Lowpass(const int order, const double r,
-                    FilterRepresentations::FIR &fir,
-                    const Window window = Window::HAMMING);
+    void FIR1Lowpass(const int order, const double r,
+                     FilterRepresentations::FIR &fir,
+                     const Window window = Window::HAMMING);
     /*!
      * @brief Designs an FIR highpass filter using the window method.
      * @param[in] order   Order of filter.  The number of taps is order + 1.
@@ -60,12 +60,12 @@ namespace FIR
      * @param[out] fir    The highpass filter corresponding to the 
      *                    design parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any arguments are incorrect.
      * @ingroup rtseis_utils_design_fir
      */
-    int FIR1Highpass(const int order, const double r,
-                     FilterRepresentations::FIR &fir,
-                     const Window window = Window::HAMMING);
+    void FIR1Highpass(const int order, const double r,
+                      FilterRepresentations::FIR &fir,
+                      const Window window = Window::HAMMING);
     /*!
      * @brief Designs an FIR bandpass filter using the window method.
      * @param[in] order   Order of filter.  The number of taps is order + 1.
@@ -77,12 +77,12 @@ namespace FIR
      * @param[out] fir    The bandpass filter corresponding to the design
      *                    parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any arguments are incorrect.
      * @ingroup rtseis_utils_design_fir
      */
-    int FIR1Bandpass(const int order, const std::pair<double,double> &r,
-                     FilterRepresentations::FIR &fir,
-                     const Window window = Window::HAMMING);
+    void FIR1Bandpass(const int order, const std::pair<double,double> &r,
+                      FilterRepresentations::FIR &fir,
+                      const Window window = Window::HAMMING);
     /*! 
      * @brief Designs an FIR bandstop (notch) filter using the window method.
      * @param[in] order   Order of filter.  The number of taps is order + 1.
@@ -94,12 +94,12 @@ namespace FIR
      * @param[out] fir    The bnadstop filter corresponding to the design
      *                    parameters.
      * @param[in] window  FIR window design.  The default is a Hamming window.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any arguments are incorrect.
      * @ingroup rtseis_utils_design_fir
      */
-    int FIR1Bandstop(const int order, const std::pair<double,double> &r,
-                     FilterRepresentations::FIR &fir,
-                     const Window window = Window::HAMMING);
+    void FIR1Bandstop(const int order, const std::pair<double,double> &r,
+                      FilterRepresentations::FIR &fir,
+                      const Window window = Window::HAMMING);
 }; /* End FIR */
 
 }; /* End FilterDesign */

@@ -37,9 +37,10 @@ int rtseis_test_utils_design_zpk2sos(void)
          1.,        -1.26117915,  0.6262586,
          1.,        -1.25707217,  0.86199667});
     SOS sosRefEll(3, bsRefEll, asRefEll);
+    bool ldigital = true;
     ierr = IIR::iirfilter(n, Wn, 5, 60,  
                           IIR::Bandtype::LOWPASS, IIR::Prototype::BUTTERWORTH,
-                          sos, false, IIR::Pairing::NEAREST);
+                          sos, ldigital, IIR::Pairing::NEAREST);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to design filter");
@@ -238,7 +239,7 @@ int rtseis_test_utils_design_iir(void)
 {
     int ierr, n;
     BA ba;
-    const bool lanalog = false;
+    const bool ldigital = true;
     double rp = 5, rs = 60;
     double Wn[2];
     //------------------------------------------------------------------------//
@@ -258,7 +259,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::LOWPASS, IIR::Prototype::BUTTERWORTH,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed butterworth lowpass design");
@@ -285,7 +286,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs,
                           IIR::Bandtype::HIGHPASS, IIR::Prototype::BUTTERWORTH,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed butterworth highpass design");
@@ -322,7 +323,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::BANDPASS, IIR::Prototype::BUTTERWORTH,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed butterworth bandpass design");
@@ -360,7 +361,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::BANDSTOP, IIR::Prototype::BUTTERWORTH,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed butterworth bandstop design");
@@ -391,7 +392,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::LOWPASS, IIR::Prototype::BESSEL,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed bessel lowpass design");
@@ -418,7 +419,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs,
                           IIR::Bandtype::HIGHPASS, IIR::Prototype::BESSEL,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed bessel highpass design");
@@ -451,7 +452,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::BANDPASS, IIR::Prototype::BESSEL,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "Failed bessel bandpass design");
@@ -485,7 +486,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::BANDSTOP, IIR::Prototype::BESSEL,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed bessel bandstop design");
@@ -516,7 +517,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::LOWPASS, IIR::Prototype::CHEBYSHEV1,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed cheby1 lowpass design");
@@ -543,7 +544,7 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs,
                           IIR::Bandtype::HIGHPASS, IIR::Prototype::CHEBYSHEV1,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed cheby1 highpass design");
@@ -577,7 +578,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs,
                           IIR::Bandtype::BANDPASS, IIR::Prototype::CHEBYSHEV1,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed cheby1 bandpass design");
@@ -611,7 +612,7 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::BANDSTOP, IIR::Prototype::CHEBYSHEV1,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed cheby1 bandstop design");
@@ -642,7 +643,7 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.3; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::LOWPASS, IIR::Prototype::CHEBYSHEV2,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed cheby2 lowpass design");
@@ -669,7 +670,7 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::HIGHPASS, IIR::Prototype::CHEBYSHEV2,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "Failed cheby2 highpass design");
@@ -703,7 +704,7 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.1; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::BANDPASS, IIR::Prototype::CHEBYSHEV2,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {   
         RTSEIS_ERRMSG("%s", "Failed cheby2 bandpass design");
@@ -734,7 +735,7 @@ int rtseis_test_utils_design_iir(void)
     n = 8, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
                           IIR::Bandtype::BANDSTOP, IIR::Prototype::CHEBYSHEV2,
-                          ba, lanalog);
+                          ba, ldigital);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed cheby2 bandstop design");

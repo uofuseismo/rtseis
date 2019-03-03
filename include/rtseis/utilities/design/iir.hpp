@@ -76,8 +76,9 @@ namespace IIR
      *                     Chebyshev1, or Chebyshev2.
      * @param[out] ba      The corresponding IIR filter specified in terms
      *                     of numerator and denominator coefficients.
-     * @param[in] lanalog  If true then this designs an analog filter.  The
-     *                     default is a digital filter.
+     * @param[in] ldigital If true then this designs a digital filter.
+     *                     Otherwise, design an analog filter. The
+     *                     default is digital filter design.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
@@ -86,7 +87,7 @@ namespace IIR
                   const Bandtype btype,
                   const Prototype ftype,
                   FilterRepresentations::BA &ba,
-                  const bool lanalog = false);
+                  const bool ldigital = true);
     /*!
      * @brief Convenience function to design a digital or analog filter from
      *        an analog prototype.
@@ -107,8 +108,9 @@ namespace IIR
      *                     Chebyshev1, or Chebyshev2.
      * @param[out] zpk     The corresponding IIR filter specified in terms
      *                     of zeros, poles, and gain.
-     * @param[in] lanalog  If true then this designs an analog filter.  The
-     *                     default is a digital filter.
+     * @param[in] ldigital If true then this designs a digital filter.
+     *                     Otherwise, design an analog filter. The
+     *                     default is digital filter design.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
@@ -117,7 +119,7 @@ namespace IIR
                   const Bandtype btype,
                   const Prototype ftype,
                   FilterRepresentations::ZPK &zpk,
-                  const bool lanalog = false);
+                  const bool ldigital = true);
     /*!
      * @brief Convenience function to design a digital or analog filter from
      *        an analog prototype.
@@ -138,19 +140,20 @@ namespace IIR
      *                     Chebyshev1, or Chebyshev2.
      * @param[out] sos     The corresponding IIR filter as a cascaded series of
      *                     second order sections.
-     * @param[in] lanalog  If true then this designs an analog filter.  The
-     *                     default is a digital filter.
+     * @param[in] ldigital If true then this designs a digital filter.
+     *                     Otherwise, design an analog filter. The
+     *                     default is digital filter design.
      * @param[in] pairing  Defines the pairing strategy.
      * @result 0 indicates success.
      * @ingroup rtseis_utils_design_iir
      */
     int iirfilter(const int n, const double *W,
-                   const double rp, const double rs,
-                   const Bandtype btype,
-                   const Prototype ftype,
-                   FilterRepresentations::SOS &sos,
-                   const bool lanalog,
-                   const Pairing pairing = Pairing::NEAREST);
+                  const double rp, const double rs,
+                  const Bandtype btype,
+                  const Prototype ftype,
+                  FilterRepresentations::SOS &sos,
+                  const bool ldigital = true,
+                  const Pairing pairing = Pairing::NEAREST);
     /*!
      * @brief Convert a filter specified as zeros, poles, and a gain to
      *        a filter consisting of cascaded second order sections.

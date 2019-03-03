@@ -82,6 +82,7 @@ SET(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES}) #${Boost_LIBRARIES} ${PY
 SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
     src/utils/verbosity.c
+    src/utils/design/filterDesigner.cpp
     src/utils/design/response.cpp
     src/utils/design/iir.cpp
     src/utils/design/fir.cpp

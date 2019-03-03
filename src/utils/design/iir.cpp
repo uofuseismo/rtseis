@@ -48,12 +48,12 @@ int IIR::iirfilter(const int n, const double *W,
                    const Bandtype btype,
                    const Prototype ftype,
                    SOS &sos,
-                   const bool lanalog,
+                   const bool ldigital,
                    const Pairing pairing)
 {
      sos.clear();
      FilterRepresentations::ZPK zpk;
-     int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, lanalog);
+     int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital);
      if (ierr != 0)
      {
          RTSEIS_ERRMSG("%s", "Failed to create iirfilter");
@@ -74,11 +74,11 @@ int IIR::iirfilter(const int n, const double *W,
                    const Bandtype btype,
                    const Prototype ftype,
                    FilterRepresentations::BA &ba,
-                   const bool lanalog)
+                   const bool ldigital)
 {
      ba.clear();
      FilterRepresentations::ZPK zpk;
-     int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, lanalog);
+     int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital);
      if (ierr != 0)
      {
          RTSEIS_ERRMSG("%s", "Failed to create iirfilter");
@@ -99,7 +99,7 @@ int IIR::iirfilter(const int n, const double *W,
                    const Bandtype btype,
                    const Prototype ftype,
                    FilterRepresentations::ZPK &zpk,
-                   const bool lanalog)
+                   const bool ldigital)
 {
     zpk.clear();
     if (n < 1)
@@ -123,7 +123,7 @@ int IIR::iirfilter(const int n, const double *W,
         RTSEIS_ERRMSG("rs %lf must be positive", rs);
         return -1;
     }
-    if (lanalog){RTSEIS_WARNMSG("%s", "Analog filter design is untested");}
+    if (!ldigital){RTSEIS_WARNMSG("%s", "Analog filter design is untested");}
     // Check the low-corner frequency
     double wn[2];
     wn[0] = W[0];
@@ -133,7 +133,7 @@ int IIR::iirfilter(const int n, const double *W,
         RTSEIS_ERRMSG("W[0]=%lf cannot be negative", wn[0]);
         return -1;
     } 
-    if (!lanalog && wn[0] > 1)
+    if (ldigital && wn[0] > 1)
     {
         RTSEIS_ERRMSG("W[0]=%lf cannot exceed 1", wn[0]);
         return -1;
@@ -180,7 +180,7 @@ int IIR::iirfilter(const int n, const double *W,
     // Pre-warp the frequencies
     double warped[2];
     double fs;
-    if (lanalog != 1)
+    if (ldigital)
     {
         fs = 2.0;
         warped[0] = 2.0*fs*tan(M_PI*wn[0]/fs);
@@ -224,7 +224,7 @@ int IIR::iirfilter(const int n, const double *W,
         return -1;
     }
     // Find the discrete equivalent
-    if (!lanalog)
+    if (ldigital)
     {
         ierr = zpkbilinear(zpktf, fs, zpk);
         if (ierr != 0)
