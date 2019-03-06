@@ -39,6 +39,21 @@ class Waveform : public std::exception
          */
         Waveform(void);
         /*!
+         * @brief Constructs a waveform from time series data.  The sampling
+         *        period will be unity.
+         * @param[in] x  Signal from which to construct time series.
+         * @throws std::invalid_argument if x is empty.
+         */
+        explicit Waveform(const std::vector<double> &x);
+        /*!
+         * @brief Constructs a waveform from time series data.
+         * @param[in] dt   Sampling period in seconds.
+         * @param[in] x    Signal from which to construct time series.
+         * @throws std::invalid_argument if the sampling period is not positive
+         *         or x is empty.
+         */
+        Waveform(const double dt, const std::vector<double> &x);
+        /*!
          * @brief Default destructor.
          */ 
         ~Waveform(void);
@@ -67,19 +82,26 @@ class Waveform : public std::exception
          * @param[in] s     The signal to convolve with x.
          * @param[in] mode  Defines the convolution output.
          * @param[in] implementation  Defines the implementation type.
-         * @throws std::invalid_argument if s is empty.
+         * @throws std::invalid_argument if s is empty or there is no data.
          */
         void convolve(const std::vector<double> &s,
-              const RTSeis::Utilities::Math::Convolve::Mode mode = RTSeis::Utilities::Math::Convolve::Mode::FULL,
-              const RTSeis::Utilities::Math::Convolve::Implementation implementation = RTSeis::Utilities::Math::Convolve::Implementation::AUTO);
+            const RTSeis::Utilities::Math::Convolve::Mode mode = RTSeis::Utilities::Math::Convolve::Mode::FULL,
+            const RTSeis::Utilities::Math::Convolve::Implementation implementation = RTSeis::Utilities::Math::Convolve::Implementation::AUTO);
         /*!
          * @brief Removes the mean from the data.
+         * @throws std::invalid_argument if there is no data.
+         *
+         * @snippet testing/postProcessing/singleChannel.cpp ppSCDemeanExample
          */
         void demean(void);
         /*!
          * @brief Removes a best fitting line \f$ \hat{y} = a x + b \f$
          *        from the data by first computing \f$ a \f$ and \f$ b \f$
          *        then computing \f$ y - (a x + b) \f$.
+         * @throws std::invalid_argument if there are less than 2 data points 
+         *         in x.
+         *
+         * @snippet testing/postProcessing/singleChannel.cpp ppSCDetrendExample
          */
         void detrend(void);
         /*!

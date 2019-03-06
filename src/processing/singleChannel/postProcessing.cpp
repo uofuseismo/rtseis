@@ -158,7 +158,7 @@ void Waveform::demean(void)
 void Waveform::detrend(void)
 {
     int len = pData_->getLengthOfInputSignal();
-    if (len < 1)
+    if (len < 2)
     {
         RTSEIS_WARNMSG("%s", "At least 2 data points required to detrend");
         return;

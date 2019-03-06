@@ -156,20 +156,23 @@ ADD_EXECUTABLE(testUtils
                testing/utils/transforms.cpp
                testing/utils/normalization.cpp
                testing/utils/windowFunctions.cpp)
-ADD_EXECUTABLE(testModules
-               testing/modules/modules.cpp
-               testing/modules/detrend.cpp
-               testing/modules/classicSTALTA.cpp)
-TARGET_LINK_LIBRARIES(testUtils   PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
-TARGET_LINK_LIBRARIES(testModules PRIVATE rtseis)
+ADD_EXECUTABLE(testPPSC
+               testing/postProcessing/singleChannel.cpp)
+               #testing/modules/modules.cpp
+               #testing/modules/detrend.cpp
+               #testing/modules/classicSTALTA.cpp)
+# The core library utilities - do these first
+TARGET_LINK_LIBRARIES(testUtils PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+# Single-channel post-processing
+TARGET_LINK_LIBRARIES(testPPSC  PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
 #SET_PROPERTY(TARGET testUtils   PROPERTY CXX_STANDARD 17)
-#SET_PROPERTY(TARGET testModules PROPERTY CXX_STANDARD 17)
 ADD_TEST(NAME utils
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testUtils)
-ADD_TEST(NAME modules
+ADD_TEST(NAME singleChannlePostProcessing
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
-         COMMAND testModules)
+         COMMAND testPPSC
+         DEPENDS utils)
 
 #ADD_LIBRARY(pyrtseis SHARED src/modules/boost.cpp)
 #TARGET_LINK_LIBRARIES(pyrtseis ${LIBALL} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})

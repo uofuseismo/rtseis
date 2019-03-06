@@ -24,9 +24,7 @@ class FIR
         FIR(void);
         /*!
          * @brief Constructs an FIR class from the given filter taps.
-         * @param[in] pTaps  zeros   Zeros to set.
-         * @param[in] poles   Poles to set.
-         * @param[in] k       Gain to set.
+         * @param[in] pTaps   Filter taps to set.
          */
         explicit FIR(const std::vector<double> &pTaps);
         /*!
