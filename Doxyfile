@@ -790,7 +790,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = include/rtseis/modules/classicSTALTA.hpp \
+INPUT                  = ./ \
                          include/rtseis/utilities/design/analogPrototype.hpp \
                          include/rtseis/utilities/design/fir.hpp \
                          include/rtseis/utilities/design/iir.hpp \
@@ -926,7 +926,7 @@ EXCLUDE_SYMBOLS        =
 # that contain example code fragments that are included (see the \include
 # command).
 
-EXAMPLE_PATH           = testing/postProcessing/postProcessing.cpp
+EXAMPLE_PATH           = ./
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and

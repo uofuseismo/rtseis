@@ -4,6 +4,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
+#ifdef __INTEL_COMPILER
+#include <pstl/execution>
+#include <pstl/algorithm>
+#endif
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
@@ -16,45 +21,58 @@ using namespace RTSeis::PostProcessing::SingleChannel;
 
 class Waveform::DataImpl
 {
-    public:
-        DataImpl(void)
-        {
-            return;
-        }
-        ~DataImpl(void)
-        {
-            return;
-        }
-        void resizeOutputData(const int n)
-        {
-            y_.resize(n);
-        }
-        void setData(const size_t n, const double x[])
-        {
-            x_.resize(n);
-            std::copy(x, x+n, x_.data());
-            return;
-        }
-        const double *getInputDataPointer(void) const
-        {
-            return x_.data();
-        }
-        double *getOutputDataPointer(void)
-        {
-            return y_.data();
-        }
-        int getLengthOfInputSignal(void) const
-        {
-            return static_cast<int> (x_.size());
-        }
-    //private:
-        std::vector<double> x_; 
-        std::vector<double> y_;
+public:
+    DataImpl(void)
+    {
+        return;
+    }
+    ~DataImpl(void)
+    {
+        return;
+    }
+    void resizeOutputData(const int n)
+    {
+        y_.resize(n);
+    }
+    void setData(const size_t n, const double x[])
+    {
+        x_.resize(n);
+#ifdef __INTEL_COMPILER
+        std::copy(pstl::execution::unseq, x, x+n, x_.data());
+#else
+        std::copy(x, x+n, x_.data());
+#endif
+        return;
+    }
+    const double *getInputDataPointer(void) const
+    {
+        return x_.data();
+    }
+    double *getOutputDataPointer(void)
+    {
+        return y_.data();
+    }
+    int getLengthOfInputSignal(void) const
+    {
+        return static_cast<int> (x_.size());
+    }
+//private:
+    std::vector<double> x_; 
+    std::vector<double> y_;
+    /// Sampling period
+    double dt = 1;
 };
 
-Waveform::Waveform(void) :
-    pData_(new DataImpl()) 
+Waveform::Waveform(const double dt) :
+    pImpl(new DataImpl()) 
 {
+    if (dt <= 0)
+    {
+        throw std::invalid_argument("Sampling period = "
+                                   + std::to_string(dt)
+                                   + " must be postiive");
+    }
+    pImpl->dt = dt;
     return;
 }
 
@@ -91,14 +109,41 @@ void Waveform::setData(const size_t n, const double x[])
         }
         throw std::invalid_argument("Invalid arguments");
     }
-    pData_->setData(n, x);
+    pImpl->setData(n, x);
     return;
 }
 
 void Waveform::getData(std::vector<double> &y)
 {
-    y = pData_->y_;
+    y = pImpl->y_;
     return;
+}
+
+void Waveform::getData(const size_t nwork, double y[]) const
+{
+    size_t leny = getOutputLength();
+    if (nwork < leny)
+    {
+        throw std::invalid_argument("nwork = " + std::to_string(nwork)
+                                  + " must be at least = "
+                                   + std::to_string(leny));
+    }
+    if (leny == 0){return;}
+    if (y == nullptr)
+    {
+        throw std::invalid_argument("y is NULL");
+    }
+//#ifdef __INTEL_COMPILER
+    std::copy(pstl::execution::unseq, pImpl->y_.begin(), pImpl->y_.end(), y);
+//#else
+    std::copy(pImpl->y_.begin(), pImpl->y_.end(), y);
+//#endif 
+    return;
+}
+
+size_t Waveform::getOutputLength(void) const
+{
+    return pImpl->y_.size();
 }
 
 void Waveform::convolve(
@@ -106,7 +151,7 @@ void Waveform::convolve(
     const Utilities::Math::Convolve::Mode mode,
     const Utilities::Math::Convolve::Implementation implementation)
 {
-    int nx = pData_->getLengthOfInputSignal();
+    int nx = pImpl->getLengthOfInputSignal();
     int ny = static_cast<int> (s.size());
     if (nx < 1)
     {
@@ -118,12 +163,12 @@ void Waveform::convolve(
         RTSEIS_ERRMSG("%s", "No data points in s");
         throw std::invalid_argument("s has no data points");
     }
-    int ierr = Utilities::Math::Convolve::convolve(pData_->x_, s, pData_->y_,
+    int ierr = Utilities::Math::Convolve::convolve(pImpl->x_, s, pImpl->y_,
                                                    mode, implementation);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute convolution");
-        pData_->y_.resize(0);
+        pImpl->y_.resize(0);
         return;
     }
     return;
@@ -131,7 +176,7 @@ void Waveform::convolve(
 
 void Waveform::demean(void)
 {
-    int len = pData_->getLengthOfInputSignal();
+    int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
         RTSEIS_WARNMSG("%s", "No data is set on the module");
@@ -142,9 +187,9 @@ void Waveform::demean(void)
     {
         DemeanParameters parms(RTSeis::Precision::DOUBLE);
         Demean demean(parms);
-        const double *x = pData_->getInputDataPointer();
-        pData_->resizeOutputData(len);
-        double  *y = pData_->getOutputDataPointer();
+        const double *x = pImpl->getInputDataPointer();
+        pImpl->resizeOutputData(len);
+        double  *y = pImpl->getOutputDataPointer();
         demean.apply(len, x, y);
     }
     catch (const std::invalid_argument &ia)
@@ -157,7 +202,7 @@ void Waveform::demean(void)
 
 void Waveform::detrend(void)
 {
-    int len = pData_->getLengthOfInputSignal();
+    int len = pImpl->getLengthOfInputSignal();
     if (len < 2)
     {
         RTSEIS_WARNMSG("%s", "At least 2 data points required to detrend");
@@ -166,9 +211,9 @@ void Waveform::detrend(void)
     // Detrend the data
     DetrendParameters parms(RTSeis::Precision::DOUBLE);
     Detrend detrend(parms);
-    const double *x = pData_->getInputDataPointer();
-    pData_->resizeOutputData(len);
-    double  *y = pData_->getOutputDataPointer();
+    const double *x = pImpl->getInputDataPointer();
+    pImpl->resizeOutputData(len);
+    double  *y = pImpl->getOutputDataPointer();
     detrend.apply(len, x, y); 
     return;
 }
@@ -176,7 +221,7 @@ void Waveform::detrend(void)
 void Waveform::taper(const double pct,
                      const TaperParameters::Type window)
 {
-    int len = pData_->getLengthOfInputSignal();
+    int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
         RTSEIS_WARNMSG("%s", "No data is set on the module");
@@ -185,9 +230,9 @@ void Waveform::taper(const double pct,
     // Taper the data
     TaperParameters parms(pct, window, RTSeis::Precision::DOUBLE);
     Taper taper(parms);
-    const double *x = pData_->getInputDataPointer();
-    pData_->resizeOutputData(len);
-    double  *y = pData_->getOutputDataPointer();
+    const double *x = pImpl->getInputDataPointer();
+    pImpl->resizeOutputData(len);
+    double  *y = pImpl->getOutputDataPointer();
     taper.apply(len, x, y);
     return;
 }
