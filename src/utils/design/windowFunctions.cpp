@@ -179,12 +179,25 @@ void WindowFunctions::sine(const int len, std::vector<double> &window)
         window[0] = 1;
         return;
     }
+    // This will put zeros at end points of sine taper
+    double pidmi = M_PI/static_cast<double> (len - 1);
+    window[0] = 0;
+    #pragma omp simd
+    for (int i=1; i<len-1; i++)
+    {
+        window[i] = std::sin(pidmi*(static_cast<double> (i)));
+    }
+    window[len-1] = 0;
+
+/*
+    // I don't agree with scipy's implementation.
     double pidmi = M_PI/static_cast<double> (len);
     #pragma omp simd
     for (int i=0; i<len; i++)
     {
         window[i] = std::sin(pidmi*(static_cast<double> (i) + 0.5));
     }
+*/
     return;
 }
 
@@ -202,12 +215,23 @@ void WindowFunctions::sine(const int len, std::vector<float> &window)
         window[0] = 1;
         return;
     }
+    // This will put zeros at end points of sine taper ala Wikipedia
+    float pidmi = static_cast<float> (M_PI/static_cast<double> (len - 1));
+    window[0] = 0;
+    #pragma omp simd
+    for (int i=1; i<len-1; i++)
+    {   
+        window[i] = std::sin(pidmi*(static_cast<float> (i)));
+    }   
+    window[len-1] = 0;
+/*
     float pidmi = static_cast<float> (M_PI/static_cast<double> (len));
     #pragma omp simd
     for (int i=0; i<len; i++)
     {
         window[i] = std::sin(pidmi*(static_cast<float> (i) + 0.5f));
     }
+*/
     return;
 }
 

@@ -57,7 +57,7 @@ void blackman(const int len, std::vector<float>  &window);
  *        \f$
  *           w_n = \sin
  *                 \left (
- *                   \frac{\pi}{L} \left (n + \frac{1}{2} \right )
+                     \frac{\pi n}{L - 1}
   *                \right )
  *        \f$.
  * @param[in] len     the window length.  This must be positive.

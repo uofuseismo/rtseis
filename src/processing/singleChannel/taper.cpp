@@ -207,14 +207,14 @@ void Taper::apply(const int nx, const double x[], double y[])
     }
     // Compute taper length
     double pct = pImpl->parms.getPercentage();
-    int npct = static_cast<int> (static_cast<double> (nx)*pct + 0.5); // Round
-    int m = std::min(nx - 2, npct);
+    int npct = static_cast<int> (static_cast<double> (nx)*pct/100 + 0.5) + 1;
+    int m = std::max(2, std::min(nx, npct));
     // Redesign the window?  If the parameters were (re)set then winLen0 is -1.
     // Otherwise, if the same length signal is coming at us then the precision
     // of the module can't change so we can just use the old window.
     if (pImpl->winLen0 != m)
     {
-        pImpl->w8.reserve(m+2); // Prevent reallocations in a bit
+        pImpl->w8.reserve(m); // Prevent reallocations in a bit
         TaperParameters::Type type = pImpl->parms.getTaperType();
         if (type == TaperParameters::Type::HAMMING)
         {
@@ -241,11 +241,11 @@ void Taper::apply(const int nx, const double x[], double y[])
             throw std::invalid_argument("Unsupported window");
         }
         // Following SAC definition the end points are set to 0
-        pImpl->w8.emplace(pImpl->w8.begin(), 0);
-        pImpl->w8.emplace_back(0);
+        //pImpl->w8.emplace(pImpl->w8.begin(), 0);
+        //pImpl->w8.emplace_back(0);
     }
     // Taper first (m+1)/2 points
-    int mp12 = (m + 1)/2;
+    int mp12 = m/2;
     const double *w = pImpl->w8.data();
     ippsMul_64f(w, x, y, mp12);
     // Copy the intermediate portion of the signal
@@ -255,6 +255,6 @@ void Taper::apply(const int nx, const double x[], double y[])
         ippsCopy_64f(&x[mp12], &y[mp12], ncopy);
     } 
     // Taper last (m+1)/2 points 
-    ippsMul_64f(&w[m+2-mp12], &x[nx-mp12], &y[nx-mp12], mp12);
+    ippsMul_64f(&w[m-mp12], &x[nx-mp12], &y[nx-mp12], mp12);
     return;
 }
