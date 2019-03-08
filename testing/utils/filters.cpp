@@ -15,6 +15,7 @@
 #include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
 #include "rtseis/utilities/filterImplementations/medianFilter.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
+#include "rtseis/utilities/filterImplementations/enums.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 #include <ipps.h>
@@ -171,7 +172,7 @@ int filters_iirFilter_test(const int npts, const double x[],
     ierr = iir.initialize(nb, b, na, a,
                           RTSeis::ProcessingMode::POST_PROCESSING,
                           RTSeis::Precision::DOUBLE,
-                          IIRFilter::Implementation::DF2_FAST);
+                          IIRDFImplementation::DF2_FAST);
     if (ierr != 0)
     {    
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
@@ -180,7 +181,7 @@ int filters_iirFilter_test(const int npts, const double x[],
     ierr = iir_slow.initialize(nb, b, na, a,
                                RTSeis::ProcessingMode::POST_PROCESSING,
                                RTSeis::Precision::DOUBLE,
-                               IIRFilter::Implementation::DF2_SLOW);
+                               IIRDFImplementation::DF2_SLOW);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize slow filter");
@@ -238,7 +239,7 @@ int filters_iirFilter_test(const int npts, const double x[],
     ierr = iir2.initialize(nb2, b2, na2, a2,
                            RTSeis::ProcessingMode::POST_PROCESSING,
                            RTSeis::Precision::DOUBLE,
-                           IIRFilter::Implementation::DF2_FAST);
+                           IIRDFImplementation::DF2_FAST);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
@@ -270,7 +271,7 @@ int filters_iirFilter_test(const int npts, const double x[],
     ierr = iirrt.initialize(nb, b, na, a,
                             RTSeis::ProcessingMode::REAL_TIME,
                             RTSeis::Precision::DOUBLE,
-                            IIRFilter::Implementation::DF2_FAST);
+                            IIRDFImplementation::DF2_FAST);
     iir = iirrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
@@ -326,7 +327,7 @@ int filters_iirFilter_test(const int npts, const double x[],
     ierr = iir_slow.initialize(nb, b, na, a,
                                RTSeis::ProcessingMode::REAL_TIME,
                                RTSeis::Precision::DOUBLE,
-                               IIRFilter::Implementation::DF2_SLOW);
+                               IIRDFImplementation::DF2_SLOW);
     iir = iir_slow;
     for (int job=0; job<2; job++)
     {    
@@ -726,7 +727,7 @@ int filters_firFilter_test(const int npts, const double x[],
     ierr = fir.initialize(nb, b,
                           RTSeis::ProcessingMode::POST_PROCESSING,
                           RTSeis::Precision::DOUBLE,
-                          FIRFilter::Implementation::DIRECT);
+                          FIRImplementation::DIRECT);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize FIR filter");
@@ -759,7 +760,7 @@ int filters_firFilter_test(const int npts, const double x[],
     ierr = firrt.initialize(nb, b,
                           RTSeis::ProcessingMode::REAL_TIME,
                           RTSeis::Precision::DOUBLE,
-                          FIRFilter::Implementation::DIRECT);
+                          FIRImplementation::DIRECT);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");

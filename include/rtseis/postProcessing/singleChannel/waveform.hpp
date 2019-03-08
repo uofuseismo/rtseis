@@ -3,6 +3,9 @@
 #include <memory>
 #include <string>
 #include <exception>
+#ifndef RTSEIS_UTILS_FILTER_FIR_HPP
+#include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#endif
 #ifndef RTSEIS_UTILS_MATH_CONVOLVE_HPP
 #include "rtseis/utilities/math/convolve.hpp"
 #endif
@@ -12,6 +15,17 @@
 
 namespace RTSeis
 {
+// Forward declare filter representations
+namespace Utilities
+{
+namespace FilterRepresentations
+{
+class FIR;
+class SOS;
+class BA;
+class ZPK;
+}; // End filter representations
+}; // End utilties
 /*!
  * @defgroup rtseis_postprocessing Post-Processing
  * @brief These are higher level algorithms that expedite post-processing
@@ -115,8 +129,8 @@ public:
      * @throws std::invalid_argument if s is empty or there is no data.
      */
     void convolve(const std::vector<double> &s,
-         const RTSeis::Utilities::Math::Convolve::Mode mode = RTSeis::Utilities::Math::Convolve::Mode::FULL,
-         const RTSeis::Utilities::Math::Convolve::Implementation implementation = RTSeis::Utilities::Math::Convolve::Implementation::AUTO);
+         const Utilities::Math::Convolve::Mode mode = Utilities::Math::Convolve::Mode::FULL,
+         const Utilities::Math::Convolve::Implementation implementation = Utilities::Math::Convolve::Implementation::AUTO);
     /*!
      * @brief Removes the mean from the data.
      * @throws std::invalid_argument if there is no data.
@@ -133,16 +147,68 @@ public:
      * @snippet testing/postProcessing/singleChannel.cpp ppSCDetrendExample
      */
     void detrend(void);
+
+    /*!
+     * @name General Filtering
+     * @{
+     * @note It is the responsibility of hte user to ensure that the
+     *       signal sampling rate and the sampling rate used in the digital
+     *       filter design are compatible.
+     */
+    /*!
+     * @brief Applies the digital FIR filter to the time series.
+     * @param[in] fir  The digital FIR filter to apply to the signal.
+     * @param[in] lremovePhase  If true, then this attempts to remove the 
+     *                          the phase distortion by applying the
+     *                          filter both forwards and backwards.  This is
+     *                          done because FIR filters are not required to
+     *                          have linear phase responses (i.e., a constant
+     *                          group delay).
+     * @param[in] implementation  Defines the implementation.
+     * @throws std::invalid_argument if the filter is invalid.
+     */
+    void filter(const Utilities::FilterRepresentations::FIR &fir,
+                const bool lremovePhase=false);
+                //const Utilities::FilterRepresentations::FIRFilter::Implementation implementation);// = Utilities::FilterRepresentations::FIRFilter::Implementation::DIRECT);
+    /*! 
+     * @brief Applies the digital IIR filter to the time series.
+     * @param[in] sos  The digital IIR filter stored in second order sections.
+     * @param[in] lremovePhase  If true, then this removes the phase distortion
+     *                          by applying the filter to both the time forward
+     *                          and time reversed signal.
+     * @note SOS filter application can be numerically more robust than
+     *       its direct form counterpart and should therefore be preferred
+     *       whenever possible.
+     * @throws std::invalid_argument if the filter is invalid.
+     */
+    void filter(const Utilities::FilterRepresentations::SOS &sos,
+                const bool lzeroPhase=false);
+    /*! 
+     * @brief Applies the digital IIR filter to the time series.
+     * @param[in] ba   The digital IIR filter stored as feed-forward and
+     *                 feed-back coefficients.
+     * @param[in] lremovePhase  If true, then this removes the phase distortion
+     *                          by applying the filter to both the time forward
+     *                          and time reversed signal.
+     * @note For higher-order filters this can be less numerically stable than
+     *        an SOS implementation.
+     * @throws std::invalid_argument if the filter is invalid.
+     */
+    void filter(const Utilities::FilterRepresentations::BA &ba,
+                const bool lzeroPhase=false);
+    /*! @} */
+
     /*!
      * @brief Tapers the ends of a signal.
      * @param[in] pct  The percentage of the signal to which the taper will
      *                 be applied.  For example, 5 percent indicates that
      *                 the first 2.5 and final 2.5 percent of the signal
-     *                  will be tapered. 
+     *                 will be tapered.  This must be in the range (0,100). 
      * @param[in] window  Defines the window function used to generate
      *                    the taper.
-     * @note The SAC tapering convention is used where the first and final
-     *       samples of the tapered signal are set to 0.
+     * @note The SAC convention would require a fraction in the range (0,0.5).
+     *       Hence, to convert from SAC to RTSeis one would do something like
+     *       pct = 100*(2*fraction).
      * @throw std::invalid_argument if the parameters are invalid.
      */
     void taper(const double pct = 5,

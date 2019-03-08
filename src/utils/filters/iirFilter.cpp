@@ -106,7 +106,7 @@ class IIRFilter::IIRFilterImpl
             nbRef_ = 0;
             naRef_ = 0;
             bufferSize_ = 0;
-            implementation_ = IIRFilter::Implementation::DF2_FAST;
+            implementation_ = IIRDFImplementation::DF2_FAST;
             mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
             precision_ = RTSeis::Precision::DOUBLE;
             linit_ = false;
@@ -118,18 +118,18 @@ class IIRFilter::IIRFilterImpl
                        const int na, const double a[],
                        const RTSeis::ProcessingMode mode,
                        const RTSeis::Precision precision,
-                       const IIRFilter::Implementation implementation)
+                       const IIRDFImplementation implementation)
         {
             clear();
             // May have to force the implementation to be slow
             IppStatus status;
-            IIRFilter::Implementation impUse = implementation;
+            IIRDFImplementation impUse = implementation;
             // IPP changed implementation in 2018.  I'm not supporting it.
             // High order IIR filters aren't a good idea.
             #if IPP_VERSION_MAJOR < 2019
-            impUse = IIRFilter::Implementation::DF2_SLOW;
+            impUse = IIRDFImplementation::DF2_SLOW;
             #endif
-            if (impUse == IIRFilter::Implementation::DF2_FAST &&
+            if (impUse == IIRDFImplementation::DF2_FAST &&
                 std::max(nb, na) - 1 > 8)
             {
                 Ipp64u featureMask, enabledMask;
@@ -140,12 +140,12 @@ class IIRFilter::IIRFilterImpl
                     if ((featureMask & ippCPUID_AVX2) &&
                         (enabledMask & ippCPUID_AVX2))
                     {
-                        impUse = IIRFilter::Implementation::DF2_SLOW;
+                        impUse = IIRDFImplementation::DF2_SLOW;
                     }
                     if ((featureMask & ippCPUID_AVX512F) &&
                         (enabledMask & ippCPUID_AVX512F))
                     {
-                        impUse = IIRFilter::Implementation::DF2_SLOW;
+                        impUse = IIRDFImplementation::DF2_SLOW;
                     }
                 }
                 else
@@ -175,7 +175,7 @@ class IIRFilter::IIRFilterImpl
             // Alllocate space
             if (precision == RTSeis::Precision::DOUBLE)
             {
-                if (impUse == Implementation::DF2_FAST)
+                if (impUse == IIRDFImplementation::DF2_FAST)
                 {
                     status = ippsIIRGetStateSize_64f(order_, &bufferSize_);
                     if (status != ippStsNoErr)
@@ -233,7 +233,7 @@ class IIRFilter::IIRFilterImpl
             }
             else
             {
-                if (impUse == Implementation::DF2_FAST)
+                if (impUse == IIRDFImplementation::DF2_FAST)
                 {
                     status = ippsIIRGetStateSize_32f(order_, &bufferSize_);
                     if (status != ippStsNoErr)
@@ -382,7 +382,7 @@ class IIRFilter::IIRFilterImpl
                 return 0;
             }
             IppStatus status;
-            if (implementation_ == Implementation::DF2_FAST)
+            if (implementation_ == IIRDFImplementation::DF2_FAST)
             {
                 status = ippsIIR_64f(x, y, n, pIIRState64f_);
                 if (status != ippStsNoErr)
@@ -423,7 +423,7 @@ class IIRFilter::IIRFilterImpl
                 return 0;
             }
             IppStatus status;
-            if (implementation_ == Implementation::DF2_FAST)
+            if (implementation_ == IIRDFImplementation::DF2_FAST)
             {
                 status = ippsIIR_32f(x, y, n, pIIRState32f_);
                 if (status != ippStsNoErr)
@@ -570,7 +570,7 @@ class IIRFilter::IIRFilterImpl
         /// The length of the pBuf.
         int bufferSize_ = 0;
         /// Filter implementation
-        Implementation implementation_ = IIRFilter::Implementation::DF2_FAST;
+        IIRDFImplementation implementation_ = IIRDFImplementation::DF2_FAST;
         /// Processing mode
         RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         /// Precision of filter application
@@ -617,7 +617,7 @@ int IIRFilter::initialize(const int nb, const double b[],
                           const int na, const double a[],
                           const RTSeis::ProcessingMode mode,
                           const RTSeis::Precision precision,
-                          const Implementation implementation)
+                          const IIRDFImplementation implementation)
 {
     clear();
     if (nb < 1 || b == nullptr || na < 1 || a == nullptr)

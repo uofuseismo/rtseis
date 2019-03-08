@@ -94,7 +94,7 @@ class FIRFilter::FIRImpl
             bufferSize_ = 0;
             specSize_ = 0;
             order_ = 0;
-            implementation_ = Implementation::DIRECT;
+            implementation_ = FIRImplementation::DIRECT;
             precision_ = RTSeis::Precision::DOUBLE;
             mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
             linit_ = false;
@@ -105,7 +105,7 @@ class FIRFilter::FIRImpl
         int initialize(const int nb, const double b[],
                        const RTSeis::ProcessingMode mode,
                        const RTSeis::Precision precision,
-                       const Implementation implementation)
+                       const FIRImplementation implementation)
         {
             clear();
             // Figure out sizes and save some basic info
@@ -118,8 +118,8 @@ class FIRFilter::FIRImpl
             ippsZero_64f(zi_, std::max(1, order_));
             // Determine the algorithm type
             IppAlgType algType = ippAlgDirect;
-            if (implementation == Implementation::FFT){algType = ippAlgFFT;}
-            if (implementation == Implementation::AUTO){algType = ippAlgAuto;}
+            if (implementation == FIRImplementation::FFT){algType = ippAlgFFT;}
+            if (implementation == FIRImplementation::AUTO){algType = ippAlgAuto;}
             // Initialize FIR filter
             if (precision == RTSeis::Precision::DOUBLE)
             {
@@ -339,7 +339,7 @@ class FIRFilter::FIRImpl
         /// Filter order.
         int order_ = 0;
         /// Implementation.
-        Implementation implementation_ = Implementation::DIRECT;
+        FIRImplementation implementation_ = FIRImplementation::DIRECT;
         /// By default the module does post-procesing.
         RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         /// The default module implementation.
@@ -379,7 +379,7 @@ FIRFilter& FIRFilter::operator=(const FIRFilter &fir)
 int FIRFilter::initialize(const int nb, const double b[],
                           const RTSeis::ProcessingMode mode,
                           const RTSeis::Precision precision,
-                          Implementation implementation)
+                          FIRImplementation implementation)
 {
     clear();
     // Checks

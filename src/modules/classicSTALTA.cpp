@@ -8,6 +8,7 @@
 #include "rtseis/log.h"
 #include "rtseis/modules/classicSTALTA.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#include "rtseis/utilities/filterImplementations/enums.hpp"
 #include <ipps.h>
 
 using namespace RTSeis::Modules;
@@ -111,7 +112,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             double xdiv = 1.0/static_cast<double> (nsta_);
             ippsSet_64f(xdiv, xsta, nsta_);
             int ierr = firNum_.initialize(nsta_, xsta, modeRT, precision,
-                 RTSeis::Utilities::FilterImplementations::FIRFilter::Implementation::DIRECT);
+                 RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
             if (ierr != 0)
             {
                 RTSEIS_ERRMSG("%s", "Failed to set numerator FIR filter");
@@ -134,7 +135,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             xdiv = 1.0/static_cast<double> (nlta_);
             ippsSet_64f(xdiv, xlta, nlta_);
             ierr = firDen_.initialize(nlta_, xlta, modeRT, precision,
-                 RTSeis::Utilities::FilterImplementations::FIRFilter::Implementation::DIRECT);
+                 RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
             if (ierr != 0)
             {
                  RTSEIS_ERRMSG("%s", "Failed to initialize denominator");
