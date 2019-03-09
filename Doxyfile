@@ -801,6 +801,7 @@ INPUT                  = ./ \
                          include/rtseis/utilities/transforms/transforms.hpp \
                          include/rtseis/utilities/normalization/signBit.hpp \
                          include/rtseis/postProcessing/singleChannel/ \
+                         doc/overview.dox \
                          doc/INSTALL.md \
                          doc/Utilities.doc \
                          doc/Math.doc \

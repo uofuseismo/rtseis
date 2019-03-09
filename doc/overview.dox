@@ -1,0 +1,71 @@
+/*!
+\mainpage RTSeis Documentation
+
+\section section_Contents Contents
+
+- \subpage page_Overview "Overview"
+- \subpage page_Installation "Installing"
+
+*/
+
+//--------------------------------------------------------------------------------------//
+
+/*!
+\page page_Overview Overview
+\section section_Overview Overview
+
+*/
+
+//--------------------------------------------------------------------------------------//
+
+/*!
+\page page_Installation Installation
+\section section_Installation Installation
+\subsection section_InstallatioN_prereqs Prerequisites
+
+The following prerequisites must be satisfied prior to building the software
+- A C++14 compliant compiler.
+- git
+- CMake v3.6
+
+If the Python bindings are desired then the additional requirements to satisfy are
+- Python3
+- Pybind11
+
+\subsection section_Installation_config Configuration
+
+After the prerequisites have been satisfied CMake can be configured by running a 
+script like the following in teh root source directory
+
+\verbatim
+
+#!/bin/sh
+export IPP_DIR=/opt/intel/ipp
+export IPP_LIB_ROOT=${IPP_DIR}/lib/intel64
+export MKL_DIR=/opt/intel/mkl
+export MKL_LIB_ROOT=${MKL_DIR}/lib/intel64
+export BUILD_DIR=build
+if [ -d ${BUILD_DIR} ]; then
+   echo "Removing build directory" ${BUILD_DIR}
+   rm -rf ${BUILD_DIR}
+fi
+mkdir ${BUILD_DIR}
+cd ${BUILD_DIR}
+cmake .. \
+-DCMAKE_C_FLAGS="-g3 -O2 -Wall" \
+-DCMAKE_CXX_FLAGS="-g3 -O2 -Wall" \
+-DIPP_INCLUDE_DIR=${IPP_DIR}/include \
+-DIPP_LIBRARY="${IPP_LIB_ROOT}/libipps.so;${IPP_LIB_ROOT}/libippvm.so;${IPP_LIB_ROOT}/libippcore.so" \
+-DMKL_INCLUDE_DIR="${MKL_DIR}/include" \
+-DMKL_LIBRARY="${MKL_LIB_ROOT}/libmkl_intel_lp64.so;${MKL_LIB_ROOT}/libmkl_sequential.so;${MKL_LIB_ROOT}/libmkl_core.so;${MKL_LIB_ROOT}/libmkl_avx2.so" \
+-DRTSEIS_WRAP_PYTHON=YES \
+-Dpybind11_INCLUDE_DIR="/usr/local/include/pybind11"
+cd ..
+
+\endverbatim
+
+After successfully configuring then one can build the code by descending into the source directory
+
+  
+
+*/

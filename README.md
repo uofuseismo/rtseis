@@ -1,3 +1,7 @@
+# WARNING
+
+This library is being actively developed and can change drastically.
+
 # Background
 
 RTSeis is a real-time focused seismic signals processing library that is intended to
