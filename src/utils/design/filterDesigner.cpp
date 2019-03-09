@@ -131,7 +131,7 @@ struct IIRDesignParameters
         if (( ldigital && !parms.ldigital) ||
             (!ldigital &&  parms.ldigital)){return false;}
         if (( lsos && !parms.lsos) ||
-             !lsos &&  parms.lsos){return false;}
+            (!lsos &&  parms.lsos)){return false;}
         if (lsos)
         {
             if (pairing != parms.pairing){return false;}

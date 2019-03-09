@@ -133,11 +133,11 @@ void Waveform::getData(const size_t nwork, double y[]) const
     {
         throw std::invalid_argument("y is NULL");
     }
-//#ifdef __INTEL_COMPILER
+#ifdef __INTEL_COMPILER
     std::copy(pstl::execution::unseq, pImpl->y_.begin(), pImpl->y_.end(), y);
-//#else
+#else
     std::copy(pImpl->y_.begin(), pImpl->y_.end(), y);
-//#endif 
+#endif 
     return;
 }
 

@@ -201,23 +201,23 @@ int testTaper(void)
         return EXIT_FAILURE;
     }
     // Compare
-    for (int i=0; i<ySine100.size(); i++)
+    for (size_t i=0; i<ySine100.size(); i++)
     {
         if (std::abs(yHamming100[i] - yHamming100Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 100 failed %d,%lf,%lf", 
+            RTSEIS_ERRMSG("Sine 100 failed %ld,%lf,%lf", 
                           i, yHamming100[i], yHamming100Ref[i])
             return EXIT_FAILURE;
         }
         if (std::abs(yHann100[i] - yHanning100Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 100 failed %d,%lf,%lf", 
+            RTSEIS_ERRMSG("Sine 100 failed %ld,%lf,%lf", 
                           i, yHann100[i], yHanning100Ref[i])
             return EXIT_FAILURE;
         }
         if (std::abs(ySine100[i] - ySine100Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 100 failed %d,%lf,%lf", 
+            RTSEIS_ERRMSG("Sine 100 failed %ld,%lf,%lf", 
                           i, ySine100[i], ySine100Ref[i])
             return EXIT_FAILURE;
         }
@@ -249,23 +249,23 @@ int testTaper(void)
         RTSEIS_ERRMSG("Taper 101 failed %s", ia.what());
         return EXIT_FAILURE;
     }
-    for (int i=0; i<101; i++)
+    for (size_t i=0; i<101; i++)
     {
         if (std::abs(yHamming101[i] - yHamming101Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 101 failed %d,%lf,%lf", 
+            RTSEIS_ERRMSG("Sine 101 failed %ld,%lf,%lf", 
                           i, yHamming101[i], yHamming101Ref[i])
             return EXIT_FAILURE;
         }
         if (std::abs(yHann101[i] - yHanning101Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 101 failed %d,%lf,%lf", 
+            RTSEIS_ERRMSG("Sine 101 failed %ld,%lf,%lf", 
                           i, yHann101[i], yHanning101Ref[i])
             return EXIT_FAILURE;
         }   
         if (std::abs(ySine101[i] - ySine101Ref[i]) > 1.e-6)
         {   
-            RTSEIS_ERRMSG("Sine 101 failed %d,%lf,%lf", 
+            RTSEIS_ERRMSG("Sine 101 failed %ld,%lf,%lf", 
                           i, ySine101[i], ySine101Ref[i])
             return EXIT_FAILURE;
         }

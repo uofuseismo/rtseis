@@ -258,7 +258,7 @@ class Interp1D::Interp1DImpl
             // Save data
             luniform = true;
             double dx = 0;
-            if (nx > 1){(xmax - xmin)/static_cast<double> (nx - 1);}
+            if (nx > 1){dx = (xmax - xmin)/static_cast<double> (nx - 1);}
             xin.resize(nx); 
             #pragma omp simd
             for (int i=0; i<nx; i++)
