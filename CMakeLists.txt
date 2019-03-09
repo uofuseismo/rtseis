@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.5)
 project(RTSeis VERSION 0.1.1 LANGUAGES C CXX)
 enable_testing()
 
@@ -59,20 +59,14 @@ IF (RTSEIS_WRAP_PYTHON)
    MESSAGE(STATUS "PYTHON_LIBRARIES = ${PYTHON_LIBRARIES}")
    MESSAGE(STATUS "PYTHON_EXECUTABLE = ${PYTHON_EXECUTABLE}")
    MESSAGE(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
-   #MESSAGE(STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
-   #MESSAGE(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
-
    FIND_PACKAGE(pybind11 REQUIRED)
 ENDIF()
 
-INCLUDE_DIRECTORIES(
-   ${CMAKE_CURRENT_SOURCE_DIR}/include
+include_directories(
+   include
    ${IPP_INCLUDE_DIR}
    ${MKL_INCLUDE_DIR}
-   ${BOOST_INCLUDEDIR}
-   #${PYTHON_INCLUDE_DIRS}
-   #${CJSON_INCLUDE_DIR}
-   )
+)
 
 ADD_SUBDIRECTORY(include)
 
@@ -106,12 +100,12 @@ SET(UTILS_SRCS
     src/utils/normalization/signBit.cpp
     src/utils/transforms/dft.cpp
     src/utils/transforms/dftUtils.cpp)
-SET(IPPS_SRCS
-    src/ipps/dft.c
-    src/ipps/downsample.c 
-    src/ipps/firfilter.c
-    src/ipps/iirfilter.c
-    src/ipps/medianFilter.c)
+#SET(IPPS_SRCS
+#    src/ipps/dft.c
+#    src/ipps/downsample.c 
+#    src/ipps/firfilter.c
+#    src/ipps/iirfilter.c
+#    src/ipps/medianFilter.c)
 SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp
@@ -119,7 +113,8 @@ SET(MODULES_SRCS
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
     src/processing/singleChannel/postProcessing.cpp
-    src/processing/singleChannel/taper.cpp)
+    src/processing/singleChannel/taper.cpp
+    src/processing/singleChannel/filter.cpp)
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
 
 # cmake -DBUILD_SHARED_LIBS=YES /path/to/source
