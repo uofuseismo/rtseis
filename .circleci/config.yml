@@ -1,0 +1,51 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # In advanced project settings one can set private variables such as the docker username and password
+      #- image: bakerb845/mkl-iscl-build
+      #  auth:
+      #     username: $DOCKER_USER
+      #     password: $DOCKER_PASS
+      - image: bakerb845/ubuntu-xcloc
+    steps:
+      - checkout
+      - run:
+          name: Print the Current Time
+          command: date
+      - run:
+          name: Build the code
+          command: |
+            export IPP_DIR=/opt/intel/ipp
+            export IPP_LIB_ROOT=${IPP_DIR}/lib/intel64
+            export MKL_DIR=/opt/intel/mkl
+            export MKL_LIB_ROOT=${MKL_DIR}/lib/intel64
+            export BUILD_DIR=build
+            if [ -d ${BUILD_DIR} ]; then
+               echo "Removing build directory" ${BUILD_DIR}
+               rm -rf ${BUILD_DIR}
+            fi
+            mkdir ${BUILD_DIR}
+            cd ${BUILD_DIR}
+            cmake .. \
+            -DCMAKE_C_FLAGS="-g3 -O2 -Wall" \
+            -DCMAKE_CXX_FLAGS="-g3 -O2 -Wall" \
+            -DIPP_INCLUDE_DIR=${IPP_DIR}/include \
+            -DIPP_LIBRARY="${IPP_LIB_ROOT}/libipps.so;${IPP_LIB_ROOT}/libippvm.so;${IPP_LIB_ROOT}/libippcore.so" \
+            -DMKL_INCLUDE_DIR="${MKL_DIR}/include" \
+            -DMKL_LIBRARY="${MKL_LIB_ROOT}/libmkl_intel_lp64.so;${MKL_LIB_ROOT}/libmkl_sequential.so;${MKL_LIB_ROOT}/libmkl_core.so;${MKL_LIB_ROOT}/libmkl_avx2.so"
+
+            export CC=gcc
+            export FC=gfortran
+            export MKL_LIB_ROOT=/opt/intel/mkl/lib/intel64
+            export IPP_LIB_ROOT=/opt/intel/ipp/lib/intel64
+      - run:
+           name: Build the code
+           command: make
+      - run:
+           name: Test the code
+           command: ctest --verbose
+      - run:
+           name: Test install
+           commmand: make install
+
