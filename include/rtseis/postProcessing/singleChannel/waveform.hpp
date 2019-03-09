@@ -149,7 +149,7 @@ public:
     void detrend(void);
 
     /*!
-     * @name General Filtering
+     * @name General FIR Filtering
      * @{
      * @note It is the responsibility of hte user to ensure that the
      *       signal sampling rate and the sampling rate used in the digital
@@ -169,7 +169,6 @@ public:
      */
     void filter(const Utilities::FilterRepresentations::FIR &fir,
                 const bool lremovePhase=false);
-                //const Utilities::FilterRepresentations::FIRFilter::Implementation implementation);// = Utilities::FilterRepresentations::FIRFilter::Implementation::DIRECT);
     /*! 
      * @brief Applies the digital IIR filter to the time series.
      * @param[in] sos  The digital IIR filter stored in second order sections.

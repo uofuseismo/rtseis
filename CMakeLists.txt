@@ -133,7 +133,10 @@ target_link_libraries(rtseis
 #                      CXX_EXTENSIONS NO)
 set(RTSEIS_WRAP_PYTHON NO)
 IF (RTSEIS_WRAP_PYTHON)
-   add_library(pyrtseis MODULE python/pyrtseis.cpp)
+   add_library(pyrtseis MODULE
+               python/pyrtseis.cpp
+               python/filterRepresentations.cpp
+               python/waveform.cpp)
    target_link_libraries(pyrtseis PRIVATE pybind11::module rtseis)
    ##PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
    ##TARGET_LINK_LIBRARIES(rtseis_python

@@ -26,7 +26,7 @@ namespace Convolve
  *        to a more efficient implementation than the other.
  * @ingroup rtseis_utils_math_convolve
  */
-enum Implementation
+enum class Implementation
 {
     AUTO = 0,   /*!< Let IPP decide. */
     DIRECT = 1, /*!< Time domain implementation. */
