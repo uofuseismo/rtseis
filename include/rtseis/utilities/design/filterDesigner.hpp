@@ -60,7 +60,7 @@ class FilterDesigner
          * @throws std::invalid_argument if any parameters are incorrect.
          */
         void designLowpassIIRFilter(const int n, const double r,
-                                    const IIR::Prototype ftype,
+                                    const IIRPrototype ftype,
                                     const double ripple,
                                     FilterRepresentations::BA &ba,
                                     const bool ldigital = true);
@@ -77,7 +77,7 @@ class FilterDesigner
          */
         void designLowpassFIRFilter(const int order,
                                     const double r,
-                                    const FIR::Window window,
+                                    const FIRWindow window,
                                     FilterRepresentations::FIR &fir) const;
         /*!
          * @brief Designs an FIR highpass filter.
@@ -92,7 +92,7 @@ class FilterDesigner
          */
         void designHighpassFIRFilter(const int order,
                                      const double r,
-                                     const FIR::Window window,
+                                     const FIRWindow window,
                                      FilterRepresentations::FIR &fir) const;
         /*!
          * @brief Designs an FIR bandpass filter.
@@ -109,7 +109,7 @@ class FilterDesigner
          */
         void designBandpassFIRFilter(const int order,
                                      const std::pair<double,double> r,
-                                     const FIR::Window window,
+                                     const FIRWindow window,
                                      FilterRepresentations::FIR &fir) const;
         /*!
          * @brief Designs an FIR bandstop filter.
@@ -126,7 +126,7 @@ class FilterDesigner
          */
         void designBandstopFIRFilter(const int order,
                                      const std::pair<double,double> r,
-                                     const FIR::Window window,
+                                     const FIRWindow window,
                                      FilterRepresentations::FIR &fir) const;
         /*!
          * @brief Erases all existing filter designs.

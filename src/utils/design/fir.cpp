@@ -5,6 +5,7 @@
 #include <stdexcept>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/design/enums.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
@@ -12,11 +13,11 @@
 using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterDesign;
 
-static IppWinType classifyWindow(const FIR::Window window);
+static IppWinType classifyWindow(const FIRWindow window);
 
 void FIR::FIR1Lowpass(const int order, const double r,
                       FilterRepresentations::FIR &fir,
-                      const Window window)
+                      const FIRWindow window)
 {
     fir.clear();
     // Check inputs
@@ -66,7 +67,7 @@ void FIR::FIR1Lowpass(const int order, const double r,
 
 void FIR::FIR1Highpass(const int order, const double r,
                        FilterRepresentations::FIR &fir,
-                       const Window window)
+                       const FIRWindow window)
 {
     fir.clear();
     // Check inputs
@@ -116,7 +117,7 @@ void FIR::FIR1Highpass(const int order, const double r,
 
 void FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
                        FilterRepresentations::FIR &fir,
-                       const Window window)
+                       const FIRWindow window)
 {
     fir.clear();
     // Check inputs
@@ -174,7 +175,7 @@ void FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
 
 void FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
                        FilterRepresentations::FIR &fir,
-                       const Window window)
+                       const FIRWindow window)
 {
     fir.clear();
     // Check inputs
@@ -237,22 +238,22 @@ void FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
  * @retval The corresponding IPP window for FIR design.
  * @ingroup rtseis_utils_design_fir
  */
-IppWinType classifyWindow(const FIR::Window window)
+IppWinType classifyWindow(const FIRWindow window)
 {
     IppWinType winType = ippWinHamming; // Matlab default
-    if (window == FIR::Window::HAMMING)
+    if (window == FIRWindow::HAMMING)
     {
         winType = ippWinHamming;
     }
-    else if (window == FIR::Window::BARTLETT)
+    else if (window == FIRWindow::BARTLETT)
     {
         winType = ippWinBartlett;
     }
-    else if (window == FIR::Window::HANN)
+    else if (window == FIRWindow::HANN)
     {
         winType = ippWinHann;
     }
-    else if (window == FIR::Window::BLACKMAN_OPT)
+    else if (window == FIRWindow::BLACKMAN_OPT)
     {
         winType = ippWinBlackman;
     }

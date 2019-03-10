@@ -198,6 +198,12 @@ Downsample::Downsample(const Downsample &downsample)
     return;
 }
 
+Downsample::Downsample(Downsample &&downsample)
+{
+    *this = std::move(downsample); 
+    return;
+}
+
 Downsample& Downsample::operator=(const Downsample &downsample)
 {
     if (&downsample == this){return *this;}
@@ -205,6 +211,13 @@ Downsample& Downsample::operator=(const Downsample &downsample)
     pDownsample_ = std::unique_ptr<DownsampleImpl>
                    (new DownsampleImpl(*downsample.pDownsample_));
     return *this;
+}
+
+Downsample& Downsample::operator=(Downsample &&downsample)
+{
+    if (&downsample == this){return *this;}
+    pDownsample_ = std::move(downsample.pDownsample_);
+    return *this; 
 }
 
 int Downsample::initialize(const int downFactor,
@@ -223,7 +236,7 @@ int Downsample::initialize(const int downFactor,
 
 void Downsample::clear(void)
 {
-    pDownsample_->clear();
+    if (pDownsample_){pDownsample_->clear();}
     return;
 }
 

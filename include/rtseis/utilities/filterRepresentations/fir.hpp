@@ -29,6 +29,7 @@ public:
     /*!
      * @brief Constructs an FIR class from the given filter taps.
      * @param[in] pTaps   Filter taps to set.
+     * @throws std::invalid_argument if pTaps is empty.
      */
     explicit FIR(const std::vector<double> &pTaps);
     /*!
@@ -73,7 +74,7 @@ public:
     /*! 
      * @brief Clears the structure.
      */
-    void clear(void);
+    void clear(void) noexcept;
     /*! @} */
 
     /*!
@@ -87,7 +88,7 @@ public:
      * @brief Gets the number of filter coefficients.
      * @result Number of filter taps.
      */
-    int getNumberOfFilterTaps(void) const;
+    int getNumberOfFilterTaps(void) const noexcept;
 
     /*! @name Set Filter Taps
      * @{
@@ -97,11 +98,13 @@ public:
      * @param[in] n     The number of filter taps.
      * @param[in] taps  The filter coefficients to set.  This is an array
      *                  of dimension [n].
+     * @throws std::invalid_argument if n is less than 1 or taps is NULL.
      */
-    void setFilterTaps(const size_t n, double taps[]);
+    void setFilterTaps(const size_t n, const double taps[]);
     /*!
      * @brief Sets the filter taps.
      * @param[in] taps  The filter coefficients to set.
+     * @throws std::invalid_argument if taps is empty.
      */
     void setFilterTaps(const std::vector<double> &taps);
     /*! @} */
@@ -113,7 +116,7 @@ public:
      * @brief Gets the filter taps.
      * @result The filter coefficients.
      */
-    std::vector<double> getFilterTaps(void) const;
+    std::vector<double> getFilterTaps(void) const noexcept;
     /*! @}*/
 
     /*!

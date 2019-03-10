@@ -7,6 +7,7 @@
 #include <cmath>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/design/iir.hpp"
+#include "rtseis/utilities/design/enums.hpp"
 #include "rtseis/utilities/design/analogPrototype.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
@@ -46,10 +47,10 @@ static int cmplxreal(const std::vector<std::complex<double>> z,
 int IIR::iirfilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,
-                   const Prototype ftype,
+                   const IIRPrototype ftype,
                    SOS &sos,
                    const bool ldigital,
-                   const Pairing pairing)
+                   const SOSPairing pairing)
 {
      sos.clear();
      FilterRepresentations::ZPK zpk;
@@ -72,7 +73,7 @@ int IIR::iirfilter(const int n, const double *W,
 int IIR::iirfilter(const int n, const double *W, 
                    const double rp, const double rs, 
                    const Bandtype btype,
-                   const Prototype ftype,
+                   const IIRPrototype ftype,
                    FilterRepresentations::BA &ba,
                    const bool ldigital)
 {
@@ -97,7 +98,7 @@ int IIR::iirfilter(const int n, const double *W,
 int IIR::iirfilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,
-                   const Prototype ftype,
+                   const IIRPrototype ftype,
                    FilterRepresentations::ZPK &zpk,
                    const bool ldigital)
 {
@@ -113,12 +114,12 @@ int IIR::iirfilter(const int n, const double *W,
         return -1;
     }
     // Check ripples
-    if (ftype == Prototype::CHEBYSHEV1 && rp <= 0)
+    if (ftype == IIRPrototype::CHEBYSHEV1 && rp <= 0)
     {
         RTSEIS_ERRMSG("rp %lf must be positive", rp);
         return -1;
     }
-    if (ftype == Prototype::CHEBYSHEV2 && rs <= 0)
+    if (ftype == IIRPrototype::CHEBYSHEV2 && rs <= 0)
     {
         RTSEIS_ERRMSG("rs %lf must be positive", rs);
         return -1;
@@ -156,15 +157,15 @@ int IIR::iirfilter(const int n, const double *W,
     // Create the analog prototype
     int ierr;
     FilterRepresentations::ZPK zpkAp;
-    if (ftype == Prototype::BUTTERWORTH)
+    if (ftype == IIRPrototype::BUTTERWORTH)
     {
         ierr = AnalogPrototype::butter(n, zpkAp);
     }
-    else if (ftype == Prototype::BESSEL)
+    else if (ftype == IIRPrototype::BESSEL)
     {
         ierr = AnalogPrototype::bessel(n, zpkAp);
     }
-    else if (ftype == Prototype::CHEBYSHEV1)
+    else if (ftype == IIRPrototype::CHEBYSHEV1)
     {
         ierr = AnalogPrototype::cheb1ap(n, rp, zpkAp); 
     }
@@ -241,7 +242,7 @@ int IIR::iirfilter(const int n, const double *W,
 }
 
 int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
-                 FilterRepresentations::SOS &sos, const Pairing pairing)
+                 FilterRepresentations::SOS &sos, const SOSPairing pairing)
 {
     sos.clear();
     ZPK zpkWork = zpk;
@@ -302,12 +303,20 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
             as[1] =-2.0*std::real(pin[0]);
             as[2] = std::pow(std::abs(pin[0]), 2);
         }
-        sos = SOS(1, bs, as);
+        try
+        {
+            sos = FilterRepresentations::SOS(1, bs, as);
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("Failed to set sos %s", ia.what());
+            return -1;
+        }
         RTSEIS_WARNMSG("%s", "Summary of design");
         sos.print(stdout);
         return 0;
     }
-    if (np%2 == 1 && pairing == Pairing::NEAREST)
+    if (np%2 == 1 && pairing == SOSPairing::NEAREST)
     {
         np = np + 1;
         nz = nz + 1;
@@ -536,10 +545,13 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         }
     }
     // Finally pack the second order sections
-    sos = FilterRepresentations::SOS(nSections, bs, as);
-    if (sos.getNumberOfSections() == 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to pack sos");
+        sos = FilterRepresentations::SOS(nSections, bs, as);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to pack sos %s", ia.what());
         return -1;
     }
     return 0;
@@ -590,7 +602,15 @@ int IIR::zpk2tf(const FilterRepresentations::ZPK &zpk,
 #endif
     for (size_t i=0; i<az.size(); i++){a[i] = std::real(az[i]);}
     // Pack into a transfer function struct
-    ba = FilterRepresentations::BA(b, a);
+    try
+    {
+        ba = FilterRepresentations::BA(b, a);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to set coefficients %s", ia.what());
+        return -1;
+    }
     return 0;
 }
 

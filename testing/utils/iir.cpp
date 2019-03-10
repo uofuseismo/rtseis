@@ -39,8 +39,8 @@ int rtseis_test_utils_design_zpk2sos(void)
     SOS sosRefEll(3, bsRefEll, asRefEll);
     bool ldigital = true;
     ierr = IIR::iirfilter(n, Wn, 5, 60,  
-                          IIR::Bandtype::LOWPASS, IIR::Prototype::BUTTERWORTH,
-                          sos, ldigital, IIR::Pairing::NEAREST);
+                          Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
+                          sos, ldigital, SOSPairing::NEAREST);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to design filter");
@@ -71,7 +71,7 @@ int rtseis_test_utils_design_zpk2sos(void)
     pell.push_back(std::complex<double> (0.62853608609, +0.683329390963));
     double kell = 0.00141539634442;
     ZPK zpk(zell, pell, kell);
-    ierr = IIR::zpk2sos(zpk, sos, IIR::Pairing::NEAREST);
+    ierr = IIR::zpk2sos(zpk, sos, SOSPairing::NEAREST);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to convert filter");
@@ -258,7 +258,7 @@ int rtseis_test_utils_design_iir(void)
     BA butterlp_ref(bref_blp, aref_blp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::LOWPASS, IIR::Prototype::BUTTERWORTH,
+                          Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -285,7 +285,7 @@ int rtseis_test_utils_design_iir(void)
     BA butterhp_ref(bref_bhp, aref_bhp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          IIR::Bandtype::HIGHPASS, IIR::Prototype::BUTTERWORTH,
+                          Bandtype::HIGHPASS, IIRPrototype::BUTTERWORTH,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -322,7 +322,7 @@ int rtseis_test_utils_design_iir(void)
     BA butterbp_ref(bref_bbp, aref_bbp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::BANDPASS, IIR::Prototype::BUTTERWORTH,
+                          Bandtype::BANDPASS, IIRPrototype::BUTTERWORTH,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -360,7 +360,7 @@ int rtseis_test_utils_design_iir(void)
     BA butterbs_ref(bref_bbs, aref_bbs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::BANDSTOP, IIR::Prototype::BUTTERWORTH,
+                          Bandtype::BANDSTOP, IIRPrototype::BUTTERWORTH,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -391,7 +391,7 @@ int rtseis_test_utils_design_iir(void)
     BA bessellp_ref(bref_belp, aref_belp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::LOWPASS, IIR::Prototype::BESSEL,
+                          Bandtype::LOWPASS, IIRPrototype::BESSEL,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -418,7 +418,7 @@ int rtseis_test_utils_design_iir(void)
     BA besselhp_ref(bref_behp, aref_behp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          IIR::Bandtype::HIGHPASS, IIR::Prototype::BESSEL,
+                          Bandtype::HIGHPASS, IIRPrototype::BESSEL,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -451,7 +451,7 @@ int rtseis_test_utils_design_iir(void)
     BA besselbp_ref(bref_bebp, aref_bebp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::BANDPASS, IIR::Prototype::BESSEL,
+                          Bandtype::BANDPASS, IIRPrototype::BESSEL,
                           ba, ldigital);
     if (ierr != 0)
     {   
@@ -485,7 +485,7 @@ int rtseis_test_utils_design_iir(void)
     BA besselbs_ref(bref_bebs, aref_bebs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::BANDSTOP, IIR::Prototype::BESSEL,
+                          Bandtype::BANDSTOP, IIRPrototype::BESSEL,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -516,7 +516,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby1lp_ref(bref_c1lp, aref_c1lp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::LOWPASS, IIR::Prototype::CHEBYSHEV1,
+                          Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV1,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -543,7 +543,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby1hp_ref(bref_c1hp, aref_c1hp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          IIR::Bandtype::HIGHPASS, IIR::Prototype::CHEBYSHEV1,
+                          Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV1,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -577,7 +577,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby1bp_ref(bref_c1bp, aref_c1bp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          IIR::Bandtype::BANDPASS, IIR::Prototype::CHEBYSHEV1,
+                          Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV1,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -611,7 +611,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby1bs_ref(bref_c1bs, aref_c1bs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::BANDSTOP, IIR::Prototype::CHEBYSHEV1,
+                          Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV1,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -642,7 +642,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby2lp_ref(bref_c2lp, aref_c2lp);
     n = 10, Wn[0] = 0.3; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::LOWPASS, IIR::Prototype::CHEBYSHEV2,
+                          Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV2,
                           ba, ldigital);
     if (ierr != 0)
     {
@@ -669,7 +669,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby2hp_ref(bref_c2hp, aref_c2hp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::HIGHPASS, IIR::Prototype::CHEBYSHEV2,
+                          Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV2,
                           ba, ldigital);
     if (ierr != 0)
     {   
@@ -703,7 +703,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby2bp_ref(bref_c2bp, aref_c2bp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0.6; rp = 5; rs = 60; 
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::BANDPASS, IIR::Prototype::CHEBYSHEV2,
+                          Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV2,
                           ba, ldigital);
     if (ierr != 0)
     {   
@@ -734,7 +734,7 @@ int rtseis_test_utils_design_iir(void)
     BA cheby2bs_ref(bref_c2bs, aref_c2bs);
     n = 8, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
     ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          IIR::Bandtype::BANDSTOP, IIR::Prototype::CHEBYSHEV2,
+                          Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV2,
                           ba, ldigital);
     if (ierr != 0)
     {

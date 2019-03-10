@@ -27,6 +27,9 @@ namespace FilterImplementations
 class Downsample
 {
 public:
+    /*! @name Constructors
+     * @{
+     */ 
     /*!
      * @brief Default constructor.
      */
@@ -36,13 +39,30 @@ public:
      * @param[in] downsample  Downsampling class from which to initialize.
      */
     Downsample(const Downsample &downsample);
-
     /*!
-     * @brief Copy operator
+     * @brief Move constructor.
+     * @param[in,out] downsample  Downsampling class to move to this class.
+     *                            On exit this class is no longer usable.
+     */
+    Downsample(Downsample &&downsample);
+    /*! @} */
+
+    /*! @name Operators
+     * @{
+     */
+    /*!
+     * @brief Copy assignment operator.
      * @param[in] downsample  Downsampling class to copy.
      * @result A deep copy of the downsampling class.
      */
     Downsample& operator=(const Downsample &downsample);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] downsample  On exit this will no longer be usable. 
+     * @result A downsample class whose memory was moved from the input class.
+     */
+    Downsample& operator=(Downsample &&downsample);
+    /*! @} */
 
     /*!
      * @brief Default destructor.

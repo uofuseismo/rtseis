@@ -113,33 +113,36 @@ void SOS::print(FILE *fout)
     return;
 }
 
-int SOS::setSecondOrderSections(const int ns,
-                                const std::vector<double> &bs,
-                                const std::vector<double> &as)
+void SOS::setSecondOrderSections(const int ns,
+                                 const std::vector<double> &bs,
+                                 const std::vector<double> &as)
 {
     clear();
     if (ns < 1)
     {
         RTSEIS_ERRMSG("%s", "No sections in SOS filter");
-        return -1;
+        throw std::invalid_argument("No sections in SOS filter");
     }
     size_t ns3 = static_cast<size_t> (ns)*3;
     if (ns3 != bs.size())
     {
         RTSEIS_ERRMSG("bs.size() = %ld must equal 3*ns=%ld", bs.size(), ns3);
-        return -1;
+        throw std::invalid_argument("ba.size() = " + std::to_string(bs.size())
+                                 + " must equal 3*ns = " + std::to_string(ns3));
     }
     if (ns3 != as.size()) 
     {
         RTSEIS_ERRMSG("as.size() = %ld must equal 3*ns=%ld", as.size(), ns3);
-        return -1;
+        throw std::invalid_argument("as.size() = " + std::to_string(as.size())
+                                 + " must equal 3*ns = " + std::to_string(ns3));
     }
     for (int i=0; i<ns; i++)
     {
         if (bs[3*i] == 0)
         {
             RTSEIS_ERRMSG("Leading bs coefficient of section %d is zero", i);
-            return -1;
+            throw std::invalid_argument("Leading bs coefficient of section "
+                                     + std::to_string(i+1) + "is zero");
         }
     }
     for (int i=0; i<ns; i++)
@@ -147,27 +150,28 @@ int SOS::setSecondOrderSections(const int ns,
         if (as[3*i] == 0)
         {
             RTSEIS_ERRMSG("Leading bs coefficient of section %d is zero", i);
-            return -1;
+            throw std::invalid_argument("Leading as coefficient of section "
+                                     + std::to_string(i+1) + "is zero");
         }
     }
     // It all checks out
     pImpl_->ns = ns;
     pImpl_->bs = bs;
     pImpl_->as = as;
-    return 0;
+    return;
 }
 
-std::vector<double> SOS::getNumeratorCoefficients(void) const
+std::vector<double> SOS::getNumeratorCoefficients(void) const noexcept
 {
     return pImpl_->bs;
 }
 
-std::vector<double> SOS::getDenominatorCoefficients(void) const
+std::vector<double> SOS::getDenominatorCoefficients(void) const noexcept
 {
     return pImpl_->as;
 }
 
-int SOS::getNumberOfSections(void) const
+int SOS::getNumberOfSections(void) const noexcept
 {
     return pImpl_->ns;
 }

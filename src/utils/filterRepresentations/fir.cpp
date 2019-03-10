@@ -79,19 +79,31 @@ void FIR::print(FILE *fout)
     return;
 }
 
-void FIR::clear(void)
+void FIR::clear(void) noexcept
 {
     pImpl_->pTaps.clear();
     pImpl_->tol = DEFAULT_TOL;
     return;
 }
 
-void FIR::setFilterTaps(const size_t n, double pTaps[])
+int FIR::getNumberOfFilterTaps(void) const noexcept
 {
+    int ntaps = static_cast<int> (pImpl_->pTaps.size());
+    return ntaps;
+}
+
+void FIR::setFilterTaps(const size_t n, const double pTaps[])
+{
+    if (n < 1)
+    {
+        pImpl_->pTaps.resize(0);
+        throw std::invalid_argument("No filter taps");
+    }
     if (n > 0 && pTaps == nullptr)
     {
-        RTSEIS_ERRMSG("%s", "pTaps is null");
         pImpl_->pTaps.resize(0);
+        RTSEIS_ERRMSG("%s", "pTaps is null");
+        throw std::invalid_argument("pTaps is NULL");
         return;
     }
     pImpl_->pTaps.resize(n);
@@ -101,11 +113,12 @@ void FIR::setFilterTaps(const size_t n, double pTaps[])
 
 void FIR::setFilterTaps(const std::vector<double> &pTaps)
 {
-    pImpl_->pTaps = pTaps;
+    setFilterTaps(pTaps.size(), pTaps.data());
+    //pImpl_->pTaps = pTaps;
     return;
 }
 
-std::vector<double> FIR::getFilterTaps(void) const
+std::vector<double> FIR::getFilterTaps(void) const noexcept
 {
     return pImpl_->pTaps;
 }

@@ -2,9 +2,11 @@
 #define RTSEIS_POSTPROCESSING_SC_WAVEFORM 1
 #include <memory>
 #include <string>
-#include <exception>
 #ifndef RTSEIS_UTILS_FILTER_FIR_HPP
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#endif
+#ifndef RTSEIS_UTILS_DESIGN_ENUMS_HPP
+#include "rtseis/utilities/design/enums.hpp"
 #endif
 #ifndef RTSEIS_UTILS_MATH_CONVOLVE_HPP
 #include "rtseis/utilities/math/convolve.hpp"
@@ -45,7 +47,7 @@ namespace SingleChannel
  * @brief This class is used for single-channel post-processing applications.
  * @ingroup rtseis_postprocessing_sc
  */
-class Waveform : public std::exception
+class Waveform
 {
 public:
     /*!
@@ -196,6 +198,14 @@ public:
     void filter(const Utilities::FilterRepresentations::BA &ba,
                 const bool lzeroPhase=false);
     /*! @} */
+
+    /*!
+     * @brief Lowpass filters a signal.
+     * @param[in] fc   The critical frequency in Hz.  This must be between
+     *                 0 and and the Nyquist frequency which can be obtained
+     *                 from \c getNyquistFrequency().
+     */
+    //void lowpass(const double fc,
 
     /*!
      * @brief Tapers the ends of a signal.

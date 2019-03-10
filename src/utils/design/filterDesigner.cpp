@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <vector>
 #include <algorithm>
+#include "rtseis/utilities/design/enums.hpp"
 #include "rtseis/utilities/design/filterDesigner.hpp"
 #include "rtseis/utilities/design/fir.hpp"
 #include "rtseis/utilities/design/iir.hpp"
@@ -20,8 +21,8 @@ struct FIRDesignParameters
     ~FIRDesignParameters(void){return;}
     FIRDesignParameters(const int orderIn,
                         const double r,
-                        const FIR::Window windowIn,
-                        const IIR::Bandtype btypeIn) :
+                        const FIRWindow windowIn,
+                        const Bandtype btypeIn) :
         r1(r),
         r2(0),
         order(orderIn),
@@ -32,8 +33,8 @@ struct FIRDesignParameters
     } 
     FIRDesignParameters(const int orderIn,
                         const std::pair<double,double> r,
-                        const FIR::Window windowIn,
-                        const IIR::Bandtype btypeIn) :
+                        const FIRWindow windowIn,
+                        const Bandtype btypeIn) :
         r1(r.first),
         r2(r.second),
         order(orderIn),
@@ -57,8 +58,8 @@ struct FIRDesignParameters
         if (window != parms.window){return false;}
         if (btype  != parms.btype){return false;}
         if (r1 != parms.r1){return false;}
-        if (btype == IIR::Bandtype::BANDPASS ||
-            btype == IIR::Bandtype::BANDSTOP)
+        if (btype == Bandtype::BANDPASS ||
+            btype == Bandtype::BANDSTOP)
         {
             if(r2 != parms.r2){return false;}
         }
@@ -73,8 +74,8 @@ struct FIRDesignParameters
         r1 = 0;
         r2 = 0;
         order = 0;
-        window = FIR::Window::HAMMING;
-        btype = IIR::Bandtype::LOWPASS;
+        window = FIRWindow::HAMMING;
+        btype = Bandtype::LOWPASS;
         return;
     }
 
@@ -85,9 +86,9 @@ struct FIRDesignParameters
     /// Filter order
     int order = 0;
     /// The window type
-    FIR::Window window = FIR::Window::HAMMING;
+    FIRWindow window = FIRWindow::HAMMING;
     /// The filter band
-    IIR::Bandtype btype = IIR::Bandtype::LOWPASS;
+    Bandtype btype = Bandtype::LOWPASS;
 };
 //----------------------------------------------------------------------------//
 struct IIRDesignParameters
@@ -99,9 +100,9 @@ struct IIRDesignParameters
         r1 = 0;
         r2 = 0;
         order = 0;
-        prototype = IIR::Prototype::BUTTERWORTH;
-        btype = IIR::Bandtype::LOWPASS;
-        pairing = IIR::Pairing::NEAREST;
+        prototype = IIRPrototype::BUTTERWORTH;
+        btype = Bandtype::LOWPASS;
+        pairing = SOSPairing::NEAREST;
         lsos = false;
         ldigital = true;
     }
@@ -123,8 +124,8 @@ struct IIRDesignParameters
         if (prototype != parms.prototype){return false;}
         if (btype  != parms.btype){return false;}
         if (r1 != parms.r1){return false;}
-        if (btype == IIR::Bandtype::BANDPASS ||
-            btype == IIR::Bandtype::BANDSTOP)
+        if (btype == Bandtype::BANDPASS ||
+            btype == Bandtype::BANDSTOP)
         {
             if(r2 != parms.r2){return false;}
         }
@@ -149,11 +150,11 @@ struct IIRDesignParameters
     /// Filter order
     int order = 0;
     /// The window type
-    IIR::Prototype prototype = IIR::Prototype::BUTTERWORTH;
+    IIRPrototype prototype = IIRPrototype::BUTTERWORTH;
     /// The filter band
-    IIR::Bandtype btype = IIR::Bandtype::LOWPASS;
+    Bandtype btype = Bandtype::LOWPASS;
     /// Pole pairing
-    IIR::Pairing pairing = IIR::Pairing::NEAREST;
+    SOSPairing pairing = SOSPairing::NEAREST;
     /// SOS?
     bool lsos = false;
     /// Digital?
@@ -251,11 +252,11 @@ void FilterDesigner::clear(void)
 void FilterDesigner::designLowpassFIRFilter(
     const int order,
     const double r,
-    const FIR::Window window,
+    const FIRWindow window,
     FilterRepresentations::FIR &fir) const
 {
     fir.clear();
-    FIRDesignParameters parms(order, r, window, IIR::Bandtype::HIGHPASS);
+    FIRDesignParameters parms(order, r, window, Bandtype::HIGHPASS);
     // Look for this design
     auto it = std::find(pImpl->firDesigns.begin(),
                         pImpl->firDesigns.end(), parms);
@@ -267,7 +268,7 @@ void FilterDesigner::designLowpassFIRFilter(
     }
     else
     {
-        FIR1Lowpass(order, r, fir, window); // Throws error
+        FIR::FIR1Lowpass(order, r, fir, window); // Throws error
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
@@ -277,11 +278,11 @@ void FilterDesigner::designLowpassFIRFilter(
 void FilterDesigner::designHighpassFIRFilter(
     const int order,
     const double r,
-    const FIR::Window window,
+    const FIRWindow window,
     FilterRepresentations::FIR &fir) const
 {
     fir.clear();
-    FIRDesignParameters parms(order, r, window, IIR::Bandtype::HIGHPASS);
+    FIRDesignParameters parms(order, r, window, Bandtype::HIGHPASS);
     // Look for this design
     auto it = std::find(pImpl->firDesigns.begin(),
                         pImpl->firDesigns.end(), parms);
@@ -293,7 +294,7 @@ void FilterDesigner::designHighpassFIRFilter(
     }
     else
     {
-        FIR1Highpass(order, r, fir, window); // Throws error
+        FIR::FIR1Highpass(order, r, fir, window); // Throws error
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
@@ -303,11 +304,11 @@ void FilterDesigner::designHighpassFIRFilter(
 void FilterDesigner::designBandpassFIRFilter(
     const int order,
     const std::pair<double,double> r,
-    const FIR::Window window,
+    const FIRWindow window,
     FilterRepresentations::FIR &fir) const
 {
     fir.clear();
-    FIRDesignParameters parms(order, r, window, IIR::Bandtype::BANDPASS);
+    FIRDesignParameters parms(order, r, window, Bandtype::BANDPASS);
     // Look for this design
     auto it = std::find(pImpl->firDesigns.begin(),
                         pImpl->firDesigns.end(), parms);
@@ -319,7 +320,7 @@ void FilterDesigner::designBandpassFIRFilter(
     }
     else
     {
-        FIR1Bandpass(order, r, fir, window); // Throws error
+        FIR::FIR1Bandpass(order, r, fir, window); // Throws error
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
@@ -329,11 +330,11 @@ void FilterDesigner::designBandpassFIRFilter(
 void FilterDesigner::designBandstopFIRFilter(
     const int order,
     const std::pair<double,double> r,
-    const FIR::Window window,
+    const FIRWindow window,
     FilterRepresentations::FIR &fir) const
 {
     fir.clear();
-    FIRDesignParameters parms(order, r, window, IIR::Bandtype::BANDSTOP);
+    FIRDesignParameters parms(order, r, window, Bandtype::BANDSTOP);
     // Look for this design
     auto it = std::find(pImpl->firDesigns.begin(),
                         pImpl->firDesigns.end(), parms);
@@ -345,7 +346,7 @@ void FilterDesigner::designBandstopFIRFilter(
     }
     else
     {
-        FIR1Bandstop(order, r, fir, window); // Throws error
+        FIR::FIR1Bandstop(order, r, fir, window); // Throws error
         pImpl->firDesigns.push_back(parms);
         pImpl->firCache.push_back(fir);
     }
