@@ -37,13 +37,16 @@ int rtseis_test_utils_design_zpk2sos(void)
          1.,        -1.26117915,  0.6262586,
          1.,        -1.25707217,  0.86199667});
     SOS sosRefEll(3, bsRefEll, asRefEll);
-    bool ldigital = true;
-    ierr = IIR::iirfilter(n, Wn, 5, 60,  
-                          Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
-                          sos, ldigital, SOSPairing::NEAREST);
-    if (ierr != 0)
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to design filter");
+         IIR::iirfilter(n, Wn, 5, 60,  
+                        Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
+                        sos, ldigital, SOSPairing::NEAREST);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     sos.setEqualityTolerance(1.e-5);
@@ -90,16 +93,18 @@ int rtseis_test_utils_design_zpk2sos(void)
 /*! IIR analog prototype design. */
 int rtseis_test_utils_design_iir_ap(void)
 {
-    int ierr;
     double k;
     ZPK zpk, zpkRef;
     std::vector<std::complex<double>> pref;
     std::vector<std::complex<double>> zref;
     // Test butterworth order 1
-    ierr = IIR::AnalogPrototype::butter(1, zpk);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "order 1 failed");
+        IIR::AnalogPrototype::butter(1, zpk);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
         return EXIT_FAILURE;
     }
     k = 1;
@@ -114,10 +119,13 @@ int rtseis_test_utils_design_iir_ap(void)
     }
     zpkRef.clear();
     // Test butterworth order 4
-    ierr = IIR::AnalogPrototype::butter(5, zpk);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "order 4 failed");
+    try
+    {
+        IIR::AnalogPrototype::butter(5, zpk);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
         return EXIT_FAILURE;
     }
     pref.clear();
@@ -139,10 +147,13 @@ int rtseis_test_utils_design_iir_ap(void)
     }
     zpkRef.clear();
     // Test order 1 cheby1
-    ierr = IIR::AnalogPrototype::cheb1ap(1, 2.2, zpk);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "order 1 failed");
+        IIR::AnalogPrototype::cheb1ap(1, 2.2, zpk);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
         return EXIT_FAILURE;
     }
     zref.clear();
@@ -159,10 +170,13 @@ int rtseis_test_utils_design_iir_ap(void)
         return EXIT_FAILURE;
     }
     // Test order 6 cheby1
-    ierr = IIR::AnalogPrototype::cheb1ap(6, 0.994, zpk);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "order 1 failed");
+    try
+    {
+        IIR::AnalogPrototype::cheb1ap(6, 0.994, zpk);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
         return EXIT_FAILURE;
     }   
     zref.clear();
@@ -184,10 +198,13 @@ int rtseis_test_utils_design_iir_ap(void)
         return EXIT_FAILURE;
     } 
     // Test order 2 cheby2 
-    ierr = IIR::AnalogPrototype::cheb2ap(1, 1.1, zpk);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "order 1 failed");
+    try
+    {
+        IIR::AnalogPrototype::cheb2ap(1, 1.1, zpk);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
         return EXIT_FAILURE;
     }
     zref.clear();
@@ -204,10 +221,13 @@ int rtseis_test_utils_design_iir_ap(void)
         return EXIT_FAILURE;
     }
     // Test order 6 cheby2 
-    ierr = IIR::AnalogPrototype::cheb2ap(6, 1.2, zpk);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "order 1 failed");
+        IIR::AnalogPrototype::cheb2ap(6, 1.2, zpk);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
         return EXIT_FAILURE;
     }
     k = 0.8709635899560811;
@@ -237,9 +257,9 @@ int rtseis_test_utils_design_iir_ap(void)
 //============================================================================//
 int rtseis_test_utils_design_iir(void)
 {
-    int ierr, n;
+    int n;
     BA ba;
-    const bool ldigital = true;
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
     double rp = 5, rs = 60;
     double Wn[2];
     //------------------------------------------------------------------------//
@@ -257,12 +277,15 @@ int rtseis_test_utils_design_iir(void)
                                   1.753099824111,   -0.162195478751});
     BA butterlp_ref(bref_blp, aref_blp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed butterworth lowpass design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE; 
     }
     if ((ba != butterlp_ref))
@@ -284,12 +307,15 @@ int rtseis_test_utils_design_iir(void)
                                   1.753099824111,  -0.162195478751});
     BA butterhp_ref(bref_bhp, aref_bhp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          Bandtype::HIGHPASS, IIRPrototype::BUTTERWORTH,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed butterworth highpass design");
+        IIR::iirfilter(n, Wn, rp, rs,
+                       Bandtype::HIGHPASS, IIRPrototype::BUTTERWORTH,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE; 
     }
     if ((ba != butterhp_ref))
@@ -321,12 +347,15 @@ int rtseis_test_utils_design_iir(void)
                                   0.000355580604});
     BA butterbp_ref(bref_bbp, aref_bbp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::BANDPASS, IIRPrototype::BUTTERWORTH,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed butterworth bandpass design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::BANDPASS, IIRPrototype::BUTTERWORTH,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE; 
     }
     ba.setEqualityTolerance(1.e-10);
@@ -359,12 +388,15 @@ int rtseis_test_utils_design_iir(void)
                                   0.000355580604});
     BA butterbs_ref(bref_bbs, aref_bbs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::BANDSTOP, IIRPrototype::BUTTERWORTH,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed butterworth bandstop design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::BANDSTOP, IIRPrototype::BUTTERWORTH,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     ba.setEqualityTolerance(1.e-10); 
@@ -390,12 +422,15 @@ int rtseis_test_utils_design_iir(void)
         -0.126843312520});
     BA bessellp_ref(bref_belp, aref_belp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::LOWPASS, IIRPrototype::BESSEL,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed bessel lowpass design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::LOWPASS, IIRPrototype::BESSEL,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE; 
     }
     if ((ba != bessellp_ref))
@@ -417,12 +452,15 @@ int rtseis_test_utils_design_iir(void)
        -0.0114500047115});
     BA besselhp_ref(bref_behp, aref_behp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          Bandtype::HIGHPASS, IIRPrototype::BESSEL,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed bessel highpass design");
+        IIR::iirfilter(n, Wn, rp, rs,
+                       Bandtype::HIGHPASS, IIRPrototype::BESSEL,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     if (ba != besselhp_ref)
@@ -450,12 +488,15 @@ int rtseis_test_utils_design_iir(void)
           0.000136336255});
     BA besselbp_ref(bref_bebp, aref_bebp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::BANDPASS, IIRPrototype::BESSEL,
-                          ba, ldigital);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed bessel bandpass design");
+    try
+    {
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::BANDPASS, IIRPrototype::BESSEL,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE; 
     }
     ba.setEqualityTolerance(1.e-10);
@@ -484,12 +525,15 @@ int rtseis_test_utils_design_iir(void)
         0.000045365626});
     BA besselbs_ref(bref_bebs, aref_bebs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::BANDSTOP, IIRPrototype::BESSEL,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed bessel bandstop design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::BANDSTOP, IIRPrototype::BESSEL,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     ba.setEqualityTolerance(1.e-10); 
@@ -515,12 +559,15 @@ int rtseis_test_utils_design_iir(void)
         -0.879860177057});
     BA cheby1lp_ref(bref_c1lp, aref_c1lp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV1,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 lowpass design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV1,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE; 
     }   
     if ((ba != cheby1lp_ref))
@@ -542,12 +589,15 @@ int rtseis_test_utils_design_iir(void)
           0.362045627246});
     BA cheby1hp_ref(bref_c1hp, aref_c1hp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
-    ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV1,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 highpass design");
+        IIR::iirfilter(n, Wn, rp, rs,
+                       Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV1,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     ba.setEqualityTolerance(1.e-10);
@@ -576,12 +626,15 @@ int rtseis_test_utils_design_iir(void)
                         0.599734743788});
     BA cheby1bp_ref(bref_c1bp, aref_c1bp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
-    ierr = IIR::iirfilter(n, Wn, rp, rs,
-                          Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV1,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 bandpass design");
+        IIR::iirfilter(n, Wn, rp, rs,
+                       Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV1,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     ba.setEqualityTolerance(1.e-10);
@@ -610,14 +663,17 @@ int rtseis_test_utils_design_iir(void)
                        -0.464975668856});
     BA cheby1bs_ref(bref_c1bs, aref_c1bs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV1,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 bandstop design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV1,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
-    }   
+    }
     ba.setEqualityTolerance(1.e-10);
     if (ba != cheby1bs_ref)
     {
@@ -641,12 +697,15 @@ int rtseis_test_utils_design_iir(void)
          -0.05771936784473,  0.00377046393483});
     BA cheby2lp_ref(bref_c2lp, aref_c2lp);
     n = 10, Wn[0] = 0.3; Wn[1] = 0; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV2,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed cheby2 lowpass design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV2,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     if ((ba != cheby2lp_ref))
@@ -668,12 +727,15 @@ int rtseis_test_utils_design_iir(void)
         -2.13561396448704,  0.18743147065574});
     BA cheby2hp_ref(bref_c2hp, aref_c2hp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV2,
-                          ba, ldigital);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed cheby2 highpass design");
+    try
+    {
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV2,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }   
     ba.setEqualityTolerance(1.e-10);
@@ -702,12 +764,15 @@ int rtseis_test_utils_design_iir(void)
        0.00318343314108,  -0.00074355290758,  0.00034509546998});
     BA cheby2bp_ref(bref_c2bp, aref_c2bp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0.6; rp = 5; rs = 60; 
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV2,
-                          ba, ldigital);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed cheby2 bandpass design");
+    try
+    {
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV2,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     if (ba != cheby2bp_ref)
@@ -733,12 +798,15 @@ int rtseis_test_utils_design_iir(void)
            -0.00759384336523,   0.00122982022910});
     BA cheby2bs_ref(bref_c2bs, aref_c2bs);
     n = 8, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
-    ierr = IIR::iirfilter(n, Wn, rp, rs, 
-                          Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV2,
-                          ba, ldigital);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed cheby2 bandstop design");
+        IIR::iirfilter(n, Wn, rp, rs, 
+                       Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV2,
+                       ba, ldigital);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
         return EXIT_FAILURE;
     }
     ba.setEqualityTolerance(1.e-10);

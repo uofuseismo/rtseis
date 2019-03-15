@@ -3,8 +3,7 @@
 #include <cstring>
 #include <cstdint>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
-#include "rtseis/log.h"
+#include "rtseis/private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/detrend.hpp"
 
 using namespace RTSeis::PostProcessing::SingleChannel;
@@ -309,7 +308,7 @@ void Detrend::apply(const int nx, const double x[], double y[])
         if (nx < 2){RTSEIS_THROW_IA("%s", "At least 2 points required");}
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
         if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        throw std::invalid_argument("Invalid argument");
+        RTSEIS_THROW_IA("%s", "Invalid argument");
     }
     pDetrend_->apply(nx, x, y);
     return;
@@ -325,7 +324,7 @@ void Detrend::apply(const int nx, const float x[], float y[])
         if (nx < 2){RTSEIS_THROW_IA("%s", "At least 2 points required");}
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
         if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        throw std::invalid_argument("Invalid argument");
+        RTSEIS_THROW_IA("%s", "Invalid argument");
     }
     pDetrend_->apply(nx, x, y);
     return;

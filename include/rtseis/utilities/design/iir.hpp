@@ -44,18 +44,16 @@ namespace IIR
  *                     Chebyshev1, or Chebyshev2.
  * @param[out] ba      The corresponding IIR filter specified in terms
  *                     of numerator and denominator coefficients.
- * @param[in] ldigital If true then this designs a digital filter.
- *                     Otherwise, design an analog filter. The
- *                     default is digital filter design.
- * @result 0 indicates success.
+ * @param[in] ldigital  Identifies the filter as a digital or analog filter.
+ * @throws std::invalid_argument if any of the arguments are invalid.
  * @ingroup rtseis_utils_design_iir
  */
-int iirfilter(const int n, const double *W,
-              const double rp, const double rs,
-              const Bandtype btype,
-              const IIRPrototype ftype,
-              FilterRepresentations::BA &ba,
-              const bool ldigital = true);
+void iirfilter(const int n, const double *W,
+               const double rp, const double rs,
+               const Bandtype btype,
+               const IIRPrototype ftype,
+               FilterRepresentations::BA &ba,
+               IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
 /*!
  * @brief Convenience function to design a digital or analog filter from
  *        an analog prototype.
@@ -76,18 +74,16 @@ int iirfilter(const int n, const double *W,
  *                     Chebyshev1, or Chebyshev2.
  * @param[out] zpk     The corresponding IIR filter specified in terms
  *                     of zeros, poles, and gain.
- * @param[in] ldigital If true then this designs a digital filter.
- *                     Otherwise, design an analog filter. The
- *                     default is digital filter design.
- * @result 0 indicates success.
+ * @param[in] ldigital  Identifies the filter as a digital or analog filter.
+ * @throws std::invalid_argument if any of the arguments are invalid.
  * @ingroup rtseis_utils_design_iir
  */
-int iirfilter(const int n, const double *W,
-              const double rp, const double rs,
-              const Bandtype btype,
-              const IIRPrototype ftype,
-              FilterRepresentations::ZPK &zpk,
-              const bool ldigital = true);
+void iirfilter(const int n, const double *W,
+               const double rp, const double rs,
+               const Bandtype btype,
+               const IIRPrototype ftype,
+               FilterRepresentations::ZPK &zpk,
+               const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
 /*!
  * @brief Convenience function to design a digital or analog filter from
  *        an analog prototype.
@@ -108,20 +104,18 @@ int iirfilter(const int n, const double *W,
  *                     Chebyshev1, or Chebyshev2.
  * @param[out] sos     The corresponding IIR filter as a cascaded series of
  *                     second order sections.
- * @param[in] ldigital If true then this designs a digital filter.
- *                     Otherwise, design an analog filter. The
- *                     default is digital filter design.
+ * @param[in] ldigital Identifies the filter as a digital or analog filter.
  * @param[in] pairing  Defines the pairing strategy.
- * @result 0 indicates success.
+ * @throws std::invalid_argument if any of the arguments are invalid.
  * @ingroup rtseis_utils_design_iir
  */
-int iirfilter(const int n, const double *W,
-              const double rp, const double rs,
-              const Bandtype btype,
-              const IIRPrototype ftype,
-              FilterRepresentations::SOS &sos,
-              const bool ldigital = true,
-              const SOSPairing pairing = SOSPairing::NEAREST);
+void iirfilter(const int n, const double *W,
+               const double rp, const double rs,
+               const Bandtype btype,
+               const IIRPrototype ftype,
+               FilterRepresentations::SOS &sos,
+               const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL,
+               const SOSPairing pairing = SOSPairing::NEAREST);
 /*!
  * @brief Convert a filter specified as zeros, poles, and a gain to
  *        a filter consisting of cascaded second order sections.
@@ -151,50 +145,51 @@ int zpk2tf(const FilterRepresentations::ZPK &zpk,
  * @brief Converts a lowpass filter prototype to a different cutoff
  *        frequency.
  * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency (rad/s).
+ * @param[in] w0       Desired cutoff frequency (rad/s).  This must be >= 0.
  * @param[out] zpkOut  The corresponding lowpass filter.
- * @result 0 indicates success.
+ * @throws std::invalid_argument if zpkIn is empty or w0 is invalid.
  * @ingroup rtseis_utils_design_iir
  */
-int zpklp2lp(const FilterRepresentations::ZPK &zpkIn,
-             const double w0, FilterRepresentations::ZPK &zpkOut);
+void zpklp2lp(const FilterRepresentations::ZPK &zpkIn,
+               const double w0, FilterRepresentations::ZPK &zpkOut);
 /*!
  * @brief Converts a lowpass filter prototype to a highpss filter.
  * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency (rad/s).
+ * @param[in] w0       Desired cutoff frequency (rad/s).  This must be >= 0.
  * @param[out] zpkOut  The corresponding highpass filter.
- * @result 0 indicates success. 
+ * @throws std::invalid_argument if zpkIn is empty or w0 is invalid.
  * @ingroup rtseis_utils_design_iir
  */
-int zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
-             FilterRepresentations::ZPK &zpkOut);
+void zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+              FilterRepresentations::ZPK &zpkOut);
 /*!
  * @brief Transforms a lowpass filter prototype to a bandpass filter.
  *        The passband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.
  * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency in rad/s.
- * @param[in] bw       The desired passband width in rad/s.
+ * @param[in] w0       Desired cutoff frequency in rad/s.  This must be >= 0.
+ * @param[in] bw       The desired passband width in rad/s.  This must be
+ *                     positive.
  * @param[out] zpkOut  The corresponding bandpass filter.
- * @result 0 indicates success.
+ * @throws std::invalid_argument if w0 or bw is invalid or zpkIn is empty.
  * @ingroup rtseis_utils_design_iir
  */
-int zpklp2bp(const FilterRepresentations::ZPK &zpkIn, const double w0,
-             const double bw, 
-             FilterRepresentations::ZPK &zpkOut);
+void zpklp2bp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+              const double bw, 
+              FilterRepresentations::ZPK &zpkOut);
 /*!
  * @brief Transforms a lowpass filter prototype to a bandstop filter.
  *        The stopband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.
  * @param[in] zpkIn    Input lowpass filter prototype to convert.
- * @param[in] w0       Desired cutoff frequency in rad/s.
- * @param[in] bw       The desired stopband width in rad/s.
+ * @param[in] w0       Desired cutoff frequency in rad/s.  This must be >= 0.
+ * @param[in] bw       The desired stopband width in rad/s.  This must be >= 0.
  * @param[out] zpkOut  The corresponding stopband filter.
- * @result 0 indicates success.
+ * @throws std::invalid_argument if w0 or bw is invalid or zpkIn is empty.
  * @ingroup rtseis_utils_design_iir
  */
-int zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
-             const double bw, FilterRepresentations::ZPK &zpkOut);
+void zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
+              const double bw, FilterRepresentations::ZPK &zpkOut);
 /*!
- * @brief Converts an analog filter to a digital filter using hte bilinear
+ * @brief Converts an analog filter to a digital filter using the bilinear
  *        transform.  This works by transforming a set of poles and zeros
  *        from the s-plane to the digital z-plane using Tustin's method,
  *        which substitutes \f$ s = \frac{z-1}{z+1} \f$ thereby maintaining
@@ -205,11 +200,12 @@ int zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
  * @param[in] fs      The sampling rate in Hz.  Note, that pre-warping is
  *                    performed in this function.
  * @param[out] zpkbl  The bilinear-transformed variant of zpk.
- * @result 0 indicates success.
+ * @throws std::invalid_argument if the number of zeros exceeds the number of
+ *         poles in zpk.
  * @ingroup rtseis_utils_design_iir
  */
-int zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,
-                FilterRepresentations::ZPK &zpkbl);
+void zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,
+                 FilterRepresentations::ZPK &zpkbl);
 
 }; /* End IIR */
 

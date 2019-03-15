@@ -444,9 +444,10 @@ int filters_iiriirFilter_test(const int npts, const double x[],
         error = error + std::pow(y[i] - yref[i], 2);
     }
     error = std::sqrt(error)/static_cast<double> (npts);
-    if (error > 3.e-2)
+    if (error > 4.e-2)
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute reference solution");
+        RTSEIS_ERRMSG("Failed to compute reference solution; error = %lf",
+                      error);
         return EXIT_FAILURE;
     }
     std::chrono::duration<double> tdif = timeEnd - timeStart;

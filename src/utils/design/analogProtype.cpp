@@ -1,23 +1,25 @@
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <cassert>
 #include <cmath>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"
 #include "rtseis/utilities/design/analogPrototype.hpp"
+#include "rtseis/private/throw.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterDesign::IIR;
 using namespace RTSeis::Utilities::FilterRepresentations;
 
-int AnalogPrototype::butter(const int n, FilterRepresentations::ZPK &zpk)
+void AnalogPrototype::butter(const int n, FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
     if (n < 1 || n > 25)
     {
-        if (n < 1){RTSEIS_ERRMSG("Order=%d must be positive", n);}
-        if (n > 25){RTSEIS_ERRMSG("Order=%d must be less than 26", n);}
-        return -1; 
+        if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
+        if (n > 25){RTSEIS_THROW_IA("Order=%d must be less than 26", n);}
+        RTSEIS_THROW_IA("Order=%d is invalid", n);
     }
     size_t npoles = n;
     size_t nzeros = 0;
@@ -32,29 +34,19 @@ int AnalogPrototype::butter(const int n, FilterRepresentations::ZPK &zpk)
     }
     double k = 1.0; //k = real(prod(-p)) which is 1
     zpk = ZPK(zeros, poles, k);
-    return 0;
+    return;
 }
 
-int AnalogPrototype::cheb1ap(const int n, const double rp,
-                             FilterRepresentations::ZPK &zpk)
+void AnalogPrototype::cheb1ap(const int n, const double rp,
+                              FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
-    if (n < 1)
-    {
-        RTSEIS_ERRMSG("Order=%d must be positive", n);
-        return -1;
-    }
-    if (rp <= 0)
-    {
-        RTSEIS_ERRMSG("rp=%lf must be positive", rp);
-        return -1;
-    }
+    if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
+    if (rp <= 0){RTSEIS_THROW_IA("rp=%lf must be positive", rp);}
     double rpdb = std::pow(10.0, 0.1*rp);
-    if (rpdb <= 1.0)
-    {
-        RTSEIS_ERRMSG("%s", "Error complex valued ripple factor");
-        return -1;
-    }
+#ifdef DEBUG
+    assert(rpdb > 1.0);
+#endif
     // Set space
     size_t npoles = static_cast<size_t> (n);
     size_t nzeros = 0;
@@ -78,23 +70,15 @@ int AnalogPrototype::cheb1ap(const int n, const double rp,
     double k = std::real(zprod); //Take real
     if (n%2 == 0){k = k/std::sqrt(1.0 + eps*eps);}
     zpk = ZPK(zeros, poles, k);
-    return 0;
+    return;
 }
 
-int AnalogPrototype::cheb2ap(const int n, const double rs,
-                             FilterRepresentations::ZPK &zpk)
+void AnalogPrototype::cheb2ap(const int n, const double rs,
+                              FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
-    if (n < 1)
-    {
-        RTSEIS_ERRMSG("Order=%d must be positive", n); 
-        return -1;
-    }
-    if (rs <= 0)
-    {
-        RTSEIS_ERRMSG("rs=%lf must be positive", rs);
-        return -1;
-    }
+    if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
+    if (rs <= 0){RTSEIS_THROW_IA("rs=%lf must be positive", rs);}
     // Figure out size
     int ntarg = n;
     if (n%2 == 1){ntarg = n - 1;}
@@ -104,11 +88,9 @@ int AnalogPrototype::cheb2ap(const int n, const double rs,
     std::vector<std::complex<double>> zeros(nzeros, 0);
     // Ripple factor check
     double rdb = pow(10.0, 0.1*rs);
-    if (rdb <= 1.0)
-    {
-        RTSEIS_ERRMSG("%s", "Error ripple factor is complex");
-        return -1;
-    }
+#ifdef DEBUG
+    assert(rdb > 1);
+#endif
     // Ripple factor
     int j = 0;
     double twoni = 1.0/(2.0*static_cast<double> (n)); 
@@ -165,17 +147,13 @@ int AnalogPrototype::cheb2ap(const int n, const double rs,
     }
     double k = std::real(znum/zden);
     zpk = ZPK(zeros, poles, k);
-    return 0;
+    return;
 }
 
-int AnalogPrototype::bessel(const int n, FilterRepresentations::ZPK &zpk)
+void AnalogPrototype::bessel(const int n, FilterRepresentations::ZPK &zpk)
 {
     zpk.clear();
-    if (n < 1)
-    {
-        RTSEIS_ERRMSG("Order=%d must be positive", n);
-        return -1;
-    }
+    if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
     size_t npoles = static_cast<size_t> (n);
     size_t nzeros = 0;
     std::vector<std::complex<double>> poles(npoles, 0);
@@ -584,9 +562,8 @@ int AnalogPrototype::bessel(const int n, FilterRepresentations::ZPK &zpk)
     }
     else
     {
-        RTSEIS_ERRMSG("%s", "Unsupported filter order");
-        return -1; 
+        RTSEIS_THROW_IA("%s", "Unsupported filter order");
     }
     zpk = ZPK(zeros, poles, k);
-    return 0;
+    return;
 }

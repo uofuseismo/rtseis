@@ -2,6 +2,11 @@
 #include <cstdlib>
 #include <cfloat>
 #include <vector>
+#ifdef DEBUG
+#include <cassert>
+#else
+#define assert(func)
+#endif
 #include <algorithm>
 #include <numeric>
 #include <cmath>
@@ -13,6 +18,7 @@
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
+#include "rtseis/private/throw.hpp"
 #include "rtseis/log.h"
 
 /*
@@ -44,100 +50,76 @@ static int cmplxreal(const std::vector<std::complex<double>> z,
                      std::vector<bool> &isreal,
                      const double *tolIn = nullptr);
 
-int IIR::iirfilter(const int n, const double *W,
-                   const double rp, const double rs,
-                   const Bandtype btype,
-                   const IIRPrototype ftype,
-                   SOS &sos,
-                   const bool ldigital,
-                   const SOSPairing pairing)
+void IIR::iirfilter(const int n, const double *W,
+                    const double rp, const double rs,
+                    const Bandtype btype,
+                    const IIRPrototype ftype,
+                    SOS &sos,
+                    const IIRFilterDomain ldigital,
+                    const SOSPairing pairing)
 {
      sos.clear();
      FilterRepresentations::ZPK zpk;
-     int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital);
-     if (ierr != 0)
-     {
-         RTSEIS_ERRMSG("%s", "Failed to create iirfilter");
-         return -1;
-     }
-     ierr = IIR::zpk2sos(zpk, sos, pairing);
-     if (ierr != 0)
-     {
-         RTSEIS_ERRMSG("%s", "Failed to convert zpk to sos");
-         sos.clear();
-         return -1;
-     }
-     return 0;
+     IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital); // throws
+#ifdef DEBUG
+     int ierr = IIR::zpk2sos(zpk, sos, pairing);
+     assert(ierr == 0); 
+#else
+     IIR::zpk2sos(zpk, sos, pairing);
+#endif
+     return;
 }
 
-int IIR::iirfilter(const int n, const double *W, 
-                   const double rp, const double rs, 
-                   const Bandtype btype,
-                   const IIRPrototype ftype,
-                   FilterRepresentations::BA &ba,
-                   const bool ldigital)
+void IIR::iirfilter(const int n, const double *W, 
+                    const double rp, const double rs, 
+                    const Bandtype btype,
+                    const IIRPrototype ftype,
+                    FilterRepresentations::BA &ba,
+                    const IIRFilterDomain ldigital)
 {
      ba.clear();
      FilterRepresentations::ZPK zpk;
-     int ierr = IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital);
-     if (ierr != 0)
-     {
-         RTSEIS_ERRMSG("%s", "Failed to create iirfilter");
-         return -1;
-     }
-     ierr = IIR::zpk2tf(zpk, ba);
-     if (ierr != 0)
-     {
-         RTSEIS_ERRMSG("%s", "Failed to convert zpk to ba");
-         ba.clear();
-         return -1;
-     }
-     return 0;
+     IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital); // throws
+#ifdef DEBUG
+     int ierr = IIR::zpk2tf(zpk, ba);
+     assert(ierr == 0);
+#else
+     IIR::zpk2tf(zpk, ba);
+#endif
+     return;
 }
 
-int IIR::iirfilter(const int n, const double *W,
-                   const double rp, const double rs,
-                   const Bandtype btype,
-                   const IIRPrototype ftype,
-                   FilterRepresentations::ZPK &zpk,
-                   const bool ldigital)
+void IIR::iirfilter(const int n, const double *W,
+                    const double rp, const double rs,
+                    const Bandtype btype,
+                    const IIRPrototype ftype,
+                    FilterRepresentations::ZPK &zpk,
+                    const IIRFilterDomain ldigital)
 {
     zpk.clear();
-    if (n < 1)
-    {
-        RTSEIS_ERRMSG("%d must be positive", n);
-        return -1;
-    }
-    if (W == nullptr)
-    {
-        RTSEIS_ERRMSG("%s", "W cannot be null");
-        return -1;
-    }
+    if (n < 1){RTSEIS_THROW_IA("Order = %d must be positive", n);}
+    if (W == nullptr){RTSEIS_THROW_IA("%s", "W is NULL");}
     // Check ripples
     if (ftype == IIRPrototype::CHEBYSHEV1 && rp <= 0)
     {
-        RTSEIS_ERRMSG("rp %lf must be positive", rp);
-        return -1;
+        RTSEIS_THROW_IA("rp = %lf must be positive", rp);
     }
     if (ftype == IIRPrototype::CHEBYSHEV2 && rs <= 0)
     {
-        RTSEIS_ERRMSG("rs %lf must be positive", rs);
-        return -1;
+        RTSEIS_THROW_IA("rs = %lf must be positive", rs);
     }
-    if (!ldigital){RTSEIS_WARNMSG("%s", "Analog filter design is untested");}
+    if (ldigital == IIRFilterDomain::ANALOG)
+    {
+        RTSEIS_WARNMSG("%s", "Analog filter design is untested");
+    }
     // Check the low-corner frequency
     double wn[2];
     wn[0] = W[0];
     wn[1] = 0;
-    if (wn[0] < 0)
+    if (wn[0] < 0){RTSEIS_THROW_IA("W[0] = %lf cannot be negative", wn[0]);}
+    if (ldigital == IIRFilterDomain::DIGITAL && wn[0] > 1)
     {
-        RTSEIS_ERRMSG("W[0]=%lf cannot be negative", wn[0]);
-        return -1;
-    } 
-    if (ldigital && wn[0] > 1)
-    {
-        RTSEIS_ERRMSG("W[0]=%lf cannot exceed 1", wn[0]);
-        return -1;
+        RTSEIS_THROW_IA("W[0]=%lf cannot exceed 1", wn[0]);
     }
     // Check the high-corner frequency
     if (btype == Bandtype::BANDPASS || btype == Bandtype::BANDSTOP)
@@ -145,43 +127,36 @@ int IIR::iirfilter(const int n, const double *W,
         wn[1] = W[1];
         if (wn[1] < wn[0])
         {
-            RTSEIS_ERRMSG("W[1]=%lf can't be less than W[0]=%lf", wn[0], wn[1]);
-            return -1;
+            RTSEIS_THROW_IA("W[1] = %lf can't be less than W[0] = %lf",
+                             wn[0], wn[1]);
         }
         if (wn[1] > 1)
         {
-            RTSEIS_ERRMSG("W[1]=%lf cannot exced 1", wn[1]);
-            return -1;
+            RTSEIS_THROW_IA("W[1] = %lf cannot exced 1", wn[1]);
         } 
     }
     // Create the analog prototype
-    int ierr;
     FilterRepresentations::ZPK zpkAp;
     if (ftype == IIRPrototype::BUTTERWORTH)
     {
-        ierr = AnalogPrototype::butter(n, zpkAp);
+        AnalogPrototype::butter(n, zpkAp); // throws invalid argument
     }
     else if (ftype == IIRPrototype::BESSEL)
     {
-        ierr = AnalogPrototype::bessel(n, zpkAp);
+        AnalogPrototype::bessel(n, zpkAp); // throws invalid argument
     }
     else if (ftype == IIRPrototype::CHEBYSHEV1)
     {
-        ierr = AnalogPrototype::cheb1ap(n, rp, zpkAp); 
+        AnalogPrototype::cheb1ap(n, rp, zpkAp); // throws invalid argument
     }
     else
     {
-        ierr = AnalogPrototype::cheb2ap(n, rs, zpkAp);
-    }
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Analog prototype failed");
-        return -1;
+        AnalogPrototype::cheb2ap(n, rs, zpkAp); // throws invalid argument
     }
     // Pre-warp the frequencies
     double warped[2];
     double fs;
-    if (ldigital)
+    if (ldigital == IIRFilterDomain::DIGITAL)
     {
         fs = 2.0;
         warped[0] = 2.0*fs*tan(M_PI*wn[0]/fs);
@@ -194,51 +169,41 @@ int IIR::iirfilter(const int n, const double *W,
         warped[1] = wn[1];
         if (wn[1] > 1.0)
         {
-            RTSEIS_ERRMSG("%s", "wn[1] > 0; result may be unstable");
+            RTSEIS_WARNMSG("%s", "wn[1] > 0; result may be unstable");
         }
     }
     // Transform to lowpass, bandpass, highpass, or bandstop 
     FilterRepresentations::ZPK zpktf;
     if (btype == Bandtype::LOWPASS)
     {
-        ierr = IIR::zpklp2lp(zpkAp, warped[0], zpktf);
+        IIR::zpklp2lp(zpkAp, warped[0], zpktf); // throws
     }
     else if (btype == Bandtype::HIGHPASS)
     {
-        ierr = IIR::zpklp2hp(zpkAp, warped[0], zpktf);
+        IIR::zpklp2hp(zpkAp, warped[0], zpktf); // throws
     }
     else if (btype == Bandtype::BANDPASS)
     {
         double bw = warped[1] - warped[0];
         double w0 = std::sqrt(warped[0]*warped[1]);
-        ierr = IIR::zpklp2bp(zpkAp, w0, bw, zpktf);
+        IIR::zpklp2bp(zpkAp, w0, bw, zpktf); // throws
     }
     else if (btype == Bandtype::BANDSTOP)
     {
         double bw = warped[1] - warped[0];
         double w0 = std::sqrt(warped[0]*warped[1]);
-        ierr = IIR::zpklp2bs(zpkAp, w0, bw, zpktf);
-    }
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to convert filter");
-        return -1;
+        IIR::zpklp2bs(zpkAp, w0, bw, zpktf); // throws
     }
     // Find the discrete equivalent
-    if (ldigital)
+    if (ldigital == IIRFilterDomain::DIGITAL)
     {
-        ierr = zpkbilinear(zpktf, fs, zpk);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed in bilinear transform");
-            return -1;
-        }
+        zpkbilinear(zpktf, fs, zpk);
     }
     else
     {
         zpk = zpktf;
     }
-    return 0;
+    return;
 }
 
 int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
@@ -614,16 +579,15 @@ int IIR::zpk2tf(const FilterRepresentations::ZPK &zpk,
     return 0;
 }
 
-int IIR::zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,
-                     FilterRepresentations::ZPK &zpkbl)
+void IIR::zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,
+                      FilterRepresentations::ZPK &zpkbl)
 {
     zpkbl.clear();
     size_t nzeros = zpk.getNumberOfZeros();
     size_t npoles = zpk.getNumberOfPoles();
     if (nzeros > npoles)
     {
-        RTSEIS_ERRMSG("%s", "Cannot have more zeros than poles");
-        return -1;
+        RTSEIS_THROW_IA("%s", "Cannot have more zeros than poles");
     }
     std::vector<std::complex<double>> z = zpk.getZeros();
     std::vector<std::complex<double>> p = zpk.getPoles();
@@ -667,20 +631,20 @@ int IIR::zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,
     double k = zpk.getGain();
     double k_bl = k*std::real(zk);
     zpkbl = FilterRepresentations::ZPK(z_bl, p_bl, k_bl);
-    return 0;
+    return;
 }
 
-int IIR::zpklp2bp(const FilterRepresentations::ZPK &zpkIn, const double w0,
-                  const double bw, FilterRepresentations::ZPK &zpkOut)
+void IIR::zpklp2bp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                   const double bw, FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
     size_t npoles = zpkIn.getNumberOfPoles();
     if (w0 < 0 || bw < 0)
     {
-        if (w0 < 0){RTSEIS_ERRMSG("w0=%lf must be non-negative", w0);}
-        if (bw < 0){RTSEIS_ERRMSG("bw=%lf must be non-negative", bw);}
-        return -1;
+        if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
+        if (bw < 0){RTSEIS_THROW_IA("bw=%lf must be non-negative", bw);}
+        RTSEIS_THROW_IA("%s", "Invalid inputs");
     }
     size_t nzeros_bp = nzeros + npoles;
     size_t npoles_bp = 2*npoles;
@@ -727,20 +691,20 @@ int IIR::zpklp2bp(const FilterRepresentations::ZPK &zpkIn, const double w0,
     double k = zpkIn.getGain();
     double k_bp = k*std::pow(bw,npoles-nzeros); //k*bw*bw^degree
     zpkOut = FilterRepresentations::ZPK(z_bp, p_bp, k_bp);
-    return 0;
+    return;
 }
 
-int IIR::zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
-                  const double bw, FilterRepresentations::ZPK &zpkOut)
+void IIR::zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                   const double bw, FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
     size_t npoles = zpkIn.getNumberOfPoles();
     if (w0 < 0 || bw < 0)
     {
-        if (w0 < 0){RTSEIS_ERRMSG("w0=%lf must be non-negative", w0);}
-        if (bw < 0){RTSEIS_ERRMSG("bw=%lf must be non-negative", bw);}
-        return -1;
+        if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
+        if (bw < 0){RTSEIS_THROW_IA("bw=%lf must be non-negative", bw);}
+        RTSEIS_THROW_IA("%s", "Invalid inputs");
     }
     size_t nzeros_bs = 2*npoles;
     size_t npoles_bs = 2*npoles;
@@ -802,24 +766,19 @@ int IIR::zpklp2bs(const FilterRepresentations::ZPK &zpkIn, const double w0,
     std::complex<double> zdiv =  zprod/pprod;
     double k_bs = k*std::real(zdiv);
     zpkOut = FilterRepresentations::ZPK(z_bs, p_bs, k_bs);
-    return 0;
+    return;
 }
 
-int IIR::zpklp2lp(const FilterRepresentations::ZPK &zpkIn,
-                  const double w0, FilterRepresentations::ZPK &zpkOut)
+void IIR::zpklp2lp(const FilterRepresentations::ZPK &zpkIn,
+                   const double w0, FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
     size_t npoles = zpkIn.getNumberOfPoles();
-    if (w0 < 0)
-    {
-        RTSEIS_ERRMSG("w0=%lf must be non-negative", w0);
-        return -1;
-    }
+    if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
     if (npoles < nzeros)
     {
-        RTSEIS_ERRMSG("%s", "npoles < nzeros not implemented");
-        return -1;
+        RTSEIS_THROW_IA("%s", "BUG! npoles < nzeros not implemented");
     }
     std::vector<std::complex<double>> z = zpkIn.getZeros();
     std::vector<std::complex<double>> p = zpkIn.getPoles();
@@ -840,24 +799,19 @@ int IIR::zpklp2lp(const FilterRepresentations::ZPK &zpkIn,
     int ndeg = npoles - nzeros;
     double k_lp = k*std::pow(w0, ndeg);
     zpkOut = FilterRepresentations::ZPK(z_lp, p_lp, k_lp);
-    return 0;
+    return;
 }
 
-int IIR::zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
-                  FilterRepresentations::ZPK &zpkOut)
+void IIR::zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
+                   FilterRepresentations::ZPK &zpkOut)
 {
     zpkOut.clear();
     size_t nzeros = zpkIn.getNumberOfZeros();
     size_t npoles = zpkIn.getNumberOfPoles();
-    if (w0 < 0)
-    {
-        RTSEIS_ERRMSG("w0=%lf must be non-negative", w0);
-        return -1;
-    }
+    if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
     if (npoles < nzeros)
     {
-        RTSEIS_ERRMSG("%s", "npoles < nzeros not implemented");
-        return -1;
+        RTSEIS_THROW_IA("%s", "BUG! npoles < nzeros not implemented");
     }
     std::vector<std::complex<double>> z = zpkIn.getZeros();
     std::vector<std::complex<double>> p = zpkIn.getPoles();
@@ -889,7 +843,7 @@ int IIR::zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
     std::complex<double> zt = zprod/pprod;
     double k_hp = k*std::real(zt);
     zpkOut = FilterRepresentations::ZPK(z_hp, p_hp, k_hp);
-    return 0;
+    return;
 }
 //============================================================================//
 //                            Utility functions for zpk2sos                   //

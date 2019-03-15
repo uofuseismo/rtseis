@@ -1,10 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
+#include <string>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
-#include "rtseis/log.h"
+#include "rtseis/private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/demean.hpp"
+
 
 using namespace RTSeis::PostProcessing::SingleChannel;
 
@@ -206,7 +208,7 @@ void Demean::apply(const int nx, const double x[], double y[])
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
         if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        throw std::invalid_argument("Invalid input");
+        RTSEIS_THROW_IA("%s", "Invalid argument");
     }
     pDemean_->apply(nx, x, y);
     return;
@@ -220,7 +222,7 @@ void Demean::apply(const int nx, const float x[], float y[])
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
         if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        throw std::invalid_argument("Invalid input");
+        RTSEIS_THROW_IA("%s", "Invalid arguments");
     }
     pDemean_->apply(nx, x, y);
     return;

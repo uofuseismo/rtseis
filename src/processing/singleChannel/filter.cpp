@@ -5,6 +5,8 @@
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 //#include "rtseis/postProcessing/singleChannel/lowpass.hpp"
+#include "rtseis/utilities/design/enums.hpp"
+#include "rtseis/utilities/design/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
@@ -15,14 +17,178 @@
 
 //namespace FR = RTSeis::Utilities::FilterRepresentations;
 //using namespace RTSeis::PostProcessing::SingleChannel;
+using namespace RTSeis;
 
-enum FilterImplementation
+enum class FilterImplementation
 {
     FIR,    // FIR filtering
     BA,     // IIR filtering
     SOS,    // SOS IIR filtering
     NONE
 };
+
+/*!
+ * @brief Defines the filter passband.
+ */
+enum class Passband
+{
+    LOWPASS, 
+    HIGHPASS, 
+    BANDPASS,
+    BANDSTOP 
+};
+
+enum class FIRDesignWindow
+{
+    HAMMING,      /*!< Hamming window. */
+    BARTLETT,     /*!< Bartlett (triangle) window. */
+    HANN,         /*!< Hann window design. */
+    BLACKMAN_OPT  /*!< Optimal Blackman window. */
+};
+
+
+class FIRFilterParameters
+{
+public:
+    /*! @name Constructors.
+     * @{
+     */
+    FIRFilterParameters(void);
+    /*! @} */
+    /*!
+     * @brief Sets an FIR filter.
+     * @param[in] fir  FIR filter to set.
+     */
+    void setFilter(RTSeis::Utilities::FilterRepresentations::FIR fir);
+    /*!
+     * @brief Sets a highpass filter.
+     */
+    void setHighpassFilter(const int order,
+                           const double fc, const double dt,
+                           const FIRDesignWindow window = FIRDesignWindow::HAMMING)
+    {
+        if (order < 4 || fc <= 0 || dt <= 0)
+        {
+            if (order < 4)
+            {
+                throw std::invalid_argument("Order must be at least 4");
+            }
+            if (fc <= 0)
+            {
+                throw std::invalid_argument("Cutoff frequency must be positive");
+            }
+            if (dt <= 0)
+            {
+                throw std::invalid_argument("Sampling period must be positive");
+            }
+            throw std::invalid_argument("Invalid filter parameters");
+        }
+        //pImpl->design(order, fc, 0, dt, Passband::HIGHPASS, window);
+    }
+//    void setBandpassFilter(const int order,
+//                           const FIRDesignWindow window = FIRDesignWindow::HAMMING)
+    RTSeis::Utilities::FilterRepresentations::FIR getFilter(void);
+private:
+    class FIRFilterParametersImpl; 
+    std::unique_ptr<FIRFilterParametersImpl> pImpl;
+};
+
+class FIRFilterParameters::FIRFilterParametersImpl
+{
+public:
+    FIRFilterParametersImpl(void)
+    {
+        return;
+    }
+    FIRFilterParametersImpl& operator=(const FIRFilterParametersImpl &parms)
+    {
+        if (&parms == this){return *this;}
+        fir = parms.fir;
+        return *this;
+    }
+    ~FIRFilterParametersImpl(void)
+    {
+        clear();
+    }
+    void design(const int order,
+                const double w0, const double w1, const double dt,
+                const Passband passband, //= Passband::LOWPASS,
+                const FIRDesignWindow window)// = FIRDesignWindow::HAMMING)
+    {
+        fir.clear();
+        // Create normalized frequencies
+        double fnyq = 1.0/(2.0*dt);
+        // Figure out the window
+        Utilities::FilterDesign::FIRWindow winDesign;
+        if (window == FIRDesignWindow::HAMMING)
+        {
+            winDesign = Utilities::FilterDesign::FIRWindow::HAMMING;
+        } 
+        else if (window == FIRDesignWindow::BARTLETT)
+        {
+            winDesign = Utilities::FilterDesign::FIRWindow::BARTLETT;
+        } 
+        else if (window == FIRDesignWindow::HANN)
+        {
+            winDesign = Utilities::FilterDesign::FIRWindow::HANN;
+        }
+        else if (window == FIRDesignWindow::BLACKMAN_OPT)
+        {
+           winDesign = Utilities::FilterDesign::FIRWindow::BLACKMAN_OPT;
+        }
+        else
+        {
+            throw std::invalid_argument("Invalid window");
+        }
+        // Throws error
+        if (passband == Passband::LOWPASS)
+        {
+            double r = w0/fnyq;
+            Utilities::FilterDesign::FIR::FIR1Lowpass(order, r,
+                                                      fir, winDesign);
+        }
+        else if (passband == Passband::HIGHPASS)
+        {
+            double r = w0/fnyq;
+            Utilities::FilterDesign::FIR::FIR1Highpass(order, r,
+                                                       fir, winDesign);
+        }
+        else if (passband == Passband::BANDPASS)
+        {
+            std::pair<double,double> r(w0, w1);
+            Utilities::FilterDesign::FIR::FIR1Bandpass(order, r,
+                                                       fir, winDesign);
+        }
+        else if (passband == Passband::BANDSTOP)
+        {
+            std::pair<double,double> r(w0, w1);
+            Utilities::FilterDesign::FIR::FIR1Bandstop(order, r,
+                                                       fir, winDesign);
+        }
+        else
+        {
+            throw std::invalid_argument("Invalid filter passband");
+        }
+        return;
+    }
+    void clear(void)
+    {
+        fir.clear();
+    }
+    bool isValid(void) const
+    {
+        if (fir.getNumberOfFilterTaps() < 1){return false;}
+        return true;
+    }
+    class RTSeis::Utilities::FilterRepresentations::FIR fir;
+};
+
+FIRFilterParameters::FIRFilterParameters(void) :
+    pImpl(new FIRFilterParametersImpl())
+{   
+    return;
+}
+
 
 class FilterParameters
 {
@@ -74,7 +240,7 @@ public:
      * @param[in] parms  The filter parameters to copy.
      * @result A deep copy of the filter parameters.
      */
-     FilterParameters& operator=(const FilterParameters &parms);
+    FilterParameters& operator=(const FilterParameters &parms);
 
     /*! @name Destructors
      * @{
@@ -106,6 +272,12 @@ public:
      */
     bool isZeroPhase(void) const;
     /*! @} */
+
+    /*!
+     * @brief Gets the filter implementation.
+     * @result The filter implementation.
+     */
+    FilterImplementation getImplementation(void) const;
     /*!
      * @brief Determines if the filter parameters are valid.
      * @result True indicates that the filter parameters are valid.
@@ -174,7 +346,8 @@ public:
     void setParameters(const FilterParameters &parms);
     /*!
      * @brief Applies the filter to the signal.
-     * 
+     * @param[in] x   Signal to filter.
+     * @param[out] y  The filtered signal.  This will have dimension [x.size()].
      * @throws std::invalid_argument if the class is not yet set.
      */
     void apply(const std::vector<double> &x, std::vector<double> &y);
@@ -311,6 +484,11 @@ void FilterParameters::clear(void)
     return;
 }
 
+FilterImplementation FilterParameters::getImplementation(void) const
+{
+    return pImpl->job;
+}
+
 void FilterParameters::setZeroPhase(const bool lzeroPhase)
 {
     pImpl->lzeroPhase = lzeroPhase;
@@ -400,11 +578,15 @@ void Filter::setParameters(const FilterParameters &parms)
     }
     // Initialize the filter
     pImpl->parms = parms;
-    FilterImplementation job;// = pImpl->parms->pImpl.getImplementation();
+    FilterImplementation job = pImpl->parms.getImplementation();
     if (pImpl->parms.isZeroPhase() && job == FilterImplementation::BA)
     {
-        
+        //pImpl->iir.initialize(); 
     } 
+    else
+    {
+
+    }
     return;
 }
 

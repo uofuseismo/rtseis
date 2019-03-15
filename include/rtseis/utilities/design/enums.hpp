@@ -30,6 +30,16 @@ enum class IIRPrototype
     CHEBYSHEV1,  /*!< Chebyshev I filter design. */
     CHEBYSHEV2   /*!< Chebyshev II filter design. */
 };  
+/*!
+ * @brief Differentiates the IIR filter design as being for analog or
+ *        digital filtering.
+ * @ingroup rtseis_utils_design_iir
+ */
+enum class IIRFilterDomain
+{
+    DIGITAL, /*!< Digital filter. */
+    ANALOG   /*!< Analog filter. */
+};
 /*! 
  * @brief Defines the bandtype for the IIR filter design.
  * @ingroup rtseis_utils_design_iir

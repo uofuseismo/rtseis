@@ -2,9 +2,17 @@
 #define RTSEIS_LOG_H__ 1
 #ifdef RTSEIS_LOGGING
 
+#ifdef __cplusplus
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <exception>
+#include <string>
+#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#endif
 #include <unistd.h>
 #include "rtseis/config.h"
 #include "rtseis/verbosity.h"
@@ -34,6 +42,46 @@
 #endif
 */
 
+/*
+#ifdef __cplusplus
+inline std::string makeInvalidArgumentError(
+  std::string msg, const char *file, const char *function, std::size_t line)
+{
+    std::string red("\x1b[31m");
+    std::string errMsg;
+    errMsg = red + "[ERROR]: (" + file + ":" + function + std::to_string(line) + "): "
+           + msg + ANSI_COLOR_RESET;
+    return errMsg;
+}
+#ifndef RTSEIS_THROW_IA
+#define RTSEIS_THROW_IA(...) \
+{ \
+    std::string errMsg = makeInvalidArgumentError(__VA_ARGS__, __FILE__, __func__, __LINE__ ); \
+    throw std::invalid_argument(errMsg); \
+}
+#endif
+#endif
+*/
+
+/*
+#ifndef RTSEIS_THROW_IA
+#define RTSEIS_THROW_IA(msg, ...) \
+{ \
+    std::string errMsg = std::to_string(ANSI_COLOR_RED) + "[ERROR]: ("; \
+                       + std::to_string(__FILE__) + ":" \
+                       + std::to_string(__func__) + ":" \
+                       + std::to_string(__LINE__) + ")" \
+    do \
+    { \
+       errMsg = errMsg + " " + std::to_string(fmt, __VA_ARGS__) \
+    } while(0); \
+    errMsg = errMsg + std::to_string(ANSI_COLOR_RESET); \
+    throw std::invalid_argument(errMsg); \
+};
+#endif
+#endif // __cplusplus
+*/
+
 #ifndef RTSEIS_ERRMSG 
 #define RTSEIS_ERRMSG(fmt, ...) \
 { \
@@ -51,6 +99,7 @@
 };
 #endif
 
+/*
 #ifndef RTSEIS_THROW_IA
 #define RTSEIS_THROW_IA(fmt, ...) \
 { \
@@ -67,6 +116,7 @@
    } \
 };
 #endif
+*/
 
 #ifndef RTSEIS_WARNMSG 
 #define RTSEIS_WARNMSG(fmt, ...) \

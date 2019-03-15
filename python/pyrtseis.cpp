@@ -1,6 +1,3 @@
-#include <vector>
-#include <memory>
-#include <exception>
 #include "wrap.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -20,9 +17,9 @@ PYBIND11_MODULE(libpyrtseis, modules)
     //singleChannelWaveform
     singleChannelWaveform.def(py::init<>());
     singleChannelWaveform.doc() = "Single channel waveform post-processing";
-    singleChannelWaveform.def("setData", &PBPostProcessing::Waveform::setData,
+    singleChannelWaveform.def("set_data", &PBPostProcessing::Waveform::setData,
                               "Sets the signal to process on the class");
-    singleChannelWaveform.def("getData", &PBPostProcessing::Waveform::getData,
+    singleChannelWaveform.def("get_data", &PBPostProcessing::Waveform::getData,
                               "Gets the filtered data as a NumPy array");
     singleChannelWaveform.def("convolve",  &PBPostProcessing::Waveform::convolve,
                               "Convolves the time series with the input signal",
@@ -36,7 +33,7 @@ PYBIND11_MODULE(libpyrtseis, modules)
                               "Tapers the ends of a signal",
                               py::arg("pct") = 5,
                               py::arg("type") = "hamming");
-    singleChannelWaveform.def("isInitialized", &PBPostProcessing::Waveform::isInitialized,
+    singleChannelWaveform.def("is_initialized", &PBPostProcessing::Waveform::isInitialized,
                               "Checks if the class is initialized");
 
     //m.doc() = "pybind11 example plugin"; // optional module docstring

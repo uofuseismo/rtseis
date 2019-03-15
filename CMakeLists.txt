@@ -15,7 +15,7 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 ##########################################################################################
-#                        Define the compiler standard and OpenMP                         #
+#                    Define the compiler standard, OpenMP, and Python                    #
 ##########################################################################################
 include(FindOpenMP QUIET)
 if (OPENMP_FOUND)
@@ -50,17 +50,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 message("Compling with CXX Flags: ${CMAKE_CXX_FLAGS}")
 
-#######################################################################################
+if (RTSEIS_WRAP_PYTHON)
+   find_package(PythonInterp 3)
+   find_package(PythonLibs 3 REQUIRED)
+   message(STATUS "PYTHON_LIBRARIES = ${PYTHON_LIBRARIES}")
+   message(STATUS "PYTHON_EXECUTABLE = ${PYTHON_EXECUTABLE}")
+   message(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
+   find_package(pybind11 REQUIRED)
+endif()
 
-IF (RTSEIS_WRAP_PYTHON)
-   #FIND_PACKAGE(Boost COMPONENTS python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR})
-   FIND_PACKAGE(PythonInterp 3)
-   FIND_PACKAGE(PythonLibs 3 REQUIRED)
-   MESSAGE(STATUS "PYTHON_LIBRARIES = ${PYTHON_LIBRARIES}")
-   MESSAGE(STATUS "PYTHON_EXECUTABLE = ${PYTHON_EXECUTABLE}")
-   MESSAGE(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
-   FIND_PACKAGE(pybind11 REQUIRED)
-ENDIF()
+##########################################################################################
+#                                       Include Directories                              #
+##########################################################################################
 
 include_directories(
    ${CMAKE_SOURCE_DIR}
@@ -178,6 +179,22 @@ ADD_TEST(NAME singleChannlePostProcessing
 #SET_TARGET_PROPERTIES(pyrtseis PROPERTIES SUFFIX .so)
 #SET_TARGET_PROPERTIES(pyrtseis PROPERTIES PREFIX "")
 
+#========================================================================================#
+#                                      Installation                                      #
+#========================================================================================#
+include(GNUInstallDirs)
+if (RTSEIS_WRAP_PYTHON)
+   install(TARGETS rtseis pyrtseis
+           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+else()
+   install(TARGETS rtseis
+           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+
 #------------------------------------------------------------------------------#
 #                                   CPACK Packaging                            #
 #------------------------------------------------------------------------------#
@@ -197,17 +214,20 @@ SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
   SET(CPACK_SOURCE_GENERATOR TGZ)
   SET(CPACK_SOURCE_PACKAGE_FILE_NAME "artspl-${PROJECT_VERSION}" )
 #ENDIF(WIN32 AND NOT UNIX)
-INCLUDE(CPack)
+include(CPack)
 
 #------------------------------------------------------------------------------#
 #                              Configuration Details                           #
 #------------------------------------------------------------------------------#
-SET_PROPERTY(TARGET rtseis PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-SET(RTSeis_LIBRARY sspl)
-SET(INCLUDE_INSTALL_DIR include/)
-SET(LIB_INSTALL_DIR lib/)
-SET(SYSCONFIG_INSTALL_DIR etc/rtseis/)
-INCLUDE(CMakePackageConfigHelpers)
+#SET_PROPERTY(TARGET rtseis PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+#SET(RTSeis_LIBRARY rtseis)
+#SET(INCLUDE_INSTALL_DIR include/)
+#SET(LIB_INSTALL_DIR lib/)
+#SET(SYSCONFIG_INSTALL_DIR etc/rtseis/)
+#include(CMakePackageConfigHelpers)
+
+include(GNUInstallDirs)
+
 #CONFIGURE_PACKAGE_CONFIG_FILE(${CMAKE_MODULE_PATH}/FindRTSeis.cmake.in
 #                              ${CMAKE_BINARY_DIR}/FindRTSeis.cmake
 #                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/rtseis/cmake
@@ -215,7 +235,11 @@ INCLUDE(CMakePackageConfigHelpers)
 #WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/RTSeisConfigVersion.cmake
 #                                 VERSION ${RTSEIS_VERSION}
 #                                 COMPATIBILITY SameMajorVersion)
-#INSTALL(TARGETS ${TARGET_NAMES}
+#install(TARGETS rtseis
+#        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+#        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+#           
 #        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ WORLD_EXECUTE WORLD_WRITE WORLD_READ
 #        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 #        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib

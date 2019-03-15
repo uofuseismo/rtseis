@@ -234,7 +234,7 @@ void FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
 /*!
  * @brief Utility function to return the IPP window from the given
  *        design window.
- * @para[in] window  The desired window for the FIR window-based design.
+ * @param[in] window  The desired window for the FIR window-based design.
  * @retval The corresponding IPP window for FIR design.
  * @ingroup rtseis_utils_design_fir
  */
@@ -259,3 +259,81 @@ IppWinType classifyWindow(const FIRWindow window)
     }
     return winType;
 }
+
+/*!
+ * @brief Converts a linear-phase FIR filter to minimum phase.
+ * @param[in] fir      The FIR phase filter to convert to minimum phase.
+ *                     This filter should be symmetric.
+ * @param[out] minfir  The corresponding minimum phase FIR filter.  This
+ *                     will (\c fir.getNumberOfFilterTaps() + 1)/2 filter
+ *                     taps.
+ * @param[in] method   Defines the minimum phase conversion method. 
+ * @param[in] nfft     The number of points to use for the FFT.  This should
+ *                     be at least a few times larger than 
+ *                     \c fir.getNumberOfFilterTaps(). 
+ *                     If this is negative then it will be selected.
+ * @throws std::invalid_argument if any of the arguments are invalid.
+ */
+/*
+void FIR::minimumPhase(
+    const FilterRepresentations::FIR &fir, 
+   FilterRepresentations::FIR &minfir,
+    const MinimumPhaseMethod method= MinimumPhaseMethod::HOMOMORPHIC,
+     const int nfft =-1)
+{
+    const double atol = 1.e-8;
+    const double rtol = 1.e-5;
+    std::vector h = getFilterTaps(); 
+    int lenh = h.size();
+    int nhalf = lenh/2;
+    int lwarn = 0;
+    #pragma omp simd reduction(max: lwarn)  
+    for (int i=0; i<nhalf; i++)
+    {
+        if (std::abs(h[i] - h[lenh-1-i]) >=  atol + rtol*std::abs(h[i]))
+        {
+            lwarn = 1;
+        }
+    }
+    if (lwarn == 1)
+    {
+        RTSEIS_WARNMSG("%s", "Filter not symmetric - this may fail");
+    }
+    nfftUse = nfft;
+    if (nfft < 1)
+    {
+        double dexp = std::ceil(2*static_cast<double> (lenh - 1)/0.01);
+        nfftUse = static_cast<int> (std::pow(2, dexp));
+    }
+    if (nfft < h.size())
+    {
+        throw std::invalid_argument("nfft = " + std::to_string(nfft)
+                                   + " must be at least "
+                                   + std::to_string(h.size()));
+    }
+    if (method == MinimumPhaseMethod::HILBERT)
+    {
+        std::vector<std::complex<double>> hft;
+        double xscal = (2*M_PI)/static_cast<double> (nfftUse)
+                      *static_cast<double> (nhalf);
+        #pragma omp simd
+        for (int i=0; i<nfftUse; i++)
+        {
+            double arg = static_cast<double> (i)*xscal;
+            hftr[i] = std::real(hft[i]*std::exp(std::complex<double>(0, arg)));
+        }
+        double dp = max(hftr) - 1;
+        double ds =-min(hftr);
+        double xden = std::sqrt(1 + dp + ds) + std::sqrt(1 - dp + ds);
+        double s = 4/(xden*xden);
+        ippsAddC_64f_I(ds, hftr.data(), nfft);
+        ippsMulC_64f_I(s,  hftr.data(), nfft);
+        ippsSqrt_64f_I(hftr.data(), nfft);
+        ippsMinThresh_64f_I(1.e-10, hftr.data(), nfft); 
+    }
+    else
+    {
+    }
+    return;
+}
+*/
