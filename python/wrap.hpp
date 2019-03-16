@@ -26,6 +26,8 @@ public:
     void demean(void);
     /// Detrend
     void detrend(void);
+    /// Generic FIR filter data
+    void firFilter(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &taps);
     /// Taper
     void taper(const double pct, const std::string &taperName); 
     /// Set data

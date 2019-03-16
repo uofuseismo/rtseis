@@ -29,6 +29,8 @@ PYBIND11_MODULE(libpyrtseis, modules)
                               "Removes the mean from the time series");
     singleChannelWaveform.def("detrend", &PBPostProcessing::Waveform::detrend,
                               "Removes the trend from the time series");
+    singleChannelWaveform.def("fir_filter", &PBPostProcessing::Waveform::firFilter,
+                              py::arg("taps"));
     singleChannelWaveform.def("taper",   &PBPostProcessing::Waveform::taper,
                               "Tapers the ends of a signal",
                               py::arg("pct") = 5,

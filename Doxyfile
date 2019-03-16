@@ -792,9 +792,7 @@ WARN_LOGFILE           =
 
 INPUT                  = ./ \
                          include/rtseis/utilities/design/analogPrototype.hpp \
-                         include/rtseis/utilities/design/fir.hpp \
-                         include/rtseis/utilities/design/iir.hpp \
-                         include/rtseis/utilities/design/response.hpp \
+                         include/rtseis/utilities/design/ \
                          include/rtseis/utilities/math/ \
                          include/rtseis/utilities/filterImplementations/ \
                          include/rtseis/utilities/filterRepresentations/ \

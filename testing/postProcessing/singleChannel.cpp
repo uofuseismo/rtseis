@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <cassert>
 #include <vector>
 #include <fstream>
 #include <stdexcept>
@@ -8,20 +9,37 @@
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
+#include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/design/iir.hpp"
+#include "rtseis/utilities/filterRepresentations/fir.hpp"
+#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
 
 const std::string dataDir = "data/";
 const std::string taperSolns100FileName = dataDir + "taper100.all.txt";
 const std::string taperSolns101FileName = dataDir + "taper101.all.txt";
+const std::string gse2FileName = dataDir + "gse2.txt";
+const std::string firSolnsRef = dataDir + "firReference.txt";
 
+using namespace RTSeis;
 using namespace RTSeis::PostProcessing;
 
 int testDemean(void);
 int testDetrend(void);
+int testFilter(const std::vector<double> &x);
 int testTaper(void);
+void readData(const std::string &fname, std::vector<double> &x);
 
 int main(void)
 {
     rtseis_utils_verbosity_setLoggingLevel(RTSEIS_SHOW_ALL);
+    std::vector<double> gse2;
+    readData(gse2FileName, gse2);
+    if (gse2.size() < 1)
+    {
+        RTSEIS_ERRMSG("%s", "No data");
+        return EXIT_FAILURE;
+    }
     int ierr;
     ierr = testDemean();
     if (ierr != EXIT_SUCCESS)
@@ -39,6 +57,14 @@ int main(void)
     } 
     RTSEIS_INFOMSG("%s", "Passed detrend test");
 
+    ierr = testFilter(gse2);
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed detrend test");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed generic filter test");
+
     ierr = testTaper();
     if (ierr != EXIT_SUCCESS)
     {
@@ -49,6 +75,45 @@ int main(void)
     return EXIT_SUCCESS; 
 }
 
+//============================================================================//
+
+int testFilter(const std::vector<double> &x)
+{
+    std::vector<double> yref;
+    readData(firSolnsRef, yref);
+    int len = static_cast<int> (yref.size());
+    assert(len > 0);
+    // Generate an FIR filter with SciPy: firwin(50, 0.4, 'hamming')
+    int order = 50;
+    const double fc = 0.4;
+    std::vector<double> y;
+    Utilities::FilterRepresentations::FIR fir;
+    try
+    {
+        Utilities::FilterDesign::FIR::FIR1Lowpass(order, fc, fir,
+                                  Utilities::FilterDesign::FIRWindow::HAMMING);
+        PostProcessing::SingleChannel::Waveform waveform; 
+        waveform.setData(x);
+        waveform.filter(fir);
+        waveform.getData(y);     
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    // Compare
+    double l1Norm = 0;
+    ippsNormDiff_L1_64f(yref.data(), y.data(), len, &l1Norm);
+    if (l1Norm > 1.e-8)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to print fir filter");
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+//============================================================================//
 
 int testDemean(void)
 {
@@ -63,7 +128,7 @@ int testDemean(void)
     std::fill(x.begin(), x.end(), xmean);
     std::vector<double> y;
 //! [ppSCDemeanExample]
-    RTSeis::PostProcessing::SingleChannel::Waveform waveform;
+    PostProcessing::SingleChannel::Waveform waveform;
     try
     {
         waveform.setData(x);    // Set waveform data to demean
@@ -104,7 +169,7 @@ int testDetrend(void)
     #pragma omp simd
     for (int i=0; i<npts; i++){x[i] = 1.1 + 0.3*static_cast<double> (i);}
 //! [ppSCDetrendExample]
-    RTSeis::PostProcessing::SingleChannel::Waveform waveform;
+    PostProcessing::SingleChannel::Waveform waveform;
     try 
     {
         waveform.setData(x);    // Set the data to detrend
@@ -172,8 +237,8 @@ int testTaper(void)
     taper100File.close();
     taper101File.close();
 
-    namespace SC = RTSeis::PostProcessing::SingleChannel;
-    RTSeis::PostProcessing::SingleChannel::Waveform waveform;
+    namespace SC = PostProcessing::SingleChannel;
+    PostProcessing::SingleChannel::Waveform waveform;
     std::vector<double> x100(100, 1);
     std::vector<double> yHamming100;
     std::vector<double> yHann100;
@@ -271,4 +336,19 @@ int testTaper(void)
         }
     }
     return EXIT_SUCCESS;
+}
+
+void readData(const std::string &fname, std::vector<double> &x)
+{
+    x.reserve(12000);
+    x.resize(0);
+    std::string line;
+    std::ifstream textFile(fname);
+    while (std::getline(textFile, line))
+    {
+        double xval;
+        std::sscanf(line.c_str(), "%lf\n", &xval);
+        x.push_back(xval);
+    }
+    return;
 }

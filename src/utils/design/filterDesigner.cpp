@@ -104,7 +104,7 @@ struct IIRDesignParameters
         btype = Bandtype::LOWPASS;
         pairing = SOSPairing::NEAREST;
         lsos = false;
-        ldigital = true;
+        ldigital = IIRFilterDomain::DIGITAL;
     }
     IIRDesignParameters& operator=(const IIRDesignParameters &parms)
     {   
@@ -129,8 +129,7 @@ struct IIRDesignParameters
         {
             if(r2 != parms.r2){return false;}
         }
-        if (( ldigital && !parms.ldigital) ||
-            (!ldigital &&  parms.ldigital)){return false;}
+        if (ldigital != parms.ldigital){return false;} 
         if (( lsos && !parms.lsos) ||
             (!lsos &&  parms.lsos)){return false;}
         if (lsos)
@@ -158,7 +157,7 @@ struct IIRDesignParameters
     /// SOS?
     bool lsos = false;
     /// Digital?
-    bool ldigital = true;
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
 };
 //----------------------------------------------------------------------------//
 class FilterDesigner::FilterDesignerImpl
@@ -246,7 +245,8 @@ void FilterDesigner::clear(void)
 
 //============================================================================//
 
-
+//void FilterDesigner::designLowpassIIRFilter(
+//    const int order,
 //============================================================================//
 
 void FilterDesigner::designLowpassFIRFilter(

@@ -64,7 +64,7 @@ void Waveform::demean(void)
     {
         waveform_->demean();
     }
-    catch (const std::invalid_argument& ia)
+    catch (const std::invalid_argument &ia)
     {
         fprintf(stderr, "%s\n", ia.what());
         throw std::invalid_argument("Demean failed");
@@ -79,10 +79,31 @@ void Waveform::detrend(void)
     {
         waveform_->detrend();
     }
-    catch (const std::invalid_argument& ia)
+    catch (const std::invalid_argument &ia)
     {
         fprintf(stderr, "%s\n", ia.what());
         throw std::invalid_argument("Detrend failed");
+    }
+    return;
+}
+
+void Waveform::firFilter(py::array_t<double, py::array::c_style | py::array::forcecast> &taps)
+{
+    if (taps.size() < 1)
+    {
+        throw std::invalid_argument("No filter coefficients!");
+    }
+    std::vector<double> tapsVec(taps.size());
+    std::memcpy(tapsVec.data(), taps.data(), taps.size()*sizeof(double));
+    try
+    {
+        RTSeis::Utilities::FilterRepresentations::FIR fir(tapsVec);
+        waveform_->filter(fir); 
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        throw std::invalid_argument("FIR filtering failed"); 
     }
     return;
 }
@@ -126,7 +147,7 @@ void Waveform::taper(const double pct, const std::string &taperName)
     {
         waveform_->taper(pct, window);
     }
-    catch (const std::invalid_argument& ia)
+    catch (const std::invalid_argument &ia)
     {
         fprintf(stderr, "%s\n", ia.what());
         throw std::invalid_argument("Taper failed");

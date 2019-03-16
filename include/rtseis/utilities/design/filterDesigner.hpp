@@ -1,8 +1,7 @@
 #ifndef RTSEIS_UTILS_DESIGN_FILTERDESIGNER_HPP
 #define RTSEIS_UTILS_DESIGN_FILTERDESIGNER_HPP
 #include <memory>
-#include "include/rtseis/utilities/design/fir.hpp"
-#include "include/rtseis/utilities/design/iir.hpp"
+#include "include/rtseis/utilities/design/enums.hpp"
 
 namespace RTSeis
 {
@@ -19,7 +18,7 @@ namespace FilterDesign
 {
 
 /*!
- * @defgroup rtseis_utils_design_iir Filter Designer
+ * @class FilterDesigner filterDesigner.hpp "include/rtseis/utilities/design/filterDesigner.hpp"
  * @brief A class for filter design.  If designing many filters then using
  *        this class may be advantageous as it will save previous filter
  *        designs.
@@ -141,103 +140,176 @@ public:
      * @{
      */
     /*!
-     * @brief Designs an IIR lowpass filter stored as zeros, poles, and a gain.
-     * @param[in] n      The order of the filter.
-     * @param[in] r      The normalized cutoff frequency where 1 is the
-     *                   Nyquist frequency.
-     * @param[in] ftype  The filter prototype.
-     * @param[out] zpk   The lowpass filter design.
-     * @param[in] ldigital  If true then design a design a digital filter.
-     *                      Otherwise, design an analog filter.
-     * @throws std::invalid_argument if any parameters are incorrect.
-     */
-    void designLowpassIIRFilter(const int n, const double r,
-                                const IIRPrototype ftype,
-                                const double ripple,
-                                FilterRepresentations::ZPK &zpk,
-                                const bool ldigital = true);
-    /*!
      * @brief Designs an IIR lowpass filter.
      * @param[in] n      The order of the filter.
      * @param[in] r      The normalized cutoff frequency where 1 is the
      *                   Nyquist frequency.
      * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] ba    The lowpass filter design.
-     * @param[in] ldigital  If true then design a design a digital filter.
-     *                      Otherwise, design an analog filter.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
     void designLowpassIIRFilter(const int n, const double r,
                                 const IIRPrototype ftype,
                                 const double ripple,
                                 FilterRepresentations::BA &ba,
-                                const bool ldigital = true);
+                                const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
     /*!
      * @brief Designs an IIR lowpass filter stored as second-order sections.
      * @param[in] n      The order of the filter.
      * @param[in] r      The normalized cutoff frequency where 1 is the
      *                   Nyquist frequency.
      * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] sos   The lowpass filter design.
-     * @param[in] ldigital  If true then design a design a digital filter.
-     *                      Otherwise, design an analog filter.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
     void designLowpassIIRFilter(const int n, const double r,
                                 const IIRPrototype ftype,
                                 const double ripple,
                                 FilterRepresentations::SOS &sos,
-                                const bool ldigital = true);
+                                const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
 
     /*! 
-     * @brief Designs an IIR highpass filter stored as zeros, poles, and a gain.
-     * @param[in] n      The order of the filter.
-     * @param[in] r      The normalized cutoff frequency where 1 is the
-     *                   Nyquist frequency.
-     * @param[in] ftype  The filter prototype.
-     * @param[out] zpk   The highpass filter design.
-     * @param[in] ldigital  If true then design a design a digital filter.
-     *                      Otherwise, design an analog filter.
-     * @throws std::invalid_argument if any parameters are incorrect.
-     */
-    void designHighpassIIRFilter(const int n, const double r,
-                                 const IIRPrototype ftype,
-                                 const double ripple,
-                                 FilterRepresentations::ZPK &zpk,
-                                 const bool ldigital = true);
-    /*! 
-     * @brief Designs an IIR highpass filter.
-     * @param[in] n      The order of the filter.
-     * @param[in] r      The normalized cutoff frequency where 1 is the
-     *                   Nyquist frequency.
-     * @param[in] ftype  The filter prototype.
-     * @param[out] ba    The highpass filter design.
-     * @param[in] ldigital  If true then design a design a digital filter.
-     *                      Otherwise, design an analog filter.
+     * @brief Designs an  IIR highpass filter.
+     * @param[in] n       The order of the filter.
+     * @param[in] r       The normalized cutoff frequency where 1 is the
+     *                    Nyquist frequency.
+     * @param[in] ftype   The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] ba     The highpass filter design.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
     void designHighpassIIRFilter(const int n, const double r,
                                  const IIRPrototype ftype,
                                  const double ripple,
                                  FilterRepresentations::BA &ba,
-                                 const bool ldigital = true);
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
     /*! 
      * @brief Designs an IIR highpass filter stored as second-order sections.
      * @param[in] n      The order of the filter.
      * @param[in] r      The normalized cutoff frequency where 1 is the
      *                   Nyquist frequency.
      * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] sos   The highpass filter design.
-     * @param[in] ldigital  If true then design a design a digital filter.
-     *                      Otherwise, design an analog filter.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
     void designHighpassIIRFilter(const int n, const double r,
                                  const IIRPrototype ftype,
                                  const double ripple,
                                  FilterRepresentations::SOS &sos,
-                                 const bool ldigital = true);
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
 
+    /*! 
+     * @brief Designs an IIR bandpass filter.
+     * @param[in] n      The order of the filter.
+     * @param[in] r      The normalized cutoff frequencies where 1 is the
+     *                   Nyquist frequency.  Here, r.first is the low corner
+     *                   and r.second is the high corner, and it is required
+     *                   that r.second > r.first.
+     * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] ba     The bandpass filter.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designBandpassIIRFilter(const int n, const std::pair<double, double> r,
+                                 const IIRPrototype ftype,
+                                 const double ripple,
+                                 FilterRepresentations::BA &ba,
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
+    /*! 
+     * @brief Designs an IIR bandpass filter stored as second order sections.
+     * @param[in] n      The order of the filter.
+     * @param[in] r      The normalized cutoff frequencies where 1 is the
+     *                   Nyquist frequency.  Here, r.first is the low corner
+     *                   and r.second is the high corner, and it is required
+     *                   that r.second > r.first.
+     * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] sos   The bandpass filter design.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designBandpassIIRFilter(const int n, const std::pair<double, double> r,
+                                 const IIRPrototype ftype,
+                                 const double ripple,
+                                 FilterRepresentations::SOS &sos,
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
+
+    /*! 
+     * @brief Designs an IIR bandstop filter.
+     * @param[in] n      The order of the filter.
+     * @param[in] r      The normalized cutoff frequencies where 1 is the
+     *                   Nyquist frequency.  Here, r.first is the low corner
+     *                   and r.second is the high corner, and it is required
+     *                   that r.second > r.first.
+     * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] ba     The bandstop filter.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designBandstopIIRFilter(const int n, const std::pair<double, double> r,
+                                 const IIRPrototype ftype,
+                                 const double ripple,
+                                 FilterRepresentations::BA &ba,
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
+    /*! 
+     * @brief Designs an IIR bandstop filter stored as second order sections.
+     * @param[in] n      The order of the filter.
+     * @param[in] r      The normalized cutoff frequencies where 1 is the
+     *                   Nyquist frequency.  Here, r.first is the low corner
+     *                   and r.second is the high corner, and it is required
+     *                   that r.second > r.first.
+     * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] sos   The bandpass filter design.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designBandstopIIRFilter(const int n, const std::pair<double, double> r,
+                                 const IIRPrototype ftype,
+                                 const double ripple,
+                                 FilterRepresentations::SOS &sos,
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
     /*! @} */
 private:
     class FilterDesignerImpl;
