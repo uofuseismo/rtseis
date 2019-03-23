@@ -311,7 +311,7 @@ int rtseis_test_utils_design_zpk2tf(void)
     for (size_t i=0; i<z.size(); i++)
     {
         bool lfound = false;
-        for (int j=0; j<zref.size(); j++)
+        for (size_t j=0; j<zref.size(); j++)
         {
             if (std::abs(zref[j] - z[i]) < 1.e-13){lfound = true;}
         }
@@ -325,7 +325,7 @@ int rtseis_test_utils_design_zpk2tf(void)
      for (size_t i=0; i<p.size(); i++)
      {
          bool lfound = false;
-         for (int j=0; j<pref.size(); j++)
+         for (size_t j=0; j<pref.size(); j++)
          {
              if (std::abs(pref[j] - p[i]) < 1.e-13){lfound = true;}
          }  
