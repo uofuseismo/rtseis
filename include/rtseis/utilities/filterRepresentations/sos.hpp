@@ -93,7 +93,7 @@ public:
      * @param[in] fout   File handle to print to.  If fout is NULL then this
      *                   will print to stdout.
      */
-    void print(FILE *fout = stdout);
+    void print(FILE *fout = stdout) const noexcept;
 
     /*!
      * @brief Sets the second order sections on the class.

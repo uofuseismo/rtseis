@@ -79,7 +79,7 @@ bool BA::operator!=(const BA &ba) const
     return !(*this == ba);
 }
 
-void BA::print(FILE *fout)
+void BA::print(FILE *fout) const noexcept
 {
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}

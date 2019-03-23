@@ -88,7 +88,7 @@ bool ZPK::operator!=(const ZPK &zpk) const
     return !(*this == zpk); 
 }
 
-void ZPK::print(FILE *fout)
+void ZPK::print(FILE *fout) const noexcept
 {
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}

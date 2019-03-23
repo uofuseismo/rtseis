@@ -94,7 +94,7 @@ void SOS::clear(void)
     return;
 }
 
-void SOS::print(FILE *fout)
+void SOS::print(FILE *fout) const noexcept
 {
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}

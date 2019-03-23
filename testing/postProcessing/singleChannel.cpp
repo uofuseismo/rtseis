@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <algorithm>
 #include <vector>
 #include <fstream>
 #include <stdexcept>
@@ -131,7 +132,7 @@ int testBandSpecificFilters(const std::vector<double> &x)
 {
     double l1Norm;
     int npts = static_cast<int> (x.size());
-    Utilities::FilterRepresentations::SOS sosLP, sosBP;
+    Utilities::FilterRepresentations::SOS sos;
     Utilities::FilterRepresentations::FIR fir;
     Utilities::FilterRepresentations::BA ba;
     const double fsamp = 200;      // Sampling rate
@@ -141,16 +142,16 @@ int testBandSpecificFilters(const std::vector<double> &x)
     y.reserve(npts);
     // By this point the core filters work.  By this point we are verifying
     // that the higher order functions correctly call the low level library. 
-    double fc[2] = {0, 0};
-    fc[0] = 10/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(2, fc, 5, 0, 
+    double fcV[2] = {0, 0};
+    fcV[0] = 10/fnyq;
+    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 5, 0, 
                       Utilities::FilterDesign::Bandtype::LOWPASS,
                       Utilities::FilterDesign::IIRPrototype::CHEBYSHEV1,
-                      sosLP,
+                      sos,
                       Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
-    int ns = sosLP.getNumberOfSections();
-    std::vector<double> bs = sosLP.getNumeratorCoefficients();
-    std::vector<double> as = sosLP.getDenominatorCoefficients();
+    int ns = sos.getNumberOfSections();
+    std::vector<double> bs = sos.getNumeratorCoefficients();
+    std::vector<double> as = sos.getDenominatorCoefficients();
     Utilities::FilterImplementations::SOSFilter sosFilt; 
     std::vector<double> ysosRef(npts);
     sosFilt.initialize(ns, bs.data(), as.data(),
@@ -160,7 +161,8 @@ int testBandSpecificFilters(const std::vector<double> &x)
     sosFilt.clear();
     // Zero-phase SOS filter
 //! [ppSCSOSLowpassExample]
-    PostProcessing::SingleChannel::Waveform waveform(dt); // Sampling period, dt=1/200
+    PostProcessing::SingleChannel::Waveform waveform;
+    waveform.setSamplingPeriod(dt); // Sampling period is 1/200
     try
     {
         // Design a 2nd order Chebyshev filter with 10 Hz cutoff
@@ -187,11 +189,55 @@ int testBandSpecificFilters(const std::vector<double> &x)
         fprintf(stderr, "Failed sos filter test with error=%e\n", l1Norm);
         return EXIT_FAILURE;
     }
+    // Highpass fliter
+    fcV[0] = 10/fnyq;
+    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 0, 0,
+                      Utilities::FilterDesign::Bandtype::HIGHPASS,
+                      Utilities::FilterDesign::IIRPrototype::BESSEL,
+                      sos,
+                      Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+    ns = sos.getNumberOfSections();
+    bs = sos.getNumeratorCoefficients();
+    as = sos.getDenominatorCoefficients();
+    std::vector<double> ytemp(npts);
+    sosFilt.initialize(ns, bs.data(), as.data(),
+                       RTSeis::ProcessingMode::POST_PROCESSING,
+                       RTSeis::Precision::DOUBLE);
+    sosFilt.apply(npts, x.data(), ytemp.data());
+    std::reverse(ytemp.begin(), ytemp.end());
+    sosFilt.apply(npts, ytemp.data(), ysosRef.data());
+    std::reverse(ysosRef.begin(), ysosRef.end());
+    sosFilt.clear();
     // Hammer on the filter designer
     for (int j=0; j<5; j++)
     {
-
+    try
+    {
+        // Design a 2nd order Bessel filter with 10 Hz cutoff
+        int order = 2;           // 2nd order (2 poles)
+        double fc = 10;          // 10 Hz cutoff
+        double ripple = 0;       // N/A
+        bool lzeroPhase = true;  // Zero-phase
+        waveform.setData(x);
+        waveform.sosHighpassFilter(order, fc,
+                                   SingleChannel::IIRPrototype::BESSEL,
+                                   ripple, lzeroPhase);
+        waveform.getData(y);
     }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    }
+    // Compare
+    ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
+    if (l1Norm > 1.e-12)
+    {
+        fprintf(stderr, "Failed sos filter test with error=%e\n", l1Norm);
+        return EXIT_FAILURE;
+    }
+
     return EXIT_SUCCESS; 
 }
 

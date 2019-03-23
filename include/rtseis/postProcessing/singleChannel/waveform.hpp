@@ -129,29 +129,25 @@ public:
      * @{
      */
     /*!
-     * @brief Default constructor.
-     * @param[in] dt   Sets the sampling period to 1 second.
-     * @throws std::invalid_argument if dt is not positive.
+     * @brief Default constructor.  The sampling period defaults to unity.
      */
-    Waveform(const double dt = 1);
+    Waveform(void); //const double dt = 1);
     /*!
      * @brief Constructs a waveform from time series data.  The sampling
      *        period will be unity.
      * @param[in] x   Signal from which to construct time series.
-     * @param[in] dt  The sampling period.  By default this is set to 
-     *                one sample per second. 
      * @throws std::invalid_argument if x is empty or the sampling period
      *         is not positive.
      */
-    explicit Waveform(const std::vector<double> &x, const double dt = 1);
+    //explicit Waveform(const std::vector<double> &x); //, const double dt = 1);
     /*!
      * @brief Constructs a waveform from time series data.
-     * @param[in] dt   Sampling period in seconds.
+     * @param[in] dt   Sampling period in seconds.  This must be positive.
      * @param[in] x    Signal from which to construct time series.
      * @throws std::invalid_argument if the sampling period is not positive
      *         or x is empty.
      */
-    Waveform(const double dt, const std::vector<double> &x);
+    //Waveform(const double dt, const std::vector<double> &x);
     /*! @} */
 
     /*!
@@ -572,6 +568,18 @@ public:
     /*! @name Utilities
      * @{
      */ 
+    /*!
+     * @brief Sets the sampling period.
+     * @param[in] dt  The signal sampling period in seconds.
+     *                This must be positive.
+     * @throws std::invalid_argument if dt is not positive.
+     */
+    void setSamplingPeriod(const double dt);
+    /*!
+     * @brief Gets the sampling period.
+     * @result The signal sampling period in seconds.
+     */
+    double getSamplingPeriod(void) const noexcept;
     /*!
      * @brief Gets the Nyquist frequency of the signal.
      * @result The Nyquist freuqency in Hz.

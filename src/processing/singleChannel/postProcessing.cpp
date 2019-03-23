@@ -139,14 +139,9 @@ public:
     double dt = 1;
 };
 
-Waveform::Waveform(const double dt) :
-    pImpl(new WaveformImpl()) 
+Waveform::Waveform(void) :
+    pImpl(new WaveformImpl())
 {
-    if (dt <= 0)
-    {
-        RTSEIS_THROW_IA("Sampling period = %lf must be positive", dt);
-    }
-    pImpl->dt = dt;
     return;
 }
 
@@ -223,6 +218,21 @@ void Waveform::getData(const size_t nwork, double y[]) const
 size_t Waveform::getOutputLength(void) const
 {
     return pImpl->y_.size();
+}
+
+void Waveform::setSamplingPeriod(const double dt)
+{
+    if (dt <= 0)
+    {
+        RTSEIS_THROW_IA("Sampling period = %lf must be positive", dt);
+    }
+    pImpl->dt = dt;
+    return;
+}
+
+double Waveform::getSamplingPeriod(void) const noexcept
+{
+    return pImpl->dt;
 }
 
 double Waveform::getNyquistFrequency(void) const noexcept

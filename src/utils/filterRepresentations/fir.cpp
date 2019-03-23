@@ -67,7 +67,7 @@ bool FIR::operator!=(const FIR &fir) const
     return !(*this == fir);
 }
 
-void FIR::print(FILE *fout)
+void FIR::print(FILE *fout) const noexcept
 {
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}

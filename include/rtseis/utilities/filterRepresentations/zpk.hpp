@@ -83,7 +83,7 @@ class ZPK
          * @param[in] fout   File handle to print to.  If fout is NULL then this
          *                   will print to stdout.
          */
-        void print(FILE *fout = stdout);
+        void print(FILE *fout = stdout) const noexcept;
         /*!
          * @brief Clears the class.
          */
