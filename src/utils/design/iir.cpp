@@ -1,12 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cfloat>
-#include <vector>
-#ifdef DEBUG
 #include <cassert>
-#else
-#define assert(func)
-#endif
+#include <vector>
 #include <algorithm>
 #include <numeric>
 #include <cmath>
@@ -20,6 +16,8 @@
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/private/throw.hpp"
 #include "rtseis/log.h"
+
+//#define DEBUG 1
 
 /*
  This source code is originally from ISTI's ISCL and is distrubted under the
@@ -61,12 +59,7 @@ void IIR::iirfilter(const int n, const double *W,
      sos.clear();
      FilterRepresentations::ZPK zpk;
      IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital); // throws
-#ifdef DEBUG
-     int ierr = IIR::zpk2sos(zpk, sos, pairing);
-     assert(ierr == 0); 
-#else
      IIR::zpk2sos(zpk, sos, pairing);
-#endif
      return;
 }
 
@@ -80,12 +73,7 @@ void IIR::iirfilter(const int n, const double *W,
      ba.clear();
      FilterRepresentations::ZPK zpk;
      IIR::iirfilter(n, W, rp, rs, btype, ftype, zpk, ldigital); // throws
-#ifdef DEBUG
-     int ierr = IIR::zpk2tf(zpk, ba);
-     assert(ierr == 0);
-#else
      IIR::zpk2tf(zpk, ba);
-#endif
      return;
 }
 
@@ -206,8 +194,8 @@ void IIR::iirfilter(const int n, const double *W,
     return;
 }
 
-int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
-                 FilterRepresentations::SOS &sos, const SOSPairing pairing)
+void IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
+                  FilterRepresentations::SOS &sos, const SOSPairing pairing)
 {
     sos.clear();
     ZPK zpkWork = zpk;
@@ -220,12 +208,15 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         std::vector<double> bs({k, 0, 0});
         std::vector<double> as({1, 0, 0});
         sos = FilterRepresentations::SOS(1, bs, as);
-        return 0;
+        return;
     }
     // Get sizes and handles to zeros and poles
     int np = npoles + std::max(nzeros - npoles, 0);
     int nz = nzeros + std::max(npoles - nzeros, 0);
     int nSections = std::max(np, nz + 1)/2;
+#ifdef DEBUG
+    assert(nSections > 0);
+#endif
     std::vector<std::complex<double>> zin = zpkWork.getZeros();
     std::vector<std::complex<double>> pin = zpkWork.getPoles();
     // Base case
@@ -268,18 +259,10 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
             as[1] =-2.0*std::real(pin[0]);
             as[2] = std::pow(std::abs(pin[0]), 2);
         }
-        try
-        {
-            sos = FilterRepresentations::SOS(1, bs, as);
-        }
-        catch (const std::invalid_argument &ia)
-        {
-            RTSEIS_ERRMSG("Failed to set sos %s", ia.what());
-            return -1;
-        }
+        sos = FilterRepresentations::SOS(1, bs, as);
         RTSEIS_WARNMSG("%s", "Summary of design");
         sos.print(stdout);
-        return 0;
+        return;
     }
     if (np%2 == 1 && pairing == SOSPairing::NEAREST)
     {
@@ -291,22 +274,22 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         if (np != nz){RTSEIS_ERRMSG("Error size inconsistent %d,%d!", np, nz);}
         if (np < 1){RTSEIS_ERRMSG("Error no zeros in use %d", nz);}
         if (nz < 1){RTSEIS_ERRMSG("Error no poles in use %d", np);}
-        return -1;
+        RTSEIS_THROW_IA("%s", "Invalid inputs");
     }
     std::vector<std::complex<double>> z;
     std::vector<bool> isreal_zero;
-    if (cmplxreal(zin, z, isreal_zero, nullptr) != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to sort zeros");
-        return -1;
-    }
+#ifdef DEBUG
+    assert(cmplxreal(zin, z, isreal_zero, nullptr) == 0);
+#else
+    cmplxreal(zin, z, isreal_zero, nullptr);
+#endif
     std::vector<std::complex<double>> p;
     std::vector<bool> isreal_pole;
-    if (cmplxreal(pin, p, isreal_pole, nullptr) != 0) 
-    {
-        RTSEIS_ERRMSG("%s", "Failed to sort poles");
-        return -1;
-    }
+#ifdef DEBUG
+    assert(cmplxreal(pin, p, isreal_pole, nullptr) == 0);
+#else
+    cmplxreal(pin, p, isreal_pole, nullptr); 
+#endif
     std::vector<bool> zmask(z.size(), false);
     std::vector<bool> pmask(p.size(), false);
     std::vector<BA> basAll;
@@ -315,11 +298,9 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         std::complex<double> z1 = std::complex<double> (0, 0);
         // Select the `worst' pole
         int p1_idx = getWorstPoleIndex(pmask, p);
-        if (p1_idx ==-1)
-        {
-            RTSEIS_ERRMSG("%s", "Pole index error");
-            return -1;
-        }
+#ifdef DEBUG
+        assert(p1_idx !=-1);
+#endif
         std::complex<double> p1 = p[p1_idx];
         pmask[p1_idx] = true;
         int psum = isreal_p_sum(pmask, isreal_pole);
@@ -332,11 +313,9 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
             // Special case to set a first order section
             int z1_idx = nearest_real_complex_idx(zmask, isreal_zero,
                                                   z, p1, true);
-            if (z1_idx ==-1)
-            {
-                RTSEIS_ERRMSG("Zero index error in section %d", is+1);
-                return -1;
-            }
+#ifdef DEBUG
+            assert(z1_idx !=-1);
+#endif
             z1 = z[z1_idx];
             zmask[z1_idx] = true;
         }
@@ -350,26 +329,18 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
                 // with so later (setting up a first-order section)
                 z1_idx = nearest_real_complex_idx(zmask, isreal_zero,
                                                   z, p1, false);
-                if (z1_idx ==-1)
-                {
-                    RTSEIS_ERRMSG("%s", "Zero index error 2");
-                    return -1;
-                }
-                if (isreal_zero[z1_idx])
-                {
-                    RTSEIS_ERRMSG("%s", "Error this should be complex");
-                    return -1;
-                }
+#ifdef DEBUG
+                assert(z1_idx !=-1);
+                assert(isreal_zero[z1_idx]);
+#endif
             }
             else
             {
                 // Pair that pole with the closest zero (real or complex)
                 z1_idx = nearest_realOrComplex_idx(zmask, z, p1);
-                if (z1_idx ==-1)
-                {
-                    RTSEIS_ERRMSG("%s", "Zero index error 3");
-                    return -1;
-                } 
+#ifdef DEBUG
+                assert(z1_idx !=-1);
+#endif
             }
             z1 = z[z1_idx];
             zmask[z1_idx] = true;
@@ -388,16 +359,10 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
                     p2 = std::conj(p1);
                     int z2_idx = nearest_real_complex_idx(zmask, isreal_zero,
                                                           z, p1, true);
-                    if (z2_idx ==-1)
-                    {
-                        RTSEIS_ERRMSG("%s", "Zero2 index error 1");
-                        return -1;
-                    }
-                    if (!isreal_zero[z2_idx])
-                    {
-                        RTSEIS_ERRMSG("%s", "Should be real zero!");
-                        return -1;
-                    }
+#ifdef DEBUG
+                    assert(z2_idx !=-1);
+                    assert(isreal_zero[z2_idx]);
+#endif
                     z2 = z[z2_idx];
                     zmask[z2_idx] = true;
                 }
@@ -411,16 +376,10 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
                     z2 = conj(z1);
                     int p2_idx = nearest_real_complex_idx(pmask, isreal_pole,
                                                           p, z1, true);
-                    if (p2_idx ==-1)
-                    {
-                        RTSEIS_ERRMSG("%s", "Pole2 index error 1");
-                        return -1;
-                    }
-                    if (!isreal_pole[p2_idx])
-                    {
-                        RTSEIS_ERRMSG("%s", "Should be real pole");
-                        return -1;
-                    }
+#ifdef DEBUG
+                    assert(p2_idx !=-1);
+                    assert(isreal_pole[p2_idx]);
+#endif
                     p2 = p[p2_idx];
                     pmask[p2_idx] = true;
                 }
@@ -430,30 +389,18 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
                     // Pick the next `worst' pole to use
                     int p2_idx = getNextWorstRealPoleIndex(pmask,
                                                            isreal_pole, p);
-                    if (p2_idx ==-1)
-                    {
-                        RTSEIS_ERRMSG("%s", "Error couldn't find next real pole");
-                        return -1;
-                    }
-                    if (!isreal_pole[p2_idx])
-                    {
-                        RTSEIS_ERRMSG("%s", "Error next pole must be real");
-                        return -1;
-                    }
+#ifdef DEBUG
+                    assert(p2_idx !=-1);
+                    assert(isreal_pole[p2_idx]);
+#endif
                     p2 = p[p2_idx];
                     // Find a real zero to match the added pole
                     int z2_idx = nearest_real_complex_idx(zmask, isreal_zero,
                                                           z, p2, true);
-                    if (z2_idx ==-1)
-                    {
-                        RTSEIS_ERRMSG("%s", "Zero3 index error 1");
-                        return -1;
-                    }
-                    if (!isreal_zero[z2_idx])
-                    {
-                        RTSEIS_ERRMSG("%s", "Should be real zero!");
-                        return -1;
-                    }
+#ifdef DEBUG
+                    assert(z2_idx !=-1);
+                    assert(isreal_zero[z2_idx]);
+#endif
                     z2 = z[z2_idx];
                     zmask[z2_idx] = true; 
                     pmask[p2_idx] = true;
@@ -467,12 +414,7 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         FilterRepresentations::ZPK zpkTemp
              = FilterRepresentations::ZPK(ztemp, ptemp, ktemp);
         BA baTemp;
-        int ierr = zpk2tf(zpkTemp, baTemp);  
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to create transfer function");
-            return -1;
-        }
+        zpk2tf(zpkTemp, baTemp);
         // Save the transfer function of the secon dorder section
         basAll.push_back(baTemp);
     } // Loop on sections
@@ -483,7 +425,10 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         {
             RTSEIS_ERRMSG("Failed to find pole %ld; nsections=%d",
                           ip, nSections);
-            return -1;
+#ifdef DEBUG
+            assert(false);
+#endif
+            return;
         }
     }
     for (size_t iz=0; iz<zmask.size(); iz++)
@@ -491,7 +436,10 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         if (!zmask[iz])
         {
             RTSEIS_ERRMSG("Failed to find zero %ld", iz);
-            return -1;
+#ifdef DEBUG
+            assert(false);
+#endif
+            return;
         }
     }
     // Construct the cascading transfer function with the `worst' pole last
@@ -510,20 +458,76 @@ int IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
         }
     }
     // Finally pack the second order sections
-    try
-    {
-        sos = FilterRepresentations::SOS(nSections, bs, as);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("Failed to pack sos %s", ia.what());
-        return -1;
-    }
-    return 0;
+    sos = FilterRepresentations::SOS(nSections, bs, as);
+    return;
 }
 
-int IIR::zpk2tf(const FilterRepresentations::ZPK &zpk,
-                FilterRepresentations::BA &ba)
+void IIR::tf2zpk(const FilterRepresentations::BA &ba,
+                 FilterRepresentations::ZPK &zpk)
+{
+    zpk.clear();
+    std::vector<double> b = ba.getNumeratorCoefficients();
+    std::vector<double> a = ba.getDenominatorCoefficients();
+    if (b.size() < 1)
+    {
+        RTSEIS_THROW_IA("%s", "No numerator coefficients");
+    }
+    if (a.size() < 1)
+    { 
+        RTSEIS_THROW_IA("%s", "No denominator coefficients");
+    }
+    double a0 = a[0];
+    if (a0 == 0){RTSEIS_THROW_IA("%s", "a[0] = 0");}
+    double b0 = b[0];
+    if (b0 == 0){RTSEIS_THROW_IA("%s", "b[0] = 0");}
+    // Normalize
+    #pragma omp simd
+    for (size_t i=0; i<b.size(); i++){b[i] = b[i]/a0;} 
+    #pragma omp simd
+    for (size_t i=0; i<a.size(); i++){a[i] = a[i]/a0;}
+    // Compute gain
+    double k = b[0]; 
+    #pragma omp simd
+    for (size_t i=0; i<b.size(); i++){b[i] = b[i]/k;}
+    //  Compute the roots of the numerator
+    constexpr size_t lone = 1;
+    constexpr size_t ltwo = 2;
+    std::vector<std::complex<double>> z(std::max(b.size(), ltwo) - lone);
+    if (b.size() > 1)
+    {
+#ifdef DEBUG
+        assert(Polynomial::roots(b, z) == 0);
+#else
+        Polynomial::roots(b, z);
+#endif
+    }
+    else
+    {
+        RTSEIS_WARNMSG("%s", "Warning no zeros");
+        z[0] = std::complex<double> (1, 0);
+    }
+    // Compute the roots of the denominator
+    std::vector<std::complex<double>> p(std::max(a.size(), ltwo) - lone);
+    if (a.size() > 1)
+    {
+#ifdef DEBUG
+        assert(Polynomial::roots(a, p) == 0);
+#else
+        Polynomial::roots(a, p);
+#endif
+    }
+    else
+    {
+        RTSEIS_WARNMSG("%s", "No poles");
+        p[0] = std::complex<double> (1, 0); 
+    }
+    // Make a transfer function
+    zpk = ZPK(z, p, k);
+    return;
+}
+                 
+void IIR::zpk2tf(const FilterRepresentations::ZPK &zpk,
+                 FilterRepresentations::BA &ba) noexcept
 {
     ba.clear();
     double k = zpk.getGain();
@@ -532,22 +536,12 @@ int IIR::zpk2tf(const FilterRepresentations::ZPK &zpk,
     //  (z - z_1)*(z - z_2)*...*(z - z_nzeros)
     std::vector<std::complex<double>> z = zpk.getZeros();
     std::vector<std::complex<double>> bz;
-    int ierr = Polynomial::poly(z, bz); 
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to expand numerator polynomial");
-        return -1;
-    }
+    Polynomial::poly(z, bz); 
     // Compute polynomial representation of zeros by expanding:
     //  (z - z_1)*(z - z_2)*...*(z - z_nzeros)
     std::vector<std::complex<double>> p = zpk.getPoles();
     std::vector<std::complex<double>> az;
-    ierr = Polynomial::poly(p, az); 
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to expand denominator polynomial");
-        return -1;
-    }
+    Polynomial::poly(p, az); 
     // Introduce gain into the numerator zeros
 #ifdef __INTEL_COMPILER
     #pragma ivdep
@@ -573,10 +567,10 @@ int IIR::zpk2tf(const FilterRepresentations::ZPK &zpk,
     }
     catch (const std::invalid_argument &ia)
     {
-        RTSEIS_ERRMSG("Failed to set coefficients %s", ia.what());
-        return -1;
+        ba.clear();
+        RTSEIS_ERRMSG("The impossible has happened %s", ia.what());
     }
-    return 0;
+    return;
 }
 
 void IIR::zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs,

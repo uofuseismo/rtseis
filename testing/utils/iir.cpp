@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cassert>
 #include <string>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
@@ -20,7 +21,6 @@ int rtseis_test_utils_design_zpk2sos(void)
     SOS sos;
     int n = 4;
     double Wn[1] = {0.1};
-    int ierr;
     const std::vector<double> bsRef1({
          4.16599204e-04,   8.33198409e-04,   4.16599204e-04,
          1.00000000e+00,   2.00000000e+00,   1.00000000e+00});
@@ -74,12 +74,15 @@ int rtseis_test_utils_design_zpk2sos(void)
     pell.push_back(std::complex<double> (0.62853608609, +0.683329390963));
     double kell = 0.00141539634442;
     ZPK zpk(zell, pell, kell);
-    ierr = IIR::zpk2sos(zpk, sos, SOSPairing::NEAREST);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to convert filter");
-        return EXIT_FAILURE;
+        IIR::zpk2sos(zpk, sos, SOSPairing::NEAREST);
     }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    } 
     sos.setEqualityTolerance(1.e-5);
     if (sos != sosRefEll)
     {
@@ -252,6 +255,86 @@ int rtseis_test_utils_design_iir_ap(void)
         zpkRef.print();
         zpk.print();
     }
+    return EXIT_SUCCESS;
+}
+//============================================================================//
+int rtseis_test_utils_design_zpk2tf(void)
+{
+    std::vector<std::complex<double>> zref;
+    std::vector<std::complex<double>> pref;
+    double kref = 0.8709635899560811;
+    zref.resize(6);
+    pref.resize(6);
+    zref[0] = std::complex<double> (0, -1.035276180410083);
+    zref[1] = std::complex<double> (0, -1.4142135623730951);
+    zref[2] = std::complex<double> (0, -3.8637033051562737);
+    zref[3] = std::complex<double> (0,  3.8637033051562737);
+    zref[4] = std::complex<double> (0,  1.4142135623730951);
+    zref[5] = std::complex<double> (0,  1.035276180410083);
+    pref[0] = std::complex<double> (-0.024686186266327684,-1.0305393933278832);
+    pref[1] = std::complex<double> (-0.12492582633346083,-1.3973824335027194);
+    pref[2] = std::complex<double> (-1.1553327165440157,-3.462761441343769);
+    pref[3] = std::complex<double> (-1.1553327165440157,+3.462761441343769);
+    pref[4] = std::complex<double> (-0.12492582633346083,+1.3973824335027194);
+    pref[5] = std::complex<double> (-0.024686186266327684,+1.0305393933278832);
+    ZPK zpkref, zpk;
+    try
+    {
+        zpkref = ZPK(zref, pref, kref);
+    } 
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    }
+
+    BA ba;
+    try
+    {
+        IIR::zpk2tf(zpkref, ba);
+        IIR::tf2zpk(ba, zpk);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
+    }
+    // Poles aren't gauranteed to be in any order so need to look
+    std::vector<std::complex<double>> z = zpk.getZeros();
+    std::vector<std::complex<double>> p = zpk.getPoles();
+    double k = zpk.getGain();
+    if (std::abs(k - kref) > 1.e-13)
+    {
+        RTSEIS_ERRMSG("Failed to compute gain %lf %lf", k, kref);
+        return EXIT_FAILURE;
+    }
+    assert(z.size() == zref.size());
+    for (size_t i=0; i<z.size(); i++)
+    {
+        bool lfound = false;
+        for (int j=0; j<zref.size(); j++)
+        {
+            if (std::abs(zref[j] - z[i]) < 1.e-13){lfound = true;}
+        }
+        if (!lfound)
+        {
+            RTSEIS_ERRMSG("Failed to find zero %ld", i);
+            return EXIT_FAILURE;
+        }
+     }
+     assert(p.size() == pref.size());
+     for (size_t i=0; i<p.size(); i++)
+     {
+         bool lfound = false;
+         for (int j=0; j<pref.size(); j++)
+         {
+             if (std::abs(pref[j] - p[i]) < 1.e-13){lfound = true;}
+         }  
+         if (!lfound)
+         {
+             RTSEIS_ERRMSG("Failed to find pole %ld", i);
+             return EXIT_FAILURE;
+         }
+     }
     return EXIT_SUCCESS;
 }
 //============================================================================//

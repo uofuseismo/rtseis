@@ -150,6 +150,26 @@ public:
      *                    For Chebyshev II filters this is the maximum ripple
      *                    in the stopband specified in dB.
      *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] zpk    The lowpass filter design.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designLowpassIIRFilter(const int n, const double r,
+                                const IIRPrototype ftype,
+                                const double ripple,
+                                FilterRepresentations::ZPK &zpk,
+                                const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
+    /*!
+     * @brief Designs an IIR lowpass filter.
+     * @param[in] n      The order of the filter.
+     * @param[in] r      The normalized cutoff frequency where 1 is the
+     *                   Nyquist frequency.
+     * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] ba    The lowpass filter design.
      * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
@@ -171,6 +191,7 @@ public:
      *                    in the stopband specified in dB.
      *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] sos   The lowpass filter design.
+     * @param[in] pairing   Defines the pole pairing policy.
      * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
@@ -178,8 +199,29 @@ public:
                                 const IIRPrototype ftype,
                                 const double ripple,
                                 FilterRepresentations::SOS &sos,
+                                const SOSPairing pairing = SOSPairing::NEAREST,
                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
 
+    /*! 
+     * @brief Designs an  IIR highpass filter.
+     * @param[in] n       The order of the filter.
+     * @param[in] r       The normalized cutoff frequency where 1 is the
+     *                    Nyquist frequency.
+     * @param[in] ftype   The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] zpk    The highpass filter design.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designHighpassIIRFilter(const int n, const double r,
+                                 const IIRPrototype ftype,
+                                 const double ripple,
+                                 FilterRepresentations::ZPK &zpk,
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
     /*! 
      * @brief Designs an  IIR highpass filter.
      * @param[in] n       The order of the filter.
@@ -212,6 +254,7 @@ public:
      *                    in the stopband specified in dB.
      *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] sos   The highpass filter design.
+     * @param[in] pairing   Defines the pole pairing policy.
      * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
@@ -219,8 +262,31 @@ public:
                                  const IIRPrototype ftype,
                                  const double ripple,
                                  FilterRepresentations::SOS &sos,
+                                 const SOSPairing pairing = SOSPairing::NEAREST,
                                  const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
 
+    /*! 
+     * @brief Designs an IIR bandpass filter.
+     * @param[in] n      The order of the filter.
+     * @param[in] r      The normalized cutoff frequencies where 1 is the
+     *                   Nyquist frequency.  Here, r.first is the low corner
+     *                   and r.second is the high corner, and it is required
+     *                   that r.second > r.first.
+     * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] zpk    The bandpass filter.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designBandpassIIRFilter(const int n, const std::pair<double, double> r,
+                                 const IIRPrototype ftype,
+                                 const double ripple,
+                                 FilterRepresentations::ZPK &zpk,
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
     /*! 
      * @brief Designs an IIR bandpass filter.
      * @param[in] n      The order of the filter.
@@ -257,6 +323,7 @@ public:
      *                    in the stopband specified in dB.
      *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] sos   The bandpass filter design.
+     * @param[in] pairing   Defines the pole pairing policy.
      * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
@@ -264,8 +331,31 @@ public:
                                  const IIRPrototype ftype,
                                  const double ripple,
                                  FilterRepresentations::SOS &sos,
+                                 const SOSPairing pairing = SOSPairing::NEAREST,
                                  const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
 
+    /*! 
+     * @brief Designs an IIR bandstop filter.
+     * @param[in] n      The order of the filter.
+     * @param[in] r      The normalized cutoff frequencies where 1 is the
+     *                   Nyquist frequency.  Here, r.first is the low corner
+     *                   and r.second is the high corner, and it is required
+     *                   that r.second > r.first.
+     * @param[in] ftype  The filter prototype.
+     * @param[in] ripple  For Chebyshev I filters this is the maximum ripple
+     *                    in the passband specified in dB.
+     *                    For Chebyshev II filters this is the maximum ripple
+     *                    in the stopband specified in dB.
+     *                    For Butterworth and Bessel filters this is ignored.
+     * @param[out] zpk    The bandstop filter.
+     * @param[in] ldigital  Specifies whether the filter is digital or analog.
+     * @throws std::invalid_argument if any parameters are incorrect.
+     */
+    void designBandstopIIRFilter(const int n, const std::pair<double, double> r,
+                                 const IIRPrototype ftype,
+                                 const double ripple,
+                                 FilterRepresentations::ZPK &zpk,
+                                 const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
     /*! 
      * @brief Designs an IIR bandstop filter.
      * @param[in] n      The order of the filter.
@@ -302,6 +392,7 @@ public:
      *                    in the stopband specified in dB.
      *                    For Butterworth and Bessel filters this is ignored.
      * @param[out] sos   The bandpass filter design.
+     * @param[in] pairing   Defines the pole pairing policy.
      * @param[in] ldigital  Specifies whether the filter is digital or analog.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
@@ -309,6 +400,7 @@ public:
                                  const IIRPrototype ftype,
                                  const double ripple,
                                  FilterRepresentations::SOS &sos,
+                                 const SOSPairing pairing = SOSPairing::NEAREST,
                                  const IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL);
     /*! @} */
 private:

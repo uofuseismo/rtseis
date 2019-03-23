@@ -28,18 +28,19 @@ void Waveform::convolve(
 {
     std::vector<double> svec(s.size());
     std::memcpy(svec.data(), s.data(), s.size()*sizeof(double));
-    RTSeis::Utilities::Math::Convolve::Mode mode = RTSeis::Utilities::Math::Convolve::Mode::FULL;
+    RTSeis::PostProcessing::SingleChannel::ConvolutionMode mode
+         = RTSeis::PostProcessing::SingleChannel::ConvolutionMode::FULL;
     if (smode == "full")
     {
-        mode = RTSeis::Utilities::Math::Convolve::Mode::FULL;
+        mode = RTSeis::PostProcessing::SingleChannel::ConvolutionMode::FULL;
     }
     else if (smode == "valid")
     {
-        mode = RTSeis::Utilities::Math::Convolve::Mode::VALID;
+        mode = RTSeis::PostProcessing::SingleChannel::ConvolutionMode::VALID;
     }
     else if (smode == "same")
     {
-        mode = RTSeis::Utilities::Math::Convolve::Mode::SAME;
+        mode = RTSeis::PostProcessing::SingleChannel::ConvolutionMode::SAME;
     }
     else
     {

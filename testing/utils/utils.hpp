@@ -12,6 +12,7 @@ int rtseis_test_utils_interpolation(void);
 int rtseis_test_utils_transforms(void);
 int rtseis_test_utils_design_iir_ap(void);
 int rtseis_test_utils_design_zpk2sos(void);
+int rtseis_test_utils_design_zpk2tf(void);
 int rtseis_test_utils_design_iir(void);
 int rtseis_test_utils_design_fir_fir1(void);
 int rtseis_test_utils_design_freqs(void);

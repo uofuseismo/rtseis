@@ -28,9 +28,9 @@ namespace Convolve
  */
 enum class Implementation
 {
-    AUTO = 0,   /*!< Let IPP decide. */
-    DIRECT = 1, /*!< Time domain implementation. */
-    FFT = 2     /*!< FFT implementation. */
+    AUTO,   /*!< Let IPP decide. */
+    DIRECT, /*!< Time domain implementation. */
+    FFT     /*!< Frequency domain implementation. */
 }; // End implementation
 
 /*!
@@ -40,21 +40,21 @@ enum class Implementation
  */
 enum Mode
 {
-    FULL = 0,   /*!< A full discrete convolution or correlation of
-                     inputs which will have length \f$ m + n - 1 \f$.
-                     Because the signals do not overlap completely
-                     at the convolution edges boundary effects can be
-                     seen. */
-    VALID = 1,  /*!< The output consists only of those elements that
-                     do not rely on zero-padding.  The return 
-                     convolution or correlation will have length
-                     \f$ \max(m,n) - \min(m,n) + 1 \f$.  This will
-                      only be computed where the input signals completely
-                     overlap so that there will not be edge effects. */
-    SAME  = 2,  /*!< The output is the same size as the first input
-                     and centered with respect to the FULL output.
-                     The resulting convolution or correlation will
-                     have length \f$ \max(m, n) \f$. */
+    FULL,   /*!< A full discrete convolution or correlation of
+                 inputs which will have length \f$ m + n - 1 \f$.
+                 Because the signals do not overlap completely
+                 at the convolution edges boundary effects can be
+                 seen. */
+    VALID,  /*!< The output consists only of those elements that
+                 do not rely on zero-padding.  The return 
+                 convolution or correlation will have length
+                 \f$ \max(m,n) - \min(m,n) + 1 \f$.  This will
+                 only be computed where the input signals completely
+                 overlap so that there will not be edge effects. */
+    SAME,  /*!< The output is the same size as the first input
+                 and centered with respect to the FULL output.
+                 The resulting convolution or correlation will
+                 have length \f$ \max(m, n) \f$. */
 }; // End mode
 
 /*!

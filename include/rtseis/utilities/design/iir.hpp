@@ -35,9 +35,10 @@ namespace IIR
  *                     (thereby making Wn half-cycles per sample.)   For
  *                     analog filters, Wn is the angular frequency in rad/s.
  * @param[in] rp       For Chebyshev I filters this specifies the maximum
- *                     ripple in the passband in decibels.
+ *                     ripple in the passband in decibels and must be positive.
  * @param[in] rs       For Chebyshev II filters this specifies the minimum
- *                     attenutation in the stop band in decibels.
+ *                     attenutation in the stop band in decibels and must
+ *                     be positive.
  * @param[in] btype    The type of filter, e.g., lowpass, highpass,
  *                     bandpass, or bandstop.
  * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel,
@@ -65,9 +66,10 @@ void iirfilter(const int n, const double *W,
  *                     (thereby making Wn half-cycles per sample.)   For
  *                     analog filters, Wn is the angular frequency in rad/s.
  * @param[in] rp       For Chebyshev I filters this specifies the maximum
- *                     ripple in the passband in decibels.
+ *                     ripple in the passband in decibels and must be positive.
  * @param[in] rs       For Chebyshev II filters this specifies the minimum
- *                     attenutation in the stop band in decibels.
+ *                     attenutation in the stop band in decibels and must
+ *                     be positive.
  * @param[in] btype    The type of filter, e.g., lowpass, highpass,
  *                     bandpass, or bandstop.
  * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel,
@@ -95,9 +97,10 @@ void iirfilter(const int n, const double *W,
  *                     (thereby making Wn half-cycles per sample.)   For
  *                     analog filters, Wn is the angular frequency in rad/s.
  * @param[in] rp       For Chebyshev I filters this specifies the maximum
- *                     ripple in the passband in decibels.
+ *                     ripple in the passband in decibels and must be positive.
  * @param[in] rs       For Chebyshev II filters this specifies the minimum
- *                     attenutation in the stop band in decibels.
+ *                     attenutation in the stop band in decibels and must
+ *                     be positive.
  * @param[in] btype    The type of filter, e.g., lowpass, highpass,
  *                     bandpass, or bandstop.
  * @param[in] ftype    The IIR filter protoytpe, e.g., Butterworth, Bessel,
@@ -124,11 +127,28 @@ void iirfilter(const int n, const double *W,
  *                     section order sections.
  * @param[in] pairing  The pairing strategy.
  * @result 0 indicates success.
+ * @throws std::invalid_argument if the number of poles in zpk is not
+ *         equal to the number of zeros or there are no poles or zeros
+ *         zpk.
  * @ingroup rtseis_utils_design_iir
  */
-int zpk2sos(const FilterRepresentations::ZPK &zpk,
-            FilterRepresentations::SOS &sos,
-            const SOSPairing pairing = SOSPairing::NEAREST);
+void zpk2sos(const FilterRepresentations::ZPK &zpk,
+             FilterRepresentations::SOS &sos,
+             const SOSPairing pairing = SOSPairing::NEAREST);
+/*!
+ * @brief Computes the pole-zero representation from a polynomial
+ *        transfer function.
+ * @param[in] ba    The transfer function to convert to zeros, poles, and
+ *                  gain.
+ * @param[out] zpk  The zeros, poles, and gain representation of the input
+ *                  transfer function.
+ * @throws std::invalid_argument if there are no numerator or denominator
+ *         coefficients or the first numerator or denominator coefficient
+ *         is 0.
+ * @ingroup rtseis_utils_design_iir
+ */
+void tf2zpk(const FilterRepresentations::BA &ba,
+            FilterRepresentations::ZPK &zpk); 
 /*! 
  * @brief Computes the polynomial transfer function from a pole-zero
  *        representation.
@@ -139,8 +159,8 @@ int zpk2sos(const FilterRepresentations::ZPK &zpk,
  * @result 0 indicates success.
  * @ingroup rtseis_utils_design_iir
  */
-int zpk2tf(const FilterRepresentations::ZPK &zpk,
-           FilterRepresentations::BA &ba);
+void zpk2tf(const FilterRepresentations::ZPK &zpk,
+            FilterRepresentations::BA &ba) noexcept;
 /*!
  * @brief Converts a lowpass filter prototype to a different cutoff
  *        frequency.

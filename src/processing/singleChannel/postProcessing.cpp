@@ -4,6 +4,9 @@
 #include <string>
 #include <exception>
 #include <vector>
+#ifdef DEBUG
+#include <cassert>
+#endif
 #include <memory>
 #include <algorithm>
 #include <ipps.h>
@@ -18,6 +21,8 @@
 #include "rtseis/postProcessing/singleChannel/detrend.hpp"
 #include "rtseis/postProcessing/singleChannel/demean.hpp"
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
+#include "rtseis/utilities/design/enums.hpp"
+#include "rtseis/utilities/design/filterDesigner.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
@@ -27,7 +32,21 @@
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
 
-using namespace RTSeis::PostProcessing::SingleChannel;
+using namespace RTSeis;
+using namespace PostProcessing::SingleChannel;
+
+static inline 
+double computeNyquistFrequencyFromSamplingPeriod(const double dt);
+static inline
+double computeNormalizedFrequencyFromSamplingPeriod(const double fc,
+                                                    const double dt);
+static inline Utilities::Math::Convolve::Mode
+classifyConvolveMode(const ConvolutionMode mode);
+static inline Utilities::Math::Convolve::Implementation
+classifyConvolveImplementation(const ConvolutionImplementation implementation);
+static inline Utilities::FilterDesign::IIRPrototype
+classifyIIRPrototype(const IIRPrototype prototype);
+
 
 static inline void reverse(std::vector<double> &x);
 static inline void reverse(const std::vector<double> &x,
@@ -70,14 +89,14 @@ static inline void reverse(const std::vector<double> &x,
     return;
 }
 
-class Waveform::DataImpl
+class Waveform::WaveformImpl
 {
 public:
-    DataImpl(void)
+    WaveformImpl(void)
     {
         return;
     }
-    ~DataImpl(void)
+    ~WaveformImpl(void)
     {
         return;
     }
@@ -108,6 +127,7 @@ public:
         return static_cast<int> (x_.size());
     }
 //private:
+    Utilities::FilterDesign::FilterDesigner filterDesigner;
     std::vector<double> x_; 
     std::vector<double> y_;
     /// Sampling period
@@ -115,7 +135,7 @@ public:
 };
 
 Waveform::Waveform(const double dt) :
-    pImpl(new DataImpl()) 
+    pImpl(new WaveformImpl()) 
 {
     if (dt <= 0)
     {
@@ -201,25 +221,76 @@ size_t Waveform::getOutputLength(void) const
 
 void Waveform::convolve(
     const std::vector<double> &s,
-    const Utilities::Math::Convolve::Mode mode,
-    const Utilities::Math::Convolve::Implementation implementation)
+    const ConvolutionMode mode,
+    const ConvolutionImplementation implementation)
 {
     int nx = pImpl->getLengthOfInputSignal();
     int ny = static_cast<int> (s.size());
-    if (nx < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    } 
-    if (ny < 1)
-    {
-        RTSEIS_THROW_IA("%s", "No data points in s");
-    }
+    if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
+    if (ny < 1){RTSEIS_THROW_IA("%s", "No data points in s");}
+    // Classify the convolution mode
+    Utilities::Math::Convolve::Mode convcorMode;
+    convcorMode = classifyConvolveMode(mode); // throws
+    // Classify the convolution implementation
+    Utilities::Math::Convolve::Implementation convcorImpl;
+    convcorImpl = classifyConvolveImplementation(implementation); // throws
+    // Perform the convolution
     int ierr = Utilities::Math::Convolve::convolve(pImpl->x_, s, pImpl->y_,
-                                                   mode, implementation);
+                                                   convcorMode, convcorImpl);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute convolution");
+        pImpl->y_.resize(0);
+        return;
+    }
+    return;
+}
+
+void Waveform::correlate(
+    const std::vector<double> &s, 
+    const ConvolutionMode mode,
+    const ConvolutionImplementation implementation)
+{
+    int nx = pImpl->getLengthOfInputSignal();
+    int ny = static_cast<int> (s.size());
+    if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
+    if (ny < 1){RTSEIS_THROW_IA("%s", "No data points in s");}
+    // Classify the convolution mode
+    Utilities::Math::Convolve::Mode convcorMode;
+    convcorMode = classifyConvolveMode(mode); // throws
+    // Classify the convolution implementation
+    Utilities::Math::Convolve::Implementation convcorImpl;
+    convcorImpl = classifyConvolveImplementation(implementation); // throws
+    // Perform the correlation
+    int ierr = Utilities::Math::Convolve::correlate(pImpl->x_, s, pImpl->y_,
+                                                    convcorMode, convcorImpl);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute correlation");
+        pImpl->y_.resize(0);
+        return;
+    }
+    return;
+}
+
+void Waveform::autocorrelate(
+    const ConvolutionMode mode,
+    const ConvolutionImplementation implementation)
+{
+    int nx = pImpl->getLengthOfInputSignal();
+    if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
+    // Classify the convolution mode
+    Utilities::Math::Convolve::Mode convcorMode;
+    convcorMode = classifyConvolveMode(mode); // throws
+    // Classify the convolution implementation
+    Utilities::Math::Convolve::Implementation convcorImpl;
+    convcorImpl = classifyConvolveImplementation(implementation); // throws
+    // Perform the correlation
+    int ierr = Utilities::Math::Convolve::autocorrelate(pImpl->x_, pImpl->y_,
+                                                    convcorMode, convcorImpl);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute autocorrelation");
         pImpl->y_.resize(0);
         return;
     }
@@ -271,6 +342,32 @@ void Waveform::detrend(void)
     pImpl->resizeOutputData(len);
     double  *y = pImpl->getOutputDataPointer();
     detrend.apply(len, x, y); 
+    return;
+}
+//----------------------------------------------------------------------------//
+//                                Lowpass Filter                              //
+//----------------------------------------------------------------------------//
+void Waveform::lowpassIIRFilter(const int order, const double fc,
+                                const IIRPrototype prototype,
+                                const double ripple,
+                                const bool lzeroPhase,
+                                const IIRFilterImplementation implementation)
+{
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    Utilities::FilterDesign::IIRPrototype ptype;
+    ptype = classifyIIRPrototype(prototype);
+    if (implementation == IIRFilterImplementation::SOS)
+    {
+        Utilities::FilterRepresentations::SOS sos;
+        pImpl->filterDesigner.designLowpassIIRFilter(
+                        order, r, ptype, ripple, sos,
+                        Utilities::FilterDesign::SOSPairing::NEAREST,
+                        Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+    }
+    else
+    {
+        Utilities::FilterRepresentations::BA ba;
+    }
     return;
 }
 //----------------------------------------------------------------------------//
@@ -427,4 +524,103 @@ void Waveform::taper(const double pct,
     double  *y = pImpl->getOutputDataPointer();
     taper.apply(len, x, y);
     return;
+}
+
+//----------------------------------------------------------------------------//
+//                              Private Functions                             //
+//----------------------------------------------------------------------------//
+double computeNormalizedFrequencyFromSamplingPeriod(const double fc,
+                                                    const double dt)
+{
+    double r = 0;
+    double fnyq = computeNyquistFrequencyFromSamplingPeriod(dt); 
+    if (fc < 0 || fc > fnyq)
+    {
+        RTSEIS_THROW_IA("fc=%lf must be in range [0,%lf]", fc, fnyq);
+    }
+    r = fc/fnyq;
+    return r;
+}
+double computeNyquistFrequencyFromSamplingPeriod(const double dt)
+{
+#ifdef DEBUG
+    assert(dt > 0);
+#endif
+    return 1.0/(2.0*dt);
+}
+Utilities::Math::Convolve::Mode
+classifyConvolveMode(const ConvolutionMode mode)
+{
+    Utilities::Math::Convolve::Mode convcorMode;
+    if (mode == ConvolutionMode::FULL)
+    {
+        convcorMode = Utilities::Math::Convolve::Mode::FULL;
+    }
+    else if (mode == ConvolutionMode::SAME)
+    {
+        convcorMode = Utilities::Math::Convolve::Mode::SAME;
+    }
+    else if (mode == ConvolutionMode::VALID)
+    {
+        convcorMode = Utilities::Math::Convolve::Mode::VALID;
+    }
+    else
+    {
+        RTSEIS_THROW_IA("Unsupported convolution mode=%d",
+                        static_cast<int> (mode));
+    }
+    return convcorMode;
+}
+
+Utilities::Math::Convolve::Implementation 
+classifyConvolveImplementation(const ConvolutionImplementation implementation)
+{
+    // Classify the convolution implementaiton
+    Utilities::Math::Convolve::Implementation convcorImpl;
+    if (implementation == ConvolutionImplementation::AUTO)
+    {   
+        convcorImpl = Utilities::Math::Convolve::Implementation::AUTO;
+    }   
+    else if (implementation == ConvolutionImplementation::DIRECT)
+    {   
+        convcorImpl = Utilities::Math::Convolve::Implementation::DIRECT;
+    }   
+    else if (implementation == ConvolutionImplementation::FFT)
+    {   
+        convcorImpl = Utilities::Math::Convolve::Implementation::FFT;
+    }   
+    else
+    {   
+        RTSEIS_THROW_IA("Unsupported convolution implementation=%d",
+                        static_cast<int> (implementation));
+    }
+    return convcorImpl;
+}
+
+Utilities::FilterDesign::IIRPrototype
+classifyIIRPrototype(const IIRPrototype prototype)
+{
+    Utilities::FilterDesign::IIRPrototype ptype;
+    if (prototype == IIRPrototype::BESSEL)
+    {
+        ptype = Utilities::FilterDesign::IIRPrototype::BESSEL;
+    }
+    else if (prototype == IIRPrototype::BUTTERWORTH)
+    {
+        ptype = Utilities::FilterDesign::IIRPrototype::BUTTERWORTH;
+    }
+    else if (prototype == IIRPrototype::CHEBYSHEV1)
+    {
+        ptype = Utilities::FilterDesign::IIRPrototype::CHEBYSHEV1;
+    }
+    else if (prototype == IIRPrototype::CHEBYSHEV2)
+    {
+        ptype = Utilities::FilterDesign::IIRPrototype::CHEBYSHEV2;
+    }
+    else
+    {
+        RTSEIS_THROW_IA("Unsupported prototype=%d",
+                        static_cast<int> (prototype));
+    }
+    return ptype;
 }

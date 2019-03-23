@@ -14,6 +14,10 @@
 using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterDesign;
 
+static inline
+std::pair<double,double> 
+iirPrototypeToRipple(const IIRPrototype ftype, const double r);
+
 
 struct FIRDesignParameters
 {
@@ -94,16 +98,49 @@ struct FIRDesignParameters
 struct IIRDesignParameters
 {
     IIRDesignParameters(void){return;}
+    /// IIR direct form constructor for lowpass/highpass
+    IIRDesignParameters(const int orderIn,
+                        const double r,
+                        const double rippleIn,
+                        const IIRPrototype prototypeIn,
+                        const Bandtype btypeIn,
+                        const IIRFilterDomain ldigitalIn) :
+        r1(r),
+        r2(0),
+        ripple(rippleIn),
+        order(orderIn),
+        prototype(prototypeIn),
+        btype(btypeIn),
+        ldigital(ldigitalIn)
+    {
+        return;
+    }
+    /// IIR direct form constructor for bandpass/bandstop
+    IIRDesignParameters(const int orderIn,
+                        const std::pair<double,double> r,
+                        const double rippleIn,
+                        const IIRPrototype prototypeIn,
+                        const Bandtype btypeIn,
+                        const IIRFilterDomain ldigitalIn) :
+        r1(r.first),
+        r2(r.second),
+        ripple(rippleIn),
+        order(orderIn),
+        prototype(prototypeIn),
+        btype(btypeIn),
+        ldigital(ldigitalIn)
+    {
+        return;
+    }
     ~IIRDesignParameters(void){return;}
     void clear(void)
     {
         r1 = 0;
         r2 = 0;
+        ripple = 0;
         order = 0;
         prototype = IIRPrototype::BUTTERWORTH;
         btype = Bandtype::LOWPASS;
-        pairing = SOSPairing::NEAREST;
-        lsos = false;
         ldigital = IIRFilterDomain::DIGITAL;
     }
     IIRDesignParameters& operator=(const IIRDesignParameters &parms)
@@ -111,11 +148,10 @@ struct IIRDesignParameters
         if (&parms == this){return *this;}
         r1 = parms.r1;
         r2 = parms.r2;
+        ripple = parms.ripple;
         order = parms.order;
         prototype  = parms.prototype;
         btype  = parms.btype;
-        pairing = parms.pairing;
-        lsos = parms.lsos;
         ldigital = parms.ldigital;
         return *this;
     }
@@ -127,15 +163,14 @@ struct IIRDesignParameters
         if (btype == Bandtype::BANDPASS ||
             btype == Bandtype::BANDSTOP)
         {
-            if(r2 != parms.r2){return false;}
+            if (r2 != parms.r2){return false;}
+        }
+        if (prototype == IIRPrototype::CHEBYSHEV1 ||
+            prototype == IIRPrototype::CHEBYSHEV2)
+        {
+            if (ripple != parms.ripple){return false;}
         }
         if (ldigital != parms.ldigital){return false;} 
-        if (( lsos && !parms.lsos) ||
-            (!lsos &&  parms.lsos)){return false;}
-        if (lsos)
-        {
-            if (pairing != parms.pairing){return false;}
-        }
         return true; 
     }
     bool operator!=(const IIRDesignParameters &parms) const
@@ -146,6 +181,113 @@ struct IIRDesignParameters
     double r1 = 0;
     /// Second critical frequency
     double r2 = 0;
+    /// The ripple for Cheby1 and Cheby2 filters
+    double ripple = 0;
+    /// Filter order
+    int order = 0;
+    /// The window type
+    IIRPrototype prototype = IIRPrototype::BUTTERWORTH;
+    /// The filter band
+    Bandtype btype = Bandtype::LOWPASS;
+    /// Digital?
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
+};
+//----------------------------------------------------------------------------//
+struct SOSDesignParameters
+{
+    SOSDesignParameters(void){return;}
+    /// SOS constructor for lowpass/highpass
+    SOSDesignParameters(const int orderIn,
+                        const double r,
+                        const double rippleIn,
+                        const IIRPrototype prototypeIn,
+                        const Bandtype btypeIn,
+                        const SOSPairing pairingIn,
+                        const IIRFilterDomain ldigitalIn) :
+        r1(r),
+        r2(0),
+        ripple(rippleIn),
+        order(orderIn),
+        prototype(prototypeIn),
+        btype(btypeIn),
+        pairing(pairingIn),
+        ldigital(ldigitalIn)
+    {
+        return;
+    }
+    /// IIR sos constructor for bandpass/bandstop
+    SOSDesignParameters(const int orderIn,
+                        const std::pair<double,double> r,
+                        const double rippleIn,
+                        const IIRPrototype prototypeIn,
+                        const Bandtype btypeIn,
+                        const SOSPairing pairingIn,
+                        const IIRFilterDomain ldigitalIn) :
+        r1(r.first),
+        r2(r.second),
+        ripple(rippleIn),
+        order(orderIn),
+        prototype(prototypeIn),
+        btype(btypeIn),
+        pairing(pairingIn),
+        ldigital(ldigitalIn)
+    {   
+        return;
+    }
+    ~SOSDesignParameters(void){return;}
+    void clear(void)
+    {
+        r1 = 0;
+        r2 = 0;
+        ripple = 0;
+        order = 0;
+        prototype = IIRPrototype::BUTTERWORTH;
+        btype = Bandtype::LOWPASS;
+        pairing = SOSPairing::NEAREST;
+        ldigital = IIRFilterDomain::DIGITAL;
+    }
+    SOSDesignParameters& operator=(const SOSDesignParameters &parms)
+    {   
+        if (&parms == this){return *this;}
+        r1 = parms.r1;
+        r2 = parms.r2;
+        ripple = parms.ripple;
+        order = parms.order;
+        prototype  = parms.prototype;
+        btype  = parms.btype;
+        pairing = parms.pairing;
+        ldigital = parms.ldigital;
+        return *this;
+    }
+    bool operator==(const SOSDesignParameters &parms) const
+    {   
+        if (prototype != parms.prototype){return false;}
+        if (btype  != parms.btype){return false;}
+        if (r1 != parms.r1){return false;}
+        if (btype == Bandtype::BANDPASS ||
+            btype == Bandtype::BANDSTOP)
+        {
+            if (r2 != parms.r2){return false;}
+        }
+        if (prototype == IIRPrototype::CHEBYSHEV1 ||
+            prototype == IIRPrototype::CHEBYSHEV2)
+        {
+            if (ripple != parms.ripple){return false;}
+        }
+        if (ldigital != parms.ldigital){return false;} 
+        if (pairing != parms.pairing){return false;}
+        return true; 
+    }
+    bool operator!=(const SOSDesignParameters &parms) const
+    {   
+        return !(*this == parms);
+    }
+    /// First critical frequency
+    double r1 = 0;
+    /// Second critical frequency
+    double r2 = 0;
+    /// The ripple for Cheby1 and Cheby2 filters
+    double ripple = 0;
     /// Filter order
     int order = 0;
     /// The window type
@@ -154,8 +296,6 @@ struct IIRDesignParameters
     Bandtype btype = Bandtype::LOWPASS;
     /// Pole pairing
     SOSPairing pairing = SOSPairing::NEAREST;
-    /// SOS?
-    bool lsos = false;
     /// Digital?
     IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
 };
@@ -197,7 +337,7 @@ class FilterDesigner::FilterDesignerImpl
         std::vector<FilterRepresentations::ZPK> zpkCache;
         std::vector<IIRDesignParameters> baDesigns;
         std::vector<FilterRepresentations::BA> baCache;
-        std::vector<IIRDesignParameters> sosDesigns;
+        std::vector<SOSDesignParameters> sosDesigns;
         std::vector<FilterRepresentations::SOS> sosCache; 
         std::vector<FIRDesignParameters> firDesigns;
         std::vector<FilterRepresentations::FIR> firCache;
@@ -219,7 +359,8 @@ FilterDesigner::FilterDesigner(const FilterDesigner &design)
 
 FilterDesigner::~FilterDesigner(void)
 {
-    if (pImpl){pImpl->clear();}
+    pImpl->clear();
+    return;
 }
 
 FilterDesigner& FilterDesigner::operator=(const FilterDesigner &design)
@@ -245,8 +386,370 @@ void FilterDesigner::clear(void)
 
 //============================================================================//
 
-//void FilterDesigner::designLowpassIIRFilter(
-//    const int order,
+void FilterDesigner::designLowpassIIRFilter(
+    const int n, const double r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::ZPK &zpk,
+    const IIRFilterDomain ldigital)
+{
+    zpk.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::LOWPASS, ldigital);
+    // Look for design
+    auto it = std::find(pImpl->zpkDesigns.begin(),
+                        pImpl->zpkDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->zpkDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->zpkDesigns.begin(), it);
+        zpk = pImpl->zpkCache[indx];
+    }
+    else
+    {
+        double W[1] = {r};
+        std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
+        IIR::iirfilter(n, W, rp.first, rp.second,
+                       Bandtype::LOWPASS, ftype, zpk, ldigital);
+        pImpl->zpkDesigns.push_back(parms);
+        pImpl->zpkCache.push_back(zpk);
+    }   
+    return;
+}
+
+void FilterDesigner::designHighpassIIRFilter(
+    const int n, const double r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::ZPK &zpk,
+    const IIRFilterDomain ldigital)
+{
+    zpk.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::HIGHPASS,ldigital);
+    // Look for design
+    auto it = std::find(pImpl->zpkDesigns.begin(),
+                        pImpl->zpkDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->zpkDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->zpkDesigns.begin(), it);
+        zpk = pImpl->zpkCache[indx];
+    }
+    else
+    {
+        double W[1] = {r};
+        std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
+        IIR::iirfilter(n, W, rp.first, rp.second,
+                       Bandtype::HIGHPASS, ftype, zpk, ldigital);
+        pImpl->zpkDesigns.push_back(parms);
+        pImpl->zpkCache.push_back(zpk);
+    }
+    return;
+}
+
+void FilterDesigner::designBandpassIIRFilter(
+    const int n, const std::pair<double,double> r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::ZPK &zpk,
+    const IIRFilterDomain ldigital)
+{
+    zpk.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::BANDPASS,ldigital);
+    // Look for design
+    auto it = std::find(pImpl->zpkDesigns.begin(),
+                        pImpl->zpkDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->zpkDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->zpkDesigns.begin(), it);
+        zpk = pImpl->zpkCache[indx];
+    }
+    else
+    {
+        double W[2] = {r.first, r.second};
+        std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
+        IIR::iirfilter(n, W, rp.first, rp.second,
+                       Bandtype::BANDPASS, ftype, zpk, ldigital);
+        pImpl->zpkDesigns.push_back(parms);
+        pImpl->zpkCache.push_back(zpk);
+    }
+    return;
+}
+
+void FilterDesigner::designBandstopIIRFilter(
+    const int n, const std::pair<double,double> r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::ZPK &zpk,
+    const IIRFilterDomain ldigital)
+{
+    zpk.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::BANDSTOP,ldigital);
+    // Look for design
+    auto it = std::find(pImpl->zpkDesigns.begin(),
+                        pImpl->zpkDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->zpkDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->zpkDesigns.begin(), it);
+        zpk = pImpl->zpkCache[indx];
+    }
+    else
+    {
+        double W[2] = {r.first, r.second};
+        std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
+        IIR::iirfilter(n, W, rp.first, rp.second,
+                       Bandtype::BANDSTOP, ftype, zpk, ldigital);
+        pImpl->zpkDesigns.push_back(parms);
+        pImpl->zpkCache.push_back(zpk);
+    }
+    return;
+}
+
+//============================================================================//
+
+void FilterDesigner::designLowpassIIRFilter(
+    const int n, const double r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::BA &ba,
+    const IIRFilterDomain ldigital)
+{
+    ba.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::LOWPASS, ldigital);
+    // Look for design
+    auto it = std::find(pImpl->baDesigns.begin(),
+                        pImpl->baDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->baDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->baDesigns.begin(), it);
+        ba = pImpl->baCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designLowpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2tf(zpk, ba);
+        pImpl->baDesigns.push_back(parms);
+        pImpl->baCache.push_back(ba);
+    }
+    return;
+}
+
+void FilterDesigner::designHighpassIIRFilter(
+    const int n, const double r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::BA &ba,
+    const IIRFilterDomain ldigital)
+{
+    ba.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::HIGHPASS,ldigital);
+    // Look for design
+    auto it = std::find(pImpl->baDesigns.begin(),
+                        pImpl->baDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->baDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->baDesigns.begin(), it);
+        ba = pImpl->baCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designHighpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2tf(zpk, ba);
+        pImpl->baDesigns.push_back(parms);
+        pImpl->baCache.push_back(ba);
+    }
+    return;
+}
+
+void FilterDesigner::designBandpassIIRFilter(
+    const int n, const std::pair<double,double> r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::BA &ba,
+    const IIRFilterDomain ldigital)
+{
+    ba.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::BANDPASS,ldigital);
+    // Look for design
+    auto it = std::find(pImpl->baDesigns.begin(),
+                        pImpl->baDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->baDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->baDesigns.begin(), it);
+        ba = pImpl->baCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designBandpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2tf(zpk, ba);
+        pImpl->baDesigns.push_back(parms);
+        pImpl->baCache.push_back(ba);
+    }
+    return;
+}
+
+void FilterDesigner::designBandstopIIRFilter(
+    const int n, const std::pair<double,double> r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::BA &ba,
+    const IIRFilterDomain ldigital)
+{
+    ba.clear();
+    IIRDesignParameters parms(n, r, ripple, ftype, Bandtype::BANDSTOP,ldigital);
+    // Look for design
+    auto it = std::find(pImpl->baDesigns.begin(),
+                        pImpl->baDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->baDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->baDesigns.begin(), it);
+        ba = pImpl->baCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designBandstopIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2tf(zpk, ba);
+        pImpl->baDesigns.push_back(parms);
+        pImpl->baCache.push_back(ba);
+    }
+    return;
+}
+
+//============================================================================//
+
+void FilterDesigner::designLowpassIIRFilter(
+    const int n, const double r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::SOS &sos,
+    const SOSPairing pairing,   
+    const IIRFilterDomain ldigital)
+{
+    sos.clear();
+    SOSDesignParameters parms(n, r, ripple, ftype, Bandtype::LOWPASS,
+                              pairing, ldigital);
+    // Look for design
+    auto it = std::find(pImpl->sosDesigns.begin(),
+                        pImpl->sosDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->sosDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->sosDesigns.begin(), it);
+        sos = pImpl->sosCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designLowpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2sos(zpk, sos);
+        pImpl->sosDesigns.push_back(parms);
+        pImpl->sosCache.push_back(sos);
+    }
+    return;
+}
+
+void FilterDesigner::designHighpassIIRFilter(
+    const int n, const double r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::SOS &sos,
+    const SOSPairing pairing,
+    const IIRFilterDomain ldigital)
+{
+    sos.clear();
+    SOSDesignParameters parms(n, r, ripple, ftype, Bandtype::HIGHPASS,
+                              pairing, ldigital);
+    // Look for design
+    auto it = std::find(pImpl->sosDesigns.begin(),
+                        pImpl->sosDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->sosDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->sosDesigns.begin(), it);
+        sos = pImpl->sosCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designHighpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2sos(zpk, sos);
+        pImpl->sosDesigns.push_back(parms);
+        pImpl->sosCache.push_back(sos);
+    }
+    return;
+}
+
+void FilterDesigner::designBandpassIIRFilter(
+    const int n, const std::pair<double,double> r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::SOS &sos,
+    const SOSPairing pairing,
+    const IIRFilterDomain ldigital)
+{
+    sos.clear();
+    SOSDesignParameters parms(n, r, ripple, ftype, Bandtype::BANDPASS,
+                              pairing, ldigital);
+    // Look for design
+    auto it = std::find(pImpl->sosDesigns.begin(),
+                        pImpl->sosDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->sosDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->sosDesigns.begin(), it);
+        sos = pImpl->sosCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designBandpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2sos(zpk, sos);
+        pImpl->sosDesigns.push_back(parms);
+        pImpl->sosCache.push_back(sos);
+    }
+    return;
+}
+
+void FilterDesigner::designBandstopIIRFilter(
+    const int n, const std::pair<double,double> r,
+    const IIRPrototype ftype,
+    const double ripple,
+    FilterRepresentations::SOS &sos,
+    const SOSPairing pairing,
+    const IIRFilterDomain ldigital)
+{
+    sos.clear();
+    SOSDesignParameters parms(n, r, ripple, ftype, Bandtype::BANDSTOP,
+                              pairing, ldigital);
+    // Look for design
+    auto it = std::find(pImpl->sosDesigns.begin(),
+                        pImpl->sosDesigns.end(), parms);
+    // Found! Copy the design
+    if (it != pImpl->sosDesigns.end())
+    {
+        size_t indx = std::distance(pImpl->sosDesigns.begin(), it);
+        sos = pImpl->sosCache[indx];
+    }
+    else
+    {
+        FilterRepresentations::ZPK zpk;
+        designBandstopIIRFilter(n, r, ftype, ripple, zpk, ldigital);
+        IIR::zpk2sos(zpk, sos);
+        pImpl->sosDesigns.push_back(parms);
+        pImpl->sosCache.push_back(sos);
+    }
+    return;
+}
+
 //============================================================================//
 
 void FilterDesigner::designLowpassFIRFilter(
@@ -351,4 +854,19 @@ void FilterDesigner::designBandstopFIRFilter(
         pImpl->firCache.push_back(fir);
     }
     return;
+}
+
+std::pair<double,double> 
+iirPrototypeToRipple(const IIRPrototype ftype, const double r)
+{
+    std::pair<double,double> ripple(0,0);
+    if (ftype == IIRPrototype::CHEBYSHEV1)
+    {
+        ripple = std::make_pair(r, 0);
+    }
+    else if (ftype == IIRPrototype::CHEBYSHEV2)
+    {
+        ripple = std::make_pair(0, r);
+    }
+    return ripple;
 }

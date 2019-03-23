@@ -57,10 +57,10 @@ enum class Bandtype
  */
 enum class SOSPairing
 {
-    NEAREST = 0,  /*!< This attempts to minimize the peak gain. */
-    KEEP_ODD = 1  /*!< This attempts to minimize the peak gain
-                       subject to the constraint that odd-order
-                       systems should retain one section as first order. */
+    NEAREST,  /*!< This attempts to minimize the peak gain. */
+    KEEP_ODD  /*!< This attempts to minimize the peak gain
+                   subject to the constraint that odd-order
+                   systems should retain one section as first order. */
 };
 
 }; // End Filter design

@@ -83,6 +83,14 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed sos filter design");
 
+    ierr = rtseis_test_utils_design_zpk2tf();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed zpk2tf");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed zpk2tf test");
+
     ierr = rtseis_test_utils_design_fir_fir1();
     if (ierr != EXIT_SUCCESS)
     {

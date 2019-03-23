@@ -1,16 +1,8 @@
 #ifndef RTSEIS_POSTPROCESSING_SC_WAVEFORM
 #define RTSEIS_POSTPROCESSING_SC_WAVEFORM 1
 #include <memory>
+#include <vector>
 #include <string>
-#ifndef RTSEIS_UTILS_FILTER_FIR_HPP
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
-#endif
-#ifndef RTSEIS_UTILS_DESIGN_ENUMS_HPP
-#include "rtseis/utilities/design/enums.hpp"
-#endif
-#ifndef RTSEIS_UTILS_MATH_CONVOLVE_HPP
-#include "rtseis/utilities/math/convolve.hpp"
-#endif
 #ifndef RTSEIS_POSTPROCESSING_SC_TAPER
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
 #endif
@@ -42,9 +34,91 @@ namespace PostProcessing
  */
 namespace SingleChannel
 {
+
+/*!
+ * @brief Defines the IIR filter implementation.
+ * @ingroup rtseis_postprocessing_sc
+ */
+enum class IIRFilterImplementation
+{
+    SOS,    /*!< Apply the filter as a cascade of second order sections.
+                 This is numerically more stable than a direct form
+                 implementation. */
+    DIRECT  /*!< Direct form IIR implementation.  The design and filter
+                 application is slightly faster than using second order
+                 sections filtering. */
+};
+/*!
+ * @brief Defines the analog prototype from which the IIR filters are designed.
+ * @ingroup rtseis_postprocessing_sc
+ */
+enum class IIRPrototype
+{
+    BUTTERWORTH, /*!< Butterworth filter design. */
+    BESSEL,      /*!< Bessel filter design. */
+    CHEBYSHEV1,  /*!< Chebyshev I filter design. */
+    CHEBYSHEV2   /*!< Chebyshev II filter design. */
+};
+/*!
+ * @brief Defines the window used in the FIR filter design.
+ * @ingroup rtseis_postprocessing_sc 
+ */
+enum class FIRWindow
+{
+    HAMMING,     /*!< Hamming window. */
+    BARTLETT,    /*!< Bartlett (triangle) window. */
+    HANN,        /*!< Hann window. */
+    BLACKMAN_OPT /*!< Optimal Blackman window. */
+}; 
+/*!
+ * @brief Defines the filter passband.
+ * @ingroup rtseis_postprocessing_sc
+ */
+enum class Bandtype
+{
+    LOWPASS,  /*!< Lowpass filter. */
+    HIGHPASS, /*!< Highpass filter. */
+    BANDPASS, /*!< Bandpass filter. */
+    BANDSTOP  /*!< Bandstop (notch) filter. */ 
+};
+
+/*!
+ * @brief Defines the nature of the convolution or correlation
+ *        and the consequence with respect to edge effects.
+ * @ingroup rtseis_postprocessing_sc
+ */
+enum class ConvolutionMode
+{
+    FULL,   /*!< A full discrete convolution or correlation of
+                 inputs which will have length \f$ m + n - 1 \f$.
+                 Because the signals do not overlap completely
+                 at the convolution edges boundary effects can be
+                 seen. */
+    VALID,  /*!< The output consists only of those elements that
+                 do not rely on zero-padding.  The return 
+                 convolution or correlation will have length
+                 \f$ \max(m,n) - \min(m,n) + 1 \f$.  This will
+                 only be computed where the input signals completely
+                 overlap so that there will not be edge effects. */
+    SAME,  /*!< The output is the same size as the first input
+                 and centered with respect to the FULL output.
+                 The resulting convolution or correlation will
+                 have length \f$ \max(m, n) \f$. */
+};
+/*!
+ * @brief Defines the convolution or correlation implementation.
+ * @ingroup rtseis_postprocessing_sc
+ */
+enum class ConvolutionImplementation
+{
+    AUTO,   /*!< Let the implementation decide. */
+    DIRECT, /*!< Time domain implementation. */
+    FFT     /*!< Frequency domain implementaiton. */
+};
 /*!
  * @class Waveform Waveform "include/rtseis/processing/singleChannel/postProcessing.hpp"
- * @brief This class is used for single-channel post-processing applications.
+ * @brief This class is to be used for single-channel post-processing
+ *        applications.
  * @ingroup rtseis_postprocessing_sc
  */
 class Waveform
@@ -121,6 +195,10 @@ public:
      * @result The length of the output signal, y.
      */
     size_t getOutputLength(void) const;
+
+    /*! @name Convolution and Correlation
+     * @{
+     */
     /*!
      * @brief Computes the convolution \f$ x \ast s \f$ where the
      *        convolution sum is defined by
@@ -131,8 +209,33 @@ public:
      * @throws std::invalid_argument if s is empty or there is no data.
      */
     void convolve(const std::vector<double> &s,
-         const Utilities::Math::Convolve::Mode mode = Utilities::Math::Convolve::Mode::FULL,
-         const Utilities::Math::Convolve::Implementation implementation = Utilities::Math::Convolve::Implementation::AUTO);
+         const ConvolutionMode mode = ConvolutionMode::FULL,
+         const ConvolutionImplementation implementation = ConvolutionImplementation::AUTO);
+    /*! 
+     * @brief Computes the correlation \f$ x \star s \f$ where the
+     *        correlation sum is defined by
+     *        \f$ y[k] = \sum_n x[n] s[n+k] \f$.
+     * @param[in] s     The signal to correlate with x.
+     * @param[in] mode  Defines the correlation output.
+     * @param[in] implementation  Defines the implementation type.
+     * @throws std::invalid_argument if s is empty or there is no data.
+     */
+    void correlate(const std::vector<double> &s,
+         const ConvolutionMode mode = ConvolutionMode::FULL,
+         const ConvolutionImplementation implementation = ConvolutionImplementation::AUTO);
+    /*! 
+     * @brief Computes the autocorrelation \f$ x \star x \f$.
+     * @param[in] mode  Defines the correlation output.
+     * @param[in] implementation  Defines the implementation type.
+     * @throws std::invalid_argument if there is no data.
+     */
+    void autocorrelate(const ConvolutionMode mode = ConvolutionMode::FULL,
+         const ConvolutionImplementation implementation = ConvolutionImplementation::AUTO);
+    /*! @} */
+
+    /*! @name Demeaning and Detrending
+     * @{
+     */
     /*!
      * @brief Removes the mean from the data.
      * @throws std::invalid_argument if there is no data.
@@ -149,11 +252,12 @@ public:
      * @snippet testing/postProcessing/singleChannel.cpp ppSCDetrendExample
      */
     void detrend(void);
+    /*! @} */
 
     /*!
-     * @name General FIR Filtering
+     * @name General Filtering
      * @{
-     * @note It is the responsibility of hte user to ensure that the
+     * @note It is the responsibility of the user to ensure that the
      *       signal sampling rate and the sampling rate used in the digital
      *       filter design are compatible.
      */
@@ -199,14 +303,175 @@ public:
                 const bool lzeroPhase=false);
     /*! @} */
 
-    /*!
-     * @brief Lowpass filters a signal.
-     * @param[in] fc   The critical frequency in Hz.  This must be between
-     *                 0 and and the Nyquist frequency which can be obtained
-     *                 from \c getNyquistFrequency().
+    /*! @name Band-specific Filtering
+     * @{
      */
-    //void lowpass(const double fc,
+    /*!
+     * @brief Lowpass filters a signal using an FIR filter.
+     * @param[in] ntaps   The number of filter taps.  This must be at least 4.
+     *                    Moreover, if the phase shift is to be removed then
+     *                    ntaps must be odd.  If it is not odd then ntaps will
+     *                    bet set to ntaps + 1.
+     * @param[in] fc      The critical frequency in Hz.  This must be between
+     *                    0 and and the Nyquist frequency.  The latter can be
+     *                    obtained from \c getNyquistFrequency().
+     * @param[in] window  The window using the FIR filter design. 
+     * @param[in] lremovePhase  If true then the phase shift is to be removed.
+     *                          The filters designed have linear group delays
+     *                          hence, the first ntaps/2 data points will not
+     *                          be saved to the output signal.
+     * @throws std::invalid_argument if the number of taps or critical frequency
+     *         is invalid.
+     */
+    void lowpassFIRFilter(const int ntaps, const double fc,
+                          const FIRWindow window,
+                          const bool lremovePhase=false);
+    /*!
+     * @brief Lowpass filters a signal using an IIR filter.
+     * @param[in] order   The filter order which equals the number of npoles.
+     *                    This must be positive.
+     * @param[in] fc      The critical frequency in Hz.  This must be between
+     *                    0 and and the Nyquist frequency.  The latter can be
+     *                    obtained from \c getNyquistFrequency().
+     * @param[in] prototype  The analog prototype from which to design the
+     *                       the digital lowpass filter.
+     * @param[in] ripple  For Chebyshev I filters this controls the maximum
+     *                    attenuation in the passband and is measured in dB.
+     *                    For Chebyshev II filters this controls the minimum
+     *                    attenuation in the stopband and is measured in dB.
+     *                    For both Chebyshev I and II filters this must be
+     *                    positive.  For Butterworth and Bessel filters this
+     *                    parameter is ignored.
+     * @param[in] lzeroPhase  If true then the phase shift is removed by
+     *                        filtering the signal in both directions.  This
+     *                        effectively squares the magnitude of the filter
+     *                        response while conveniently annihilating the
+     *                        the nonlinear group delay.
+     * @param[in] implementation  Defines the IIR implementation.  Note that for
+     *                            direct form zero-phase filtering that the 
+     *                            algorithm will attempt to minimize transients
+     *                            at the ends of the signals.  This can result 
+     *                            in slightly different results than Matlab.
+     * @throws std::invalid_argument if the order isn't positive or the ripple
+     *         isn't positive for Chebyshev I or Chebyshev II filter design.
+     */
+    void lowpassIIRFilter(const int order, const double fc,
+                          const IIRPrototype prototype,
+                          const double ripple,
+                          const bool lzeroPhase=false,
+                          const IIRFilterImplementation implementation = IIRFilterImplementation::SOS);
 
+    /*! 
+     * @brief Highpass filters a signal using an FIR filter.
+     * @param[in] ntaps   The number of filter taps.
+     * @param[in] fc      The critical frequency in Hz.
+     * @param[in] window  The window using the FIR filter design. 
+     * @param[in] lremovePhase  If true then the phase shift is to be removed.
+     * @throws std::invalid_argument if the number of taps or critical frequency
+     *         is invalid.
+     * @sa lowpassFIRFilter()
+     */
+    void highpassFIRFilter(const int ntaps, const double fc, 
+                           const FIRWindow window,
+                           const bool lremovePhase=false);
+    /*!
+     * @brief Highpass filters a signal using an IIR filter.
+     * @param[in] order   The filter order which equals the number of npoles.
+     * @param[in] fc      The critical frequency in Hz.
+     * @param[in] prototype  The analog prototype from which to design the
+     *                       the digital lowpass filter.
+     * @param[in] ripple  Controls the ripple size in Chebyshev I and 
+     *                    Chebyshev II design.
+     * @param[in] lzeroPhase  If true then the phase shift is removed.
+     * @param[in] implementation  Defines the IIR implementation. 
+     * @throws std::invalid_argument if the order isn't positive or the ripple
+     *         isn't positive for Chebyshev I or Chebyshev II filter design.
+     * @sa lowpassIIRFilter()
+     */
+    void highpassIIRFilter(const int order, const double fc, 
+                           const IIRPrototype prototype,
+                           const double ripple,
+                           const bool lzeroPhase=false,
+                           const IIRFilterImplementation implementation = IIRFilterImplementation::SOS);
+    /*! 
+     * @brief Bandpass filters a signal using an FIR filter.
+     * @param[in] ntaps   The number of filter taps.
+     * @param[in] fc      The critical frequencies in Hz.  fc.first is the low
+     *                    corner and fc.second is the high corner.
+     *                    Both critical frequencies must be greater than 0 and
+     *                    less than the Nyquist frequency.  Additionally,
+     *                    fc.second must be greater than fc.first.  
+     * @param[in] window  The window using the FIR filter design. 
+     * @param[in] lremovePhase  If true then the phase shift is to be removed.
+     * @throws std::invalid_argument if the number of taps or critical frequency
+     *         is invalid.
+     * @sa lowpassFIRFilter()
+     */
+    void bandpassFIRFilter(const int ntaps, const std::pair<double,double> fc, 
+                           const FIRWindow window,
+                           const bool lremovePhase=false);
+    /*! 
+     * @brief Bandpass filters a signal using an IIR filter.
+     * @param[in] order   The filter order which equals the number of npoles.
+     * @param[in] fc      The critical frequencies in Hz.  fc.first is the low
+     *                    corner and fc.second is the high corner.
+     *                    Both critical frequencies must be greater than 0 and
+     *                    less than the Nyquist frequency.  Additionally,
+     *                    fc.second must be greater than fc.first.
+     * @param[in] prototype  The analog prototype from which to design the
+     *                       the digital lowpass filter.
+     * @param[in] ripple  Controls the ripple size in Chebyshev I and 
+     *                    Chebyshev II design.
+     * @param[in] lzeroPhase  If true then the phase shift is removed.
+     * @param[in] implementation  Defines the IIR implementation. 
+     * @throws std::invalid_argument if the order isn't positive or the ripple
+     *         isn't positive for Chebyshev I or Chebyshev II filter design.
+     * @sa lowpassIIRFilter()
+     */
+    void bandpassIIRFilter(const int order, const std::pair<double,double> fc, 
+                           const IIRPrototype prototype,
+                           const double ripple,
+                           const bool lzeroPhase=false,
+                           const IIRFilterImplementation implementation = IIRFilterImplementation::SOS);
+    /*! 
+     * @brief Bandstop filters a signal using an FIR filter.
+     * @param[in] ntaps   The number of filter taps.
+     * @param[in] fc      The critical frequencies in Hz.
+     * @param[in] window  The window using the FIR filter design. 
+     * @param[in] lremovePhase  If true then the phase shift is to be removed.
+     * @throws std::invalid_argument if the number of taps or critical frequency
+     *         is invalid.
+     * @sa lowpassFIRFilter()
+     * @sa bandpassFIRFilter()
+     */
+    void bandstopFIRFilter(const int ntaps, const std::pair<double,double> fc, 
+                           const FIRWindow window,
+                           const bool lremovePhase=false);
+    /*! 
+     * @brief Bandstop filters a signal using an IIR filter.
+     * @param[in] order   The filter order which equals the number of npoles.
+     * @param[in] fc      The critical frequencies in Hz.
+     * @param[in] prototype  The analog prototype from which to design the
+     *                       the digital lowpass filter.
+     * @param[in] ripple  Controls the ripple size in Chebyshev I and 
+     *                    Chebyshev II design.
+     * @param[in] lzeroPhase  If true then the phase shift is removed.
+     * @param[in] implementation  Defines the IIR implementation. 
+     * @throws std::invalid_argument if the order isn't positive or the ripple
+     *         isn't positive for Chebyshev I or Chebyshev II filter design.
+     * @sa lowpassIIRFilter()
+     * @sa bandpassIIRFilter()
+     */
+    void bandstopIIRFilter(const int order, const std::pair<double,double> fc, 
+                           const IIRPrototype prototype,
+                           const double ripple,
+                           const bool lzeroPhase=false,
+                           const IIRFilterImplementation implementation = IIRFilterImplementation::SOS);
+    /*! @} */
+
+    /*! @name Tapering and Cutting
+     * @{
+     */
     /*!
      * @brief Tapers the ends of a signal.
      * @param[in] pct  The percentage of the signal to which the taper will
@@ -222,9 +487,11 @@ public:
      */
     void taper(const double pct = 5,
                const TaperParameters::Type window = TaperParameters::Type::HAMMING);
+    /*! @} */
+
 private:
-    class DataImpl;
-    std::unique_ptr<DataImpl> pImpl;
+    class WaveformImpl;
+    std::unique_ptr<WaveformImpl> pImpl;
 }; // end waveform
 }; // End SingleChannel
 }; // End PostProcessing
