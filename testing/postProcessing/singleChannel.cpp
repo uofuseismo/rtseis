@@ -189,7 +189,7 @@ int testBandSpecificFilters(const std::vector<double> &x)
         fprintf(stderr, "Failed sos filter test with error=%e\n", l1Norm);
         return EXIT_FAILURE;
     }
-    // Highpass fliter
+    // Highpass filter
     fcV[0] = 10/fnyq;
     Utilities::FilterDesign::IIR::iirfilter(2, fcV, 0, 0,
                       Utilities::FilterDesign::Bandtype::HIGHPASS,
@@ -237,7 +237,97 @@ int testBandSpecificFilters(const std::vector<double> &x)
         fprintf(stderr, "Failed sos filter test with error=%e\n", l1Norm);
         return EXIT_FAILURE;
     }
-
+    // Bandpass filter
+    fcV[0] = 1/fnyq;
+    fcV[1] = 10/fnyq;
+    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 0, 0,
+                      Utilities::FilterDesign::Bandtype::BANDPASS,
+                      Utilities::FilterDesign::IIRPrototype::BUTTERWORTH,
+                      sos,
+                      Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+    ns = sos.getNumberOfSections();
+    bs = sos.getNumeratorCoefficients();
+    as = sos.getDenominatorCoefficients();
+    sosFilt.initialize(ns, bs.data(), as.data(),
+                       RTSeis::ProcessingMode::POST_PROCESSING,
+                       RTSeis::Precision::DOUBLE);
+    sosFilt.apply(npts, x.data(), ytemp.data());
+    std::reverse(ytemp.begin(), ytemp.end());
+    sosFilt.apply(npts, ytemp.data(), ysosRef.data());
+    std::reverse(ysosRef.begin(), ysosRef.end());
+    sosFilt.clear();
+    for (int j=0; j<1; j++)
+    {
+    try
+    {
+        // Design a 2nd order Bessel filter with 10 Hz cutoff
+        int order = 2;                     // 2nd order (becomes 4 poles)
+        std::pair<double,double> fc(1,10); // Passband is 1 to 10 Hz
+        double ripple = 0;                 // N/A
+        bool lzeroPhase = true;            // Zero-phase
+        waveform.setData(x);
+        waveform.sosBandpassFilter(order, fc,
+                                   SingleChannel::IIRPrototype::BUTTERWORTH,
+                                   ripple, lzeroPhase);
+        waveform.getData(y);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    }
+    // Compare
+    ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
+    if (l1Norm > 1.e-12)
+    {
+        fprintf(stderr, "Failed sos bp filter test with error=%e\n", l1Norm);
+        return EXIT_FAILURE;
+    }
+    // Bandpass filter
+    fcV[0] = 1/fnyq;
+    fcV[1] = 10/fnyq;
+    Utilities::FilterDesign::IIR::iirfilter(3, fcV, 0, 0,
+                          Utilities::FilterDesign::Bandtype::BANDSTOP,
+                          Utilities::FilterDesign::IIRPrototype::BESSEL,
+                          sos,
+                          Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+    ns = sos.getNumberOfSections();
+    bs = sos.getNumeratorCoefficients();
+    as = sos.getDenominatorCoefficients();
+    sosFilt.initialize(ns, bs.data(), as.data(),
+                       RTSeis::ProcessingMode::POST_PROCESSING,
+                       RTSeis::Precision::DOUBLE);
+    sosFilt.apply(npts, x.data(), ysosRef.data());
+    sosFilt.clear();
+    for (int j=0; j<1; j++)
+    {
+    try
+    {
+        // Design a 2nd order Bessel filter with 10 Hz cutoff
+        int order = 3;                     // 2nd order (becomes 4 poles)
+        std::pair<double,double> fc(1,10); // Passband is 1 to 10 Hz
+        double ripple = 0;                 // N/A
+        bool lzeroPhase = false;           // Not Zero-phase
+        waveform.setData(x);
+        waveform.sosBandstopFilter(order, fc,
+                                   SingleChannel::IIRPrototype::BESSEL,
+                                   ripple, lzeroPhase);
+        waveform.getData(y);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    }
+    // Compare
+    ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
+    if (l1Norm > 1.e-12)
+    {
+        fprintf(stderr, "Failed sos bs filter test with error=%e\n", l1Norm);
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS; 
 }
 

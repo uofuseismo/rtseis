@@ -28,22 +28,22 @@ using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 using namespace RTSeis::Utilities::Math;
 
-static int getNextWorstRealPoleIndex(const std::vector<bool> pmask,
-                                     const std::vector<bool> isreal_pole,
-                                     const std::vector<std::complex<double>> p);
-static int getWorstPoleIndex(const std::vector<bool> pmask,
-                             const std::vector<std::complex<double>> p);
-static int isreal_p_sum(const std::vector<bool> pmask,
-                        const std::vector<bool> isreal_pole);
-static int nearest_real_complex_idx(const std::vector<bool> zmask,
-                                    const std::vector<bool> isreal_zero,
-                                    const std::vector<std::complex<double>> z,
+static int getNextWorstRealPoleIndex(const std::vector<bool> &pmask,
+                                     const std::vector<bool> &isreal_pole,
+                                     const std::vector<std::complex<double>> &p);
+static int getWorstPoleIndex(const std::vector<bool> &pmask,
+                             const std::vector<std::complex<double>> &p);
+static int isreal_p_sum(const std::vector<bool> &pmask,
+                        const std::vector<bool> &isreal_pole);
+static int nearest_real_complex_idx(const std::vector<bool> &zmask,
+                                    const std::vector<bool> &isreal_zero,
+                                    const std::vector<std::complex<double>> &z,
                                     const std::complex<double> p1,
                                     const bool lreal);
-static int nearest_realOrComplex_idx(const std::vector<bool> zmask,
-                                     const std::vector<std::complex<double>> z,
+static int nearest_realOrComplex_idx(const std::vector<bool> &zmask,
+                                     const std::vector<std::complex<double>> &z,
                                      const std::complex<double> p1);
-static int cmplxreal(const std::vector<std::complex<double>> z,
+static int cmplxreal(const std::vector<std::complex<double>> &z,
                      std::vector<std::complex<double>> &p,
                      std::vector<bool> &isreal,
                      const double *tolIn = nullptr);
@@ -846,9 +846,9 @@ void IIR::zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0,
  * @brief Utility function for getting index of next closest pole to
  *        unit circle.
  */
-static int getNextWorstRealPoleIndex(const std::vector<bool> pmask,
-                                     const std::vector<bool> isreal_pole,
-                                     const std::vector<std::complex<double>> p)
+static int getNextWorstRealPoleIndex(const std::vector<bool> &pmask,
+                                     const std::vector<bool> &isreal_pole,
+                                     const std::vector<std::complex<double>> &p)
 {
     const std::complex<double> zone = std::complex<double> (1, 0);
     double difMin = DBL_MAX;
@@ -870,8 +870,8 @@ static int getNextWorstRealPoleIndex(const std::vector<bool> pmask,
 /*!
  * @brief Utility function for getting next pole closest to unit circle.
  */
-static int getWorstPoleIndex(const std::vector<bool> pmask,
-                             const std::vector<std::complex<double>> p)
+static int getWorstPoleIndex(const std::vector<bool> &pmask,
+                             const std::vector<std::complex<double>> &p)
 {
     double difMin = DBL_MAX;
     int indx =-1;
@@ -893,8 +893,8 @@ static int getWorstPoleIndex(const std::vector<bool> pmask,
  * @brief Utility function for computing the sum of the reals of the poles
  *        array
  */
-static int isreal_p_sum(const std::vector<bool> pmask,
-                        const std::vector<bool> isreal_pole)
+static int isreal_p_sum(const std::vector<bool> &pmask,
+                        const std::vector<bool> &isreal_pole)
 {
     int xsum = 0;
     for (size_t i=0; i<isreal_pole.size(); i++)
@@ -907,9 +907,9 @@ static int isreal_p_sum(const std::vector<bool> pmask,
  * @brief Utility function for finding the closest real or complex zero
  *        to the pole p1
  */
-static int nearest_real_complex_idx(const std::vector<bool> zmask,
-                                    const std::vector<bool> isreal_zero,
-                                    const std::vector<std::complex<double>> z,
+static int nearest_real_complex_idx(const std::vector<bool> &zmask,
+                                    const std::vector<bool> &isreal_zero,
+                                    const std::vector<std::complex<double>> &z,
                                     const std::complex<double> p1,
                                     const bool lreal)
 {
@@ -954,8 +954,8 @@ static int nearest_real_complex_idx(const std::vector<bool> zmask,
  * @brief Find the index of the next nearest real or complex zero to the
  *        given pole.
  */
-static int nearest_realOrComplex_idx(const std::vector<bool> zmask,
-                                     const std::vector<std::complex<double>> z,
+static int nearest_realOrComplex_idx(const std::vector<bool> &zmask,
+                                     const std::vector<std::complex<double>> &z,
                                      const std::complex<double> p1)
 {
     double difMin = DBL_MAX;
@@ -974,7 +974,7 @@ static int nearest_realOrComplex_idx(const std::vector<bool> zmask,
     }
     return indx;
 }
-static int cmplxreal(const std::vector<std::complex<double>> z,
+static int cmplxreal(const std::vector<std::complex<double>> &z,
                      std::vector<std::complex<double>> &p,
                      std::vector<bool> &isreal,
                      const double *tolIn)
@@ -1063,6 +1063,7 @@ static int cmplxreal(const std::vector<std::complex<double>> z,
                     //isreal.push_back(false);
                     lskip[i] = 1;
                     lskip[j] = 1;
+                    break;
                 }
             }
         }
@@ -1072,7 +1073,18 @@ static int cmplxreal(const std::vector<std::complex<double>> z,
         {
             RTSEIS_ERRMSG("All poles need complex conjugate pairs; %d %ld",
                           npaired, cmplxs.size());
+            fprintf(stderr, "Input\n");
+            for (size_t m=0; m<z.size(); m++)
+            {
+                fprintf(stderr, "%e + %+ei\n", z[m].real(), z[m].imag());
+            }
+            fprintf(stderr, "Found complexes\n");
+            for (size_t m=0; m<cmplxs.size(); m++) 
+            {
+                fprintf(stderr, "%e + %+ei\n", cmplxs[m].real(), cmplxs[m].imag());
+            }
             p.resize(0);
+getchar();
             return -1;
         }
     }
