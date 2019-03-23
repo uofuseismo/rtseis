@@ -13,6 +13,9 @@
 namespace py = pybind11;
 using namespace PBPostProcessing;
 
+static RTSeis::PostProcessing::SingleChannel::IIRPrototype
+stringToAnalogPrototype(const std::string &prototype);
+
 Waveform::Waveform(void) :
     waveform_(new RTSeis::PostProcessing::SingleChannel::Waveform())
 {
@@ -99,7 +102,7 @@ void Waveform::firFilter(py::array_t<double, py::array::c_style | py::array::for
     try
     {
         RTSeis::Utilities::FilterRepresentations::FIR fir(tapsVec);
-        waveform_->filter(fir); 
+        waveform_->firFilter(fir); 
     }
     catch (const std::invalid_argument &ia)
     {
@@ -107,6 +110,25 @@ void Waveform::firFilter(py::array_t<double, py::array::c_style | py::array::for
         throw std::invalid_argument("FIR filtering failed"); 
     }
     return;
+}
+
+void Waveform::sosLowpassFilter(const double fc, const int order,
+                                const std::string &prototype,
+                                const double ripple,
+                                const bool zeroPhase)
+{
+    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype; 
+    ptype = stringToAnalogPrototype(prototype);
+    try
+    {
+        waveform_->sosLowpassFilter(order, fc, ptype, ripple, zeroPhase);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        throw std::invalid_argument("SOS filtering failed");
+    } 
+    return;    
 }
 
 /// Taper
@@ -197,3 +219,30 @@ bool Waveform::isInitialized(void) const
 {
     return true;//waveform_->isInitialized();
 }
+
+RTSeis::PostProcessing::SingleChannel::IIRPrototype
+stringToAnalogPrototype(const std::string &prototype)
+{
+    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype;
+    if (prototype == "bessel")
+    {
+        ptype = RTSeis::PostProcessing::SingleChannel::IIRPrototype::BESSEL;
+    }
+    else if (prototype == "butterworth" || prototype == "butter")
+    {
+        ptype = RTSeis::PostProcessing::SingleChannel::IIRPrototype::BUTTERWORTH;
+    }
+    else if (prototype == "chebyshev1" || prototype == "cheby1")
+    {
+        ptype = RTSeis::PostProcessing::SingleChannel::IIRPrototype::CHEBYSHEV1;
+    }
+    else if (prototype == "chebyshev2" || prototype == "cheby2")
+    {
+        ptype = RTSeis::PostProcessing::SingleChannel::IIRPrototype::CHEBYSHEV2;
+    }
+    else
+    {
+        throw std::invalid_argument("Unknown prototype " + prototype);
+    }
+    return ptype;
+} 

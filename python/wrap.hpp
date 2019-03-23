@@ -28,6 +28,11 @@ public:
     void detrend(void);
     /// Generic FIR filter data
     void firFilter(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &taps);
+    /// IIR lowpass filter using second-order-sections
+    void sosLowpassFilter(const double fc, const int order,
+                          const std::string &prototype,
+                          const double ripple,
+                          const bool zeroPhase);
     /// Taper
     void taper(const double pct, const std::string &taperName); 
     /// Set data

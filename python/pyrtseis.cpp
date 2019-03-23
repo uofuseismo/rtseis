@@ -31,6 +31,13 @@ PYBIND11_MODULE(libpyrtseis, modules)
                               "Removes the trend from the time series");
     singleChannelWaveform.def("fir_filter", &PBPostProcessing::Waveform::firFilter,
                               py::arg("taps"));
+    singleChannelWaveform.def("sos_lowpass_filter", &PBPostProcessing::Waveform::sosLowpassFilter,
+                              "Lowpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
     singleChannelWaveform.def("taper",   &PBPostProcessing::Waveform::taper,
                               "Tapers the ends of a signal",
                               py::arg("pct") = 5,

@@ -91,6 +91,33 @@ int rtseis_test_utils_design_zpk2sos(void)
         RTSEIS_ERRMSG("%s", "Filters do not match");
         return EXIT_FAILURE;
     }
+    // Test this edge case so i can remove a debugging statement
+    // iirfilter(2, 10/(100), rp=60, btype='lowpass', ftype='cheby1', output='sos')
+    std::vector<double> bsRefCheb1 = {1.2386078193258956e-05,
+                                      2.477215638651791e-05,
+                                      1.2386078193258956e-05};  
+    std::vector<double> asRefCheb1 = {1.0, -1.9502344968431102, 0.999778809616146};
+    SOS sosRefCheb1(1, bsRefCheb1, asRefCheb1);
+    try 
+    {   
+         double Wn2[2] = {10/100., 0};
+         IIR::iirfilter(2, Wn2, 60, 0,
+                        Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV1,
+                        sos, ldigital, SOSPairing::NEAREST);
+    }   
+    catch (const std::invalid_argument &ia)
+    {   
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    } 
+    sos.setEqualityTolerance(1.e-12);
+    if (sos != sosRefCheb1)
+    {   
+        sos.print();
+        sosRefCheb1.print();
+        RTSEIS_ERRMSG("%s", "Filters do not match");
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 /*! IIR analog prototype design. */

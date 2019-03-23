@@ -260,8 +260,8 @@ void IIR::zpk2sos(const FilterRepresentations::ZPK &zpk,
             as[2] = std::pow(std::abs(pin[0]), 2);
         }
         sos = FilterRepresentations::SOS(1, bs, as);
-        RTSEIS_WARNMSG("%s", "Summary of design");
-        sos.print(stdout);
+        //RTSEIS_WARNMSG("%s", "Summary of design");
+        //sos.print(stdout);
         return;
     }
     if (np%2 == 1 && pairing == SOSPairing::NEAREST)

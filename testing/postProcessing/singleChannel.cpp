@@ -14,6 +14,10 @@
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/utilities/filterImplementations/sosFilter.hpp"
+#include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
+#include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 
 const std::string dataDir = "data/";
 const std::string taperSolns100FileName = dataDir + "taper100.all.txt";
@@ -23,10 +27,12 @@ const std::string firSolnsRef = dataDir + "firReference.txt";
 
 using namespace RTSeis;
 using namespace RTSeis::PostProcessing;
+using namespace RTSeis::PostProcessing::SingleChannel;
 
 int testDemean(void);
 int testDetrend(void);
 int testFilter(const std::vector<double> &x);
+int testBandSpecificFilters(const std::vector<double> &x);
 int testTaper(void);
 void readData(const std::string &fname, std::vector<double> &x);
 
@@ -65,6 +71,14 @@ int main(void)
     }
     RTSEIS_INFOMSG("%s", "Passed generic filter test");
 
+    ierr = testBandSpecificFilters(gse2);
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed band specific filter tests");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed band specific filter tests");
+
     ierr = testTaper();
     if (ierr != EXIT_SUCCESS)
     {
@@ -94,7 +108,7 @@ int testFilter(const std::vector<double> &x)
                                   Utilities::FilterDesign::FIRWindow::HAMMING);
         PostProcessing::SingleChannel::Waveform waveform; 
         waveform.setData(x);
-        waveform.filter(fir);
+        waveform.firFilter(fir);
         waveform.getData(y);     
     }
     catch (const std::invalid_argument &ia)
@@ -111,6 +125,74 @@ int testFilter(const std::vector<double> &x)
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
+}
+
+int testBandSpecificFilters(const std::vector<double> &x)
+{
+    double l1Norm;
+    int npts = static_cast<int> (x.size());
+    Utilities::FilterRepresentations::SOS sosLP, sosBP;
+    Utilities::FilterRepresentations::FIR fir;
+    Utilities::FilterRepresentations::BA ba;
+    const double fsamp = 200;      // Sampling rate
+    const double dt = 1/fsamp;     // Sampling period
+    const double fnyq = 1./(2*dt); // Nyquist frequency
+    std::vector<double> y;
+    y.reserve(npts);
+    // By this point the core filters work.  By this point we are verifying
+    // that the higher order functions correctly call the low level library. 
+    double fc[2] = {0, 0};
+    fc[0] = 10/fnyq;
+    Utilities::FilterDesign::IIR::iirfilter(2, fc, 5, 0, 
+                      Utilities::FilterDesign::Bandtype::LOWPASS,
+                      Utilities::FilterDesign::IIRPrototype::CHEBYSHEV1,
+                      sosLP,
+                      Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+    int ns = sosLP.getNumberOfSections();
+    std::vector<double> bs = sosLP.getNumeratorCoefficients();
+    std::vector<double> as = sosLP.getDenominatorCoefficients();
+    Utilities::FilterImplementations::SOSFilter sosFilt; 
+    std::vector<double> ysosRef(npts);
+    sosFilt.initialize(ns, bs.data(), as.data(),
+                       RTSeis::ProcessingMode::POST_PROCESSING,
+                       RTSeis::Precision::DOUBLE);
+    sosFilt.apply(npts, x.data(), ysosRef.data());
+    sosFilt.clear();
+    // Zero-phase SOS filter
+//! [ppSCSOSLowpassExample]
+    PostProcessing::SingleChannel::Waveform waveform(dt); // Sampling period, dt=1/200
+    try
+    {
+        // Design a 2nd order Chebyshev filter with 10 Hz cutoff
+        int order = 2;           // 2nd order (2 poles)
+        double fc = 10;          // 10 Hz cutoff
+        double ripple = 5;       // 5 dB ripple in passband
+        bool lzeroPhase = false; // Apply causally (will retain nonlinear phase response)
+        waveform.setData(x);
+        waveform.sosLowpassFilter(order, fc,
+                                  SingleChannel::IIRPrototype::CHEBYSHEV1,
+                                  ripple, lzeroPhase);
+        waveform.getData(y);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        return EXIT_FAILURE;
+    }
+//! [ppSCSOSLowpassExample]
+    // Compare
+    ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
+    if (l1Norm > 1.e-12)
+    {
+        fprintf(stderr, "Failed sos filter test with error=%e\n", l1Norm);
+        return EXIT_FAILURE;
+    }
+    // Hammer on the filter designer
+    for (int j=0; j<5; j++)
+    {
+
+    }
+    return EXIT_SUCCESS; 
 }
 
 //============================================================================//
