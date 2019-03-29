@@ -382,6 +382,7 @@ FilterDesigner& FilterDesigner::operator=(const FilterDesigner &design)
 void FilterDesigner::clear(void)
 {
     if (pImpl){pImpl->clear();}
+    return;
 }
 
 //============================================================================//

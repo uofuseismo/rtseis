@@ -233,12 +233,15 @@ int Response::groupDelay(const BA &ba,
     int ierr;
     std::vector<double> c;
     // Correlation is convolution, however, a is reversed.
-    ierr = Math::Convolve::correlate(b, a, c,
-                                     Math::Convolve::Mode::FULL,
-                                     Math::Convolve::Implementation::DIRECT);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute convolution");
+        Math::Convolve::correlate(b, a, c,
+                                  Math::Convolve::Mode::FULL,
+                                  Math::Convolve::Implementation::DIRECT);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return -1;
     }
     // Differentiate b*conj(a).  Note, that the order is reversed to conform

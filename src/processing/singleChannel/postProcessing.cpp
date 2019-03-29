@@ -51,6 +51,8 @@ static inline Utilities::Math::Convolve::Implementation
 classifyConvolveImplementation(const ConvolutionImplementation implementation);
 static inline Utilities::FilterDesign::IIRPrototype
 classifyIIRPrototype(const IIRPrototype prototype);
+static inline Utilities::FilterDesign::FIRWindow
+classifyFIRWindow(const FIRWindow windowIn);
 
 
 static inline void reverse(std::vector<double> &x);
@@ -261,14 +263,16 @@ void Waveform::convolve(
     Utilities::Math::Convolve::Implementation convcorImpl;
     convcorImpl = classifyConvolveImplementation(implementation); // throws
     // Perform the convolution
-    int ierr = Utilities::Math::Convolve::convolve(pImpl->x_, s, pImpl->y_,
-                                                   convcorMode, convcorImpl);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute convolution");
-        pImpl->y_.resize(0);
-        return;
+        Utilities::Math::Convolve::convolve(pImpl->x_, s, pImpl->y_,
+                                            convcorMode, convcorImpl);
     }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to compute convolution: %s", ia.what());
+        pImpl->y_.resize(0);
+    } 
     return;
 }
 
@@ -288,13 +292,15 @@ void Waveform::correlate(
     Utilities::Math::Convolve::Implementation convcorImpl;
     convcorImpl = classifyConvolveImplementation(implementation); // throws
     // Perform the correlation
-    int ierr = Utilities::Math::Convolve::correlate(pImpl->x_, s, pImpl->y_,
-                                                    convcorMode, convcorImpl);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute correlation");
+        Utilities::Math::Convolve::correlate(pImpl->x_, s, pImpl->y_,
+                                             convcorMode, convcorImpl);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to compute correlation: %s", ia.what());
         pImpl->y_.resize(0);
-        return;
     }
     return;
 }
@@ -312,13 +318,15 @@ void Waveform::autocorrelate(
     Utilities::Math::Convolve::Implementation convcorImpl;
     convcorImpl = classifyConvolveImplementation(implementation); // throws
     // Perform the correlation
-    int ierr = Utilities::Math::Convolve::autocorrelate(pImpl->x_, pImpl->y_,
-                                                    convcorMode, convcorImpl);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute autocorrelation");
+        Utilities::Math::Convolve::autocorrelate(pImpl->x_, pImpl->y_,
+                                                 convcorMode, convcorImpl);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("Failed to compute autocorrelation: %s", ia.what());
         pImpl->y_.resize(0);
-        return;
     }
     return;
 }
@@ -423,6 +431,48 @@ void Waveform::sosLowpassFilter(const int order, const double fc,
     return;
 }
 
+void Waveform::firLowpassFilter(const int ntapsIn, const double fc,
+                                const FIRWindow windowIn,
+                                const bool lremovePhase)
+{
+    // Check that there's data
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    int ntaps = ntapsIn;
+    if (lremovePhase && ntaps%2 == 0)
+    {
+        RTSEIS_WARNMSG("%s", "Adding a filter tap");
+        ntaps = ntaps + 1;
+    }
+    if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
+    int order = ntaps - 1;
+    // Compute normalized frequencies
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    Utilities::FilterDesign::FIRWindow window;
+    window = classifyFIRWindow(windowIn);
+    Utilities::FilterRepresentations::FIR fir;
+    pImpl->filterDesigner.designLowpassFIRFilter(order, r, window, fir);
+    if (!lremovePhase)
+    {
+        firFilter(fir);
+    }
+    else
+    {
+        std::vector<double> xtemp = pImpl->x_;
+        size_t nx0 = pImpl->x_.size();
+        size_t nhalf = static_cast<size_t> (ntaps)/2;
+        pImpl->x_.resize(nx0 + nhalf, 0);
+        firFilter(fir);
+        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
+        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+    }
+    return;
+}
+
 void Waveform::iirHighpassFilter(const int order, const double fc, 
                                  const IIRPrototype prototype,
                                  const double ripple,
@@ -471,6 +521,49 @@ void Waveform::sosHighpassFilter(const int order, const double fc,
     sosFilter(sos, lzeroPhase);
     return;
 }
+
+void Waveform::firHighpassFilter(const int ntapsIn, const double fc, 
+                                 const FIRWindow windowIn,
+                                 const bool lremovePhase)
+{
+    // Check that there's data
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    int ntaps = ntapsIn;
+    if (lremovePhase && ntaps%2 == 0)
+    {
+        RTSEIS_WARNMSG("%s", "Adding a filter tap");
+        ntaps = ntaps + 1;
+    }
+    if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
+    int order = ntaps - 1;
+    // Compute normalized frequencies
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    Utilities::FilterDesign::FIRWindow window;
+    window = classifyFIRWindow(windowIn);
+    Utilities::FilterRepresentations::FIR fir;
+    pImpl->filterDesigner.designHighpassFIRFilter(order, r, window, fir);
+    if (!lremovePhase)
+    {
+        firFilter(fir);
+    }
+    else
+    {
+        std::vector<double> xtemp = pImpl->x_;
+        size_t nx0 = pImpl->x_.size();
+        size_t nhalf = static_cast<size_t> (ntaps)/2;
+        pImpl->x_.resize(nx0 + nhalf, 0); 
+        firFilter(fir);
+        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
+        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+    }
+    return;
+}
+
 
 void Waveform::iirBandpassFilter(const int order,
                                  const std::pair<double,double> fc, 
@@ -525,6 +618,50 @@ void Waveform::sosBandpassFilter(const int order,
     return;
 }
 
+void Waveform::firBandpassFilter(const int ntapsIn,
+                                 const std::pair<double,double> fc, 
+                                 const FIRWindow windowIn,
+                                 const bool lremovePhase)
+{
+    // Check that there's data
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    int ntaps = ntapsIn;
+    if (lremovePhase && ntaps%2 == 0)
+    {
+        RTSEIS_WARNMSG("%s", "Adding a filter tap");
+        ntaps = ntaps + 1;
+    }
+    if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
+    int order = ntaps - 1;
+    // Compute normalized frequencies
+    std::pair<double,double> r
+        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    Utilities::FilterDesign::FIRWindow window;
+    window = classifyFIRWindow(windowIn);
+    Utilities::FilterRepresentations::FIR fir;
+    pImpl->filterDesigner.designBandpassFIRFilter(order, r, window, fir);
+    if (!lremovePhase)
+    {
+        firFilter(fir);
+    }
+    else
+    {
+        std::vector<double> xtemp = pImpl->x_;
+        size_t nx0 = pImpl->x_.size();
+        size_t nhalf = static_cast<size_t> (ntaps)/2;
+        pImpl->x_.resize(nx0 + nhalf, 0); 
+        firFilter(fir);
+        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
+        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+    }
+    return;
+}
+
 void Waveform::iirBandstopFilter(const int order,
                                  const std::pair<double,double> fc, 
                                  const IIRPrototype prototype,
@@ -575,6 +712,50 @@ void Waveform::sosBandstopFilter(const int order,
                     Utilities::FilterDesign::SOSPairing::NEAREST,
                     Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     sosFilter(sos, lzeroPhase);
+    return;
+}
+
+void Waveform::firBandstopFilter(const int ntapsIn,
+                                 const std::pair<double,double> fc,
+                                 const FIRWindow windowIn,
+                                 const bool lremovePhase)
+{
+    // Check that there's data
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    int ntaps = ntapsIn;
+    if (lremovePhase && ntaps%2 == 0)
+    {
+        RTSEIS_WARNMSG("%s", "Adding a filter tap");
+        ntaps = ntaps + 1;
+    }
+    if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
+    int order = ntaps - 1;
+    // Compute normalized frequencies
+    std::pair<double,double> r
+         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    Utilities::FilterDesign::FIRWindow window;
+    window = classifyFIRWindow(windowIn);
+    Utilities::FilterRepresentations::FIR fir;
+    pImpl->filterDesigner.designBandstopFIRFilter(order, r, window, fir);
+    if (!lremovePhase)
+    {
+        firFilter(fir);
+    }
+    else
+    {
+        std::vector<double> xtemp = pImpl->x_;
+        size_t nx0 = pImpl->x_.size();
+        size_t nhalf = static_cast<size_t> (ntaps)/2;
+        pImpl->x_.resize(nx0 + nhalf, 0);
+        firFilter(fir);
+        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
+        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+    }
     return;
 }
 
@@ -856,4 +1037,32 @@ classifyIIRPrototype(const IIRPrototype prototype)
                         static_cast<int> (prototype));
     }
     return ptype;
+}
+
+Utilities::FilterDesign::FIRWindow
+classifyFIRWindow(const FIRWindow windowIn)
+{
+    Utilities::FilterDesign::FIRWindow window;
+    if (windowIn == FIRWindow::HAMMING)
+    {
+        window = Utilities::FilterDesign::FIRWindow::HAMMING;
+    }
+    else if (windowIn == FIRWindow::HANN)
+    {
+        window = Utilities::FilterDesign::FIRWindow::HANN;
+    }
+    else if (windowIn == FIRWindow::BLACKMAN_OPT)
+    {
+        window = Utilities::FilterDesign::FIRWindow::BLACKMAN_OPT;
+    }
+    else if (windowIn == FIRWindow::BARTLETT)
+    {
+        window = Utilities::FilterDesign::FIRWindow::BARTLETT;
+    }
+    else
+    {
+        RTSEIS_THROW_IA("Unsupported window=%d",
+                        static_cast<int> (windowIn));
+    }
+    return window;
 }

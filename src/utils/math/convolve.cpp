@@ -2,7 +2,9 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+#include <cassert>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
@@ -15,41 +17,79 @@ static std::pair<int,int> computeTrimIndices(
     const Convolve::Mode mode,
     const int n1, const int n2);
 
-int Convolve::convolve(const std::vector<double> &a,
-                       const std::vector<double> &b,
-                       std::vector<double> &c,
-                       const Convolve::Mode mode,
-                       const Convolve::Implementation implementation)
+void Convolve::convolve(const std::vector<double> &a,
+                        const std::vector<double> &b, 
+                        std::vector<double> &c,
+                        const Convolve::Mode mode,
+                        const Convolve::Implementation implementation)
 {
-    IppEnum funCfg = getImplementation(implementation);
     int src1Len = static_cast<size_t> (a.size());
     int src2Len = static_cast<size_t> (b.size());
     c.resize(0);
     if (src1Len < 1 || src2Len < 1)
     {
-        if (src1Len < 1){RTSEIS_ERRMSG("%s", "No points in a");}
-        if (src2Len < 1){RTSEIS_ERRMSG("%s", "No points in b");}
-        return -1;
+        if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
+        if (src2Len < 1){RTSEIS_THROW_IA("%s", "No points in b");}
+        RTSEIS_THROW_IA("%s", "Invalid length");
+    }
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
+    int len = indexes.second - indexes.first;
+    int nc;
+    c.resize(len);
+    convolve(src1Len, a.data(), src2Len, b.data(), 
+             len, nc, c.data(), mode, implementation);
+#ifdef DEBUG
+    assert(nc == static_cast<int> (c.size()));
+#endif
+    return;
+}
+
+void Convolve::convolve(const int src1Len, const double a[],
+                        const int src2Len, const double b[],
+                        const int maxc, int &nc, double c[],
+                        const Convolve::Mode mode,
+                        const Convolve::Implementation implementation)
+{
+    // Check the inputs
+    nc = 0;
+    if (src1Len < 1 || a == nullptr || src2Len < 1 || b == nullptr)
+    {
+        if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
+        if (src2Len < 1){RTSEIS_THROW_IA("%s", "No points in b");}
+        if (a == nullptr){RTSEIS_THROW_IA("%s", "a is NULL");}
+        if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
+        RTSEIS_THROW_IA("%s", "Invalid lengths");
+    }
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
+    int fullLen = indexes.second - indexes.first;
+    if (maxc < fullLen || c == nullptr)
+    {
+       if (maxc < fullLen)
+       {
+           RTSEIS_THROW_IA("maxc = %d must be at least %d", maxc, fullLen);
+       }
+       if (c == nullptr){RTSEIS_THROW_IA("%s", "c is NULL");}
+       RTSEIS_THROW_IA("%s", "Invalid arguments");
     }
     int len = src1Len + src2Len - 1;
     // Figure out the buffer size
     int bufSize = 0;
+    IppEnum funCfg = getImplementation(implementation);
     IppStatus status = ippsConvolveGetBufferSize(src1Len, src2Len, ipp64f,
                                                  funCfg, &bufSize);
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute buffer size");
-        return -1;
+        return;
     }
     Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
     // Perform the convolution
-    const double *pSrc1 = a.data();
-    const double *pSrc2 = b.data();
+    const double *pSrc1 = a;
+    const double *pSrc2 = b;
     double *pDst = nullptr;
     if (mode == Mode::FULL)
     {
-        c.resize(len);
-        pDst = c.data();
+        pDst = c;
     }
     else
     {
@@ -61,65 +101,103 @@ int Convolve::convolve(const std::vector<double> &a,
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute convolution");
-        c.resize(0);
-        return -1;
+        if (mode != Mode::FULL){ippsFree(pDst);}
+        return;
     }
     // The full convolution is desired
-    if (mode == Mode::FULL){return 0;}
+    nc = fullLen;
+    if (mode == Mode::FULL){return;}
     // Trim the full convolution
-    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
     int i1 = indexes.first;
     int i2 = indexes.second;
     len = i2 - i1;
-    c.resize(len);
-#ifdef _INTEL_COMPILER
-    #pragma ivdep
-#endif
-    std::copy(&pDst[i1], &pDst[i1+i2], c.begin());
+    ippsCopy_64f(&pDst[i1], c, len);
     ippsFree(pDst);
-    return 0;
+    return;
 }
 
-int Convolve::correlate(const std::vector<double> &a,
-                        const std::vector<double> &b,
-                        std::vector<double> &c, 
-                        const Convolve::Mode mode,
-                        const Convolve::Implementation implementation)
+//============================================================================//
+//                                     Correlate                              //
+//============================================================================//
+
+void Convolve::correlate(const std::vector<double> &a,
+                         const std::vector<double> &b, 
+                         std::vector<double> &c,
+                         const Convolve::Mode mode,
+                         const Convolve::Implementation implementation)
 {
-    IppEnum funCfg = getImplementation(implementation) | ippsNormNone;
     int src1Len = static_cast<size_t> (a.size());
     int src2Len = static_cast<size_t> (b.size());
     c.resize(0);
     if (src1Len < 1 || src2Len < 1)
-    {   
-        if (src1Len < 1){RTSEIS_ERRMSG("%s", "No points in a");}
-        if (src2Len < 1){RTSEIS_ERRMSG("%s", "No points in b");}
-        return -1; 
-    }   
+    {
+        if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
+        if (src2Len < 1){RTSEIS_THROW_IA("%s", "No points in b");}
+        RTSEIS_THROW_IA("%s", "Invalid length");
+    }
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
+    int len = indexes.second - indexes.first;
+    int nc;
+    c.resize(len);
+    correlate(src1Len, a.data(), src2Len, b.data(),
+              len, nc, c.data(), mode, implementation);
+#ifdef DEBUG
+    assert(nc == static_cast<int> (c.size()));
+#endif
+    return;
+}
+
+void Convolve::correlate(const int src1Len, const double a[],
+                         const int src2Len, const double b[],
+                         const int maxc, int &nc, double c[],
+                         const Convolve::Mode mode,
+                         const Convolve::Implementation implementation)
+{
+    // Check the inputs
+    nc = 0;
+    if (src1Len < 1 || a == nullptr || src2Len < 1 || b == nullptr)
+    {
+        if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
+        if (src2Len < 1){RTSEIS_THROW_IA("%s", "No points in b");}
+        if (a == nullptr){RTSEIS_THROW_IA("%s", "a is NULL");}
+        if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
+        RTSEIS_THROW_IA("%s", "Invalid lengths");
+    }
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
+    int fullLen = indexes.second - indexes.first;
+    if (maxc < fullLen || c == nullptr)
+    {
+       if (maxc < fullLen)
+       {
+           RTSEIS_THROW_IA("maxc = %d must be at least %d", maxc, fullLen);
+       }
+       if (c == nullptr){RTSEIS_THROW_IA("%s", "c is NULL");}
+       RTSEIS_THROW_IA("%s", "Invalid arguments");
+    }
     int len = src1Len + src2Len - 1;
     // Figure out the buffer size
+    IppEnum funCfg = getImplementation(implementation) | ippsNormNone;
     int bufSize = 0;
     const int lowLag =-src2Len + 1; //(std::max(src1Len, src2Len) - 1);
     IppStatus status = ippsCrossCorrNormGetBufferSize(src1Len, src2Len, len,
                                                       lowLag, ipp64f, funCfg,
                                                       &bufSize);
     if (status != ippStsNoErr)
-    {   
+    {
         RTSEIS_ERRMSG("%s", "Failed to compute buffer size");
-        return -1; 
-    }   
+        return; 
+    }
     Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
     // Perform the correlation
-    const double *pSrc1 = a.data();
-    const double *pSrc2 = b.data();
+    const double *pSrc1 = a;
+    const double *pSrc2 = b;
     double *pDst = nullptr;
     if (mode == Mode::FULL)
-    {   
-        c.resize(len);
-        pDst = c.data();
-    }   
+    {
+        pDst = c;
+    }
     else
-    {   
+    {
         pDst = ippsMalloc_64f(len);
     }
     // Perform the correlation noting that IPP uses a formula whose convention
@@ -131,51 +209,81 @@ int Convolve::correlate(const std::vector<double> &a,
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute correlation");
-        c.resize(0);
-        return -1;
+        if (mode != Mode::FULL){ippsFree(pDst);}
+        return;
     }
     // The full correlation is desired
-    if (mode == Mode::FULL){return 0;}
+    nc = fullLen;
+    if (mode == Mode::FULL){return;}
     // Trim the full correlation
-    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
     int i1 = indexes.first;
     int i2 = indexes.second;
     len = i2 - i1;
-    c.resize(len);
-#ifdef _INTEL_COMPILER
-    #pragma ivdep
-#endif
-    std::copy(&pDst[i1], &pDst[i1]+i2, c.begin());
+    ippsCopy_64f(&pDst[i1], c, len);
     ippsFree(pDst);
-    return 0;
+    return;
 }
 
-int Convolve::autocorrelate(const std::vector<double> &a,
-                            std::vector<double> &c, 
-                            const Convolve::Mode mode,
-                            const Convolve::Implementation implementation)
+//============================================================================//
+
+void Convolve::autocorrelate(const std::vector<double> &a, 
+                             std::vector<double> &c,
+                             const Convolve::Mode mode,
+                             const Convolve::Implementation implementation)
 {
-    IppEnum funCfg = getImplementation(implementation) | ippsNormNone;
     int src1Len = static_cast<size_t> (a.size());
     c.resize(0);
-    if (src1Len < 1)
+    if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src1Len);
+    int len = indexes.second - indexes.first;
+    int nc;
+    c.resize(len);
+    autocorrelate(src1Len, a.data(),
+                  len, nc, c.data(), mode, implementation);
+#ifdef DEBUG
+    assert(nc == static_cast<int> (c.size()));
+#endif
+    return;
+}
+
+void Convolve::autocorrelate(const int src1Len, const double a[],
+                             const int maxc, int &nc, double c[],
+                             const Convolve::Mode mode,
+                             const Convolve::Implementation implementation)
+{
+    // Check the inputs
+    nc = 0;
+    if (src1Len < 1 || a == nullptr)
     {
-        if (src1Len < 1){RTSEIS_ERRMSG("%s", "No points in a");}
-        return -1;
+        if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
+        if (a == nullptr){RTSEIS_THROW_IA("%s", "a is NULL");}
+        RTSEIS_THROW_IA("%s", "Invalid lengths");
     }
-    int len = (2*src1Len - 1)/2 + 1;
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src1Len);
+    int fullLen = indexes.second - indexes.first;
+    if (maxc < fullLen || c == nullptr)
+    {
+       if (maxc < fullLen)
+       {
+           RTSEIS_THROW_IA("maxc = %d must be at least %d", maxc, fullLen);
+       }
+       if (c == nullptr){RTSEIS_THROW_IA("%s", "c is NULL");}
+       RTSEIS_THROW_IA("%s", "Invalid arguments");
+    }
     // Figure out the buffer size
+    int len = (2*src1Len - 1)/2 + 1;
+    IppEnum funCfg = getImplementation(implementation) | ippsNormNone;
     int bufSize = 0;
     IppStatus status = ippsAutoCorrNormGetBufferSize(src1Len, len,
                                                      ipp64f, funCfg, &bufSize);
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute buffer size");
-        return -1;
+        return;
     }
     Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
     // Perform the autocorrelation
-    const double *pSrc1 = a.data();
+    const double *pSrc1 = a;
     double *pDst = nullptr;
     pDst = ippsMalloc_64f(len);
     status = ippsAutoCorrNorm_64f(pSrc1, src1Len, pDst, len, funCfg, pBuffer);
@@ -183,18 +291,15 @@ int Convolve::autocorrelate(const std::vector<double> &a,
     if (status != ippStsNoErr)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute autocorrelation");
-        c.resize(0);
-        return -1;
+        ippsFree(pDst);
+        return;
     }
     // Only the first half is computed
     if (mode == Mode::FULL)
     {
-        c.resize(2*src1Len - 1);
-        double *cPtr = c.data();
-        ippsFlip_64f(pDst, cPtr, len);
-        ippsCopy_64f(&pDst[1], &cPtr[len], len-1); 
+        ippsFlip_64f(pDst, c, len);
+        ippsCopy_64f(&pDst[1], &c[len], len-1); 
         ippsFree(pDst);
-        return 0;
     }
     else
     {
@@ -207,14 +312,11 @@ int Convolve::autocorrelate(const std::vector<double> &a,
         int i1 = indexes.first;
         int i2 = indexes.second;
         len = i2 - i1; 
-        c.resize(len);
-#ifdef _INTEL_COMPILER
-        #pragma ivdep
-#endif
-        std::copy(&scratch[i1], &scratch[i1]+i2, c.begin());
+        ippsCopy_64f(&scratch[i1], c, len);
         ippsFree(scratch);
     }
-    return 0;
+    nc = fullLen;
+    return;
 }
 /*!
  * @brief Utility function to get appropriate IPP implementaiton.
