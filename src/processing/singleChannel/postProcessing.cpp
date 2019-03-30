@@ -19,6 +19,7 @@
 #include "rtseis/private/throw.hpp"
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
+#include "include/rtseis/private/doubleDataContainer.hpp"
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
 #include "rtseis/postProcessing/singleChannel/detrend.hpp"
 #include "rtseis/postProcessing/singleChannel/demean.hpp"

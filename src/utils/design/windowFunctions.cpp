@@ -281,7 +281,7 @@ void WindowFunctions::kaiser(const int len, std::vector<double> &window,
 }
 
 void WindowFunctions::kaiser(const int len, std::vector<float> &window,
-                            const float beta)
+                             const float beta)
 {
     if (len < 1)
     {
