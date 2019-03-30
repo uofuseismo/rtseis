@@ -42,7 +42,6 @@ int real(const std::vector<std::complex<double>> &z,
 
 /*!
  * @defgroup rtseis_utils_math_vm_copysign Copysign
- * @ingroup rtseis_utils_math_vm
  * @brief Computes the copysign of a float or double precision array s.t.
  *        \f[
  *           y =
@@ -57,7 +56,7 @@ int real(const std::vector<std::complex<double>> &z,
  * @param[in] x   The array of which to compute the sign bit.
  *                This has dimension [n].
  * @param[out] y  The sign bit of the input array.  This has dimension [n].
- * @ingroup rtseis_utils_math_vm_copysign
+ * @ingroup rtseis_utils_math_vm
  */
 template<typename T> int copysign(const int n, const T x[], T y[]);
 /*!
@@ -79,12 +78,13 @@ template<typename T> int copysign(const int n, const T x[], T y[]);
 template<typename T> int copysign(const std::vector<T> &x, std::vector<T> &y);
 
 /*!
- * defgroup rtseis_utilties_math_vm_isSorted isSorted
+ * @defgroup rtseis_utilties_math_vm_isSorted isSorted
  * @ingroup rtseis_utils_math_vm
  * @brief Determines if the vector is sorted in increasing order.
  * @param[in] x  The array to determine if is sorted or not.
  * @retval True indicates that x is sorted in increasing order.
  * @retval False indicates that x is not sorted in increasing order.
+ * @ingroup rtseis_utils_math_vm
  */
 template<typename T> bool isSorted(const std::vector<T> &x);
 

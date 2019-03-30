@@ -2,6 +2,7 @@
 #include <memory>
 #include <exception>
 #include "wrap.hpp"
+#include "modules.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -131,6 +132,67 @@ void Waveform::sosLowpassFilter(const double fc, const int order,
     return;    
 }
 
+void Waveform::sosHighpassFilter(const double fc, const int order,
+                                 const std::string &prototype,
+                                 const double ripple,
+                                 const bool zeroPhase)
+{
+    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype;
+    ptype = stringToAnalogPrototype(prototype);
+    try
+    {
+        waveform_->sosHighpassFilter(order, fc, ptype, ripple, zeroPhase);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        throw std::invalid_argument("SOS filtering failed");
+    }
+    return;
+}
+
+void Waveform::sosBandpassFilter(const std::pair<double,double> fc,
+                                 const int order,
+                                 const std::string &prototype,
+                                 const double ripple,
+                                 const bool zeroPhase)
+{
+    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype;
+    ptype = stringToAnalogPrototype(prototype);
+    try
+    {
+        waveform_->sosBandpassFilter(order, fc, ptype, ripple, zeroPhase);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        throw std::invalid_argument("SOS filtering failed");
+    }
+    return;
+}
+
+void Waveform::sosBandstopFilter(const std::pair<double,double> fc, 
+                                 const int order,
+                                 const std::string &prototype,
+                                 const double ripple,
+                                 const bool zeroPhase)
+{
+    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype;
+    ptype = stringToAnalogPrototype(prototype);
+    try
+    {
+        waveform_->sosBandstopFilter(order, fc, ptype, ripple, zeroPhase);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        throw std::invalid_argument("SOS filtering failed");
+    }
+    return;
+}
+
+
+
 /// Taper
 void Waveform::taper(const double pct, const std::string &taperName)
 {
@@ -220,6 +282,10 @@ bool Waveform::isInitialized(void) const
     return true;//waveform_->isInitialized();
 }
 
+///==========================================================================///
+///                          Private Functions                               ///
+///==========================================================================///
+
 RTSeis::PostProcessing::SingleChannel::IIRPrototype
 stringToAnalogPrototype(const std::string &prototype)
 {
@@ -245,4 +311,69 @@ stringToAnalogPrototype(const std::string &prototype)
         throw std::invalid_argument("Unknown prototype " + prototype);
     }
     return ptype;
-} 
+
+}
+
+///==========================================================================///
+///                          Python Bindings                                 ///
+///==========================================================================///
+
+void init_pp_waveform(py::module &m)
+{
+    m.doc() = "Utilities for post-processing waveforms";
+
+    py::class_<PBPostProcessing::Waveform> singleChannelWaveform(m, "Waveform");
+
+    singleChannelWaveform.def(py::init<>());
+    singleChannelWaveform.doc() = "Single channel waveform post-processing";
+    singleChannelWaveform.def("set_data", &PBPostProcessing::Waveform::setData,
+                              "Sets the signal to process on the class");
+    singleChannelWaveform.def("get_data", &PBPostProcessing::Waveform::getData,
+                              "Gets the filtered data as a NumPy array");
+    singleChannelWaveform.def("convolve",  &PBPostProcessing::Waveform::convolve,
+                              "Convolves the time series with the input signal",
+                              py::arg("s"),
+                              py::arg("smode") = "full");
+    singleChannelWaveform.def("demean",  &PBPostProcessing::Waveform::demean,
+                              "Removes the mean from the time series");
+    singleChannelWaveform.def("detrend", &PBPostProcessing::Waveform::detrend,
+                              "Removes the trend from the time series");
+    singleChannelWaveform.def("fir_filter", &PBPostProcessing::Waveform::firFilter,
+                              py::arg("taps"));
+
+    singleChannelWaveform.def("sos_lowpass_filter", &PBPostProcessing::Waveform::sosLowpassFilter,
+                              "Lowpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
+    singleChannelWaveform.def("sos_highpass_filter", &PBPostProcessing::Waveform::sosHighpassFilter,
+                              "Highpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
+    singleChannelWaveform.def("sos_bandpass_filter", &PBPostProcessing::Waveform::sosBandpassFilter,
+                              "Bandpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
+    singleChannelWaveform.def("sos_bandstop_filter", &PBPostProcessing::Waveform::sosBandstopFilter,
+                              "Lowpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
+    singleChannelWaveform.def("taper",   &PBPostProcessing::Waveform::taper,
+                              "Tapers the ends of a signal",
+                              py::arg("pct") = 5,
+                              py::arg("type") = "hamming");
+    singleChannelWaveform.def("is_initialized", &PBPostProcessing::Waveform::isInitialized,
+                              "Checks if the class is initialized");
+
+}

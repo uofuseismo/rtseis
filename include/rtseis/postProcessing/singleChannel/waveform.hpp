@@ -349,9 +349,11 @@ public:
      * @brief Applies the digital IIR filter represented as cascaded second
      *        order sections to the time series.
      * @param[in] sos  The digital IIR filter stored in second order sections.
-     * @param[in] lremovePhase  If true, then this removes the phase distortion
-     *                          by applying the filter to both the time forward
-     *                          and time reversed signal.
+     * @param[in] lzeroPhase  If true then the phase shift is removed by
+     *                        filtering the signal in both directions.  This
+     *                        effectively squares the magnitude of the filter
+     *                        response while conveniently annihilating
+     *                        the nonlinear phase response.
      * @throws std::invalid_argument if the filter is invalid.
      * @note It is the responsibility of the user to ensure that the
      *       signal sampling rate and the sampling rate used in the digital

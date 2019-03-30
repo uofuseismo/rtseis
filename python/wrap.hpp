@@ -1,5 +1,5 @@
-#ifndef RTSEIS_WRAP_HPP
-#define RTSEIS_WRAP_HPP 1
+#ifndef PYRTSEIS_WRAP_HPP
+#define PYRTSEIS_WRAP_HPP 1
 #include <memory>
 #include <string>
 #include <pybind11/pybind11.h>
@@ -28,11 +28,27 @@ public:
     void detrend(void);
     /// Generic FIR filter data
     void firFilter(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &taps);
-    /// IIR lowpass filter using second-order-sections
+    /// Generic IIR filter data using biquad second-order sections
+    /// IIR lowpass filter using second order sections
     void sosLowpassFilter(const double fc, const int order,
                           const std::string &prototype,
                           const double ripple,
                           const bool zeroPhase);
+    /// IIR highpass filter using second order sections
+    void sosHighpassFilter(const double fc, const int order,
+                           const std::string &prototype,
+                           const double ripple,
+                           const bool zeroPhase); 
+    /// IIR bandpass filter using second order sections
+    void sosBandpassFilter(const std::pair<double,double> fc, const int order,
+                           const std::string &prototype,
+                           const double ripple,
+                           const bool zeroPhase);
+    /// IIR bandstop filter using second order sections
+    void sosBandstopFilter(const std::pair<double,double> fc, const int order,
+                           const std::string &prototype,
+                           const double ripple,
+                           const bool zeroPhase);
     /// Taper
     void taper(const double pct, const std::string &taperName); 
     /// Set data
@@ -53,11 +69,34 @@ class FIR
 public:
     FIR(void);
     void setTaps(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> taps);
-    pybind11::array_t<double> getTaps(void);
+    pybind11::array_t<double> getTaps(void) const;
 private:
-    RTSeis::Utilities::FilterRepresentations::FIR fir;
+    std::unique_ptr<RTSeis::Utilities::FilterRepresentations::FIR> fir_;
 };
 
+class SOS
+{
+public:
+    SOS(void);
+    int getNumberOfSections(void) const;
+    pybind11::array_t<double> getNumeratorCoefficients(void) const;
+    pybind11::array_t<double> getDenominatorCoefficients(void) const;
+private:
+    std::unique_ptr<RTSeis::Utilities::FilterRepresentations::SOS> sos_;
 };
+
+class BA 
+{
+public:
+    BA(void);
+    void setNumeratorCoefficients(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &b);
+    void setDenominatorCoefficients(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &x);
+    pybind11::array_t<double> getNumeratorCoefficients(void) const;
+    pybind11::array_t<double> getDenominatorCoefficients(void) const;
+private:
+    std::unique_ptr<RTSeis::Utilities::FilterRepresentations::BA> ba_;
+};
+
+}; /// End representations
 
 #endif

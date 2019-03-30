@@ -13,7 +13,8 @@
 namespace py = pybind11;
 using namespace PBFilterRepresentations;
 
-FIR::FIR(void)
+FIR::FIR(void) :
+   fir_(new RTSeis::Utilities::FilterRepresentations::FIR()) 
 {
    return;
 }
@@ -22,13 +23,13 @@ void FIR::setTaps(py::array_t<double, py::array::c_style | py::array::forcecast>
 {
    std::vector<double> tapsVec(taps.size());
    std::memcpy(tapsVec.data(), tapsVec.data(), taps.size()*sizeof(double));
-   fir.setFilterTaps(tapsVec);
+   fir_->setFilterTaps(tapsVec);
 }
 /// Get the filter coefficients in a form usable
-py::array_t<double> FIR::getTaps(void)
+py::array_t<double> FIR::getTaps(void) const
 {
    std::vector<double> taps;
-   taps = fir.getFilterTaps();
+   taps = fir_->getFilterTaps();
    return py::array(taps.size(), taps.data());
 }
 

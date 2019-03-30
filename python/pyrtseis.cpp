@@ -1,4 +1,5 @@
-#include "wrap.hpp"
+//#include "wrap.hpp"
+#include "modules.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -11,7 +12,8 @@ PYBIND11_MODULE(libpyrtseis, modules)
     //                         PostProcessing Group                           //
     //------------------------------------------------------------------------// 
     py::module m = modules.def_submodule("PostProcessing");
-    m.doc() = "Utilities for post-processing waveforms";
+    init_pp_waveform(m);
+/*
 
     py::class_<PBPostProcessing::Waveform> singleChannelWaveform(m, "Waveform");
     //singleChannelWaveform
@@ -38,6 +40,27 @@ PYBIND11_MODULE(libpyrtseis, modules)
                               py::arg("prototype") = "butterworth",
                               py::arg("ripple") = 5,
                               py::arg("zero_phase") = false);
+    singleChannelWaveform.def("sos_highpass_filter", &PBPostProcessing::Waveform::sosHighpassFilter,
+                              "Highpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
+    singleChannelWaveform.def("sos_bandpass_filter", &PBPostProcessing::Waveform::sosBandpassFilter,
+                              "Bandpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
+    singleChannelWaveform.def("sos_bandstop_filter", &PBPostProcessing::Waveform::sosBandstopFilter,
+                              "Lowpass filters a signal using a biquadratic (second-order-section) filter",
+                              py::arg("fc"),
+                              py::arg("order") = 2,
+                              py::arg("prototype") = "butterworth",
+                              py::arg("ripple") = 5,
+                              py::arg("zero_phase") = false);
     singleChannelWaveform.def("taper",   &PBPostProcessing::Waveform::taper,
                               "Tapers the ends of a signal",
                               py::arg("pct") = 5,
@@ -48,17 +71,25 @@ PYBIND11_MODULE(libpyrtseis, modules)
     //m.doc() = "pybind11 example plugin"; // optional module docstring
 
     //m.def("add", &add, "A function which adds two numbers");
+*/
 
     //------------------------------------------------------------------------//
     //                       Filter Representations Group                     //
     //------------------------------------------------------------------------// 
+/*
     py::module mfr = modules.def_submodule("FilterRepresentations");
     mfr.doc() = "Utilities for representing filters";
 
     py::class_<PBFilterRepresentations::FIR> fir(mfr, "FIR");
     fir.def(py::init<>());
+    fir.def_property("taps",
+                      &PBFilterRepresentations::FIR::getTaps,
+                      &PBFilterRepresentations::FIR::setTaps); 
+*/
+/*
     fir.def("setTaps", &PBFilterRepresentations::FIR::setTaps,
             "Sets the filter taps");
     fir.def("getTaps", &PBFilterRepresentations::FIR::getTaps,
             "Gets the filter taps");
+*/
 }

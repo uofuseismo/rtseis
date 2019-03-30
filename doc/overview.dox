@@ -3,16 +3,17 @@
 
 \section section_Contents Contents
 
-- \subpage page_Overview "Overview"
-- \subpage page_Installation "Installing"
+- \subpage page_overview "Overview"
+- \subpage page_installation "Installing"
+- \subpage page_utilities "Utilities"
 
 */
 
 //--------------------------------------------------------------------------------------//
 
 /*!
-\page page_Overview Overview
-\section section_Overview Overview
+\page page_overview Overview
+\section section_overview Overview
 
 RTSeis is a real-time focused seismic signals processing library that is intended to
 
@@ -22,7 +23,7 @@ convenient C++ and Python solutions with minimal sacrifice in performance.
 - Emphasize data parallelism to achieve high-performance for processing of
 Large-N datasets.
 
-\subsection section_Overview_history History
+\subsection section_overview_history History
 
 RTSeis is the offshoot of my time at <a href="http://www.isti.com/">ISTI</a> where
 I'd frequently have to write holistic applications that were required do some generic
@@ -30,7 +31,7 @@ signals processing.  The generic part is the focus of this library where the goa
 o help seismologists easily add a signals processing workflow to their seismological
 application.
 
-\subsection section_Overview_alternatives Alternatives
+\subsection section_overview_alternatives Alternatives
 
 There are a great many signals processing packages.  In general, RTSeis tries to
 distinguish itself by
@@ -44,14 +45,14 @@ These points are really driven by the target audience which are seismologists in
 network operations or seismologists looking to process many signals.  To the latter,
 realize that the bottleneck in processing will likely be accessing disk.
 
-\subsection section_Overview_limitations Limitations
+\subsection section_overview_limitations Limitations
 
 RTSeis leverages libraries designed explicitly for x86_64 hardware.  In particular,
 these libraries are tuned for Intel chips though AMD users will be okay.  
 ARM and Power9 users will have to look elsewhere or reimplement a lot of low-level
 stuff (which is actually doable because the API is hardware agnostic by design).
 
-\subsection section_Overview_obspy ObsPy
+\subsection section_overview_obspy ObsPy
 
 <a href="https://github.com/obspy/obspy/wiki">ObsPy</a> 
 is a feature-rich platform for seismic processing with an easy-to-use Python
@@ -60,7 +61,7 @@ it is, at the time of writing, limited in its real-time applications.  Additiona
 RTSeis's license does not involve a copyleft clause which may be advantageous for
 those looking to create closed-source solutions.
 
-\subsection section_Overview_matlab Matlab
+\subsection section_overview_matlab Matlab
 
 Matlab is a complete signals processing solution.  RTSeis does not even begin to
 approach the breadth and depth of Matlab's functionality.  However, what RTSeis does 
@@ -74,14 +75,14 @@ provide a solution that doesn't require developers to have a Matlab license.
 //--------------------------------------------------------------------------------------//
 
 /*!
-\page page_Installation Installation
-\section section_Installation Installation
+\page page_installation Installation
+\section section_installation Installation
 This section introduces a strategy to build the library from source.  First, the
 dependencies will be introduced.  Then CMake can be configured which upon successful
 completion will generate a Makefile that is appropriate for your environement.  
 Following a successful configruation, the software can be built, tested, and installed.
 
-\subsection section_Installation_prereqs Prerequisites
+\subsection section_installation_prereqs Prerequisites
 
 The following prerequisites must be satisfied prior to building the software
 - A C++14 compliant compiler.
@@ -101,7 +102,7 @@ If the Python bindings are desired then the additional requirements to satisfy a
 In addition, the API documentation can be created locally with
 - <a href="http://www.doxygen.nl/">Doxygen</a>
 
-\subsection section_Installation_config Configuration
+\subsection section_installation_config Configuration
 
 After the prerequisites have been satisfied CMake can be configured by running a
 script like the following in the root source directory
@@ -137,7 +138,5 @@ Notice, the RTSEIS_WRAP_PYTHON flag has been toggled on.  If the Python bindings
 are not desired then you can simply remove the last two lines.
 
 After successfully configuring then one can build the code by descending into the source directory
-
-  
 
 */
