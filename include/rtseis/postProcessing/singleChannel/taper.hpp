@@ -150,6 +150,9 @@ private:
 class Taper : public std::exception
 {
 public:
+    /*! @name Constructors
+     * @{ 
+     */
     /*!
      * @brief Default constructor.
      */
@@ -165,16 +168,32 @@ public:
      * @throw std::invalid_argument if the parameters are invalid.
      */
     explicit Taper(const TaperParameters &parameters);
+    /*! @} */
+
+    /*! @name Operators
+     * @{
+     */
     /*!
      * @brief Copy assignment operator.
      * @param[in] demean   Demean class to copy.
      * @result A deep copy of the demean class.
      */
     Taper& operator=(const Taper &Taper);
+    /*! @} */
+
+    /*! @name Destructors
+     * @{
+     */
     /*!
-     * @brief Default constructor.
+     * @brief Default destructor.
      */
     ~Taper(void);
+    /*! 
+     * @brief Clears the memory and restores the defaults.
+     */
+    void clear(void);
+    /*! @} */
+
     /*!
      * @brief Sets the taper parameters.
      * @param[in] parameters  A correctly initialized taper parameters
@@ -182,6 +201,14 @@ public:
      * @throw std::invalid_argument if the parameters are invalid.
      */
     void setParameters(const TaperParameters &parameters);
+
+    /*!
+     * @brief Determines if the class is initialized.
+     * @retval True indicates that the class is ready to be applied to data.
+     * @retval False indicates that the class is not ready to be
+     *         applied to data.
+     */
+    bool isInitialized(void) const;
     /*!
      * @brief Applies the taper to the data.
      * @param[in] nx   Number of points in the signal.
@@ -190,11 +217,6 @@ public:
      * @throw std::invalid_argument if the parameters are invalid. 
      */
     void apply(const int nx, const double x[], double y[]);
-         
-    /*!
-     * @brief Clears the memory and restores the defaults.
-     */
-    void clear(void);
 private:
     class TaperImpl;
     std::unique_ptr<TaperImpl> pImpl;

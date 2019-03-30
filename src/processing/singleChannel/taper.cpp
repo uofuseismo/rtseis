@@ -1,10 +1,13 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cassert>
 #include <cmath>
 #include <algorithm>
 #include <exception>
+#include <stdexcept>
 #include <memory>
 #include <ipps.h>
+#include "rtseis/private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/enums.h"
@@ -25,11 +28,11 @@ struct TaperParameters::TaperParametersImpl
 
 struct Taper::TaperImpl
 {
-    public:
-        TaperParameters parms; 
-        std::vector<double> w8;
-        std::vector<float>  w4;
-        int winLen0 =-1;
+    TaperParameters parms; 
+    std::vector<double> w8;
+    std::vector<float>  w4;
+    int winLen0 =-1;
+    bool linit = true;
 };
 
 TaperParameters::TaperParameters(const double pct,
@@ -102,7 +105,7 @@ void TaperParameters::setPercentage(const double pct)
 {
     if (pct < 0 || pct > 100)
     {
-        throw std::invalid_argument("Percentage must be in range [0,100]");
+        RTSEIS_THROW_IA("%s", "Percentage must be in range [0,100]");
     }
     pImpl->pct = pct;
     return;
@@ -161,6 +164,7 @@ void Taper::clear(void)
         pImpl->w8.clear();
         pImpl->w4.clear();
         pImpl->winLen0 =-1;
+        pImpl->linit = true;
     }
     return;
 }
@@ -174,6 +178,7 @@ Taper& Taper::operator=(const Taper &taper)
     pImpl->w8 = taper.pImpl->w8;
     pImpl->w4 = taper.pImpl->w4;
     pImpl->winLen0 = taper.pImpl->winLen0;
+    pImpl->linit = taper.pImpl->linit;
     return *this;
 }
 
@@ -182,8 +187,7 @@ void Taper::setParameters(const TaperParameters &parameters)
     clear(); // Sets winLen0 to -1
     if (!parameters.isValid())
     {
-        throw std::invalid_argument("Taper parameters are invalid");
-        return;
+        RTSEIS_THROW_IA("%s", "Taper parameters are invalid");
     }
     pImpl->parms = parameters;
     return;
@@ -192,11 +196,15 @@ void Taper::setParameters(const TaperParameters &parameters)
 void Taper::apply(const int nx, const double x[], double y[])
 {
     if (nx <= 0){return;}
+    if (!pImpl->linit)
+    {
+        RTSEIS_THROW_IA("%s", "Taper never initialized");
+    }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){throw std::invalid_argument("x is NULL");}
-        if (y == nullptr){throw std::invalid_argument("y is NULL");}
-        throw std::invalid_argument("Invalid arrays");
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is NULL");}
+        RTSEIS_THROW_IA("%s", "Invalid arguments");
     }
     // Deal with an edge case
     if (nx < 3)
@@ -238,11 +246,11 @@ void Taper::apply(const int nx, const double x[], double y[])
         }
         else
         {
-            throw std::invalid_argument("Unsupported window");
+#ifdef DEBUG
+            assert(false);
+#endif
+            RTSEIS_THROW_IA("%s", "Unsupported window");
         }
-        // Following SAC definition the end points are set to 0
-        //pImpl->w8.emplace(pImpl->w8.begin(), 0);
-        //pImpl->w8.emplace_back(0);
     }
     // Taper first (m+1)/2 points
     int mp12 = m/2;
@@ -257,4 +265,9 @@ void Taper::apply(const int nx, const double x[], double y[])
     // Taper last (m+1)/2 points 
     ippsMul_64f(&w[m-mp12], &x[nx-mp12], &y[nx-mp12], mp12);
     return;
+}
+
+bool Taper::isInitialized(void) const
+{
+    return pImpl->linit;
 }

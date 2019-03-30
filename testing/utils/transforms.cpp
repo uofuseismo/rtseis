@@ -9,7 +9,9 @@
 #include <complex>
 #include <vector>
 #define RTSEIS_LOGGING 1
+#include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/transforms.hpp"
+#include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 #include <ipps.h>
@@ -57,47 +59,47 @@ int rtseis_test_utils_transforms(void)
 
 int transforms_nextPow2_test(void)
 {
-    if (DFTUtils::nextPow2(0) != 1)
+    if (DFTUtilities::nextPow2(0) != 1)
     {   
         RTSEIS_ERRMSG("%s", "Failed 0 test");
         return EXIT_FAILURE;
     }   
-    if (DFTUtils::nextPow2(1) != 1)
+    if (DFTUtilities::nextPow2(1) != 1)
     {
         RTSEIS_ERRMSG("%s", "Failed 1 test");
         return EXIT_FAILURE;
     }
-    if (DFTUtils::nextPow2(2) != 2)
+    if (DFTUtilities::nextPow2(2) != 2)
     {
         RTSEIS_ERRMSG("%s", "Failed 2 test");
         return EXIT_FAILURE;
     }
-    if (DFTUtils::nextPow2(3) != 4)
+    if (DFTUtilities::nextPow2(3) != 4)
     {
         RTSEIS_ERRMSG("%s", "Failed 3 test");
         return EXIT_FAILURE;
     }
-    if (DFTUtils::nextPow2(4) != 4)
+    if (DFTUtilities::nextPow2(4) != 4)
     {
         RTSEIS_ERRMSG("%s", "Failed 4 test");
         return EXIT_FAILURE;
     }
-    if (DFTUtils::nextPow2(5) != 8)
+    if (DFTUtilities::nextPow2(5) != 8)
     {
         RTSEIS_ERRMSG("%s", "Failed 8 test");
         return EXIT_FAILURE;
     }
-    if (DFTUtils::nextPow2(1200) != 2048)
+    if (DFTUtilities::nextPow2(1200) != 2048)
     {
         RTSEIS_ERRMSG("%s", "Failed 1200 test");
         return EXIT_FAILURE;
     }
-    if (DFTUtils::nextPow2(120000) != 131072)
+    if (DFTUtilities::nextPow2(120000) != 131072)
     {
         RTSEIS_ERRMSG("%s", "Failed 120000 test");
         return EXIT_FAILURE;
     }
-    if (DFTUtils::nextPow2(131072) != 131072)
+    if (DFTUtilities::nextPow2(131072) != 131072)
     {
         RTSEIS_ERRMSG("%s", "Failed 131072 test");
         return EXIT_FAILURE;
@@ -136,7 +138,7 @@ int transforms_unwrap_test(void)
                        -0.570800000000000};
     // Should run with default tol = M_PI
     double q[23];
-    int ierr = DFTUtils::unwrap(n, p, q);
+    int ierr = DFTUtilities::unwrap(n, p, q);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to called unwrap");
@@ -153,7 +155,7 @@ int transforms_unwrap_test(void)
     // Switch tolerance to 90 degrees and adjust p
     for (int i=0; i<n; i++){p[i] =-p[i] + 1;}
     double tol = M_PI/2;
-    ierr = DFTUtils::unwrap(n, p, q, tol);
+    ierr = DFTUtilities::unwrap(n, p, q, tol);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to called unwrap");
@@ -185,7 +187,7 @@ int transforms_phase_test(void)
     z[5] = std::complex<double> (0, +1);
     z[6] = std::complex<double> (1, +0);
     double angle[7];
-    int ierr = DFTUtils::phase(n, z, angle);
+    int ierr = DFTUtilities::phase(n, z, angle);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute phase");
@@ -201,7 +203,7 @@ int transforms_phase_test(void)
     } 
 
     bool lwantDeg = true;
-    ierr = DFTUtils::phase(n, z, angle, lwantDeg);
+    ierr = DFTUtilities::phase(n, z, angle, lwantDeg);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute phase");
@@ -241,7 +243,7 @@ int transforms_test_dft(void)
             return EXIT_FAILURE;
         }
         // Compute an FFT w/ FFTw
-        int np2 = DFTUtils::nextPow2(npts);
+        int np2 = DFTUtilities::nextPow2(npts);
         int lenfft = np2/2 + 1;
         std::complex<double> *zrefFFT = new std::complex<double>[lenfft];
         ierr = rfft(npts, x, np2, lenfft, zrefFFT); 
@@ -251,9 +253,10 @@ int transforms_test_dft(void)
             return EXIT_FAILURE;
         }
         // Initialize the DFT
-        DFTR2C dft; 
-        bool ldoFFT = false;
-        ierr = dft.initialize(npts, ldoFFT, RTSeis::Precision::DOUBLE); 
+        DFTRealToComplex dft; 
+        ierr = dft.initialize(npts,
+                              FourierTransformImplementation::DFT,
+                              RTSeis::Precision::DOUBLE); 
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Failed to initialize dft");
@@ -337,8 +340,9 @@ int transforms_test_dft(void)
         }
         delete[] z;
         // Redo this for an FFT
-        ldoFFT = true;
-        dft.initialize(npts, ldoFFT, RTSeis::Precision::DOUBLE);
+        dft.initialize(npts,
+                       FourierTransformImplementation::FFT,
+                       RTSeis::Precision::DOUBLE);
         if (ierr != 0)
         {
             RTSEIS_ERRMSG("%s", "Failed to initialize fft");

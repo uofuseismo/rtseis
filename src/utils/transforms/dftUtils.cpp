@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/transforms/transforms.hpp"
+#include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
@@ -14,8 +14,8 @@ using namespace RTSeis::Utilities::Transforms;
 #pragma omp declare simd
 static double rem(const double x, double y);
 
-int DFTUtils::unwrap(const int n, const double p[], double q[],
-                     const double tol)
+int DFTUtilities::unwrap(const int n, const double p[], double q[],
+                         const double tol)
 {
     if (n <= 0){return 0;}
     if (p == nullptr || q == nullptr)
@@ -63,9 +63,9 @@ int DFTUtils::unwrap(const int n, const double p[], double q[],
     return 0;
 }
 
-int DFTUtils::phase(const int n, const std::complex<double> z[],
-                    double phi[],
-                    const bool lwantDeg)
+int DFTUtilities::phase(const int n, const std::complex<double> z[],
+                        double phi[],
+                        const bool lwantDeg)
 {
     if (n <= 0){return 0;} 
     if (z == nullptr || phi == nullptr)
@@ -88,7 +88,7 @@ int DFTUtils::phase(const int n, const std::complex<double> z[],
     return 0;
 }
 
-int DFTUtils::nextPow2(const int n)
+int DFTUtilities::nextPow2(const int n)
 {
     if (n < 0)
     {
