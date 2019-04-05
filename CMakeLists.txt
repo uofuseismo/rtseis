@@ -130,7 +130,7 @@ target_link_libraries(rtseis
 #SET_TARGET_PROPERTIES(rtseis PROPERTIES
 #                      CXX_STANDARD_REQUIRED YES
 #                      CXX_EXTENSIONS NO)
-set(RTSEIS_WRAP_PYTHON YES)
+#set(RTSEIS_WRAP_PYTHON YES)
 IF (RTSEIS_WRAP_PYTHON)
    add_library(pyrtseis MODULE
                python/pyrtseis.cpp

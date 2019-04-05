@@ -10,178 +10,178 @@ using namespace RTSeis::Utilities::FilterImplementations;
 
 class Downsample::DownsampleImpl
 {
-    public:
-        /// Default constructor
-        DownsampleImpl(void)
+public:
+    /// Default constructor
+    DownsampleImpl(void)
+    {
+        return;
+    }
+    /// Copy constructor
+    DownsampleImpl(const DownsampleImpl &downsample)
+    {
+        *this = downsample;
+        return;
+    }
+    /// (Deep) copy operator
+    DownsampleImpl& operator=(const DownsampleImpl &downsample)
+    {
+        if (&downsample == this){return *this;}
+        phase0_ = downsample.phase0_;
+        downFactor_ = downsample.downFactor_;
+        phase_ = downsample.phase_;
+        mode_ = downsample.mode_;
+        precision_ = downsample.precision_;
+        linit_ = downsample.linit_; 
+        return *this;
+    }
+    /// Default destructor
+    ~DownsampleImpl(void) = default;
+    /// Clears memory and resets the module
+    void clear(void)
+    {
+        phase0_ = 0;
+        downFactor_ = 0;
+        phase_ = 0;
+        mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        precision_ = RTSeis::Precision::DOUBLE;
+        linit_ = false;
+        return;
+    }
+    //--------------------------------------------------------------------//
+    /// Initialize the filter
+    int initialize(const int downFactor,
+                   const RTSeis::ProcessingMode mode,
+                   const RTSeis::Precision precision)
+    {
+        clear();
+        downFactor_ = downFactor;
+        phase0_ = 0;
+        phase_ = 0;
+        mode_ = mode;
+        precision_ = precision;
+        linit_ = true;
+        return 0;
+    }
+    /// Determines if the module is initialized
+    bool isInitialized(void) const
+    {
+        return linit_;
+    }
+    /// Estimates the space required to hold the downsampled signal
+    int estimateSpace(const int n) const
+    {
+        int phase = 0;
+        if (mode_ ==  RTSeis::ProcessingMode::REAL_TIME){phase = phase_;}
+        int pDstLen = (n + downFactor_ - 1 - phase)/downFactor_;
+        return pDstLen;  
+    }
+    /// Gets the downsampling factor
+    int getDownsampleFactor(void) const
+    {
+        return downFactor_;
+    }
+    /// Sets the initial conditions
+    int setInitialConditions(const int phase)
+    {
+        resetInitialConditions();
+        if (phase < 0 || phase > downFactor_ - 1) 
         {
-            return;
+            return -1;
         }
-        /// Copy constructor
-        DownsampleImpl(const DownsampleImpl &downsample)
+        phase0_ = phase;
+        phase_  = phase;
+        return 0;
+    }
+    /// Resets the initial conditions
+    int resetInitialConditions(void)
+    {
+        phase_ = phase0_;
+        return 0;
+    }
+    /// Apply the downsampler
+    int apply(const int nx, const double x[],
+              int *nyDown, double y[])
+    {
+        *nyDown = 0;
+        if (nx == 0){return 0;} 
+        // There's really nothing to do
+        if (downFactor_ == 1)
         {
-            *this = downsample;
-            return;
-        }
-        /// (Deep) copy operator
-        DownsampleImpl& operator=(const DownsampleImpl &downsample)
-        {
-            if (&downsample == this){return *this;}
-            phase0_ = downsample.phase0_;
-            downFactor_ = downsample.downFactor_;
-            phase_ = downsample.phase_;
-            mode_ = downsample.mode_;
-            precision_ = downsample.precision_;
-            linit_ = downsample.linit_; 
-            return *this;
-        }
-        /// Default destructor
-        ~DownsampleImpl(void)
-        {
-            clear();
-        }
-        /// Clears memory and resets the module
-        void clear(void)
-        {
-            phase0_ = 0;
-            downFactor_ = 0;
-            phase_ = 0;
-            mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-            precision_ = RTSeis::Precision::DOUBLE;
-            linit_ = false;
-            return;
-        }
-        //--------------------------------------------------------------------//
-        /// Initialize the filter
-        int initialize(const int downFactor,
-                       const RTSeis::ProcessingMode mode,
-                       const RTSeis::Precision precision)
-        {
-            clear();
-            downFactor_ = downFactor;
-            phase0_ = 0;
-            phase_ = 0;
-            mode_ = mode;
-            precision_ = precision;
-            linit_ = true;
+            ippsCopy_64f(x, y, nx);
+            *nyDown = nx; 
             return 0;
         }
-        /// Determines if the module is initialized
-        bool isInitialized(void) const
+        // Apply downsampler
+        int pDstLen = estimateSpace(nx);
+        int phase = 0;
+        int pEst = pDstLen;
+        if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase = phase_;}
+        IppStatus status = ippsSampleDown_64f(x, nx, y, &pEst,
+                                              downFactor_, &phase);
+        if (status != ippStsNoErr)
         {
-            return linit_;
+            RTSEIS_ERRMSG("%s", "Failed to downsample signal");
+            return -1; 
         }
-        /// Estimates the space required to hold the downsampled signal
-        int estimateSpace(const int n) const
+        // TODO - this is hack'ish.  I think I need to try cacheing vectors
+        // that are too small to downsample then hit them on the next
+        // iteration. 
+        // Weird unhandled exception
+        if (pEst < 0 || pEst >= nx){pEst = pDstLen;}
+        *nyDown = pEst;
+        if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase_ = phase;}
+        return 0;
+    }
+    /// Apply the downsampler
+    int apply(const int nx, const float x[],
+              int *nyDown, float y[])
+    {
+        *nyDown = 0;
+        if (nx == 0){return 0;}
+        // There's really nothing to do
+        if (downFactor_ == 1)
         {
-            int phase = 0;
-            if (mode_ ==  RTSeis::ProcessingMode::REAL_TIME){phase = phase_;}
-            int pDstLen = (n + downFactor_ - 1 - phase)/downFactor_;
-            return pDstLen;  
-        }
-        /// Gets the downsampling factor
-        int getDownsampleFactor(void) const
-        {
-            return downFactor_;
-        }
-        /// Sets the initial conditions
-        int setInitialConditions(const int phase)
-        {
-            resetInitialConditions();
-            if (phase < 0 || phase > downFactor_ - 1) 
-            {
-                return -1;
-            }
-            phase0_ = phase;
-            phase_  = phase;
-            return 0 ;
-        }
-        /// Resets the initial conditions
-        int resetInitialConditions(void)
-        {
-            phase_ = phase0_;
+            ippsCopy_32f(x, y, nx);
+            *nyDown = nx;
             return 0;
         }
-        /// Apply the downsampler
-        int apply(const int nx, const double x[],
-                  int *nyDown, double y[])
+        // Apply downsampler
+        int pDstLen = estimateSpace(nx);
+        int phase = 0;
+        int pEst = pDstLen;
+        if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase = phase_;}
+        IppStatus status = ippsSampleDown_32f(x, nx, y, &pEst,
+                                              downFactor_, &phase);
+        if (status != ippStsNoErr)
         {
-            *nyDown = 0;
-            if (nx == 0){return 0;} 
-            // There's really nothing to do
-            if (downFactor_ == 1)
-            {
-                ippsCopy_64f(x, y, nx);
-                *nyDown = nx; 
-                return 0;
-            }
-            // Apply downsampler
-            int pDstLen = estimateSpace(nx);
-            int phase = 0;
-            int pEst = pDstLen;
-            if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase = phase_;}
-            IppStatus status = ippsSampleDown_64f(x, nx, y, &pEst,
-                                                  downFactor_, &phase);
-            if (status != ippStsNoErr)
-            {
-               RTSEIS_ERRMSG("%s", "Failed to downsample signal");
-               return -1; 
-            }
-            // Weird unhandled exception
-            if (pEst < 0 || pEst >= nx){pEst = pDstLen;}
-            *nyDown = pEst;
-            if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase_ = phase;}
-            return 0;
+            RTSEIS_ERRMSG("%s", "Failed to downsample signal");
+           return -1;
         }
-        /// Apply the downsampler
-        int apply(const int nx, const float x[],
-                  int *nyDown, float y[])
-        {
-            *nyDown = 0;
-            if (nx == 0){return 0;}
-            // There's really nothing to do
-            if (downFactor_ == 1)
-            {
-                ippsCopy_32f(x, y, nx);
-                *nyDown = nx;
-                return 0;
-            }
-            // Apply downsampler
-            int pDstLen = estimateSpace(nx);
-            int phase = 0;
-            int pEst = pDstLen;
-            if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase = phase_;}
-            IppStatus status = ippsSampleDown_32f(x, nx, y, &pEst,
-                                                  downFactor_, &phase);
-            if (status != ippStsNoErr)
-            {
-               RTSEIS_ERRMSG("%s", "Failed to downsample signal");
-               return -1;
-            }
-            // Weird unhandled exception
-            if (pEst < 0 || pEst >= nx){pEst = pDstLen;}
-            *nyDown = pEst;
-            if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase_ = phase;}
-            return 0;
-        }
-    private:
-        /// Initial conditions for phase.
-        int phase0_ = 0;
-        /// Downsampling factor.
-        int downFactor_ = 0;
-        /// The phase.
-        int phase_ = 0;
-        /// By default the module does post-procesing.
-        RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-        /// The default module implementation.
-        RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
-        /// Flag indicating the module is initialized.
-        bool linit_ = false; 
+        // Weird unhandled exception
+        if (pEst < 0 || pEst >= nx){pEst = pDstLen;}
+        *nyDown = pEst;
+        if (mode_ == RTSeis::ProcessingMode::REAL_TIME){phase_ = phase;}
+        return 0;
+    }
+private:
+    /// Initial conditions for phase.
+    int phase0_ = 0;
+    /// Downsampling factor.
+    int downFactor_ = 0;
+    /// The phase.
+    int phase_ = 0;
+    /// By default the module does post-procesing.
+    RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+    /// The default module implementation.
+    RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+    /// Flag indicating the module is initialized.
+    bool linit_ = false; 
 };
 
 //============================================================================//
 
 Downsample::Downsample(void) :
-    pDownsample_(new DownsampleImpl())
+    pDownsample_(std::make_unique<DownsampleImpl>())
 {
     return;
 }
@@ -207,9 +207,9 @@ Downsample::Downsample(Downsample &&downsample)
 Downsample& Downsample::operator=(const Downsample &downsample)
 {
     if (&downsample == this){return *this;}
-    if (pDownsample_){pDownsample_->clear();}
-    pDownsample_ = std::unique_ptr<DownsampleImpl>
-                   (new DownsampleImpl(*downsample.pDownsample_));
+    pDownsample_ = std::make_unique<DownsampleImpl> (*downsample.pDownsample_);
+    //pDownsample_ = std::unique_ptr<DownsampleImpl>
+    //               (new DownsampleImpl(*downsample.pDownsample_));
     return *this;
 }
 
