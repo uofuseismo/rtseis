@@ -251,12 +251,13 @@ void Waveform::setData(py::array_t<double, py::array::c_style | py::array::force
 */
     // Use pointers
     py::buffer_info xbuf = x.request();
-    int len = xbuf.size;
+    size_t len = xbuf.size;
     const double *xptr = (double *) (xbuf.ptr);
     if (xptr == nullptr)
     {
         throw std::runtime_error("x is null");
     }
+    //waveform_->setDataPointer(len, xptr);
     waveform_->setData(len, xptr);
     return;
 }

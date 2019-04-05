@@ -173,6 +173,24 @@ public:
      */
     void setData(const size_t n, const double x[]);
     /*!
+     * @brief Sets a pointer to the input data on the module.
+     * @param[in] n   The number of points in the signal.
+     * @param[in] x   The signal to set.  This is a unique pointer to an
+     *                array of dimension [n].  This class will own this
+     *                reference until it is released or the class goes out
+     *                of scope.
+     * @note This class will own x's reference until it is released
+     *       with \c releaseDataPointer().
+     * @sa \c releaseDataPointer()
+     */
+    void setDataPointer(const size_t n, const double *x);
+    /*!
+     * @brief Releases the data pointer back to the owner.
+     * @note This will reset the number of data points to 0. 
+     * @sa \c setDataPointer()
+     */
+    void releaseDataPointer(void) noexcept;
+    /*!
      * @brief Gets the processed waveform data.
      * @param[out] y  The processed waveform data.
      */

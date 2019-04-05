@@ -100,7 +100,7 @@ class Demean::DemeanImpl
 };
 
 DemeanParameters::DemeanParameters(const RTSeis::Precision precision) :
-    pDemeanParmsImpl_(new DemeanParms())
+    pDemeanParmsImpl_(std::make_unique<DemeanParms>())
 {
     pDemeanParmsImpl_->precision_ = precision;
     return;
@@ -117,8 +117,10 @@ DemeanParameters&
 {
     if (&parameters == this){return *this;}
     if (pDemeanParmsImpl_){pDemeanParmsImpl_->clear();}
-    pDemeanParmsImpl_ = std::unique_ptr<DemeanParms>
-                        (new DemeanParms(*parameters.pDemeanParmsImpl_));
+    pDemeanParmsImpl_ = std::make_unique<DemeanParms>
+                        (*parameters.pDemeanParmsImpl_);
+    //pDemeanParmsImpl_ = std::unique_ptr<DemeanParms>
+    //                    (new DemeanParms(*parameters.pDemeanParmsImpl_));
     return *this;
 }
 
@@ -151,7 +153,7 @@ bool DemeanParameters::isInitialized(void) const
 //============================================================================//
 
 Demean::Demean(void) :
-    pDemean_(new DemeanImpl())
+    pDemean_(std::make_unique<DemeanImpl>())
 {
     return;
 }
@@ -163,7 +165,7 @@ Demean::Demean(const Demean &demean)
 }
 
 Demean::Demean(const DemeanParameters &parameters) :
-    pDemean_(new DemeanImpl())
+    pDemean_(std::make_unique<DemeanImpl>())
 {
     setParameters(parameters);
     return;
@@ -173,7 +175,8 @@ Demean& Demean::operator=(const Demean &demean)
 {
     if (&demean == this){return *this;}
     if (pDemean_){pDemean_->clear();}
-    pDemean_ = std::unique_ptr<DemeanImpl> (new DemeanImpl(*demean.pDemean_));
+    pDemean_ = std::make_unique<DemeanImpl> (*demean.pDemean_);
+    //pDemean_ = std::unique_ptr<DemeanImpl> (new DemeanImpl(*demean.pDemean_));
     return *this;
 }
 

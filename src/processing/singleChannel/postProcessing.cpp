@@ -55,24 +55,31 @@ classifyIIRPrototype(const IIRPrototype prototype);
 static inline Utilities::FilterDesign::FIRWindow
 classifyFIRWindow(const FIRWindow windowIn);
 
+#define FIR_REMOVE_PHASE(pImpl, fir) \
+{ \
+    const std::vector<double> taps = fir.getFilterTaps(); \
+    const int ntaps = static_cast<int> (taps.size()); \
+    int nhalf = ntaps/2; \
+    int npad = len + nhalf; \
+    double *xtemp = ippsMalloc_64f(npad); \
+    double *ytemp = ippsMalloc_64f(npad); \
+    const double *x = pImpl->getInputDataPointer(); \
+    ippsCopy_64f(x, xtemp, len); \
+    ippsZero_64f(&xtemp[len], npad - len); \
+    RTSeis::Utilities::FilterImplementations::FIRFilter firFilter; \
+    firFilter.initialize(ntaps, taps.data(), \
+                   ProcessingMode::POST_PROCESSING, \
+                   Precision::DOUBLE, \
+                   Utilities::FilterImplementations::FIRImplementation::DIRECT); \
+    firFilter.apply(npad, xtemp, ytemp); \
+    ippsFree(xtemp); \
+    pImpl->resizeOutputData(len); \
+    double *yout = pImpl->getOutputDataPointer(); \
+    ippsCopy_64f(&ytemp[nhalf], yout, len); \
+    ippsFree(ytemp); \
+};
 
-static inline void reverse(std::vector<double> &x);
-static inline void reverse(const std::vector<double> &x,
-                           std::vector<double> &y);
-static inline void copy(const std::vector<double> &x, 
-                        std::vector<double> &y);
-
-static inline void copy(const std::vector<double> &x, 
-                        std::vector<double> &y)
-{
-#ifdef __INTEL_COMPILER
-    std::copy(pstl::execution::unseq, x.begin(), x.end(), y.begin());
-#else
-    int len = static_cast<int> (x.size());
-    ippsCopy_64f(x.data(), y.data(), len);
-#endif
-}
-
+/*
 static inline void reverse(std::vector<double> &x)
 {
 #ifdef __INTEL_COMPLIER
@@ -82,68 +89,155 @@ static inline void reverse(std::vector<double> &x)
     ippsFlip_64f_I(x.data(), len);
 #endif
     return;
-} 
-
-static inline void reverse(const std::vector<double> &x, 
-                           std::vector<double> &y)
-{
-#ifdef __INTEL_COMPILER
-    y.resize(x.size());
-    std::reverse_copy(pstl::execution::unseq, x.begin(), x.end(), y.begin());
-#else
-    int len = static_cast<int> (x.size());
-    ippsFlip_64f(x.data(), y.data(), len);
-#endif
-    return;
 }
+*/
+
 
 class Waveform::WaveformImpl
 {
 public:
+    /// Default constructor
     WaveformImpl(void)
     {
         return;
     }
-    ~WaveformImpl(void)
+/*
+    /// Copy constructor
+    WaveformImpl(const WaveformImpl &waveform)
     {
+        *this = waveform;
         return;
     }
-    void resizeOutputData(const int n)
+    /// Move constructor
+    WaveformImpl(WaveformImpl &&waveform)
     {
-        y_.resize(n);
+        *this = std::move(waveform);
+        return;
     }
-    void setData(const size_t n, const double x[])
+*/
+    /// Default destructor
+    ~WaveformImpl(void)
     {
-        x_.resize(n);
+        clear();
+        return;
+    }
+    /// Resets the module
+    void clear(void) noexcept
+    {
+        filterDesigner.clear();
+        if (x_){ippsFree(x_);}
+        if (y_){ippsFree(y_);}
+        x_ = nullptr;
+        y_ = nullptr;
+        xptr_ = nullptr; //.release(); // = nullptr;
+        maxx_ = 0;
+        nx_ = 0;
+        maxy_ = 0;
+        ny_ = 0;
+        return;
+    }
+    /// Gets the number of input sapmles
+    int getNumberOfInputSamples(void) const noexcept
+    {
+        return nx_;
+    }
+    /// Gets the number of output samples
+    int getNumberOfOutputSamples(void) const noexcept
+    {
+        return ny_;
+    }
+    /// Sets a pointer to the input data
+    void setInputDataPointer(const int nx,
+                             const double *x) noexcept
+    {
+        xptr_ = nullptr; //.release();
+        nx_ = nx;
+        xptr_ = x; //std::move(x);
+    }
+    /// Releases the input pointer to the data
+    void releaseInputDataPointer(void) noexcept
+    {
+        xptr_ = nullptr; //.release();
+        nx_ = 0;
+        return;
+    }
+    /// Sets the input time series
+    void setData(const size_t n, const double x[]) 
+    {
+        xptr_ = nullptr; //.release();
+        nx_ = static_cast<int> (n); 
+        if (nx_ > maxx_)
+        {
+            if (x_){ippsFree(x_);}
+            x_ = ippsMalloc_64f(nx_); 
+            maxx_ = nx_; 
+        }
+        if (nx_ == 0){return;} // Nothing to copy
 #ifdef __INTEL_COMPILER
-        std::copy(pstl::execution::unseq, x, x+n, x_.data());
+        std::copy(pstl::execution::unseq, x, x+n, x_); 
 #else
-        std::copy(x, x+n, x_.data());
+        ippsCopy_64f(x, x_, nx_);
 #endif
         return;
     }
+    /// Resizes the output
+    void resizeOutputData(const int ny)
+    {
+        ny_ = ny;
+        if (ny_ > maxy_)
+        {
+            if (y_){ippsFree(y_);}
+            y_ = ippsMalloc_64f(ny_);
+            maxy_ = ny_;
+        }
+        return;
+    }
+    /// Returns a pointer to the input data
     const double *getInputDataPointer(void) const
     {
-        return x_.data();
+        if (xptr_)
+        {
+            return xptr_;
+        }
+        else
+        {
+            return x_;
+        }
     }
+    /// Gets a pointer to the output data
     double *getOutputDataPointer(void)
     {
-        return y_.data();
+        return y_;
     }
-    int getLengthOfInputSignal(void) const
+
+    int getLengthOfInputSignal(void) const noexcept
     {
-        return static_cast<int> (x_.size());
+        return nx_; //static_cast<int> (x_.size());
     }
 //private:
     Utilities::FilterDesign::FilterDesigner filterDesigner;
-    std::vector<double> x_;
-    std::vector<double> y_;
+    //std::vector<double> x_;
+    //std::vector<double> y_;
+    /// A pointer to the input data
+    const double *xptr_ = nullptr;
+    /// The input data
+    double *x_ = nullptr;
+    /// The output data
+    double *y_ = nullptr;
     /// Sampling period
     double dt = 1;
+    /// Max space reserved to x
+    int maxx_ = 0;
+    /// Max space reserved to y
+    int maxy_ = 0;
+    /// Number of elements in x
+    int nx_ = 0;
+    /// Number of elements in y
+    int ny_ = 0;
 };
 
 Waveform::Waveform(void) :
-    pImpl(new WaveformImpl())
+    pImpl(std::make_unique<WaveformImpl>())
 {
     return;
 }
@@ -165,21 +259,32 @@ void Waveform::setData(const std::vector<double> &x)
     return;
 }
 
+void Waveform::setDataPointer(const size_t n,
+                              const double *x)
+{
+    if (n < 1 || x == nullptr)
+    {
+        if (n < 1){RTSEIS_THROW_IA("%s", "x has zero length");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "Invalid arguments");
+    }
+    pImpl->setInputDataPointer(static_cast<int> (n), x);
+    return; 
+}
+
+void Waveform::releaseDataPointer(void) noexcept
+{
+    pImpl->releaseInputDataPointer();
+    return;
+}
+
 void Waveform::setData(const size_t n, const double x[])
 {
     if (n < 1 || x == nullptr)
     {
-        if (n < 1)
-        {
-            RTSEIS_ERRMSG("%s", "x has zero length");
-            throw std::invalid_argument("x has zero length");
-        }
-        if (x == nullptr)
-        {
-            RTSEIS_ERRMSG("%s", "x is NULL");
-            throw std::invalid_argument("x is NULL");
-        }
-        throw std::invalid_argument("Invalid arguments");
+        if (n < 1){RTSEIS_THROW_IA("%s", "x has zero length");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "Invalid arguments");
     }
     pImpl->setData(n, x);
     return;
@@ -187,14 +292,20 @@ void Waveform::setData(const size_t n, const double x[])
 
 void Waveform::getData(std::vector<double> &y)
 {
-    y = pImpl->y_;
+    int ny = pImpl->getNumberOfOutputSamples();
+    y.resize(ny);
+    if (ny > 0)
+    {
+        const double *yout = pImpl->getOutputDataPointer();
+        ippsCopy_64f(yout, y.data(), ny);
+    }
     return;
 }
 
 void Waveform::getData(const size_t nwork, double y[]) const
 {
-    size_t leny = getOutputLength();
-    if (nwork < leny)
+    int leny = pImpl->getNumberOfOutputSamples();
+    if (nwork < static_cast<size_t> (leny))
     {
         throw std::invalid_argument("nwork = " + std::to_string(nwork)
                                   + " must be at least = "
@@ -205,11 +316,8 @@ void Waveform::getData(const size_t nwork, double y[]) const
     {
         throw std::invalid_argument("y is NULL");
     }
-#ifdef __INTEL_COMPILER
-    std::copy(pstl::execution::unseq, pImpl->y_.begin(), pImpl->y_.end(), y);
-#else
-    std::copy(pImpl->y_.begin(), pImpl->y_.end(), y);
-#endif 
+    const double *yout = pImpl->getOutputDataPointer();
+    ippsCopy_64f(yout, y, leny);
     return;
 }
 
@@ -220,7 +328,7 @@ void Waveform::getData(const size_t nwork, double y[]) const
 /// TODO delete this function
 size_t Waveform::getOutputLength(void) const
 {
-    return pImpl->y_.size();
+    return pImpl->getNumberOfOutputSamples(); //pImpl->ny_;
 }
 
 void Waveform::setSamplingPeriod(const double dt)
@@ -266,13 +374,25 @@ void Waveform::convolve(
     // Perform the convolution
     try
     {
-        Utilities::Math::Convolve::convolve(pImpl->x_, s, pImpl->y_,
+        int lenc = 0; 
+        lenc = Utilities::Math::Convolve::computeConvolutionLength(nx, ny,
+                                                                   convcorMode);
+        pImpl->resizeOutputData(lenc); 
+        int nyout;
+        const double *x = pImpl->getInputDataPointer();
+        double *yout = pImpl->getOutputDataPointer();
+        Utilities::Math::Convolve::convolve(nx, x,
+                                            ny, s.data(),
+                                            lenc, nyout, yout,
                                             convcorMode, convcorImpl);
+#ifdef DEBUG
+        assert(lenc == nyout);
+#endif
     }
     catch (const std::invalid_argument &ia)
     {
         RTSEIS_ERRMSG("Failed to compute convolution: %s", ia.what());
-        pImpl->y_.resize(0);
+        pImpl->resizeOutputData(0);
     } 
     return;
 }
@@ -295,13 +415,25 @@ void Waveform::correlate(
     // Perform the correlation
     try
     {
-        Utilities::Math::Convolve::correlate(pImpl->x_, s, pImpl->y_,
+        int lenc = 0;
+        lenc = Utilities::Math::Convolve::computeConvolutionLength(nx, ny,
+                                                                   convcorMode);
+        pImpl->resizeOutputData(lenc); 
+        int nyout;
+        const double *x = pImpl->getInputDataPointer();
+        double *yout = pImpl->getOutputDataPointer();
+        Utilities::Math::Convolve::correlate(nx, x,
+                                             ny, s.data(),
+                                             lenc, nyout, yout,
                                              convcorMode, convcorImpl);
+#ifdef DEBUG
+        assert(lenc == nyout);
+#endif
     }
     catch (const std::invalid_argument &ia)
     {
         RTSEIS_ERRMSG("Failed to compute correlation: %s", ia.what());
-        pImpl->y_.resize(0);
+        pImpl->resizeOutputData(0);
     }
     return;
 }
@@ -321,13 +453,24 @@ void Waveform::autocorrelate(
     // Perform the correlation
     try
     {
-        Utilities::Math::Convolve::autocorrelate(pImpl->x_, pImpl->y_,
+        int lenc = 0; 
+        lenc = Utilities::Math::Convolve::computeConvolutionLength(nx, nx,
+                                                                   convcorMode);
+        pImpl->resizeOutputData(lenc);
+        int nyout;
+        const double *x = pImpl->getInputDataPointer();
+        double *yout = pImpl->getOutputDataPointer();
+        Utilities::Math::Convolve::autocorrelate(nx, x,
+                                                 lenc, nyout, yout,
                                                  convcorMode, convcorImpl);
+#ifdef DEBUG
+        assert(lenc == nyout);
+#endif
     }
     catch (const std::invalid_argument &ia)
     {
         RTSEIS_ERRMSG("Failed to compute autocorrelation: %s", ia.what());
-        pImpl->y_.resize(0);
+        pImpl->resizeOutputData(0);
     }
     return;
 }
@@ -357,7 +500,7 @@ void Waveform::demean(void)
     catch (const std::invalid_argument &ia)
     {
         RTSEIS_ERRMSG("%s", ia.what());
-        throw std::invalid_argument("Algorithmic failure");
+        throw std::runtime_error("Algorithmic failure");
     }
     return; 
 }
@@ -463,13 +606,7 @@ void Waveform::firLowpassFilter(const int ntapsIn, const double fc,
     }
     else
     {
-        std::vector<double> xtemp = pImpl->x_;
-        size_t nx0 = pImpl->x_.size();
-        size_t nhalf = static_cast<size_t> (ntaps)/2;
-        pImpl->x_.resize(nx0 + nhalf, 0);
-        firFilter(fir);
-        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
-        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+        FIR_REMOVE_PHASE(pImpl, fir);
     }
     return;
 }
@@ -548,19 +685,14 @@ void Waveform::firHighpassFilter(const int ntapsIn, const double fc,
     window = classifyFIRWindow(windowIn);
     Utilities::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designHighpassFIRFilter(order, r, window, fir);
+    // Standard FIR filtering
     if (!lremovePhase)
     {
         firFilter(fir);
     }
     else
     {
-        std::vector<double> xtemp = pImpl->x_;
-        size_t nx0 = pImpl->x_.size();
-        size_t nhalf = static_cast<size_t> (ntaps)/2;
-        pImpl->x_.resize(nx0 + nhalf, 0); 
-        firFilter(fir);
-        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
-        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+        FIR_REMOVE_PHASE(pImpl, fir);
     }
     return;
 }
@@ -652,13 +784,7 @@ void Waveform::firBandpassFilter(const int ntapsIn,
     }
     else
     {
-        std::vector<double> xtemp = pImpl->x_;
-        size_t nx0 = pImpl->x_.size();
-        size_t nhalf = static_cast<size_t> (ntaps)/2;
-        pImpl->x_.resize(nx0 + nhalf, 0); 
-        firFilter(fir);
-        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
-        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+        FIR_REMOVE_PHASE(pImpl, fir);
     }
     return;
 }
@@ -749,13 +875,7 @@ void Waveform::firBandstopFilter(const int ntapsIn,
     }
     else
     {
-        std::vector<double> xtemp = pImpl->x_;
-        size_t nx0 = pImpl->x_.size();
-        size_t nhalf = static_cast<size_t> (ntaps)/2;
-        pImpl->x_.resize(nx0 + nhalf, 0);
-        firFilter(fir);
-        pImpl->x_.erase(pImpl->x_.begin()+nx0, pImpl->x_.end());
-        pImpl->y_.erase(pImpl->y_.begin(), pImpl->y_.begin()+nhalf);
+        FIR_REMOVE_PHASE(pImpl, fir);
     }
     return;
 }
@@ -789,19 +909,21 @@ void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
                    Precision::DOUBLE,
                    Utilities::FilterImplementations::FIRImplementation::DIRECT);
     pImpl->resizeOutputData(len);
-    // Zero-phase filtering needs workspace so that x isn't annihalated
-    if (lremovePhase)
+    // Standard FIR filtering 
+    const double *x = pImpl->getInputDataPointer();
+    double *yout = pImpl->getOutputDataPointer();
+    if (!lremovePhase)
     {
-        std::vector<double> xwork(len);
-        copy(pImpl->x_, xwork);
-        firFilter.apply(len, xwork.data(), pImpl->y_.data());
-        reverse(pImpl->y_, xwork);
-        firFilter.apply(len, pImpl->x_.data(), pImpl->y_.data());
-        reverse(pImpl->y_);
+        firFilter.apply(len, x, yout);
     }
     else
     {
-        firFilter.apply(len, pImpl->x_.data(), pImpl->y_.data());
+        double *ywork = ippsMalloc_64f(len);
+        firFilter.apply(len, x,    ywork); // Filter forwards
+        ippsFlip_64f(ywork, yout,  len);   // Reverse y
+        firFilter.apply(len, yout, ywork); // Filter y backwards
+        ippsFlip_64f(ywork, yout,  len);   // Reverse it
+        ippsFree(ywork);
     }
     return;
 }
@@ -838,7 +960,9 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
                Precision::DOUBLE,
                Utilities::FilterImplementations::IIRDFImplementation::DF2_FAST);
         pImpl->resizeOutputData(len);
-        iirFilter.apply(len, pImpl->x_.data(), pImpl->y_.data());
+        const double *x = pImpl->getInputDataPointer();
+        double *yout = pImpl->getOutputDataPointer();
+        iirFilter.apply(len, x, yout);
     }
     else
     {
@@ -847,7 +971,9 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
                                 na, a.data(),
                                 Precision::DOUBLE);
         pImpl->resizeOutputData(len);
-        iiriirFilter.apply(len, pImpl->x_.data(), pImpl->y_.data());
+        const double *x = pImpl->getInputDataPointer();
+        double *yout = pImpl->getOutputDataPointer();
+        iiriirFilter.apply(len, x, yout);
     }
     return;
 }
@@ -876,19 +1002,22 @@ void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
                          ProcessingMode::POST_PROCESSING,
                          Precision::DOUBLE);
     pImpl->resizeOutputData(len);
+    // Get handles on pointers
+    const double *x = pImpl->getInputDataPointer();
+    double *yout = pImpl->getOutputDataPointer();
     // Zero-phase filtering needs workspace so that x isn't annihalated
     if (lremovePhase)
     {
-        std::vector<double> xwork(len);
-        copy(pImpl->x_, xwork);
-        sosFilter.apply(len, xwork.data(), pImpl->y_.data());
-        reverse(pImpl->y_, xwork);
-        sosFilter.apply(len, pImpl->x_.data(), pImpl->y_.data());
-        reverse(pImpl->y_);
+        double *ywork = ippsMalloc_64f(len);
+        sosFilter.apply(len, x,    ywork); // Filter forwards
+        ippsFlip_64f(ywork, yout,  len);   // Reverse y
+        sosFilter.apply(len, yout, ywork); // Filter y backwards
+        ippsFlip_64f(ywork, yout,  len);   // Reverse it
+        ippsFree(ywork);
     }
     else
     {
-        sosFilter.apply(len, pImpl->x_.data(), pImpl->y_.data());
+        sosFilter.apply(len, x, yout);
     }
     return;
 }
@@ -1067,3 +1196,4 @@ classifyFIRWindow(const FIRWindow windowIn)
     }
     return window;
 }
+

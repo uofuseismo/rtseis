@@ -254,10 +254,10 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     }
     }
     // Compare
-    ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
+    ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        fprintf(stderr, "Failed sos filter test with error=%e\n", l1Norm);
+        RTSEIS_ERRMSG("Failed sos filter test with error=%e", l1Norm);
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -303,7 +303,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     }
     }
     // Compare
-    ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
+    ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
         RTSEIS_ERRMSG("Failed sos bp filter test with error=%e", l1Norm);
@@ -697,10 +697,11 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
         int ntaps = order + 1;              // Length of FIR filter
         std::pair<double,double> fc(2, 10); // 2-10 Hz bandpass 
         bool lremovePhase = true;           // Remove phase shift
-        waveform.setData(x);
+        waveform.setDataPointer(x.size(), x.data());
         waveform.firBandpassFilter(ntaps, fc,
                                    SingleChannel::FIRWindow::HANN,
                                    lremovePhase);
+        waveform.releaseDataPointer();
         waveform.getData(y);
     }
     catch (const std::invalid_argument &ia)

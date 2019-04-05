@@ -100,8 +100,8 @@ void convolve(const int na, const double a[],
               const int nb, const double b[],
               const int maxc,
               int &nc, double c[],
-              const Mode mode = Mode::FULL,
-              const Implementation implementation = Implementation::AUTO);
+              const Mode mode, // = Mode::FULL,
+              const Implementation implementation);// = Implementation::AUTO);
 /*!
  * @brief Computes the correlation \f$ c[k] = \sum_n a[n] b[n+k] \f$.
  * @param[in] a        First array in correlation.  This has length [m]
@@ -144,8 +144,8 @@ void correlate(const int na, const double a[],
                const int nb, const double b[],
                const int maxc,
                int &nc, double c[],
-               const Mode mode = Mode::FULL,
-               const Implementation implementation = Implementation::AUTO);
+               const Mode mode, //= Mode::FULL,
+               const Implementation implementation);// = Implementation::AUTO);
 /*!
  * @brief Computes the autocorrelation \f$ c[k] = \sum_n a[n] a[n+k] \f$.
  * @param[in] a     Array to autocorrelation.  This has length [m].
@@ -180,6 +180,20 @@ void autocorrelate(const int na, const double a[],
                    const int maxc, int &nc, double c[],
                    const Mode mode = Convolve::Mode::FULL,
                    const Implementation implementation = Implementation::AUTO);
+
+/*!
+ * @brief Utility routine to deterimine the length of a convolution or 
+ *        correlation given a mode.
+ * @param[in] n1    The length of the first signal in the convolution or
+ *                  correlation.
+ * @param[in] n2    The length of the second signal in the convolution or
+ *                  correlation.
+ * @param[in] mode  Defines the convolution or correlation mode.
+ * @result The length of the convolution or correlation.
+ * @ingroup rtseis_utils_math_convolve
+ */
+int computeConvolutionLength(const int n1, const int n2,
+                             const Convolve::Mode mode);
 
 
 }; /* End Convolve. */

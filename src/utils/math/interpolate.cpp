@@ -441,7 +441,7 @@ class Interp1D::Interp1DImpl
 };
 
 Interp1D::Interp1D(void) :
-    pImpl(new Interp1DImpl())
+    pImpl(std::unique_ptr<Interp1DImpl>())
 {
     return;
 }

@@ -302,51 +302,51 @@ struct SOSDesignParameters
 //----------------------------------------------------------------------------//
 class FilterDesigner::FilterDesignerImpl
 {
-    public:
-        FilterDesignerImpl(void)
-        {
-            zpkDesigns.reserve(64);
-            zpkCache.reserve(64);
-            baDesigns.reserve(64);
-            baCache.reserve(64);
-            sosDesigns.reserve(64);
-            sosCache.reserve(64);
-            firDesigns.reserve(64);
-            firCache.reserve(64);
-            return;
-        }
-        ~FilterDesignerImpl(void)
-        {
-            clear();
-            return;
-        }
-        void clear(void)
-        {
-            zpkDesigns.clear();
-            zpkCache.clear();
-            baDesigns.clear();
-            baCache.clear();
-            sosDesigns.clear();
-            sosCache.clear();
-            firDesigns.clear();
-            firCache.clear();
-            return;
-        }
+public:
+    FilterDesignerImpl(void)
+    {
+        zpkDesigns.reserve(64);
+        zpkCache.reserve(64);
+        baDesigns.reserve(64);
+        baCache.reserve(64);
+        sosDesigns.reserve(64);
+        sosCache.reserve(64);
+        firDesigns.reserve(64);
+        firCache.reserve(64);
+        return;
+    }
+    ~FilterDesignerImpl(void)
+    {
+        clear();
+        return;
+    }
+    void clear(void)
+    {
+        zpkDesigns.clear();
+        zpkCache.clear();
+        baDesigns.clear();
+        baCache.clear();
+        sosDesigns.clear();
+        sosCache.clear();
+        firDesigns.clear();
+        firCache.clear();
+        return;
+    }
 
-        std::vector<IIRDesignParameters> zpkDesigns;
-        std::vector<FilterRepresentations::ZPK> zpkCache;
-        std::vector<IIRDesignParameters> baDesigns;
-        std::vector<FilterRepresentations::BA> baCache;
-        std::vector<SOSDesignParameters> sosDesigns;
-        std::vector<FilterRepresentations::SOS> sosCache; 
-        std::vector<FIRDesignParameters> firDesigns;
-        std::vector<FilterRepresentations::FIR> firCache;
+    std::vector<IIRDesignParameters> zpkDesigns;
+    std::vector<FilterRepresentations::ZPK> zpkCache;
+    std::vector<IIRDesignParameters> baDesigns;
+    std::vector<FilterRepresentations::BA> baCache;
+    std::vector<SOSDesignParameters> sosDesigns;
+    std::vector<FilterRepresentations::SOS> sosCache; 
+    std::vector<FIRDesignParameters> firDesigns;
+    std::vector<FilterRepresentations::FIR> firCache;
 };
 
 //=============================================================================//
 
 FilterDesigner::FilterDesigner(void) :
-    pImpl(new FilterDesignerImpl())
+    pImpl(std::make_unique<FilterDesignerImpl>())
 {
     return;
 }
@@ -367,7 +367,7 @@ FilterDesigner& FilterDesigner::operator=(const FilterDesigner &design)
 {
     if (&design == this){return *this;}
     if (pImpl){pImpl->clear();}
-    pImpl = std::unique_ptr<FilterDesignerImpl> (new FilterDesignerImpl());
+    pImpl = std::make_unique<FilterDesignerImpl> (); //std::unique_ptr<FilterDesignerImpl> (new FilterDesignerImpl());
     pImpl->zpkDesigns = design.pImpl->zpkDesigns;
     pImpl->zpkCache   = design.pImpl->zpkCache;
     pImpl->baDesigns  = design.pImpl->baDesigns;

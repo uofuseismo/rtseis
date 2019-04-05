@@ -1,7 +1,6 @@
 #ifndef RTSEIS_POSTPROCESSING_SC_TAPER
 #define RTSEIS_POSTPROCESSING_SC_TAPER 1
 #include <memory>
-#include <exception>
 #include "rtseis/enums.h"
 
 namespace RTSeis
@@ -24,7 +23,7 @@ namespace SingleChannel
  * @ingroup rtseis_postprocessing_sc_taper
  * @copyright Ben Baker distributed under the MIT license.
  */
-class TaperParameters : public std::exception
+class TaperParameters
 {
 public:
     /*!
@@ -147,7 +146,7 @@ private:
  * @ingroup rtseis_postprocessing_sc_taper
  * @copyright Ben Baker distributed under the MIT license.
  */
-class Taper : public std::exception
+class Taper
 {
 public:
     /*! @name Constructors

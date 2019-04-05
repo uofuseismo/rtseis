@@ -318,6 +318,17 @@ void Convolve::autocorrelate(const int src1Len, const double a[],
     nc = fullLen;
     return;
 }
+
+//============================================================================//
+
+int Convolve::computeConvolutionLength(const int n1, const int n2,
+                                       const Convolve::Mode mode)
+{
+    std::pair<int, int> indexes = computeTrimIndices(mode, n1, n2);
+    int len = indexes.second - indexes.first; 
+    return len;
+}
+
 /*!
  * @brief Utility function to get appropriate IPP implementaiton.
  * @param[in] implementatation  The desired implementation.
@@ -339,6 +350,7 @@ static IppEnum getImplementation(const Convolve::Implementation implementation)
         return ippAlgAuto;
     }   
 }
+
 /*!
  * @brief Computes the start and stop indices of the convolution or correlation.
  *        The resulting copy would go from conv(res.first:res.second) where the

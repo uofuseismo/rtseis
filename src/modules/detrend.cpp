@@ -8,9 +8,8 @@
 
 using namespace RTSeis::PostProcessing::SingleChannel;
 
-class DetrendParameters::DetrendParms
+struct DetrendParameters::DetrendParmsImpl
 {
-public:
     void clear(void)
     {
         precision_ = RTSeis::Precision::DOUBLE;
@@ -22,9 +21,8 @@ public:
     bool linit_ = true; // This module is always ready to roll
 };
 
-class Detrend::DetrendImpl
+struct Detrend::DetrendImpl
 {
-public:
     DetrendImpl(void)
     { 
         return;
@@ -182,7 +180,7 @@ public:
     {
         b1_ = b1;
     }
-private:
+//private:
     /// Detrend parameters
     DetrendParameters parms_;
     /// The y-intercept
@@ -195,9 +193,9 @@ private:
 //============================================================================//
 
 DetrendParameters::DetrendParameters(const RTSeis::Precision precision) :
-    pDetrendParmsImpl_(new DetrendParms())
+    pImpl(std::make_unique<DetrendParmsImpl>())
 {
-    pDetrendParmsImpl_->precision_ = precision;
+    pImpl->precision_ = precision;
     return;
 }
 
@@ -211,41 +209,44 @@ DetrendParameters&
     DetrendParameters::operator=(const DetrendParameters &parameters)
 {
     if (&parameters == this){return *this;}
-    if (pDetrendParmsImpl_){pDetrendParmsImpl_->clear();}
-    pDetrendParmsImpl_ = std::unique_ptr<DetrendParms>
-                         (new DetrendParms(*parameters.pDetrendParmsImpl_));
+    //if (pImpl){pImpl->clear();}
+    //pImpl = std::make_unique<DetrendParms>(*parameters.pImpl);
+    pImpl = std::unique_ptr<DetrendParmsImpl>
+                         (new DetrendParmsImpl(*parameters.pImpl));
     return *this;
 }
 
-DetrendParameters::~DetrendParameters(void)
+DetrendParameters::~DetrendParameters(void) = default;
+/*
 {
-    clear();
+    //clear();
     return;
 }
+*/
 
 void DetrendParameters::clear(void)
 {
-    pDetrendParmsImpl_->clear();
+    pImpl->clear();
     return;
 }
 
 RTSeis::Precision DetrendParameters::getPrecision(void) const
 {
-    return pDetrendParmsImpl_->precision_;
+    return pImpl->precision_;
 }
 
 RTSeis::ProcessingMode DetrendParameters::getProcessingMode(void) const
 {
-    return pDetrendParmsImpl_->mode_;
+    return pImpl->mode_;
 }
 
 bool DetrendParameters::isInitialized(void) const
 {
-    return pDetrendParmsImpl_->linit_;
+    return pImpl->linit_;
 }
 //============================================================================//
 Detrend::Detrend(void) :
-    pDetrend_(new DetrendImpl())
+    pDetrend_(std::make_unique<DetrendImpl>())
 {
     clear();
     return;
@@ -258,7 +259,7 @@ Detrend::Detrend(const Detrend &detrend)
 }
 
 Detrend::Detrend(const DetrendParameters &parameters) : 
-    pDetrend_(new DetrendImpl())
+    pDetrend_(std::make_unique<DetrendImpl>())
 {
     setParameters(parameters);
     return;
@@ -268,6 +269,7 @@ Detrend& Detrend::operator=(const Detrend &detrend)
 {
     if (&detrend == this){return *this;}
     if (pDetrend_){pDetrend_->clear();}
+    //pDetrend_ = std::make_unique<DetrendImpl> (*detrend.pDetrend_);
     pDetrend_ = std::unique_ptr<DetrendImpl>
                 (new DetrendImpl(*detrend.pDetrend_));
     return *this;

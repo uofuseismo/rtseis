@@ -75,7 +75,7 @@ ADD_SUBDIRECTORY(include)
 SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
 SET(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES}) #${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
-SET(PYTHON_SRC src/modules/wrap.cpp)
+#SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
     src/utils/verbosity.c
     src/utils/design/filterDesigner.cpp
@@ -115,8 +115,10 @@ SET(MODULES_SRCS
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
     src/processing/singleChannel/postProcessing.cpp
+    #src/processing/singleChannel/envelope.cpp
     src/processing/singleChannel/taper.cpp
-    src/processing/singleChannel/filter.cpp)
+    #src/processing/singleChannel/filter.cpp
+    )
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
 
 # cmake -DBUILD_SHARED_LIBS=YES /path/to/source
