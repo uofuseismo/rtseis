@@ -45,4 +45,6 @@ jobs:
             make
       - run:
            name: Test the code
-           command: ctest --verbose
+           command: |
+            cd build
+            ctest --verbose
