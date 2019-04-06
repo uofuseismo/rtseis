@@ -279,7 +279,7 @@ int transforms_test_dft(void)
         {
             error = std::max(error, std::abs(z[i] - zrefDFT[i]));
         }
-        if (error > 1.e-12)
+        if (error > 1.e-11)
         {
             RTSEIS_ERRMSG("Failed to compute dft %.10e", error);
             return EXIT_FAILURE;
