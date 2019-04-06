@@ -5,10 +5,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-#include "include/rtseis/postProcessing/singleChannel/waveform.hpp"
-#include "include/rtseis/utilities/filterRepresentations/ba.hpp"
-#include "include/rtseis/utilities/filterRepresentations/fir.hpp"
-#include "include/rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/postProcessing/singleChannel/waveform.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/utilities/filterRepresentations/fir.hpp"
+#include "rtseis/utilities/filterRepresentations/sos.hpp"
 
 namespace PBPostProcessing
 {

@@ -7,9 +7,9 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <pybind11/complex.h>
-#include "include/rtseis/utilities/filterRepresentations/ba.hpp"
-#include "include/rtseis/utilities/filterRepresentations/fir.hpp"
-#include "include/rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/utilities/filterRepresentations/fir.hpp"
+#include "rtseis/utilities/filterRepresentations/sos.hpp"
 
 namespace py = pybind11;
 using namespace PBPostProcessing;

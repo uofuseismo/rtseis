@@ -2,18 +2,6 @@ cmake_minimum_required(VERSION 3.5)
 project(RTSeis VERSION 0.1.1 LANGUAGES C CXX)
 enable_testing()
 
-SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-
-#SET(RTSEIS_VERSION ${RTSEIS_VERSION_MAJOR}.${RTSEIS_VERSION_MINOR}.${RTSEIS_VERSION_PATCH})
-MESSAGE("Configuring RTSeis version: " ${VERSION})
-#set(CMAKE_BUILD_TYPE Release)
-# Add modules for finding requisites
-SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/testing)
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-
 ##########################################################################################
 #                    Define the compiler standard, OpenMP, and Python                    #
 ##########################################################################################
@@ -45,9 +33,6 @@ else()
       endif()
    endif()
 endif()
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 message("Compling with CXX Flags: ${CMAKE_CXX_FLAGS}")
 
 if (RTSEIS_WRAP_PYTHON)
@@ -64,16 +49,34 @@ endif()
 ##########################################################################################
 
 include_directories(
-   ${CMAKE_SOURCE_DIR}
    ${CMAKE_CURRENT_SOURCE_DIR}/include
-   ${IPP_INCLUDE_DIR}
-   ${MKL_INCLUDE_DIR}
 )
+set(PRIVATE_INCLUDE_DEPENDS ${IPP_INCLUDE_DIR} ${MKL_INCLUDE_DIR})
+message("Include directories:" ${PRIVATE_INCLUDE_DEPENDS})
 
-ADD_SUBDIRECTORY(include)
+#ADD_SUBDIRECTORY(include)
 
-SET(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
-SET(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES}) #${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+##########################################################################################
+#                                        Sort Out Python Wrappers                        #
+##########################################################################################
+#set(RTSEIS_WRAP_PYTHON YES)
+IF (RTSEIS_WRAP_PYTHON)
+   add_library(pyrtseis MODULE
+               python/pyrtseis.cpp
+               python/filterRepresentations.cpp
+               python/waveform.cpp)
+   target_link_libraries(pyrtseis PRIVATE pybind11::module rtseis)
+   ##PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
+   ##TARGET_LINK_LIBRARIES(rtseis_python
+   ##                      rtseis ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+ENDIF()
+
+##########################################################################################
+#                                      Define Library Dependencies                       #
+##########################################################################################
+
+set(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
+set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 
 #SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
@@ -124,23 +127,15 @@ SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SR
 # cmake -DBUILD_SHARED_LIBS=YES /path/to/source
 set(BUILD_SHARED_LIBS YES)
 add_library(rtseis SHARED ${SRCS})
+target_include_directories(rtseis
+                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS})
 target_link_libraries(rtseis
-                      PRIVATE ${MKL_LIBRARY} ${IPP_LIBRARY})
+                      PRIVATE ${LIBALL})
 #TARGET_COMPILE_FEATURES(rtseis PUBLIC CXX_STD_14)
 #SET_TARGET_PROPERTIES(rtseis PROPERTIES
 #                      CXX_STANDARD_REQUIRED YES
 #                      CXX_EXTENSIONS NO)
 #set(RTSEIS_WRAP_PYTHON YES)
-IF (RTSEIS_WRAP_PYTHON)
-   add_library(pyrtseis MODULE
-               python/pyrtseis.cpp
-               python/filterRepresentations.cpp
-               python/waveform.cpp)
-   target_link_libraries(pyrtseis PRIVATE pybind11::module rtseis)
-   ##PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
-   ##TARGET_LINK_LIBRARIES(rtseis_python
-   ##                      rtseis ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
-ENDIF()
 
 #########################################################################################
 #                                        Unit Tests                                     #
@@ -164,10 +159,17 @@ ADD_EXECUTABLE(testPPSC
                #testing/modules/detrend.cpp
                #testing/modules/classicSTALTA.cpp)
 # The core library utilities - do these first
-TARGET_LINK_LIBRARIES(testUtils PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+target_link_libraries(testUtils
+                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+target_include_directories(testUtils
+                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS})
 # Single-channel post-processing
-TARGET_LINK_LIBRARIES(testPPSC  PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+target_link_libraries(testPPSC
+                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
 #SET_PROPERTY(TARGET testUtils   PROPERTY CXX_STANDARD 17)
+target_include_directories(testPPSC
+                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS})
+
 ADD_TEST(NAME utils
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testUtils)
@@ -175,6 +177,10 @@ ADD_TEST(NAME singleChannlePostProcessing
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testPPSC
          DEPENDS utils)
+
+# Need to copy the answers to the test directory
+file(COPY ${CMAKE_SOURCE_DIR}/testing/data DESTINATION .)
+file(COPY ${CMAKE_SOURCE_DIR}/python/benchmarks.py DESTINATION .)
 
 #ADD_LIBRARY(pyrtseis SHARED src/modules/boost.cpp)
 #TARGET_LINK_LIBRARIES(pyrtseis ${LIBALL} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
@@ -197,26 +203,26 @@ else()
            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 
-#------------------------------------------------------------------------------#
-#                                   CPACK Packaging                            #
-#------------------------------------------------------------------------------#
-SET(CPACK_PACKAGE_NAME "rtseis")
-SET(CPACK_PACKAGE_VENDOR "The Internet")
-SET(CPACK_PACKAGE_CONTACT "bakerb845@gmail.com")
-SET(CPACK_PACKAGE_LICENSE "MIT")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A real-time seismic signals processing library")
-SET(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-#IF (WIN32 AND NOT UNIX)
-
-#ELSE(WIN32 AND NOT UNIX)
-  SET(CPACK_GENERATOR "TGZ")
-  SET(CPACK_SOURCE_GENERATOR TGZ)
-  SET(CPACK_SOURCE_PACKAGE_FILE_NAME "artspl-${PROJECT_VERSION}" )
-#ENDIF(WIN32 AND NOT UNIX)
-include(CPack)
+##########################################################################################
+#                                     CPACK Packaging                                    #
+##########################################################################################
+#set(CPACK_PACKAGE_NAME "rtseis")
+#set(CPACK_PACKAGE_VENDOR "The Internet")
+#set(CPACK_PACKAGE_CONTACT "bakerb845@gmail.com")
+#set(CPACK_PACKAGE_LICENSE "MIT")
+#set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A real-time seismic signals processing library")
+#set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+#set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+#set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+##IF (WIN32 AND NOT UNIX)
+#
+##ELSE(WIN32 AND NOT UNIX)
+#  set(CPACK_GENERATOR "TGZ")
+#  set(CPACK_SOURCE_GENERATOR TGZ)
+#  set(CPACK_SOURCE_PACKAGE_FILE_NAME "rtseis-${PROJECT_VERSION}" )
+##ENDIF(WIN32 AND NOT UNIX)
+#include(CPack)
 
 #------------------------------------------------------------------------------#
 #                              Configuration Details                           #
@@ -228,7 +234,7 @@ include(CPack)
 #SET(SYSCONFIG_INSTALL_DIR etc/rtseis/)
 #include(CMakePackageConfigHelpers)
 
-include(GNUInstallDirs)
+#include(GNUInstallDirs)
 
 #CONFIGURE_PACKAGE_CONFIG_FILE(${CMAKE_MODULE_PATH}/FindRTSeis.cmake.in
 #                              ${CMAKE_BINARY_DIR}/FindRTSeis.cmake

@@ -19,26 +19,32 @@ Prior to building RTSeis the following dependencies must be cleared:
 CMake can be configured using a script like
 
     #!/bin/sh
+    # Set the compilers
+    export CC=/usr/bin/clang-6.0
+    export CXX=/usr/bin/clang++-6.0
+    # Set the libraries
     export IPP_DIR=/opt/intel/ipp
     export IPP_LIB_ROOT=${IPP_DIR}/lib/intel64
     export MKL_DIR=/opt/intel/mkl
     export MKL_LIB_ROOT=${MKL_DIR}/lib/intel64
-    if [ -f Makefile ]; then
-       make clean
+    # Only matters if you intend to 
+    export pybind11_INCLUDE_DIR=/usr/local/include/pybind11
+    # Set the working directory
+    export BUILD_DIR=clang_build 
+    # Clobber the existing directory for a fresh build
+    if [ -d ${BUILD_DIR} ]; then
+       rm -r {BUILD_DIR}
     fi
-    if [ -f CMakeCache.txt ]; then
-       echo "Removing CMakeCache.txt"
-       rm CMakeCache.txt
-    fi
-    if [ -d CMakeFiles ]; then
-       echo "Removing CMakeFiles"
-       rm -rf CMakeFiles
-    fi
-    cmake ./ \
-    -DCMAKE_C_COMPILER=gcc \
-    -DCMAKE_CXX_COMPILER=g++ \
-    -DCMAKE_C_FLAGS="-g3 -O2 -Wall" \
-    -DCMAKE_CXX_FLAGS="-g3 -O2 -Wall" \
+    mkdir ${BUILD_DIR}
+    # Descend into build directory 
+    cd ${BUILD_DIR}
+    # Configure a build release - to disable Python wrapping remove -DRTSEIS_WRAP_PYTHON
+    cmake ../ \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=${CC} \
+    -DCMAKE_CXX_COMPILER=${CXX} \
+    -DCMAKE_C_FLAGS="-Wall" \
+    -DCMAKE_CXX_FLAGS="-Wall" \
     -DIPP_INCLUDE_DIR=${IPP_DIR}/include \
     -DIPP_LIBRARY="${IPP_LIB_ROOT}/libipps.so;${IPP_LIB_ROOT}/libippvm.so;${IPP_LIB_ROOT}/libippcore.so" \
     -DMKL_INCLUDE_DIR="${MKL_DIR}/include" \

@@ -14,7 +14,6 @@
 #include <pstl/execution>
 #include <pstl/algorithm>
 #endif
-//#include <boost/align/aligned_allocator.hpp>
 #include <vector>
 #include "rtseis/private/throw.hpp"
 #define RTSEIS_LOGGING 1

@@ -1,7 +1,7 @@
 #ifndef RTSEIS_UTILS_DESIGN_FILTERDESIGNER_HPP
 #define RTSEIS_UTILS_DESIGN_FILTERDESIGNER_HPP
 #include <memory>
-#include "include/rtseis/utilities/design/enums.hpp"
+#include "rtseis/utilities/design/enums.hpp"
 
 namespace RTSeis
 {

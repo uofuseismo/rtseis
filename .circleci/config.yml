@@ -36,7 +36,9 @@ jobs:
             -DMKL_LIBRARY="${MKL_LIB_ROOT}/libmkl_intel_lp64.so;${MKL_LIB_ROOT}/libmkl_sequential.so;${MKL_LIB_ROOT}/libmkl_core.so;${MKL_LIB_ROOT}/libmkl_avx2.so"
       - run:
            name: Build the code
-           command: make
+           command: |
+            pwd
+            make
       - run:
            name: Test the code
            command: ctest --verbose
