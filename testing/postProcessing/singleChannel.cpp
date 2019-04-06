@@ -829,7 +829,7 @@ int testDetrend(void)
     double maxAbs = 0;
     ippsMaxAbs_64f(y.data(), npts, &maxAbs);
     // ~50,000 points loses about 5 digits which is sensible 
-    if (maxAbs > 1.e-9)
+    if (maxAbs > 1.e-8)
     {
         RTSEIS_ERRMSG("Demean failed %e", maxAbs);
         return EXIT_FAILURE;
