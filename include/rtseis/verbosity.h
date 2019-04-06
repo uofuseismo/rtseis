@@ -1,8 +1,8 @@
 #ifndef RTSEIS_VERBOSITY_H__
 #define RTSEIS_VERBOSITY_H__ 1
 #include <stdbool.h>
-#include "rtseis/config.h"
 #include "rtseis/enums.h"
+#include "rtseis/config.h"
 
 #ifdef __cplusplus
 extern "C"

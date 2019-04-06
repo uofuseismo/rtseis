@@ -75,6 +75,9 @@ ENDIF()
 #                                      Define Library Dependencies                       #
 ##########################################################################################
 
+configure_file(${CMAKE_SOURCE_DIR}/include/rtseis/config.h.in
+               ${CMAKE_SOURCE_DIR}/include/rtseis/config.h)
+
 set(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
 set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 

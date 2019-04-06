@@ -25,6 +25,10 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+#ifndef RTSEIS_MAXMSG_LEN
+   #define RTSEIS_MAXMSG_LEN 4096
+#endif
+
 /*
 #ifndef RTSEIS_PACK_ERRMSG
 #define RTSEIS_PACK_ERRMSG(fmt, ...) \

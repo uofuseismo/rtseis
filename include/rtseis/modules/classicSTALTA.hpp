@@ -1,7 +1,6 @@
 #ifndef RTSEIS_MODULES_CLASSICSTALTA_HPP
 #define RTSEIS_MODULES_CLASSICSTALTA_HPP 1
 #include <memory>
-#include "rtseis/config.h"
 #include "rtseis/enums.h"
 
 namespace RTSeis
