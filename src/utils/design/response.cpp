@@ -5,6 +5,7 @@
 #include <cfloat>
 #include <algorithm>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/design/response.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
@@ -13,20 +14,16 @@
 #include "rtseis/log.h"
 #include <ipps.h>
 
-/*
- This source code is originally from ISTI's ISCL which is distributed under the
- Apache 2 license.  It has been heavily modified to conform to C++.
-*/
 
 using namespace RTSeis::Utilities::FilterDesign;
 using namespace RTSeis::Utilities::FilterRepresentations;
 
-int Response::freqs(const BA &ba, const std::vector<double> &w,
-                    std::vector<std::complex<double>> &h)
+std::vector<std::complex<double>>
+Response::freqs(const BA &ba, const std::vector<double> &w)
 {
     size_t nw = w.size();
-    h.resize(0);
-    if (nw == 0){return 0;}
+    std::vector<std::complex<double>> h;
+    if (nw == 0){return h;}
     // Get a handle on the numerator and denominator coefficients
     std::vector<double> b = ba.getNumeratorCoefficients();
     std::vector<double> a = ba.getDenominatorCoefficients();
@@ -41,8 +38,7 @@ int Response::freqs(const BA &ba, const std::vector<double> &w,
     } 
     if (lzero)
     {
-        RTSEIS_ERRMSG("%s", "a is entirely 0; division by zero");
-        return -1;
+        RTSEIS_THROW_IA("%s", "a is entirely 0; division by zero");
     }
     // Compute s = i \omega
     std::vector<std::complex<double>> s;
@@ -59,41 +55,27 @@ int Response::freqs(const BA &ba, const std::vector<double> &w,
 #endif
     for (size_t i=0; i<b.size(); i++){bz[i] = std::complex<double> (b[i], 0);}
     std::vector<std::complex<double>> hsNum;
-    int ierr = Math::Polynomial::polyval(bz, s, hsNum);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute hsNum");
-        return -1;
-    }
-    std::vector<std::complex<double>> hsDen;
+    Math::Polynomial::polyval(bz, s, hsNum);
+
     std::vector<std::complex<double>> az;
     az.resize(a.size());
 #ifdef __INTEL_COMPILER
     #pragma ivdep
 #endif
     for (size_t i=0; i<a.size(); i++){az[i] = std::complex<double> (a[i], 0);}
-    ierr = Math::Polynomial::polyval(az, s, hsDen);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute hsDen");
-        return -1;
-    }
+    std::vector<std::complex<double>> hsDen;
+    Math::Polynomial::polyval(az, s, hsDen);
     // Compute the transfer function
-    ierr = Math::VectorMath::divide(hsDen, hsNum, h);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Division failed");
-        return -1;
-    }
-    return 0;
+    Math::VectorMath::divide(hsDen, hsNum, h);
+    return h;
 }
 
-int Response::freqz(const BA &ba, const std::vector<double> &w,
-                    std::vector<std::complex<double>> &h) 
+std::vector<std::complex<double>>
+Response::freqz(const BA &ba, const std::vector<double> &w)
 {
     size_t nw = w.size();
-    h.resize(0);
-    if (nw == 0){return 0;} 
+    std::vector<std::complex<double>> h;
+    if (nw == 0){return h;} 
     // Get a handle on the numerator and denominator coefficients
     std::vector<double> b = ba.getNumeratorCoefficients();
     std::vector<double> a = ba.getDenominatorCoefficients();
@@ -108,8 +90,7 @@ int Response::freqz(const BA &ba, const std::vector<double> &w,
     }   
     if (lzero)
     {   
-        RTSEIS_ERRMSG("%s", "a is entirely 0; division by zero");
-        return -1; 
+        RTSEIS_THROW_IA("%s", "a is entirely 0; division by zero");
     }
     // Copy numerators and denominators in reverse order for consistency with
     // polyval and then compute z.  The polyval convention requires us to
@@ -146,104 +127,37 @@ int Response::freqz(const BA &ba, const std::vector<double> &w,
     }
     // Evaluate the numerator and denominator polynoimals
     std::vector<std::complex<double>> hzNum;
-    int ierr = Math::Polynomial::polyval(bz, z, hzNum);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute hzNum");
-        return -1; 
-    }
+    Math::Polynomial::polyval(bz, z, hzNum);
+
     std::vector<std::complex<double>> hzDen;
-    ierr = Math::Polynomial::polyval(az, z, hzDen);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute hzDen");
-        return -1;
-    }
+    Math::Polynomial::polyval(az, z, hzDen);
     // Compute the transfer function: H = Num/Den
-    ierr = Math::VectorMath::divide(hzDen, hzNum, h); 
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Division failed");
-        return -1;
-    }
-    return 0;
+    Math::VectorMath::divide(hzDen, hzNum, h); 
+    return h;
 }
 
-/*
-int Response::groupDelay(const BA &ba,
-                         std::vector<double> &gd,
-                         const int n,
-                         const bool lwhole)
+std::vector<double>
+Response::groupDelay(const BA &ba,
+                    const std::vector<double> &w)
 {
-    gd.resize(0);
-    if (n < 0)
-    {
-        RTSEIS_ERRMSG("%s", "n must be positive");
-        return -1;
-    }
-    if (n == 0){return 0;}
-    if (fs <= 0)
-    {
-        RTSEIS_ERRMSG("fs = %lf must be postiive", fs);
-        return -1;
-    }
-    // Discretize
-    std::vector<double> w(n);
-    double di = M_PI/static_cast<double> (n);
-    if (lwhole){di = (2*M_PI)/static_cast<double> (n);}
-    if (n == 1)
-    {
-        w[0] = di;
-    }
-    else
-    {
-        #pragma omp simd
-        for (int i=0; i<n; i++)
-        {
-            w[i] = di*static_cast<double> (i);
-        }
-    }
-    int ierr = groupDelay(ba, w, gd);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute group delay");
-        return -1;
-    }
-    return 0;
-}
-*/
-
-int Response::groupDelay(const BA &ba,
-                         const std::vector<double> &w,
-                         std::vector<double> &gd)
-{
-    gd.resize(0);
+    std::vector<double> gd;
     // Nothing to do
-    if (w.size() == 0){return 0;}
+    if (w.size() == 0){return gd;}
     // Get handles on data
     std::vector<double> b = ba.getNumeratorCoefficients();
     std::vector<double> a = ba.getDenominatorCoefficients();
     if (b.size() < 1 || a.size() < 1)
     {
-        if (b.size() < 1){RTSEIS_ERRMSG("%s", "No elements in b");}
-        if (a.size() < 1){RTSEIS_ERRMSG("%s", "No elements in a");}
-        return -1;
+        if (b.size() < 1){RTSEIS_THROW_IA("%s", "No elements in b");}
+        if (a.size() < 1){RTSEIS_THROW_IA("%s", "No elements in a");}
+        RTSEIS_THROW_IA("%s", "Invalid arguments");
     }
     // B/A = b[0]/A + b[1]/A + ... = b[0]*conj(A) + ... = b*conj(a)
-    int ierr;
     std::vector<double> c;
     // Correlation is convolution, however, a is reversed.
-    try
-    {
-        Math::Convolve::correlate(b, a, c,
+    c = Math::Convolve::correlate(b, a,
                                   Math::Convolve::Mode::FULL,
                                   Math::Convolve::Implementation::DIRECT);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return -1;
-    }
     // Differentiate b*conj(a).  Note, that the order is reversed to conform
     // to polyval.
     int nc = static_cast<int> (c.size());
@@ -264,19 +178,10 @@ int Response::groupDelay(const BA &ba,
     }
     // Evaluate the numerator and denominator polynomials at angular frequencies
     std::vector<std::complex<double>> num;
-    ierr = Math::Polynomial::polyval(zcr, z, num);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute numerator");
-        return -1;
-    }
+    Math::Polynomial::polyval(zcr, z, num);
+
     std::vector<std::complex<double>> den;
-    ierr = Math::Polynomial::polyval(zc, z, den);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute numerator");
-        return -1; 
-    }
+    Math::Polynomial::polyval(zc, z, den);
     // Check for singular elements
     for (size_t i=0; i<w.size(); i++)
     {
@@ -298,5 +203,5 @@ int Response::groupDelay(const BA &ba,
     {
         gd[i] = std::real(zgd[i]) - shift;
     }
-    return 0;
+    return gd;
 }

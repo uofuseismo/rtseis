@@ -40,9 +40,10 @@ int rtseis_test_utils_design_zpk2sos(void)
     IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
     try
     {
-         IIR::iirfilter(n, Wn, 5, 60,  
-                        Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
-                        sos, ldigital, SOSPairing::NEAREST);
+         sos = IIR::designSOSIIRFilter(n, Wn, 5, 60,  
+                                       Bandtype::LOWPASS,
+                                       IIRPrototype::BUTTERWORTH,
+                                       ldigital, SOSPairing::NEAREST);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -76,7 +77,7 @@ int rtseis_test_utils_design_zpk2sos(void)
     ZPK zpk(zell, pell, kell);
     try
     {
-        IIR::zpk2sos(zpk, sos, SOSPairing::NEAREST);
+        sos = IIR::zpk2sos(zpk, SOSPairing::NEAREST);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -101,9 +102,10 @@ int rtseis_test_utils_design_zpk2sos(void)
     try 
     {   
          double Wn2[2] = {10/100., 0};
-         IIR::iirfilter(2, Wn2, 60, 0,
-                        Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV1,
-                        sos, ldigital, SOSPairing::NEAREST);
+         sos = IIR::designSOSIIRFilter(2, Wn2, 60, 0,
+                                       Bandtype::LOWPASS,
+                                       IIRPrototype::CHEBYSHEV1,
+                                       ldigital, SOSPairing::NEAREST);
     }   
     catch (const std::invalid_argument &ia)
     {   
@@ -130,7 +132,7 @@ int rtseis_test_utils_design_iir_ap(void)
     // Test butterworth order 1
     try
     {
-        IIR::AnalogPrototype::butter(1, zpk);
+        zpk = IIR::AnalogPrototype::butter(1);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -151,7 +153,7 @@ int rtseis_test_utils_design_iir_ap(void)
     // Test butterworth order 4
     try
     {
-        IIR::AnalogPrototype::butter(5, zpk);
+        zpk = IIR::AnalogPrototype::butter(5);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -179,7 +181,7 @@ int rtseis_test_utils_design_iir_ap(void)
     // Test order 1 cheby1
     try
     {
-        IIR::AnalogPrototype::cheb1ap(1, 2.2, zpk);
+        zpk = IIR::AnalogPrototype::cheb1ap(1, 2.2);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -202,7 +204,7 @@ int rtseis_test_utils_design_iir_ap(void)
     // Test order 6 cheby1
     try
     {
-        IIR::AnalogPrototype::cheb1ap(6, 0.994, zpk);
+        zpk = IIR::AnalogPrototype::cheb1ap(6, 0.994);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -230,7 +232,7 @@ int rtseis_test_utils_design_iir_ap(void)
     // Test order 2 cheby2 
     try
     {
-        IIR::AnalogPrototype::cheb2ap(1, 1.1, zpk);
+        zpk = IIR::AnalogPrototype::cheb2ap(1, 1.1);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -253,7 +255,7 @@ int rtseis_test_utils_design_iir_ap(void)
     // Test order 6 cheby2 
     try
     {
-        IIR::AnalogPrototype::cheb2ap(6, 1.2, zpk);
+        zpk = IIR::AnalogPrototype::cheb2ap(6, 1.2);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -318,8 +320,8 @@ int rtseis_test_utils_design_zpk2tf(void)
     BA ba;
     try
     {
-        IIR::zpk2tf(zpkref, ba);
-        IIR::tf2zpk(ba, zpk);
+        ba = IIR::zpk2tf(zpkref);
+        zpk = IIR::tf2zpk(ba);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -389,9 +391,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::LOWPASS, IIRPrototype::BUTTERWORTH,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::LOWPASS,
+                                    IIRPrototype::BUTTERWORTH,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -419,9 +422,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs,
-                       Bandtype::HIGHPASS, IIRPrototype::BUTTERWORTH,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
+                                    Bandtype::HIGHPASS,
+                                    IIRPrototype::BUTTERWORTH,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -459,9 +463,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::BANDPASS, IIRPrototype::BUTTERWORTH,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
+                                    Bandtype::BANDPASS,
+                                    IIRPrototype::BUTTERWORTH,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -500,9 +505,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::BANDSTOP, IIRPrototype::BUTTERWORTH,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::BANDSTOP,
+                                    IIRPrototype::BUTTERWORTH,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -534,9 +540,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::LOWPASS, IIRPrototype::BESSEL,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::LOWPASS,
+                                    IIRPrototype::BESSEL,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -564,9 +571,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs,
-                       Bandtype::HIGHPASS, IIRPrototype::BESSEL,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
+                                    Bandtype::HIGHPASS,
+                                    IIRPrototype::BESSEL,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -600,9 +608,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::BANDPASS, IIRPrototype::BESSEL,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::BANDPASS,
+                                    IIRPrototype::BESSEL,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -637,9 +646,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::BANDSTOP, IIRPrototype::BESSEL,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::BANDSTOP,
+                                    IIRPrototype::BESSEL,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -671,9 +681,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV1,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::LOWPASS,
+                                    IIRPrototype::CHEBYSHEV1,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -701,9 +712,10 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs,
-                       Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV1,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
+                                    Bandtype::HIGHPASS,
+                                    IIRPrototype::CHEBYSHEV1,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -738,9 +750,9 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs,
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
                        Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV1,
-                       ba, ldigital);
+                       ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -775,9 +787,10 @@ int rtseis_test_utils_design_iir(void)
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV1,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::BANDSTOP,
+                                    IIRPrototype::CHEBYSHEV1,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -809,9 +822,10 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.3; Wn[1] = 0; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::LOWPASS, IIRPrototype::CHEBYSHEV2,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::LOWPASS,
+                                    IIRPrototype::CHEBYSHEV2,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -839,9 +853,10 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::HIGHPASS, IIRPrototype::CHEBYSHEV2,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::HIGHPASS,
+                                    IIRPrototype::CHEBYSHEV2,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -876,9 +891,10 @@ int rtseis_test_utils_design_iir(void)
     n = 10, Wn[0] = 0.1; Wn[1] = 0.6; rp = 5; rs = 60; 
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV2,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::BANDPASS,
+                                    IIRPrototype::CHEBYSHEV2,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -910,9 +926,10 @@ int rtseis_test_utils_design_iir(void)
     n = 8, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
     try
     {
-        IIR::iirfilter(n, Wn, rp, rs, 
-                       Bandtype::BANDSTOP, IIRPrototype::CHEBYSHEV2,
-                       ba, ldigital);
+        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+                                    Bandtype::BANDSTOP,
+                                    IIRPrototype::CHEBYSHEV2,
+                                    ldigital);
     }
     catch (const std::invalid_argument &ia)
     {

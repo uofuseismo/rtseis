@@ -130,12 +130,16 @@ int rtseis_test_utils_design_freqs(void)
         w[i] = 2.0*M_PI*std::pow(10, x1 + static_cast<double> (i)*dx);
     }
     std::vector<std::complex<double>> h;
-    int ierr = Response::freqs(ba, w, h);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed calling freqs");
+        h = Response::freqs(ba, w);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
+
     if (h.size() != static_cast<size_t> (nw))
     {
         RTSEIS_ERRMSG("%s", "h is wrong size");
@@ -158,12 +162,17 @@ int rtseis_test_utils_design_freqs(void)
     {
         w[i] = 0 + static_cast<double> (i)*df;
     }  
-    ierr = Response::freqz(baz, w, h);
-    if (ierr != 0)
+
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed calling freqz");
+        h = Response::freqz(baz, w);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what()); 
         return EXIT_FAILURE;
     }
+
     if (h.size() != static_cast<size_t> (nf))
     {
         RTSEIS_ERRMSG("%s", "h is wrong size");
@@ -205,12 +214,16 @@ int rtseis_test_utils_design_groupDelay(void)
         w[i] =  0 + di*static_cast<double> (i);
     }
     std::vector<double> gd;
-    int ierr = Response::groupDelay(ba, w, gd);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute group delay");
+        gd = Response::groupDelay(ba, w);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
+
     for (int i=0; i<nf; i++)
     {
         if (std::abs(gd[i] - gdR[i]) > 1.e-7)

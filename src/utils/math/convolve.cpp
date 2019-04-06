@@ -17,12 +17,13 @@ static std::pair<int,int> computeTrimIndices(
     const Convolve::Mode mode,
     const int n1, const int n2);
 
-void Convolve::convolve(const std::vector<double> &a,
-                        const std::vector<double> &b, 
-                        std::vector<double> &c,
-                        const Convolve::Mode mode,
-                        const Convolve::Implementation implementation)
+std::vector<double>
+Convolve::convolve(const std::vector<double> &a,
+                   const std::vector<double> &b, 
+                   const Convolve::Mode mode,
+                   const Convolve::Implementation implementation)
 {
+    std::vector<double> c;
     int src1Len = static_cast<size_t> (a.size());
     int src2Len = static_cast<size_t> (b.size());
     c.resize(0);
@@ -37,21 +38,21 @@ void Convolve::convolve(const std::vector<double> &a,
     int nc;
     c.resize(len);
     convolve(src1Len, a.data(), src2Len, b.data(), 
-             len, nc, c.data(), mode, implementation);
+             len, &nc, c.data(), mode, implementation);
 #ifdef DEBUG
     assert(nc == static_cast<int> (c.size()));
 #endif
-    return;
+    return c;
 }
 
 void Convolve::convolve(const int src1Len, const double a[],
                         const int src2Len, const double b[],
-                        const int maxc, int &nc, double c[],
+                        const int maxc, int *nc, double c[],
                         const Convolve::Mode mode,
                         const Convolve::Implementation implementation)
 {
     // Check the inputs
-    nc = 0;
+    *nc = 0;
     if (src1Len < 1 || a == nullptr || src2Len < 1 || b == nullptr)
     {
         if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
@@ -105,7 +106,7 @@ void Convolve::convolve(const int src1Len, const double a[],
         return;
     }
     // The full convolution is desired
-    nc = fullLen;
+    *nc = fullLen;
     if (mode == Mode::FULL){return;}
     // Trim the full convolution
     int i1 = indexes.first;
@@ -120,12 +121,13 @@ void Convolve::convolve(const int src1Len, const double a[],
 //                                     Correlate                              //
 //============================================================================//
 
-void Convolve::correlate(const std::vector<double> &a,
-                         const std::vector<double> &b, 
-                         std::vector<double> &c,
-                         const Convolve::Mode mode,
-                         const Convolve::Implementation implementation)
+std::vector<double>
+Convolve::correlate(const std::vector<double> &a,
+                    const std::vector<double> &b, 
+                    const Convolve::Mode mode,
+                    const Convolve::Implementation implementation)
 {
+    std::vector<double> c;
     int src1Len = static_cast<size_t> (a.size());
     int src2Len = static_cast<size_t> (b.size());
     c.resize(0);
@@ -140,21 +142,21 @@ void Convolve::correlate(const std::vector<double> &a,
     int nc;
     c.resize(len);
     correlate(src1Len, a.data(), src2Len, b.data(),
-              len, nc, c.data(), mode, implementation);
+              len, &nc, c.data(), mode, implementation);
 #ifdef DEBUG
     assert(nc == static_cast<int> (c.size()));
 #endif
-    return;
+    return c;
 }
 
 void Convolve::correlate(const int src1Len, const double a[],
                          const int src2Len, const double b[],
-                         const int maxc, int &nc, double c[],
+                         const int maxc, int *nc, double c[],
                          const Convolve::Mode mode,
                          const Convolve::Implementation implementation)
 {
     // Check the inputs
-    nc = 0;
+    *nc = 0;
     if (src1Len < 1 || a == nullptr || src2Len < 1 || b == nullptr)
     {
         if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
@@ -213,7 +215,7 @@ void Convolve::correlate(const int src1Len, const double a[],
         return;
     }
     // The full correlation is desired
-    nc = fullLen;
+    *nc = fullLen;
     if (mode == Mode::FULL){return;}
     // Trim the full correlation
     int i1 = indexes.first;
@@ -226,11 +228,12 @@ void Convolve::correlate(const int src1Len, const double a[],
 
 //============================================================================//
 
-void Convolve::autocorrelate(const std::vector<double> &a, 
-                             std::vector<double> &c,
-                             const Convolve::Mode mode,
-                             const Convolve::Implementation implementation)
+std::vector<double>
+Convolve::autocorrelate(const std::vector<double> &a, 
+                        const Convolve::Mode mode,
+                        const Convolve::Implementation implementation)
 {
+    std::vector<double> c;
     int src1Len = static_cast<size_t> (a.size());
     c.resize(0);
     if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
@@ -239,20 +242,20 @@ void Convolve::autocorrelate(const std::vector<double> &a,
     int nc;
     c.resize(len);
     autocorrelate(src1Len, a.data(),
-                  len, nc, c.data(), mode, implementation);
+                  len, &nc, c.data(), mode, implementation);
 #ifdef DEBUG
     assert(nc == static_cast<int> (c.size()));
 #endif
-    return;
+    return c;
 }
 
 void Convolve::autocorrelate(const int src1Len, const double a[],
-                             const int maxc, int &nc, double c[],
+                             const int maxc, int *nc, double c[],
                              const Convolve::Mode mode,
                              const Convolve::Implementation implementation)
 {
     // Check the inputs
-    nc = 0;
+    *nc = 0;
     if (src1Len < 1 || a == nullptr)
     {
         if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
@@ -315,7 +318,7 @@ void Convolve::autocorrelate(const int src1Len, const double a[],
         ippsCopy_64f(&scratch[i1], c, len);
         ippsFree(scratch);
     }
-    nc = fullLen;
+    *nc = fullLen;
     return;
 }
 

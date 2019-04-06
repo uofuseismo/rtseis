@@ -379,7 +379,7 @@ void Waveform::convolve(
         double *yout = pImpl->getOutputDataPointer();
         Utilities::Math::Convolve::convolve(nx, x,
                                             ny, s.data(),
-                                            lenc, nyout, yout,
+                                            lenc, &nyout, yout,
                                             convcorMode, convcorImpl);
 #ifdef DEBUG
         assert(lenc == nyout);
@@ -420,7 +420,7 @@ void Waveform::correlate(
         double *yout = pImpl->getOutputDataPointer();
         Utilities::Math::Convolve::correlate(nx, x,
                                              ny, s.data(),
-                                             lenc, nyout, yout,
+                                             lenc, &nyout, yout,
                                              convcorMode, convcorImpl);
 #ifdef DEBUG
         assert(lenc == nyout);
@@ -457,7 +457,7 @@ void Waveform::autocorrelate(
         const double *x = pImpl->getInputDataPointer();
         double *yout = pImpl->getOutputDataPointer();
         Utilities::Math::Convolve::autocorrelate(nx, x,
-                                                 lenc, nyout, yout,
+                                                 lenc, &nyout, yout,
                                                  convcorMode, convcorImpl);
 #ifdef DEBUG
         assert(lenc == nyout);

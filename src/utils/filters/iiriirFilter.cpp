@@ -342,7 +342,7 @@ class IIRIIRFilter::IIRIIRImpl
         /// The default module implementation.
         RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
         /// The default processing mode is post-processing only.
-        const RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+        //const RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         /// Flag indicating that the filter is initialized.
         bool linit_ = false;
  

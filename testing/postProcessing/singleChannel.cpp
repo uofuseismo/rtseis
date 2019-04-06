@@ -123,7 +123,7 @@ int testFilter(const std::vector<double> &x)
     Utilities::FilterRepresentations::FIR fir;
     try
     {
-        Utilities::FilterDesign::FIR::FIR1Lowpass(order, fc, fir,
+        fir = Utilities::FilterDesign::FIR::FIR1Lowpass(order, fc,
                                   Utilities::FilterDesign::FIRWindow::HAMMING);
         PostProcessing::SingleChannel::Waveform waveform; 
         waveform.setData(x);
@@ -165,10 +165,9 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     // that the higher order functions correctly call the low level library. 
     double fcV[2] = {0, 0};
     fcV[0] = 10/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 5, 0, 
+    sos = Utilities::FilterDesign::IIR::designSOSIIRFilter(2, fcV, 5, 0, 
                       Utilities::FilterDesign::Bandtype::LOWPASS,
                       Utilities::FilterDesign::IIRPrototype::CHEBYSHEV1,
-                      sos,
                       Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     int ns = sos.getNumberOfSections();
     std::vector<double> bs = sos.getNumeratorCoefficients();
@@ -214,10 +213,9 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     //                            Highpass filter                             //
     //------------------------------------------------------------------------//
     fcV[0] = 10/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 0, 0,
+    sos = Utilities::FilterDesign::IIR::designSOSIIRFilter(2, fcV, 0, 0,
                       Utilities::FilterDesign::Bandtype::HIGHPASS,
                       Utilities::FilterDesign::IIRPrototype::BESSEL,
-                      sos,
                       Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     ns = sos.getNumberOfSections();
     bs = sos.getNumeratorCoefficients();
@@ -265,10 +263,9 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     //------------------------------------------------------------------------//
     fcV[0] = 1/fnyq;
     fcV[1] = 10/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 0, 0,
+    sos = Utilities::FilterDesign::IIR::designSOSIIRFilter(2, fcV, 0, 0,
                       Utilities::FilterDesign::Bandtype::BANDPASS,
                       Utilities::FilterDesign::IIRPrototype::BUTTERWORTH,
-                      sos,
                       Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     ns = sos.getNumberOfSections();
     bs = sos.getNumeratorCoefficients();
@@ -314,10 +311,9 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     //------------------------------------------------------------------------//
     fcV[0] = 1/fnyq;
     fcV[1] = 10/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(3, fcV, 0, 0,
+    sos = Utilities::FilterDesign::IIR::designSOSIIRFilter(3, fcV, 0, 0,
                           Utilities::FilterDesign::Bandtype::BANDSTOP,
                           Utilities::FilterDesign::IIRPrototype::BESSEL,
-                          sos,
                           Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     ns = sos.getNumberOfSections();
     bs = sos.getNumeratorCoefficients();
@@ -375,10 +371,9 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     // that the higher order functions correctly call the low level library. 
     double fcV[2] = {0, 0};
     fcV[0] = 5/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 5, 0, 
+    ba = Utilities::FilterDesign::IIR::designBAIIRFilter(2, fcV, 5, 0,
                       Utilities::FilterDesign::Bandtype::LOWPASS,
                       Utilities::FilterDesign::IIRPrototype::CHEBYSHEV1,
-                      ba,
                       Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     std::vector<double> b = ba.getNumeratorCoefficients();
     std::vector<double> a = ba.getDenominatorCoefficients();
@@ -426,10 +421,9 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     //                            Highpass filter                             //
     //------------------------------------------------------------------------//
     fcV[0] = 15/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 0, 0,
+    ba = Utilities::FilterDesign::IIR::designBAIIRFilter(2, fcV, 0, 0,
                       Utilities::FilterDesign::Bandtype::HIGHPASS,
                       Utilities::FilterDesign::IIRPrototype::BESSEL,
-                      ba,
                       Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     b = ba.getNumeratorCoefficients();
     a = ba.getDenominatorCoefficients();
@@ -474,10 +468,9 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     //------------------------------------------------------------------------//
     fcV[0] = 0.5/fnyq;
     fcV[1] = 8.5/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(2, fcV, 0, 0,
+    ba = Utilities::FilterDesign::IIR::designBAIIRFilter(2, fcV, 0, 0,
                       Utilities::FilterDesign::Bandtype::BANDPASS,
                       Utilities::FilterDesign::IIRPrototype::BUTTERWORTH,
-                      ba,
                       Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     b = ba.getNumeratorCoefficients();
     a = ba.getDenominatorCoefficients();
@@ -520,10 +513,9 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     //------------------------------------------------------------------------//
     fcV[0] = 3/fnyq;
     fcV[1] = 15/fnyq;
-    Utilities::FilterDesign::IIR::iirfilter(3, fcV, 0, 0,
+    ba = Utilities::FilterDesign::IIR::designBAIIRFilter(3, fcV, 0, 0,
                           Utilities::FilterDesign::Bandtype::BANDSTOP,
                           Utilities::FilterDesign::IIRPrototype::BESSEL,
-                          ba,
                           Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
     b = ba.getNumeratorCoefficients();
     a = ba.getDenominatorCoefficients();
@@ -582,7 +574,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     // that the higher order functions correctly call the low level library. 
     double fcd = 10/fnyq;
     int order  = 100;
-    Utilities::FilterDesign::FIR::FIR1Lowpass(order, fcd, fir,
+    fir = Utilities::FilterDesign::FIR::FIR1Lowpass(order, fcd,
                                   Utilities::FilterDesign::FIRWindow::HAMMING);
     int ntaps = fir.getNumberOfFilterTaps();
     std::vector<double> b = fir.getFilterTaps();
@@ -628,7 +620,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     fcd = 5/fnyq;
     order  = 90;
     int nextra = (order+1)/2;
-    Utilities::FilterDesign::FIR::FIR1Highpass(order, fcd, fir,
+    fir = Utilities::FilterDesign::FIR::FIR1Highpass(order, fcd,
                               Utilities::FilterDesign::FIRWindow::BLACKMAN_OPT);
     ntaps = fir.getNumberOfFilterTaps();
     b = fir.getFilterTaps();
@@ -676,7 +668,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     std::pair<double,double> fcbp(2/fnyq, 10/fnyq);
     order  = 150;
     nextra = (order+1)/2;
-    Utilities::FilterDesign::FIR::FIR1Bandpass(order, fcbp, fir, 
+    fir = Utilities::FilterDesign::FIR::FIR1Bandpass(order, fcbp,
                               Utilities::FilterDesign::FIRWindow::HANN);
     ntaps = fir.getNumberOfFilterTaps();
     b = fir.getFilterTaps();
@@ -724,7 +716,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     //------------------------------------------------------------------------//
     std::pair<double,double> fcbs = std::make_pair(1/fnyq, 11/fnyq);
     order  = 200; 
-    Utilities::FilterDesign::FIR::FIR1Bandstop(order, fcbs, fir, 
+    fir = Utilities::FilterDesign::FIR::FIR1Bandstop(order, fcbs,
                               Utilities::FilterDesign::FIRWindow::BARTLETT);
     ntaps = fir.getNumberOfFilterTaps();
     b = fir.getFilterTaps();

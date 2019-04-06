@@ -409,8 +409,8 @@ void FilterDesigner::designLowpassIIRFilter(
     {
         double W[1] = {r};
         std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
-        IIR::iirfilter(n, W, rp.first, rp.second,
-                       Bandtype::LOWPASS, ftype, zpk, ldigital);
+        zpk = IIR::designZPKIIRFilter(n, W, rp.first, rp.second,
+                                      Bandtype::LOWPASS, ftype, ldigital);
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }   
@@ -439,8 +439,8 @@ void FilterDesigner::designHighpassIIRFilter(
     {
         double W[1] = {r};
         std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
-        IIR::iirfilter(n, W, rp.first, rp.second,
-                       Bandtype::HIGHPASS, ftype, zpk, ldigital);
+        zpk = IIR::designZPKIIRFilter(n, W, rp.first, rp.second,
+                                      Bandtype::HIGHPASS, ftype, ldigital);
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }
@@ -469,8 +469,8 @@ void FilterDesigner::designBandpassIIRFilter(
     {
         double W[2] = {r.first, r.second};
         std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
-        IIR::iirfilter(n, W, rp.first, rp.second,
-                       Bandtype::BANDPASS, ftype, zpk, ldigital);
+        zpk = IIR::designZPKIIRFilter(n, W, rp.first, rp.second,
+                                      Bandtype::BANDPASS, ftype, ldigital);
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }
@@ -499,8 +499,8 @@ void FilterDesigner::designBandstopIIRFilter(
     {
         double W[2] = {r.first, r.second};
         std::pair<double, double> rp = iirPrototypeToRipple(ftype, ripple);
-        IIR::iirfilter(n, W, rp.first, rp.second,
-                       Bandtype::BANDSTOP, ftype, zpk, ldigital);
+        zpk = IIR::designZPKIIRFilter(n, W, rp.first, rp.second,
+                                      Bandtype::BANDSTOP, ftype, ldigital);
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }
@@ -531,7 +531,7 @@ void FilterDesigner::designLowpassIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designLowpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2tf(zpk, ba);
+        ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
@@ -560,7 +560,7 @@ void FilterDesigner::designHighpassIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designHighpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2tf(zpk, ba);
+        ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
@@ -589,7 +589,7 @@ void FilterDesigner::designBandpassIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designBandpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2tf(zpk, ba);
+        ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
@@ -618,7 +618,7 @@ void FilterDesigner::designBandstopIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designBandstopIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2tf(zpk, ba);
+        ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
@@ -651,7 +651,7 @@ void FilterDesigner::designLowpassIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designLowpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2sos(zpk, sos);
+        sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
         pImpl->sosCache.push_back(sos);
     }
@@ -682,7 +682,7 @@ void FilterDesigner::designHighpassIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designHighpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2sos(zpk, sos);
+        sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
         pImpl->sosCache.push_back(sos);
     }
@@ -713,7 +713,7 @@ void FilterDesigner::designBandpassIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designBandpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2sos(zpk, sos);
+        sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
         pImpl->sosCache.push_back(sos);
     }
@@ -744,7 +744,7 @@ void FilterDesigner::designBandstopIIRFilter(
     {
         FilterRepresentations::ZPK zpk;
         designBandstopIIRFilter(n, r, ftype, ripple, zpk, ldigital);
-        IIR::zpk2sos(zpk, sos);
+        sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
         pImpl->sosCache.push_back(sos);
     }
@@ -772,7 +772,7 @@ void FilterDesigner::designLowpassFIRFilter(
     }
     else
     {
-        FIR::FIR1Lowpass(order, r, fir, window); // Throws error
+        fir = FIR::FIR1Lowpass(order, r, window); // Throws error
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
@@ -798,7 +798,7 @@ void FilterDesigner::designHighpassFIRFilter(
     }
     else
     {
-        FIR::FIR1Highpass(order, r, fir, window); // Throws error
+        fir = FIR::FIR1Highpass(order, r, window); // Throws error
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
@@ -824,7 +824,7 @@ void FilterDesigner::designBandpassFIRFilter(
     }
     else
     {
-        FIR::FIR1Bandpass(order, r, fir, window); // Throws error
+        fir = FIR::FIR1Bandpass(order, r, window); // Throws error
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
@@ -850,7 +850,7 @@ void FilterDesigner::designBandstopFIRFilter(
     }
     else
     {
-        FIR::FIR1Bandstop(order, r, fir, window); // Throws error
+        fir = FIR::FIR1Bandstop(order, r, window); // Throws error
         pImpl->firDesigns.push_back(parms);
         pImpl->firCache.push_back(fir);
     }

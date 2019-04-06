@@ -32,6 +32,12 @@ public:
      */
     SOS(const SOS &sos);
     /*!
+     * @brief Move constructor.
+     * @param[in,out] sos  SOS class to move to this class.  
+     *                     On exit sos is undefined.
+     */
+    SOS(SOS &&sos);
+    /*!
      * @brief Constructs an SOS class from the given second order sections.
      * @param[in] ns    Number of sections.  This must be positive.
      * @param[in] bs    The numerator coefficients to set.  This 
@@ -59,6 +65,13 @@ public:
      * @result A deep copy of the input class.
      */
     SOS &operator=(const SOS &sos);
+    /*!
+     * @brief Move assignement operator.
+     * @param[in,out] sos  SOS class to move.  On exit sos's behavior is
+     *                     undefined.
+     * @result The moved version of sos.
+     */
+    SOS &operator=(SOS &&sos);
     /*!
      * @brief Equality operator.
      * @param sos  Class to compare to this class.
@@ -138,7 +151,7 @@ public:
     void setEqualityTolerance(const double tol = 1.e-12);
 private:
     class SOSImpl;
-     std::unique_ptr<SOSImpl> pImpl_;
+    std::unique_ptr<SOSImpl> pImpl;
 }; // End SOS
 }; // End FilterRepresentations
 }; // End Utilities

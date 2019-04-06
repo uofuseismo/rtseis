@@ -8,8 +8,9 @@ using namespace RTSeis::Utilities::FilterRepresentations;
 
 #define DEFAULT_TOL 1.e-12
 
-struct SOS::SOSImpl
+class SOS::SOSImpl
 {
+public:
     /// Numerator coefficients
     std::vector<double> bs;
     /// Denominator coefficients
@@ -21,7 +22,7 @@ struct SOS::SOSImpl
 };
 
 SOS::SOS(void) :
-    pImpl_(new SOSImpl())
+    pImpl(std::make_unique<SOSImpl>())
 {
     return;
 }
@@ -29,7 +30,7 @@ SOS::SOS(void) :
 SOS::SOS(const int ns,
          const std::vector<double> &bs,
          const std::vector<double> &as) :
-    pImpl_(new SOSImpl())
+    pImpl(std::make_unique<SOSImpl>())
 {
     setSecondOrderSections(ns, bs, as);
     return;
@@ -38,29 +39,37 @@ SOS::SOS(const int ns,
 SOS& SOS::operator=(const SOS &sos)
 {
     if (&sos == this){return *this;}
-    pImpl_ = std::unique_ptr<SOSImpl> (new SOSImpl());
-    pImpl_->bs  = sos.pImpl_->bs;
-    pImpl_->as  = sos.pImpl_->as;
-    pImpl_->ns  = sos.pImpl_->ns;
-    pImpl_->tol = sos.pImpl_->tol;
+    pImpl = std::make_unique<SOSImpl> ();
+    //pImpl = std::unique_ptr<SOSImpl> (new SOSImpl());
+    pImpl->bs  = sos.pImpl->bs;
+    pImpl->as  = sos.pImpl->as;
+    pImpl->ns  = sos.pImpl->ns;
+    pImpl->tol = sos.pImpl->tol;
+    return *this;
+}
+
+SOS& SOS::operator=(SOS &&sos)
+{
+    if (&sos == this){return *this;}
+    pImpl = std::move(sos.pImpl);
     return *this;
 }
 
 bool SOS::operator==(const SOS &sos) const
 {
-    if (pImpl_->bs.size() != sos.pImpl_->bs.size()){return false;}
-    if (pImpl_->as.size() != sos.pImpl_->as.size()){return false;}
-    if (pImpl_->ns != sos.pImpl_->ns){return false;}
-    for (size_t i=0; i<pImpl_->bs.size(); i++)
+    if (pImpl->bs.size() != sos.pImpl->bs.size()){return false;}
+    if (pImpl->as.size() != sos.pImpl->as.size()){return false;}
+    if (pImpl->ns != sos.pImpl->ns){return false;}
+    for (size_t i=0; i<pImpl->bs.size(); i++)
     {
-        if (std::abs(pImpl_->bs[i] - sos.pImpl_->bs[i]) > pImpl_->tol)
+        if (std::abs(pImpl->bs[i] - sos.pImpl->bs[i]) > pImpl->tol)
         {
             return false;
         }
     }
-    for (size_t i=0; i<pImpl_->as.size(); i++)
+    for (size_t i=0; i<pImpl->as.size(); i++)
     {
-        if (std::abs(pImpl_->as[i] - sos.pImpl_->as[i]) > pImpl_->tol)
+        if (std::abs(pImpl->as[i] - sos.pImpl->as[i]) > pImpl->tol)
         {
             return false;
         }
@@ -79,18 +88,20 @@ SOS::SOS(const SOS &sos)
    return;
 }
 
-SOS::~SOS(void)
+SOS::SOS(SOS &&sos)
 {
-    clear();
+    *this = std::move(sos);
     return;
 }
 
+SOS::~SOS(void) = default;
+
 void SOS::clear(void)
 {
-    pImpl_->bs.clear();
-    pImpl_->as.clear();
-    pImpl_->ns = 0;
-    pImpl_->tol = DEFAULT_TOL;
+    pImpl->bs.clear();
+    pImpl->as.clear();
+    pImpl->ns = 0;
+    pImpl->tol = DEFAULT_TOL;
     return;
 }
 
@@ -99,16 +110,16 @@ void SOS::print(FILE *fout) const noexcept
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
     fprintf(f, "Numerator sections\n");
-    for (int i=0; i<pImpl_->ns; i++)
+    for (int i=0; i<pImpl->ns; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
-                pImpl_->bs[3*i], pImpl_->bs[3*i+1], pImpl_->bs[3*i+2]);
+                pImpl->bs[3*i], pImpl->bs[3*i+1], pImpl->bs[3*i+2]);
     }
     fprintf(f, "Denominator sections\n");
-    for (int i=0; i<pImpl_->ns; i++)
+    for (int i=0; i<pImpl->ns; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
-                pImpl_->as[3*i], pImpl_->as[3*i+1], pImpl_->as[3*i+2]);
+                pImpl->as[3*i], pImpl->as[3*i+1], pImpl->as[3*i+2]);
     }
     return;
 }
@@ -155,30 +166,30 @@ void SOS::setSecondOrderSections(const int ns,
         }
     }
     // It all checks out
-    pImpl_->ns = ns;
-    pImpl_->bs = bs;
-    pImpl_->as = as;
+    pImpl->ns = ns;
+    pImpl->bs = bs;
+    pImpl->as = as;
     return;
 }
 
 std::vector<double> SOS::getNumeratorCoefficients(void) const noexcept
 {
-    return pImpl_->bs;
+    return pImpl->bs;
 }
 
 std::vector<double> SOS::getDenominatorCoefficients(void) const noexcept
 {
-    return pImpl_->as;
+    return pImpl->as;
 }
 
 int SOS::getNumberOfSections(void) const noexcept
 {
-    return pImpl_->ns;
+    return pImpl->ns;
 }
 
 void SOS::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
-    pImpl_->tol = tol;
+    pImpl->tol = tol;
     return;
 }

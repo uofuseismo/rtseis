@@ -12,9 +12,8 @@
 using namespace RTSeis::Utilities::FilterDesign::IIR;
 using namespace RTSeis::Utilities::FilterRepresentations;
 
-void AnalogPrototype::butter(const int n, FilterRepresentations::ZPK &zpk)
+ZPK AnalogPrototype::butter(const int n)
 {
-    zpk.clear();
     if (n < 1 || n > 25)
     {
         if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
@@ -33,14 +32,12 @@ void AnalogPrototype::butter(const int n, FilterRepresentations::ZPK &zpk)
         poles[i] =-std::exp(arg);
     }
     double k = 1.0; //k = real(prod(-p)) which is 1
-    zpk = ZPK(zeros, poles, k);
-    return;
+    ZPK zpk(zeros, poles, k);
+    return zpk;
 }
 
-void AnalogPrototype::cheb1ap(const int n, const double rp,
-                              FilterRepresentations::ZPK &zpk)
+ZPK AnalogPrototype::cheb1ap(const int n, const double rp)
 {
-    zpk.clear();
     if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
     if (rp <= 0){RTSEIS_THROW_IA("rp=%lf must be positive", rp);}
     double rpdb = std::pow(10.0, 0.1*rp);
@@ -69,14 +66,12 @@ void AnalogPrototype::cheb1ap(const int n, const double rp,
     }
     double k = std::real(zprod); //Take real
     if (n%2 == 0){k = k/std::sqrt(1.0 + eps*eps);}
-    zpk = ZPK(zeros, poles, k);
-    return;
+    ZPK zpk(zeros, poles, k);
+    return zpk;
 }
 
-void AnalogPrototype::cheb2ap(const int n, const double rs,
-                              FilterRepresentations::ZPK &zpk)
+ZPK AnalogPrototype::cheb2ap(const int n, const double rs)
 {
-    zpk.clear();
     if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
     if (rs <= 0){RTSEIS_THROW_IA("rs=%lf must be positive", rs);}
     // Figure out size
@@ -146,13 +141,12 @@ void AnalogPrototype::cheb2ap(const int n, const double rs,
        znum = (-poles[i])*znum;
     }
     double k = std::real(znum/zden);
-    zpk = ZPK(zeros, poles, k);
-    return;
+    ZPK zpk(zeros, poles, k);
+    return zpk;
 }
 
-void AnalogPrototype::bessel(const int n, FilterRepresentations::ZPK &zpk)
+ZPK AnalogPrototype::bessel(const int n)
 {
-    zpk.clear();
     if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
     size_t npoles = static_cast<size_t> (n);
     size_t nzeros = 0;
@@ -564,6 +558,6 @@ void AnalogPrototype::bessel(const int n, FilterRepresentations::ZPK &zpk)
     {
         RTSEIS_THROW_IA("%s", "Unsupported filter order");
     }
-    zpk = ZPK(zeros, poles, k);
-    return;
+    ZPK zpk(zeros, poles, k);
+    return zpk;
 }

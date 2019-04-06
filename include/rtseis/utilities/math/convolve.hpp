@@ -69,11 +69,11 @@ enum Mode
  * @throws std::invalid_argument if any of the arguments are incorrect.
  * @ingroup rtseis_utils_math_convolve
  */
-void convolve(const std::vector<double> &a, 
-              const std::vector<double> &b, 
-              std::vector<double> &c, 
-              const Mode mode = Mode::FULL,
-              const Implementation implementation = Implementation::AUTO);
+std::vector<double>
+convolve(const std::vector<double> &a, 
+         const std::vector<double> &b, 
+         const Mode mode = Mode::FULL,
+         const Implementation implementation = Implementation::AUTO);
 /*!
  * @brief Computes the convolution \f$ c[k] = \sum_n a[n] b[n-k] \f$.
  * @param[in] na       The length of the array a.
@@ -99,9 +99,9 @@ void convolve(const std::vector<double> &a,
 void convolve(const int na, const double a[],
               const int nb, const double b[],
               const int maxc,
-              int &nc, double c[],
-              const Mode mode, // = Mode::FULL,
-              const Implementation implementation);// = Implementation::AUTO);
+              int *nc, double c[],
+              const Mode mode = Mode::FULL,
+              const Implementation implementation = Implementation::AUTO);
 /*!
  * @brief Computes the correlation \f$ c[k] = \sum_n a[n] b[n+k] \f$.
  * @param[in] a        First array in correlation.  This has length [m]
@@ -114,11 +114,11 @@ void convolve(const int na, const double a[],
  * @throws std::invalid_argument if any of the arguments are incorrect.
  * @ingroup rtseis_utils_math_convolve
  */
-void correlate(const std::vector<double> &a,
-               const std::vector<double> &b,
-               std::vector<double> &c,
-               const Mode mode = Mode::FULL,
-               const Implementation implementation = Implementation::AUTO);
+std::vector<double>
+correlate(const std::vector<double> &a,
+          const std::vector<double> &b,
+          const Mode mode = Mode::FULL,
+          const Implementation implementation = Implementation::AUTO);
 /*!
  * @brief Computes the correlation \f$ c[k] = \sum_n a[n] b[n+k] \f$.
  * @param[in] na       The length of the array a.
@@ -143,9 +143,9 @@ void correlate(const std::vector<double> &a,
 void correlate(const int na, const double a[],
                const int nb, const double b[],
                const int maxc,
-               int &nc, double c[],
-               const Mode mode, //= Mode::FULL,
-               const Implementation implementation);// = Implementation::AUTO);
+               int *nc, double c[],
+               const Mode mode = Mode::FULL,
+               const Implementation implementation = Implementation::AUTO);
 /*!
  * @brief Computes the autocorrelation \f$ c[k] = \sum_n a[n] a[n+k] \f$.
  * @param[in] a     Array to autocorrelation.  This has length [m].
@@ -155,10 +155,10 @@ void correlate(const int na, const double a[],
  * @throws std::invalid_argument if any arguments are wrong.
  * @ingroup rtseis_utils_math_convolve
  */
-void autocorrelate(const std::vector<double> &a,
-                   std::vector<double> &c, 
-                   const Mode mode = Convolve::Mode::FULL,
-                   const Implementation implementation = Implementation::AUTO);
+std::vector<double>
+autocorrelate(const std::vector<double> &a,
+              const Mode mode = Convolve::Mode::FULL,
+              const Implementation implementation = Implementation::AUTO);
 /*!
  * @brief Computes the autocorrelation \f$ c[k] = \sum_n a[n] a[n+k] \f$.
  * @param[in] na    The number of elements in a.
@@ -177,7 +177,7 @@ void autocorrelate(const std::vector<double> &a,
  * @ingroup rtseis_utils_math_convolve
  */
 void autocorrelate(const int na, const double a[],
-                   const int maxc, int &nc, double c[],
+                   const int maxc, int *nc, double c[],
                    const Mode mode = Convolve::Mode::FULL,
                    const Implementation implementation = Implementation::AUTO);
 

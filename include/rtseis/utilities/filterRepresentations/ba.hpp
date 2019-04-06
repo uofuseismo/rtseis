@@ -48,6 +48,12 @@ public:
      * @param[in] ba  Class from which to initialized.
      */
     BA(const BA &ba);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] ba   Class to move to this class.  On exit ba's behavior
+     *                     is undefined.
+     */
+    BA(BA &&ba);
     /*! @} */
 
     /*! @name Operators
@@ -59,6 +65,12 @@ public:
      * @result A deep copy of the input class.
      */
     BA &operator=(const BA &ba);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] ba  BA class to move.  On exit ba's behavior is undefined.
+     * @result The moved version of ba.
+     */
+    BA &operator=(BA &&ba);
     /*!
      * @brief Equality operator.
      * @param[in] ba  Class to compare to this class.
@@ -158,7 +170,7 @@ public:
     void setEqualityTolerance(const double tol = 1.e-12);
 private:
     class BAImpl;
-    std::unique_ptr<BAImpl> pImpl_;
+    std::unique_ptr<BAImpl> pImpl;
 }; // End BA
 }; // End FilterRepresentations
 }; // End Utilities

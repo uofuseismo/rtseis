@@ -37,8 +37,14 @@ public:
      * @param[in] fir  Class from which to initialize this class.
      */
     FIR(const FIR &fir);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] fir  Class to move to this class.
+     *                     On exit fir's behavior is undefined.
+     */
+    FIR(FIR &&fir);
     /*! @} */
-
+ 
     /*! @name Operators
      * @{
      */
@@ -48,6 +54,13 @@ public:
      * @result A deep copy of the input class.
      */
     FIR &operator=(const FIR &fir);
+    /*! 
+     * @brief Move operator.
+     * @param[in,out] fir  FIR class to move.  On exit fir's behavior
+     *                     is undefined.
+     * @result The moved version of fir.
+     */
+    FIR &operator=(FIR &&fir);
     /*!
      * @brief Equality operator.
      * @param[in] fir  Class to compare to this class.
@@ -125,9 +138,9 @@ public:
      */
     void setEqualityTolerance(const double tol = 1.e-12);
   
- private:
+private:
     class FIRImpl;
-    std::unique_ptr<FIRImpl> pImpl_;
+    std::unique_ptr<FIRImpl> pImpl;
 };
 };
 };

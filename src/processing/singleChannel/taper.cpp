@@ -14,8 +14,9 @@
 
 using namespace RTSeis::PostProcessing::SingleChannel;
 
-struct TaperParameters::TaperParametersImpl
+class TaperParameters::TaperParametersImpl
 {
+public:
     /// Percentage of signal to apply taper to
     double pct = 5;
     /// Taper type.
@@ -26,8 +27,9 @@ struct TaperParameters::TaperParametersImpl
     const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING;
 };
 
-struct Taper::TaperImpl
+class Taper::TaperImpl
 {
+public:
     TaperParameters parms; 
     std::vector<double> w8;
     std::vector<float>  w4;
@@ -38,7 +40,7 @@ struct Taper::TaperImpl
 TaperParameters::TaperParameters(const double pct,
                                  const Type type,
                                  const RTSeis::Precision precision) :
-    pImpl(new TaperParametersImpl())
+    pImpl(std::make_unique<TaperParametersImpl>())
 {
     setPercentage(pct);
     setTaperType(type);
@@ -61,7 +63,8 @@ TaperParameters::TaperParameters(TaperParameters &&parms)
 TaperParameters& TaperParameters::operator=(const TaperParameters &parms)
 {
     if (&parms == this){return *this;}
-    pImpl = std::unique_ptr<TaperParametersImpl> (new TaperParametersImpl());
+    pImpl = std::make_unique<TaperParametersImpl> ();
+    //pImpl = std::unique_ptr<TaperParametersImpl> (new TaperParametersImpl());
     pImpl->pct = parms.pImpl->pct;
     pImpl->type = parms.pImpl->type;
     pImpl->precision = parms.pImpl->precision;
@@ -75,10 +78,7 @@ TaperParameters& TaperParameters::operator=(TaperParameters &&parms)
     return *this;
 }
 
-TaperParameters::~TaperParameters(void)
-{
-    return;
-}
+TaperParameters::~TaperParameters(void) = default;
 
 void TaperParameters::setPrecision(const RTSeis::Precision precision)
 {
@@ -138,13 +138,13 @@ bool TaperParameters::isValid(void) const
 //============================================================================//
 
 Taper::Taper(void) :
-    pImpl(new TaperImpl())
+    pImpl(std::make_unique<TaperImpl>())
 {
     return;
 }
 
 Taper::Taper(const TaperParameters &parameters) :
-    pImpl(new TaperImpl())
+    pImpl(std::make_unique<TaperImpl>())
 {
     setParameters(parameters);
     return;
@@ -173,7 +173,8 @@ Taper& Taper::operator=(const Taper &taper)
 {
     if (&taper == this){return *this;}
     clear(); //if (pImpl){clear();}
-    pImpl = std::unique_ptr<TaperImpl> (new TaperImpl()); 
+    pImpl = std::make_unique<TaperImpl> ();
+    //pImpl = std::unique_ptr<TaperImpl> (new TaperImpl()); 
     pImpl->parms = taper.pImpl->parms;
     pImpl->w8 = taper.pImpl->w8;
     pImpl->w4 = taper.pImpl->w4;

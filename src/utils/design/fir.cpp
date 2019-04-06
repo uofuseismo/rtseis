@@ -15,11 +15,11 @@ using namespace RTSeis::Utilities::FilterDesign;
 
 static IppWinType classifyWindow(const FIRWindow window);
 
-void FIR::FIR1Lowpass(const int order, const double r,
-                      FilterRepresentations::FIR &fir,
-                      const FIRWindow window)
+FilterRepresentations::FIR
+FIR::FIR1Lowpass(const int order, const double r,
+                 const FIRWindow window)
 {
-    fir.clear();
+    FilterRepresentations::FIR fir;
     // Check inputs
     if (order < 4 || r <= 0.0 || r >= 1.0)
     {
@@ -62,14 +62,14 @@ void FIR::FIR1Lowpass(const int order, const double r,
         throw std::invalid_argument("Internal error calling lowpass");
     }
     ippsFree(pTaps);
-    return;
+    return fir;
 }
 
-void FIR::FIR1Highpass(const int order, const double r,
-                       FilterRepresentations::FIR &fir,
-                       const FIRWindow window)
+FilterRepresentations::FIR
+FIR::FIR1Highpass(const int order, const double r,
+                  const FIRWindow window)
 {
-    fir.clear();
+    FilterRepresentations::FIR fir;
     // Check inputs
     if (order < 4 || r <= 0.0 || r >= 1.0)
     {   
@@ -112,14 +112,14 @@ void FIR::FIR1Highpass(const int order, const double r,
         throw std::invalid_argument("Internal error calling highass");
     }
     ippsFree(pTaps);
-    return;
+    return fir;
 }
 
-void FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
-                       FilterRepresentations::FIR &fir,
-                       const FIRWindow window)
+FilterRepresentations::FIR
+FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
+                  const FIRWindow window)
 {
-    fir.clear();
+    FilterRepresentations::FIR fir;
     // Check inputs
     const double r0 = r.first;
     const double r1 = r.second;
@@ -170,14 +170,14 @@ void FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
         throw std::invalid_argument("Error calling bandpass");
     }
     ippsFree(pTaps);
-    return;
+    return fir;
 }
 
-void FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
-                       FilterRepresentations::FIR &fir,
-                       const FIRWindow window)
+FilterRepresentations::FIR
+FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
+                  const FIRWindow window)
 {
-    fir.clear();
+    FilterRepresentations::FIR fir;
     // Check inputs
     const double r0 = r.first;
     const double r1 = r.second;
@@ -228,7 +228,7 @@ void FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
         throw std::invalid_argument("Error calling bandstop");
     }
     ippsFree(pTaps);
-    return;
+    return fir;
 }
 
 /*!

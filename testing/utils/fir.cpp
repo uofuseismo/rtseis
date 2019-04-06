@@ -60,7 +60,7 @@ int rtseis_test_utils_design_fir_fir1(void)
     order = 13; r = 0.6; 
     try
     {
-        FIR::FIR1Lowpass(order, r, fir, FIRWindow::HAMMING);
+        fir = FIR::FIR1Lowpass(order, r, FIRWindow::HAMMING);
     }
     catch (std::invalid_argument &ia)
     {
@@ -85,7 +85,7 @@ int rtseis_test_utils_design_fir_fir1(void)
     order = 16; r = 0.45;
     try
     {
-        FIR::FIR1Highpass(order, r, fir, FIRWindow::HANN);
+        fir = FIR::FIR1Highpass(order, r, FIRWindow::HANN);
     }
     catch (std::invalid_argument &ia)
     {
@@ -112,7 +112,7 @@ int rtseis_test_utils_design_fir_fir1(void)
     r2 = std::make_pair(0.2, 0.8);
     try
     {
-        FIR::FIR1Bandpass(order, r2, fir, FIRWindow::BARTLETT); 
+        fir = FIR::FIR1Bandpass(order, r2, FIRWindow::BARTLETT); 
     }
     catch (std::invalid_argument &ia)
     {
@@ -138,7 +138,7 @@ int rtseis_test_utils_design_fir_fir1(void)
     r2 = std::make_pair(0.15, 0.85);
     try
     {
-        FIR::FIR1Bandstop(order, r2, fir, FIRWindow::BLACKMAN_OPT);
+        fir = FIR::FIR1Bandstop(order, r2, FIRWindow::BLACKMAN_OPT);
     }
     catch (std::invalid_argument &ia)
     {

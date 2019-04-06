@@ -33,29 +33,27 @@ namespace FIR
  *                    This must be at least 4.
  * @param[in] r       The normalized cutoff frequency where 1 is
  *                    the Nyquist.
- * @param[out] fir    The FIR lowpass filter corresponding to the
- *                    design parameters.
  * @param[in] window  FIR window design.  The default is a Hamming window.
+ * @result The lowpass filter corresponding to the design parameters.
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-void FIR1Lowpass(const int order, const double r,
-                 FilterRepresentations::FIR &fir,
-                 const FIRWindow window = FIRWindow::HAMMING);
+FilterRepresentations::FIR
+FIR1Lowpass(const int order, const double r,
+            const FIRWindow window = FIRWindow::HAMMING);
 /*!
  * @brief Designs an FIR highpass filter using the window method.
  * @param[in] order   Order of filter.  The number of taps is order + 1.
  *                    This must be at least 4.
  * @param[in] r       The normalized cutoff frequency where 1 is
  *                    the Nyquist.
- * @param[out] fir    The highpass filter corresponding to the 
- *                    design parameters.
  * @param[in] window  FIR window design.  The default is a Hamming window.
+ * @result The highpass filter corresponding to the design parameters.
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-void FIR1Highpass(const int order, const double r,
-                  FilterRepresentations::FIR &fir,
+FilterRepresentations::FIR
+FIR1Highpass(const int order, const double r,
                   const FIRWindow window = FIRWindow::HAMMING);
 /*!
  * @brief Designs an FIR bandpass filter using the window method.
@@ -65,15 +63,14 @@ void FIR1Highpass(const int order, const double r,
  *                    frequencies where 1 is the Nyquist.  Here,
  *                    r.first is the low cutoff and r.second is the
  *                    high cutoff.
- * @param[out] fir    The bandpass filter corresponding to the design
- *                    parameters.
  * @param[in] window  FIR window design.  The default is a Hamming window.
+ * @result The bandpass filter corresponding to the design parameters.
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-void FIR1Bandpass(const int order, const std::pair<double,double> &r,
-                  FilterRepresentations::FIR &fir,
-                  const FIRWindow window = FIRWindow::HAMMING);
+FilterRepresentations::FIR
+FIR1Bandpass(const int order, const std::pair<double,double> &r,
+             const FIRWindow window = FIRWindow::HAMMING);
 /*! 
  * @brief Designs an FIR bandstop (notch) filter using the window method.
  * @param[in] order   Order of filter.  The number of taps is order + 1.
@@ -82,15 +79,14 @@ void FIR1Bandpass(const int order, const std::pair<double,double> &r,
  *                    frequencies where 1 is the Nyquist.  Here,
  *                    r.first is the low cutoff and r.second is the
  *                    high cutoff.
- * @param[out] fir    The bnadstop filter corresponding to the design
- *                    parameters.
  * @param[in] window  FIR window design.  The default is a Hamming window.
+ * @result The bandstop filter corresponding to the design parameters.
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-void FIR1Bandstop(const int order, const std::pair<double,double> &r,
-                  FilterRepresentations::FIR &fir,
-                  const FIRWindow window = FIRWindow::HAMMING);
+FilterRepresentations::FIR
+FIR1Bandstop(const int order, const std::pair<double,double> &r,
+             const FIRWindow window = FIRWindow::HAMMING);
 
 }; /* End FIR */
 

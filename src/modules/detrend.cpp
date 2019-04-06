@@ -8,8 +8,9 @@
 
 using namespace RTSeis::PostProcessing::SingleChannel;
 
-struct DetrendParameters::DetrendParmsImpl
+class DetrendParameters::DetrendParmsImpl
 {
+public:
     void clear(void)
     {
         precision_ = RTSeis::Precision::DOUBLE;
@@ -21,8 +22,9 @@ struct DetrendParameters::DetrendParmsImpl
     bool linit_ = true; // This module is always ready to roll
 };
 
-struct Detrend::DetrendImpl
+class Detrend::DetrendImpl
 {
+public:
     DetrendImpl(void)
     { 
         return;

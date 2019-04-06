@@ -57,8 +57,8 @@ int convolve_convolve_test(void)
         // Test 1
         try
         {
-            Convolve::convolve(a1, b1, c,
-                               Convolve::Mode::FULL, implementation);
+            c = Convolve::convolve(a1, b1,
+                                   Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -82,8 +82,8 @@ int convolve_convolve_test(void)
         // Test 2 - interchange 1
         try
         {
-            Convolve::convolve(b1, a1, c,
-                               Convolve::Mode::FULL, implementation);
+            c = Convolve::convolve(b1, a1,
+                                   Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -107,8 +107,8 @@ int convolve_convolve_test(void)
         // Test 3
         try
         {
-            Convolve::convolve(a1, b1, c,
-                               Convolve::Mode::VALID, implementation);
+            c = Convolve::convolve(a1, b1,
+                                   Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -129,8 +129,8 @@ int convolve_convolve_test(void)
         // Test 4 - interchange 3
         try
         {
-            Convolve::convolve(b1, a1, c,
-                               Convolve::Mode::VALID, implementation);
+            c = Convolve::convolve(b1, a1,
+                                   Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -151,8 +151,8 @@ int convolve_convolve_test(void)
         // Test 5
         try
         {
-            Convolve::convolve(a1, b1, c,
-                               Convolve::Mode::SAME, implementation);
+            c = Convolve::convolve(a1, b1,
+                                   Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -176,8 +176,8 @@ int convolve_convolve_test(void)
         // Test 6 - interchange 5
         try
         {
-            Convolve::convolve(b1, a1, c,
-                               Convolve::Mode::SAME, implementation);
+            c = Convolve::convolve(b1, a1,
+                                   Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -207,8 +207,8 @@ int convolve_convolve_test(void)
         // Test 7
         try
         {
-            Convolve::convolve(a2, b2, c,
-                               Convolve::Mode::FULL, implementation);
+            c = Convolve::convolve(a2, b2,
+                                   Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -232,8 +232,8 @@ int convolve_convolve_test(void)
         // Test 8 - interchange 7
         try
         {
-            Convolve::convolve(b2, a2, c,
-                               Convolve::Mode::FULL, implementation);
+            c = Convolve::convolve(b2, a2,
+                                   Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -257,8 +257,8 @@ int convolve_convolve_test(void)
         // Test 9
         try
         {
-            Convolve::convolve(a2, b2, c,
-                               Convolve::Mode::VALID, implementation);
+            c = Convolve::convolve(a2, b2,
+                                   Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -282,8 +282,8 @@ int convolve_convolve_test(void)
         // Test 10 - interchange 9
         try
         {
-            Convolve::convolve(b2, a2, c,
-                               Convolve::Mode::VALID, implementation);
+            c = Convolve::convolve(b2, a2,
+                                   Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -307,8 +307,8 @@ int convolve_convolve_test(void)
         // Test 11 - different sizes
         try
         {
-            Convolve::convolve(a2, b2, c,
-                               Convolve::Mode::SAME, implementation);
+            c = Convolve::convolve(a2, b2,
+                                   Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -332,8 +332,8 @@ int convolve_convolve_test(void)
         // Test 12 - interchange 11
         try
         {
-            Convolve::convolve(b2, a2, c,
-                               Convolve::Mode::SAME, implementation);
+            c = Convolve::convolve(b2, a2,
+                                   Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -378,8 +378,8 @@ int convolve_correlate_test(void)
         // Test 1
         try
         {
-            Convolve::correlate(a1, b1, c,
-                                Convolve::Mode::FULL, implementation);
+            c = Convolve::correlate(a1, b1,
+                                    Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -403,8 +403,8 @@ int convolve_correlate_test(void)
         // Test 2 - interchange 1
         try
         {
-            Convolve::correlate(b1, a1, c,
-                                Convolve::Mode::FULL, implementation);
+            c = Convolve::correlate(b1, a1,
+                                    Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -428,8 +428,8 @@ int convolve_correlate_test(void)
         // Test 3
         try
         {
-            Convolve::correlate(a1, b1, c,
-                                Convolve::Mode::VALID, implementation);
+            c = Convolve::correlate(a1, b1,
+                                    Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -450,8 +450,8 @@ int convolve_correlate_test(void)
         // Test 4 - interchange 3
         try
         {
-            Convolve::correlate(b1, a1, c,
-                                Convolve::Mode::VALID, implementation);
+            c = Convolve::correlate(b1, a1,
+                                    Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -472,8 +472,8 @@ int convolve_correlate_test(void)
         // Test 5
         try
         {
-            Convolve::correlate(a1, b1, c,
-                                Convolve::Mode::SAME, implementation);
+            c = Convolve::correlate(a1, b1,
+                                    Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -497,8 +497,8 @@ int convolve_correlate_test(void)
         // Test 6 - interchange 5
         try
         {
-            Convolve::correlate(b1, a1, c,
-                                Convolve::Mode::SAME, implementation);
+            c = Convolve::correlate(b1, a1,
+                                    Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -528,8 +528,8 @@ int convolve_correlate_test(void)
         // Test 7
         try
         {
-            Convolve::correlate(a2, b2, c,
-                                Convolve::Mode::FULL, implementation);
+            c = Convolve::correlate(a2, b2,
+                                    Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -553,8 +553,8 @@ int convolve_correlate_test(void)
         // Test 8 - interchange 7
         try
         {
-            Convolve::correlate(b2, a2, c,
-                                Convolve::Mode::FULL, implementation);
+            c = Convolve::correlate(b2, a2,
+                                    Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -578,8 +578,8 @@ int convolve_correlate_test(void)
         // Test 9
         try
         {
-            Convolve::correlate(a2, b2, c,
-                                Convolve::Mode::VALID, implementation);
+            c = Convolve::correlate(a2, b2,
+                                    Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -603,8 +603,8 @@ int convolve_correlate_test(void)
         // Test 10 - interchange 9 
         try
         {
-            Convolve::correlate(b2, a2, c,
-                                Convolve::Mode::VALID, implementation);
+            c = Convolve::correlate(b2, a2,
+                                    Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -628,8 +628,8 @@ int convolve_correlate_test(void)
         // Test 11
         try
         {
-            Convolve::correlate(a2, b2, c,
-                                Convolve::Mode::SAME, implementation);
+            c = Convolve::correlate(a2, b2,
+                                    Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -653,8 +653,8 @@ int convolve_correlate_test(void)
         // Test 12 - interchange 11
         try
         {
-            Convolve::correlate(b2, a2, c,
-                                Convolve::Mode::SAME, implementation);
+            c = Convolve::correlate(b2, a2,
+                                    Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -698,10 +698,10 @@ int convolve_autocorrelate_test(void)
         // Test 1
         try
         {
-            Convolve::correlate(a1, b1, cref,
-                                Convolve::Mode::FULL, implementation);
-            Convolve::autocorrelate(a1, c,
-                                    Convolve::Mode::FULL, implementation);
+            cref = Convolve::correlate(a1, b1,
+                                       Convolve::Mode::FULL, implementation);
+            c = Convolve::autocorrelate(a1,
+                                        Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -725,10 +725,10 @@ int convolve_autocorrelate_test(void)
         // Test 2
         try
         {
-            Convolve::correlate(a1, b1, cref,
-                                Convolve::Mode::VALID, implementation);
-            Convolve::autocorrelate(a1, c,
-                                    Convolve::Mode::VALID, implementation);
+            cref = Convolve::correlate(a1, b1,
+                                       Convolve::Mode::VALID, implementation);
+            c = Convolve::autocorrelate(a1,
+                                        Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -752,10 +752,10 @@ int convolve_autocorrelate_test(void)
         // Test 3
         try
         {
-            Convolve::correlate(a1, b1, cref,
-                                Convolve::Mode::SAME, implementation);
-            Convolve::autocorrelate(a1, c,
-                                    Convolve::Mode::SAME, implementation);
+            cref = Convolve::correlate(a1, b1,
+                                       Convolve::Mode::SAME, implementation);
+            c = Convolve::autocorrelate(a1,
+                                        Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -784,10 +784,10 @@ int convolve_autocorrelate_test(void)
         // Test 4
         try
         {
-            Convolve::correlate(a2, b2, cref,
-                                Convolve::Mode::FULL, implementation);
-            Convolve::autocorrelate(a2, c,
-                                    Convolve::Mode::FULL, implementation);
+            cref = Convolve::correlate(a2, b2,
+                                       Convolve::Mode::FULL, implementation);
+            c = Convolve::autocorrelate(a2,
+                                        Convolve::Mode::FULL, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -811,10 +811,10 @@ int convolve_autocorrelate_test(void)
         // Test 5
         try
         {
-            Convolve::correlate(a2, b2, cref,
-                                   Convolve::Mode::VALID, implementation);
-            Convolve::autocorrelate(a2, c,
+            cref = Convolve::correlate(a2, b2,
                                        Convolve::Mode::VALID, implementation);
+            c = Convolve::autocorrelate(a2,
+                                        Convolve::Mode::VALID, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
@@ -838,10 +838,10 @@ int convolve_autocorrelate_test(void)
         // Test 6
         try
         {
-            Convolve::correlate(a2, b2, cref,
-                                Convolve::Mode::SAME, implementation);
-            Convolve::autocorrelate(a2, c,
-                                    Convolve::Mode::SAME, implementation);
+            cref = Convolve::correlate(a2, b2,
+                                       Convolve::Mode::SAME, implementation);
+            c = Convolve::autocorrelate(a2,
+                                        Convolve::Mode::SAME, implementation);
         }
         catch (const std::invalid_argument &ia)
         {
