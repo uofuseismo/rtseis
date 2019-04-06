@@ -121,7 +121,7 @@ SET(MODULES_SRCS
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
     src/processing/singleChannel/postProcessing.cpp
-    #src/processing/singleChannel/envelope.cpp
+    src/processing/singleChannel/envelope.cpp
     src/processing/singleChannel/taper.cpp
     #src/processing/singleChannel/filter.cpp
     )

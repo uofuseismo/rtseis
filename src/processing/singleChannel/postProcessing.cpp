@@ -164,6 +164,7 @@ public:
     {
         xptr_ = nullptr; //.release();
         nx_ = static_cast<int> (n); 
+        ny_ = 0; // Can't have processed data before new data
         if (nx_ > maxx_)
         {
             if (x_){ippsFree(x_);}
