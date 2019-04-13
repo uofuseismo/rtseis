@@ -24,7 +24,7 @@ public:
     /*!
      * @brief Copy constructor.
      */
-    MedianFilter(void);
+    MedianFilter();
     /*!
      * @brief Copy constructor.
      * @param[in] median  Median class from which to initialize.
@@ -49,7 +49,7 @@ public:
     /*! 
      * @brief Destructor.
      */
-    ~MedianFilter(void);
+    ~MedianFilter();
     /* @} */
 
     /*!
@@ -71,20 +71,20 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const;
+    bool isInitialized() const;
     /*!
      * @brief Utility routine to determine the initial condition length.
      * @retval A non-negative number is the length of the initial
      *         condition array.
      * @retval -1 Indicates failure.
      */
-    int getInitialConditionLength(void) const;
+    int getInitialConditionLength() const;
     /*!
      * @brief Returns the group delay of the filter.  Note, that this
      *        shift is required to get a correspondence to Matlab.
      * @result The group delay.
      */
-    int getGroupDelay(void) const;
+    int getGroupDelay() const;
     /*!
      * @brief Sets the initial conditions for the filter.  This should
      *        be called prior to filter application as it will reset
@@ -112,11 +112,11 @@ public:
      *        set when MedianFilter::setInitialConditions() was called.
      * @result 0 indicates success.
      */ 
-    int resetInitialConditions(void);
+    int resetInitialConditions();
     /*! 
      * @brief Clears the module and resets all parameters.
      */
-    void clear(void);
+    void clear();
  private:
     class MedianFilterImpl;
     std::unique_ptr<MedianFilterImpl> pMedian_;

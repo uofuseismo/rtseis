@@ -11,6 +11,7 @@
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/dftRealToComplex.hpp"
+#include "rtseis/utilities/transforms/dft.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
@@ -22,7 +23,9 @@ using namespace RTSeis::Utilities::Transforms;
 int transforms_nextPow2_test(void);
 int transforms_phase_test(void);
 int transforms_unwrap_test(void);
-int transforms_test_dft(void);
+int transforms_test_dftr2c(void);
+int ifft(const int nx, const std::complex<double> *x, 
+         const int ny, std::complex<double> *y);
 int rfft(const int nx, double x[], const int n,
          const int ny, std::complex<double> y[]);
 int irfft(const int nx, const std::complex<double> x[],
@@ -48,7 +51,7 @@ int rtseis_test_utils_transforms(void)
         RTSEIS_ERRMSG("%s", "Failed to unwrap phase");
         return EXIT_FAILURE;
     }
-    ierr = transforms_test_dft();
+    ierr = transforms_test_dftr2c();
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute rdft");
@@ -220,7 +223,7 @@ int transforms_phase_test(void)
     return EXIT_SUCCESS; 
 }
 
-int transforms_test_dft(void)
+int transforms_test_dftr2c(void)
 {
     int niter = 50;
     int np0 = 12001;
@@ -431,7 +434,70 @@ int transforms_test_dft(void)
     }
     delete[] x;
     return EXIT_SUCCESS;
-} 
+}
+
+//============================================================================//
+//                              Private functions                             //
+//============================================================================//
+
+int ifft(const int nx, const std::complex<double> *x,
+         const int ny, std::complex<double> *y)
+{
+    if (nx < 1 || ny < 1)
+    {
+        if (nx < 1){RTSEIS_ERRMSG("%s", "nx must be positive");}
+        if (ny < 1){RTSEIS_ERRMSG("%s", "ny must be positive");}
+        return -1; 
+    }
+    if (x == nullptr || y == nullptr)
+    {
+        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
+        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        return -1; 
+    }
+    // Set space and make plan
+    auto n = ny; 
+    size_t nbytes = sizeof(fftw_complex)*static_cast<size_t> (n);
+    fftw_complex *in  = static_cast<fftw_complex *> (fftw_malloc(nbytes));
+    memset(in, 0, nbytes);
+    fftw_complex *out = reinterpret_cast<fftw_complex *> (y); //(fftw_complex *)fftw_malloc(sizeof(fftw_complex)*(size_t) n);
+    fftw_plan p = fftw_plan_dft_1d(n, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
+    // Equal size transforms
+    if (nx == ny) 
+    {
+        std::memcpy(in, x, nbytes);
+    }   
+    // Truncate x to length of output array y
+    else if (nx > ny) 
+    {
+        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (ny);
+        std::memcpy(in, x, ncopy);
+    }
+    // Pad x to length of output array y
+    else if (nx < ny) 
+    {
+        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (nx);
+        std::memcpy(in, x, ncopy);
+    }
+    else
+    {
+        RTSEIS_ERRMSG("Could not classify job (nx,ny)=(%d,%d)", nx, ny);
+        fftw_destroy_plan(p);
+        return -1;
+    }
+    // Transform
+    fftw_execute(p);
+    fftw_destroy_plan(p);
+    fftw_free(in);
+    fftw_cleanup();
+    double xnorm = 1.0/static_cast<double> (ny);
+    for (int i=0; i<ny; i++)
+    {
+        y[i] = xnorm*y[i];
+    }
+
+    return 0;
+}
 
 int irfft(const int nx, const std::complex<double> x[],
           const int n, double y[])

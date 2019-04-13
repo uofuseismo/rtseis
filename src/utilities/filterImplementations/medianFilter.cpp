@@ -12,10 +12,7 @@ class MedianFilter::MedianFilterImpl
 {
     public:
         /// Default constructor.
-        MedianFilterImpl(void)
-        {
-            return;
-        }
+        MedianFilterImpl() = default;
         /// Copy constructor.
         MedianFilterImpl(const MedianFilterImpl &median)
         {
@@ -57,14 +54,13 @@ class MedianFilter::MedianFilterImpl
             return *this;
         }
         /// Destructor
-        ~MedianFilterImpl(void)
+        ~MedianFilterImpl()
         {
             clear();
-            return;
         }
         //====================================================================//
         /// Clears the filter/releases the memory
-        void clear(void)
+        void clear()
         {
             if (dlysrc64_ != nullptr){ippsFree(dlysrc64_);}
             if (dlydst64_ != nullptr){ippsFree(dlydst64_);}
@@ -83,7 +79,6 @@ class MedianFilter::MedianFilterImpl
             mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
             precision_ = RTSeis::Precision::DOUBLE;
             linit_ = false;
-            return;
         }
         /// Initializes the filter
         int initialize(const int n,
@@ -138,18 +133,18 @@ class MedianFilter::MedianFilterImpl
             return 0;
         }
         /// Determines if the module is initialized.
-        bool isInitialized(void) const
+        bool isInitialized() const
         {
             return linit_;
         }
         /// Determines the length of the initial conditions.
-        int getInitialConditionLength(void) const
+        int getInitialConditionLength() const
         {
             int len = maskSize_ - 1;;
             return len;
         }
         /// Gets the group delay.
-        int getGroupDelay(void) const
+        int getGroupDelay() const
         {
             int grpDelay = maskSize_/2;
             return grpDelay;
@@ -172,7 +167,7 @@ class MedianFilter::MedianFilterImpl
             return 0;
         }
         /// Resets the initial conditions
-        int resetInitialConditions(void)
+        int resetInitialConditions()
         {
             if (precision_ == RTSeis::Precision::DOUBLE)
             {
@@ -223,7 +218,7 @@ class MedianFilter::MedianFilterImpl
             else
             {
                 status = ippsFilterMedian_64f(x, y, n, maskSize_,
-                                              dlysrc64_, NULL, pBuf_);
+                                              dlysrc64_, nullptr, pBuf_);
                 if (status != ippStsNoErr)
                 {
                     RTSEIS_ERRMSG("%s", "Error applying real-time filter");
@@ -271,7 +266,7 @@ class MedianFilter::MedianFilterImpl
             else
             {
                 status = ippsFilterMedian_32f(x, y, n, maskSize_,
-                                              dlysrc32_, NULL, pBuf_);
+                                              dlysrc32_, nullptr, pBuf_);
                 if (status != ippStsNoErr)
                 {
                     RTSEIS_ERRMSG("%s", "Error applying real-time filter");
@@ -310,37 +305,30 @@ class MedianFilter::MedianFilterImpl
 
 };
 
-MedianFilter::MedianFilter(void) :
-    pMedian_(new MedianFilterImpl())
+MedianFilter::MedianFilter() :
+    pMedian_(std::make_unique<MedianFilterImpl> ())
 {
-    return;
 }
 
 MedianFilter::MedianFilter(const MedianFilter &median)
 {
     *this = median;
-    return;
 }
 
 MedianFilter& MedianFilter::operator=(const MedianFilter &median)
 {
     if (&median == this){return *this;}
     if (pMedian_){pMedian_->clear();}
-    pMedian_ = std::unique_ptr<MedianFilterImpl>
-               (new MedianFilterImpl(*median.pMedian_));
+    pMedian_ = std::make_unique<MedianFilterImpl> (*median.pMedian_);
     return *this;
 }
 
-MedianFilter::~MedianFilter(void)
-{
-    clear();
-    return;
-}
+MedianFilter::~MedianFilter() = default;
 
-void MedianFilter::clear(void)
+
+void MedianFilter::clear()
 {
     pMedian_->clear();
-    return;
 }
 
 int MedianFilter::initialize(const int n,
@@ -389,7 +377,7 @@ int MedianFilter::setInitialConditions(const int nz, const double zi[])
     return 0;
 }
 
-int MedianFilter::resetInitialConditions(void)
+int MedianFilter::resetInitialConditions()
 {
     if (!pMedian_->isInitialized())
     {
@@ -400,13 +388,13 @@ int MedianFilter::resetInitialConditions(void)
     return 0;
 }
 
-bool MedianFilter::isInitialized(void) const
+bool MedianFilter::isInitialized() const
 {
     bool linit = pMedian_->isInitialized();
     return linit;
 }
 
-int MedianFilter::getInitialConditionLength(void) const
+int MedianFilter::getInitialConditionLength() const
 {
     if (!pMedian_->isInitialized())
     {
@@ -461,7 +449,7 @@ int MedianFilter::apply(const int n, const float x[], float y[])
     return 0;
 }
 
-int MedianFilter::getGroupDelay(void) const
+int MedianFilter::getGroupDelay() const
 {
     int grpDelay = pMedian_->getGroupDelay();
     return grpDelay;
