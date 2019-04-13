@@ -10,7 +10,7 @@
 #include <vector>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/transforms/enums.hpp"
-#include "rtseis/utilities/transforms/transforms.hpp"
+#include "rtseis/utilities/transforms/dftRealToComplex.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"

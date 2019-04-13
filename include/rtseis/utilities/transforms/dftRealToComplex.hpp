@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_TRANSFORMS_HPP
-#define RTSEIS_UTILS_TRANSFORMS_HPP 1
+#ifndef RTSEIS_UTILITIES_TRANSFORMS_DFTREALTOCOMPLEX_HPP
+#define RTSEIS_UTILITIES_TRANSFORMS_DFTREALTOCOPMLEX_HPP 1
 #include <memory>
 #include <complex>
 #include "rtseis/utilities/transforms/enums.hpp"
@@ -33,36 +33,16 @@ namespace Transforms
  * @brief Utilities for computing the discrete Fourier transform of a signal.
  * @ingroup rtseis_utils_transforms
  */
-/*! 
- * @defgroup rtseis_utils_transforms_dftc2c Hilbert Transform
- *           A class for computing the Hilbert transform of a signal.
- * @ingroup rtseis_utils_transforms  
- */
 /*!
- * @defgroup rtseis_utils_transforms_dftc2c Complex-to-Complex DFT
- * @brief A class for computing the discrete Fourier transform of
- *        complex-valued signals.
- * @ingroup rtseis_utils_transforms_dft
- */
-/*!
- * @defgroup rtseis_utils_transforms_dftr2c Real-to-Complex DFT
- * @brief A class for computing the discrete Fourier transform of
- *        real-valued time domain signals.
+ * @class DFTRealToComplex dftRealToComplex.hpp "includertseis/utilities/transforms/dftRealToComplex.hpp" 
+ * @brief Handles the discrete Fourier transform of real signals.  This
+ *        leverages an efficiency that requires that the value of a negative
+ *        frequency is a complex conjugate of the corresponding positive
+ *        frequency.
  * @ingroup rtseis_utils_transforms_dft
  */
 class DFTRealToComplex
 {
-public:
-    /*!
-     * @brief Defines the Fourier transform implementation.
-     */
-    enum class Implementation
-    {
-        DFT, /*!< Perform a Discrete Fourier Transform computation. */
-        FFT  /*!< Force an Fast Fouerier Transform computation.  The 
-                  implementation will have to zero-pad the signal so that
-                  its length is a power of 2. */
-    };
 public:
     /*! @name Constructors
      * @{ 
@@ -173,38 +153,38 @@ public:
                           const int maxy, double y[]);
      /*!
       * @brief Gets the inverse transform length.
-      * @result The length of the inverse DFT or FFT.  If this is negative
-      *         then an error has occurred.
+      * @result The length of the inverse DFT or FFT.
+      * @throws std::invalid_argument if the class is not initialized.
       */
-     int getInverseTransformLength(void) const;
+     int getInverseTransformLength() const;
      /*!
       * @brief Gets the length of the transform.
-      * @result The length of the DFT or FFT.  If this is negative then an
-      *         error has occurred.
+      * @result The length of the DFT or FFT.
+      * @throws std::runtime_error if the class is not initialized.
       */
-     int getTransformLength(void) const;
+     int getTransformLength() const;
      /*!
       * @brief Gets the maximum length of the input signal.
-      * @result The maximum length of the input signal.  If this is negative
-      *         then an error has occurred.
+      * @result The maximum length of the input signal.
+      * @throws std::invalid_argument if the class is not initialized.
       */
-     int getMaximumInputSignalLength(void) const;
+     int getMaximumInputSignalLength() const;
      /*!
       * @brief Returns whether or not the class is initialized.
       * @retval True indicates the class is initialized.
       * @retval False indicates the class is not-initialized.
       */
-    bool isInitialized(void) const;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Releases the memory on the module and resets the
      *        defaults.  The class must be reinitialized before
      *        using it again.
      * @ingroup rtseis_utils_transforms_dftr2c
      */
-    void clear(void);
+    void clear();
 private:
     class DFTImpl;
-    std::unique_ptr<DFTImpl> pDFT_;
+    std::unique_ptr<DFTImpl> pImpl;
 }; // End DFTRealToComplex
 
 }; /* End transforms */
