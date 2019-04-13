@@ -15,21 +15,16 @@ class DFTRealToComplex::DFTImpl
 {
 public:
     /// Default constructor
-    DFTImpl(void)
-    {
-        return; 
-    }
+    DFTImpl() = default;
     /// Copy constructor
     DFTImpl(const DFTImpl &dft)
     {
         *this = dft;
-        return;
     }
     /// Default destructor
-    ~DFTImpl(void)
+    ~DFTImpl()
     {
         clear();
-        return;
     }
     /// (Deep) copy operator
     DFTImpl& operator=(const DFTImpl &dftr2c)
@@ -182,7 +177,7 @@ public:
                     clear();
                     return -1;
                 }
-                pFFTSpec64_ = NULL;
+                pFFTSpec64_ = nullptr;
                 Ipp8u *pSpecBuffer = ippsMalloc_8u(sizeInit);
                 Ipp8u *pSpec = ippsMalloc_8u(specSize_);
                 status = ippsFFTInit_R_64f(&pFFTSpec64_,
@@ -253,7 +248,7 @@ public:
                     clear();
                     return -1; 
                 }
-                pFFTSpec32_ = NULL;
+                pFFTSpec32_ = nullptr;
                 Ipp8u *pSpecBuffer = ippsMalloc_8u(sizeInit);
                 Ipp8u *pSpec = ippsMalloc_8u(specSize_);
                 status = ippsFFTInit_R_32f(&pFFTSpec32_,
@@ -508,17 +503,12 @@ private:
     bool linit_ = false;
 };
 
-DFTRealToComplex::DFTRealToComplex(void) :
+DFTRealToComplex::DFTRealToComplex() :
     pImpl(std::make_unique<DFTImpl> ())
 {
-    return;
 }
 
-DFTRealToComplex::~DFTRealToComplex(void)
-{
-    clear();
-    return;
-}
+DFTRealToComplex::~DFTRealToComplex() = default;
 
 DFTRealToComplex::DFTRealToComplex(const DFTRealToComplex &dftr2c)
 {
@@ -535,7 +525,7 @@ DFTRealToComplex& DFTRealToComplex::operator=(const DFTRealToComplex &dftr2c)
     return *this;
 }
 
-void DFTRealToComplex::clear(void)
+void DFTRealToComplex::clear()
 {
     pImpl->clear();
     return;

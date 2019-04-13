@@ -50,7 +50,7 @@ public:
     /*!
      * @brief Default constructor.
      */
-    DFTRealToComplex(void);
+    DFTRealToComplex();
     /*!
      * @brief Copy constructor.
      * @param[in] dftr2c  Class from which to initialize from.
@@ -70,7 +70,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~DFTRealToComplex(void);
+    ~DFTRealToComplex();
     /*! @} */
 
     /*!

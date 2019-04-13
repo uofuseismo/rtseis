@@ -110,6 +110,7 @@ SET(UTILS_SRCS
     src/utilities/math/polynomial.cpp
     src/utilities/math/vectorMath.cpp
     src/utilities/normalization/signBit.cpp
+    src/utilities/transforms/dft.cpp
     src/utilities/transforms/dftRealToComplex.cpp
     src/utilities/transforms/dftUtils.cpp)
 #SET(IPPS_SRCS
