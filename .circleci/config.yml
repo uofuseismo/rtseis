@@ -7,7 +7,7 @@ jobs:
       #  auth:
       #     username: $DOCKER_USER
       #     password: $DOCKER_PASS
-      - image: bakerb845/ubuntu-xcloc
+      - image: bakerb845/ubuntu-rtseis
     steps:
       - checkout
       - run:

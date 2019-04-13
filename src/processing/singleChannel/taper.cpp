@@ -63,11 +63,7 @@ TaperParameters::TaperParameters(TaperParameters &&parms)
 TaperParameters& TaperParameters::operator=(const TaperParameters &parms)
 {
     if (&parms == this){return *this;}
-    pImpl = std::make_unique<TaperParametersImpl> ();
-    //pImpl = std::unique_ptr<TaperParametersImpl> (new TaperParametersImpl());
-    pImpl->pct = parms.pImpl->pct;
-    pImpl->type = parms.pImpl->type;
-    pImpl->precision = parms.pImpl->precision;
+    pImpl = std::make_unique<TaperParametersImpl> (*parms.pImpl);
     return *this; 
 }
 
@@ -83,6 +79,7 @@ TaperParameters::~TaperParameters(void) = default;
 void TaperParameters::setPrecision(const RTSeis::Precision precision)
 {
     pImpl->precision = precision;
+    return;
 }
 
 RTSeis::Precision TaperParameters::getPrecision(void) const
@@ -150,36 +147,23 @@ Taper::Taper(const TaperParameters &parameters) :
     return;
 }
 
-Taper::~Taper(void)
-{
-    clear();
-    return;
-}
+Taper::~Taper(void) = default;
 
 void Taper::clear(void)
 {
-    if (pImpl)
-    {
-        pImpl->parms.clear();
-        pImpl->w8.clear();
-        pImpl->w4.clear();
-        pImpl->winLen0 =-1;
-        pImpl->linit = true;
-    }
+    pImpl->parms.clear();
+    pImpl->w8.clear();
+    pImpl->w4.clear();
+    pImpl->winLen0 =-1;
+    pImpl->linit = true;
     return;
 }
 
 Taper& Taper::operator=(const Taper &taper)
 {
     if (&taper == this){return *this;}
-    clear(); //if (pImpl){clear();}
-    pImpl = std::make_unique<TaperImpl> ();
-    //pImpl = std::unique_ptr<TaperImpl> (new TaperImpl()); 
-    pImpl->parms = taper.pImpl->parms;
-    pImpl->w8 = taper.pImpl->w8;
-    pImpl->w4 = taper.pImpl->w4;
-    pImpl->winLen0 = taper.pImpl->winLen0;
-    pImpl->linit = taper.pImpl->linit;
+    if (pImpl){pImpl.reset();}
+    pImpl = std::make_unique<TaperImpl> (*taper.pImpl);
     return *this;
 }
 

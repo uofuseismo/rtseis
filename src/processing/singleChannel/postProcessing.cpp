@@ -28,6 +28,7 @@
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
@@ -55,6 +56,13 @@ classifyFIRWindow(const FIRWindow windowIn);
 
 #define FIR_REMOVE_PHASE(pImpl, fir) \
 { \
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();} \
+    int len = pImpl->getLengthOfInputSignal(); \
+    if (len < 1) \
+    { \
+        RTSEIS_WARNMSG("%s", "No data is set on the module"); \
+        return; \
+    } \
     const std::vector<double> taps = fir.getFilterTaps(); \
     const int ntaps = static_cast<int> (taps.size()); \
     int nhalf = ntaps/2; \
@@ -75,6 +83,7 @@ classifyFIRWindow(const FIRWindow windowIn);
     double *yout = pImpl->getOutputDataPointer(); \
     ippsCopy_64f(&ytemp[nhalf], yout, len); \
     ippsFree(ytemp); \
+    pImpl->lfirstFilter_ = false; \
 };
 
 /*
@@ -95,9 +104,8 @@ class Waveform::WaveformImpl
 {
 public:
     /// Default constructor
-    WaveformImpl(void)
+    WaveformImpl()
     {
-        return;
     }
 /*
     /// Copy constructor
@@ -128,10 +136,13 @@ public:
         x_ = nullptr;
         y_ = nullptr;
         xptr_ = nullptr; //.release(); // = nullptr;
+        dt0_ = 1;
+        dt_ = 1;
         maxx_ = 0;
         nx_ = 0;
         maxy_ = 0;
         ny_ = 0;
+        lfirstFilter_ = true;
         return;
     }
     /// Gets the number of input sapmles
@@ -146,11 +157,14 @@ public:
     }
     /// Sets a pointer to the input data
     void setInputDataPointer(const int nx,
-                             const double *x) noexcept
+                             const double *x,
+                             const bool lfirst = true) noexcept
     {
         xptr_ = nullptr; //.release();
         nx_ = nx;
         xptr_ = x; //std::move(x);
+        lfirstFilter_ = lfirst;
+        return;
     }
     /// Releases the input pointer to the data
     void releaseInputDataPointer(void) noexcept
@@ -159,8 +173,23 @@ public:
         nx_ = 0;
         return;
     }
+    /// Overwrite input data with filtered data
+    void overwriteInputWithOutput(void)
+    {
+        xptr_ = nullptr; // Release
+        setData(static_cast<size_t> (ny_), y_, false); // Overwrite
+        ny_ = 0; // Try to avoid unnecessary allocation
+        return;
+    }
+    /// Restores the sampling period
+    void restoreSamplingPeriod(void) noexcept
+    {
+        dt_ = dt0_;
+        return;
+    }
     /// Sets the input time series
-    void setData(const size_t n, const double x[]) 
+    void setData(const size_t n, const double x[],
+                 const bool lfirst = true)
     {
         xptr_ = nullptr; //.release();
         nx_ = static_cast<int> (n); 
@@ -177,6 +206,7 @@ public:
 #else
         ippsCopy_64f(x, x_, nx_);
 #endif
+        lfirstFilter_ = lfirst;
         return;
     }
     /// Resizes the output
@@ -221,8 +251,10 @@ public:
     double *x_ = nullptr;
     /// The output data
     double *y_ = nullptr;
+    /// Input sampling period
+    double dt0_ = 1;
     /// Sampling period
-    double dt = 1;
+    double dt_ = 1;
     /// Max space reserved to x
     int maxx_ = 0;
     /// Max space reserved to y
@@ -231,6 +263,8 @@ public:
     int nx_ = 0;
     /// Number of elements in y
     int ny_ = 0;
+    /// Flag indicating this is the first filtering operation on the input data
+    bool lfirstFilter_ = true; 
 };
 
 Waveform::Waveform(void) :
@@ -265,7 +299,8 @@ void Waveform::setDataPointer(const size_t n,
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "Invalid arguments");
     }
-    pImpl->setInputDataPointer(static_cast<int> (n), x);
+    pImpl->restoreSamplingPeriod();
+    pImpl->setInputDataPointer(static_cast<int> (n), x, true);
     return; 
 }
 
@@ -283,7 +318,8 @@ void Waveform::setData(const size_t n, const double x[])
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "Invalid arguments");
     }
-    pImpl->setData(n, x);
+    pImpl->restoreSamplingPeriod();
+    pImpl->setData(n, x, true);
     return;
 }
 
@@ -334,18 +370,19 @@ void Waveform::setSamplingPeriod(const double dt)
     {
         RTSEIS_THROW_IA("Sampling period = %lf must be positive", dt);
     }
-    pImpl->dt = dt;
+    pImpl->dt0_ = dt;
+    pImpl->dt_ = dt;
     return;
 }
 
 double Waveform::getSamplingPeriod(void) const noexcept
 {
-    return pImpl->dt;
+    return pImpl->dt_;
 }
 
 double Waveform::getNyquistFrequency(void) const noexcept
 {
-    double fnyq = 1.0/(2.0*pImpl->dt);
+    double fnyq = 1.0/(2.0*pImpl->dt_);
     return fnyq;
 } 
 
@@ -358,6 +395,7 @@ void Waveform::convolve(
     const ConvolutionMode mode,
     const ConvolutionImplementation implementation)
 {
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int nx = pImpl->getLengthOfInputSignal();
     int ny = static_cast<int> (s.size());
     if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
@@ -385,12 +423,13 @@ void Waveform::convolve(
 #ifdef DEBUG
         assert(lenc == nyout);
 #endif
+        pImpl->lfirstFilter_ = false;
     }
     catch (const std::invalid_argument &ia)
     {
         RTSEIS_ERRMSG("Failed to compute convolution: %s", ia.what());
         pImpl->resizeOutputData(0);
-    } 
+    }
     return;
 }
 
@@ -399,6 +438,7 @@ void Waveform::correlate(
     const ConvolutionMode mode,
     const ConvolutionImplementation implementation)
 {
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int nx = pImpl->getLengthOfInputSignal();
     int ny = static_cast<int> (s.size());
     if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
@@ -426,6 +466,7 @@ void Waveform::correlate(
 #ifdef DEBUG
         assert(lenc == nyout);
 #endif
+        pImpl->lfirstFilter_ = false;
     }
     catch (const std::invalid_argument &ia)
     {
@@ -439,6 +480,7 @@ void Waveform::autocorrelate(
     const ConvolutionMode mode,
     const ConvolutionImplementation implementation)
 {
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int nx = pImpl->getLengthOfInputSignal();
     if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
     // Classify the convolution mode
@@ -463,6 +505,7 @@ void Waveform::autocorrelate(
 #ifdef DEBUG
         assert(lenc == nyout);
 #endif
+        pImpl->lfirstFilter_ = false;
     }
     catch (const std::invalid_argument &ia)
     {
@@ -478,6 +521,7 @@ void Waveform::autocorrelate(
 
 void Waveform::demean(void)
 {
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
@@ -493,6 +537,7 @@ void Waveform::demean(void)
         pImpl->resizeOutputData(len);
         double  *y = pImpl->getOutputDataPointer();
         demean.apply(len, x, y);
+        pImpl->lfirstFilter_ = false;
     }
     catch (const std::invalid_argument &ia)
     {
@@ -504,6 +549,7 @@ void Waveform::demean(void)
 
 void Waveform::detrend(void)
 {
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
     if (len < 2)
     {
@@ -517,7 +563,52 @@ void Waveform::detrend(void)
     pImpl->resizeOutputData(len);
     double  *y = pImpl->getOutputDataPointer();
     detrend.apply(len, x, y); 
+    pImpl->lfirstFilter_ = false;
     return;
+}
+
+//----------------------------------------------------------------------------//
+//                        Downsampling and Decimation                         //
+//----------------------------------------------------------------------------//
+
+void Waveform::downsample(const int nq)
+{
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    if (nq < 1)
+    {
+        RTSEIS_THROW_IA("Downsampling factor = %d must be at least 1", nq); 
+    }
+    // Initialize the downsampler
+    Utilities::FilterImplementations::Downsample downsample;
+    try
+    {
+        downsample.initialize(nq, 
+                              RTSeis::ProcessingMode::POST_PROCESSING,
+                              RTSeis::Precision::DOUBLE);
+        // Space estimate
+        int leny = downsample.estimateSpace(len);
+        pImpl->resizeOutputData(leny);
+        double  *y = pImpl->getOutputDataPointer(); // Handle on output
+        const double *x = pImpl->getInputDataPointer(); // Handle on input
+        int nyout;
+        downsample.apply(len, x, leny, &nyout, y);  // Finally downsample
+#ifdef DEBUG
+        assert(nyout == leny);
+#endif
+        pImpl->dt_ = pImpl->dt_*static_cast<double> (nq);
+        pImpl->lfirstFilter_ = false;
+    }
+    catch (const std::runtime_error &ra)
+    {
+        RTSEIS_ERRMSG("Downsampling failed: %s", ra.what());
+    }
+    return; 
 }
 //----------------------------------------------------------------------------//
 //                           Band-specific Filters                            //
@@ -528,15 +619,8 @@ void Waveform::iirLowpassFilter(const int order, const double fc,
                                 const double ripple,
                                 const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {   
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     // Compute normalized frequencies
-    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::BA ba;
@@ -552,15 +636,8 @@ void Waveform::sosLowpassFilter(const int order, const double fc,
                                 const double ripple,
                                 const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     // Compute normalized frequencies
-    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::SOS sos;
@@ -576,13 +653,6 @@ void Waveform::firLowpassFilter(const int ntapsIn, const double fc,
                                 const FIRWindow windowIn,
                                 const bool lremovePhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
     {
@@ -592,7 +662,7 @@ void Waveform::firLowpassFilter(const int ntapsIn, const double fc,
     if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
     int order = ntaps - 1;
     // Compute normalized frequencies
-    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     Utilities::FilterRepresentations::FIR fir;
@@ -613,15 +683,8 @@ void Waveform::iirHighpassFilter(const int order, const double fc,
                                  const double ripple,
                                  const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {   
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }   
     // Compute normalized frequencies
-    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::BA ba; 
@@ -637,15 +700,8 @@ void Waveform::sosHighpassFilter(const int order, const double fc,
                                  const double ripple,
                                  const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {   
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }   
     // Compute normalized frequencies
-    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::SOS sos;
@@ -661,13 +717,6 @@ void Waveform::firHighpassFilter(const int ntapsIn, const double fc,
                                  const FIRWindow windowIn,
                                  const bool lremovePhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
     {
@@ -677,7 +726,7 @@ void Waveform::firHighpassFilter(const int ntapsIn, const double fc,
     if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
     int order = ntaps - 1;
     // Compute normalized frequencies
-    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+    double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     Utilities::FilterRepresentations::FIR fir;
@@ -701,16 +750,9 @@ void Waveform::iirBandpassFilter(const int order,
                                  const double ripple,
                                  const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {   
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     // Compute normalized frequencies
     std::pair<double,double> r
-        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::BA ba; 
@@ -727,16 +769,9 @@ void Waveform::sosBandpassFilter(const int order,
                                  const double ripple,
                                  const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {   
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }   
     // Compute normalized frequencies
     std::pair<double,double> r
-        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::SOS sos;
@@ -753,13 +788,6 @@ void Waveform::firBandpassFilter(const int ntapsIn,
                                  const FIRWindow windowIn,
                                  const bool lremovePhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
     {
@@ -770,7 +798,7 @@ void Waveform::firBandpassFilter(const int ntapsIn,
     int order = ntaps - 1;
     // Compute normalized frequencies
     std::pair<double,double> r
-        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     Utilities::FilterRepresentations::FIR fir;
@@ -792,16 +820,9 @@ void Waveform::iirBandstopFilter(const int order,
                                  const double ripple,
                                  const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     // Compute normalized frequencies
     std::pair<double,double> r
-        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::BA ba;
@@ -818,16 +839,9 @@ void Waveform::sosBandstopFilter(const int order,
                                  const double ripple,
                                  const bool lzeroPhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     // Compute normalized frequencies
     std::pair<double,double> r
-        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+        = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     Utilities::FilterRepresentations::SOS sos;
@@ -844,13 +858,6 @@ void Waveform::firBandstopFilter(const int ntapsIn,
                                  const FIRWindow windowIn,
                                  const bool lremovePhase)
 {
-    // Check that there's data
-    int len = pImpl->getLengthOfInputSignal();
-    if (len < 1)
-    {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
-    }
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
     {
@@ -861,7 +868,7 @@ void Waveform::firBandstopFilter(const int ntapsIn,
     int order = ntaps - 1;
     // Compute normalized frequencies
     std::pair<double,double> r
-         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt);
+         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     Utilities::FilterRepresentations::FIR fir;
@@ -884,7 +891,7 @@ void Waveform::firBandstopFilter(const int ntapsIn,
 void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
                          const bool lremovePhase)
 {
-    // Check that there's data
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
@@ -922,13 +929,14 @@ void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
         ippsFlip_64f(ywork, yout,  len);   // Reverse it
         ippsFree(ywork);
     }
+    pImpl->lfirstFilter_ = false;
     return;
 }
 
 void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
                          const bool lremovePhase)
 {
-    // Check that there's data
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
@@ -972,13 +980,14 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
         double *yout = pImpl->getOutputDataPointer();
         iiriirFilter.apply(len, x, yout);
     }
+    pImpl->lfirstFilter_ = false;
     return;
 }
 
 void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
                          const bool lremovePhase)
 {
-    // Check that there's data
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
@@ -1016,6 +1025,7 @@ void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
     {
         sosFilter.apply(len, x, yout);
     }
+    pImpl->lfirstFilter_ = false;
     return;
 }
 
@@ -1026,6 +1036,7 @@ void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
 void Waveform::taper(const double pct,
                      const TaperParameters::Type window)
 {
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
@@ -1039,6 +1050,7 @@ void Waveform::taper(const double pct,
     pImpl->resizeOutputData(len);
     double  *y = pImpl->getOutputDataPointer();
     taper.apply(len, x, y);
+    pImpl->lfirstFilter_ = false;
     return;
 }
 

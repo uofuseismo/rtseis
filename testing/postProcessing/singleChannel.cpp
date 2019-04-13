@@ -32,6 +32,7 @@ using namespace RTSeis::PostProcessing::SingleChannel;
 
 int testDemean(void);
 int testDetrend(void);
+int testDownsample(const std::vector<double> &x);
 int testFilter(const std::vector<double> &x);
 int testBandSpecificSOSFilters(const std::vector<double> &x);
 int testBandSpecificIIRFilters(const std::vector<double> &x);
@@ -65,6 +66,14 @@ int main(void)
         return EXIT_FAILURE;
     } 
     RTSEIS_INFOMSG("%s", "Passed detrend test");
+
+    ierr = testDownsample(gse2);
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed downsample test");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed downsample test");
 
     ierr = testFilter(gse2);
     if (ierr != EXIT_SUCCESS)
@@ -751,10 +760,62 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed fir filter test with error=%e\n", l1Norm);
+        RTSEIS_ERRMSG("Failed fir filter test with error=%e", l1Norm);
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS; 
+}
+
+//============================================================================//
+
+int testDownsample(const std::vector<double> &x)
+{
+    const int nq = 7;
+    int npts = static_cast<int> (x.size());
+    const double dt = 1.0/200.0;
+    PostProcessing::SingleChannel::Waveform waveform;
+    waveform.setSamplingPeriod(dt);
+    for (int iq=1; iq<nq+1; iq++)
+    {
+        std::vector<double> y;
+        try
+        {
+            waveform.setData(x);
+            waveform.downsample(iq);
+            waveform.getData(y);
+        }
+        catch (std::exception &e)
+        {
+            RTSEIS_ERRMSG("Error in downsampling %d %s", iq, e.what());
+            return EXIT_FAILURE;
+        }
+        // Verify
+        int j = 0; 
+        for (int i=0; i<npts; i=i+iq)
+        {
+            if (std::abs(x[i] - y.at(j)) > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed downsample %d %d %lf %lf", 
+                              iq, i, x[i], y[j]); 
+                return EXIT_FAILURE;
+            }
+            j = j + 1;
+        }
+        if (j != static_cast<int> (y.size()))
+        {
+            RTSEIS_ERRMSG("%s", "Size mismatch");
+            return EXIT_FAILURE;
+        }
+        double dtNew = waveform.getSamplingPeriod();
+        double dtTarg = static_cast<double> (iq)*dt;
+        if (std::abs(dtNew - dtTarg) > 1.e-12)
+        {
+            RTSEIS_ERRMSG("Failed to update sampling period %lf %lf",
+                          dtTarg, dtNew);
+            return EXIT_FAILURE;
+        }
+    }
+    return EXIT_SUCCESS;
 }
 
 //============================================================================//

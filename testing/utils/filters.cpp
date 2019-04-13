@@ -1148,27 +1148,32 @@ int filters_downsample_test(const int npts, const double x[])
                 (calloc(static_cast<size_t> (npts), sizeof(double)));
     double *yref = static_cast<double *>
                    (calloc(static_cast<size_t> (npts), sizeof(double)));
-    int ierr = 0;
     fprintf(stdout, "Testing downsampler...\n");
     for (int iq=1; iq<nq+1; iq++)
     {
         // Do a post-processing test
         memset(y, 0, static_cast<size_t> (npts)*sizeof(double));
         memset(yref, 0, static_cast<size_t> (npts)*sizeof(double));
-        ierr = downsample.initialize(iq,
-                                     RTSeis::ProcessingMode::POST_PROCESSING,
-                                     precision); 
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to intiialized downsample");
+            downsample.initialize(iq,
+                                  RTSeis::ProcessingMode::POST_PROCESSING,
+                                  precision); 
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("Failed to intiialized downsample %s", ia.what());
             return EXIT_FAILURE;
         }
         auto timeStart = std::chrono::high_resolution_clock::now();
         int ny;
-        ierr = downsample.apply(npts, x, npts, &ny, y);
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to call downsampler");
+            downsample.apply(npts, x, npts, &ny, y);
+        }
+        catch (const std::exception &e)
+        {
+            RTSEIS_ERRMSG("Failed to call downsampler %s", e.what());
             return EXIT_FAILURE;
         }
         auto timeEnd = std::chrono::high_resolution_clock::now();
@@ -1197,12 +1202,15 @@ int filters_downsample_test(const int npts, const double x[])
         int nyref = ny;
         for (int iy=0; iy<ny; iy++){yref[iy] = y[iy];}
         // Do a real-time test
-        ierr = downsample.initialize(iq,
-                                     RTSeis::ProcessingMode::REAL_TIME,
-                                     precision);
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to intiialized downsample");
+            downsample.initialize(iq,
+                                  RTSeis::ProcessingMode::REAL_TIME,
+                                  precision);
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("Failed to intiialize downsample %s", ia.what());
             return EXIT_FAILURE;
         }
         std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
@@ -1216,11 +1224,15 @@ int filters_downsample_test(const int npts, const double x[])
             {
                 int nptsPass = std::min(packetSize[ip], npts - nxloc);
                 int nyDec = 0;
-                ierr = downsample.apply(nptsPass, &x[nxloc],
-                                        npts+1-nyloc, &nyDec, &y[nyloc]);
-                if (ierr != 0)
+                try
                 {
-                    RTSEIS_ERRMSG("Failed to apply downsampler for iq=%d", iq);
+                    downsample.apply(nptsPass, &x[nxloc],
+                                     npts+1-nyloc, &nyDec, &y[nyloc]);
+                }
+                catch (const std::exception &e)
+                {
+                    RTSEIS_ERRMSG("Failed to apply downsampler for iq=%d; %s",
+                                  iq, e.what());
                     return EXIT_FAILURE; 
                 }
                 nxloc = nxloc + nptsPass;
@@ -1260,11 +1272,15 @@ int filters_downsample_test(const int npts, const double x[])
         {
             int nptsPass = std::min(packetLen, npts - nxloc);
             int nyDec = 0;
-            ierr = downsample.apply(nptsPass, &x[nxloc],
-                                    npts+1-nyloc, &nyDec, &y[nyloc]);
-            if (ierr != 0)
+            try
             {
-                RTSEIS_ERRMSG("Failed to apply downsampler for iq=%d", iq);
+                downsample.apply(nptsPass, &x[nxloc],
+                                 npts+1-nyloc, &nyDec, &y[nyloc]);
+            }
+            catch (const std::exception &e)
+            {
+                RTSEIS_ERRMSG("Failed to apply downsampler for iq=%d; %s",
+                               iq, e.what());
                 return EXIT_FAILURE;
             }
             nxloc = nxloc + nptsPass;

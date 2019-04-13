@@ -42,7 +42,7 @@ public:
     /*!
      * @brief Move constructor.
      * @param[in,out] downsample  Downsampling class to move to this class.
-     *                            On exit this class is no longer usable.
+     *                            On exit downsample's behavior is undefined.
      */
     Downsample(Downsample &&downsample);
     /*! @} */
@@ -71,16 +71,16 @@ public:
 
     /*!
      * @brief Initializes the downsampler.
-     * @param[in] downFactor  The downsampling factor.  This must be
-     *                        positive.  This will retain every 
-     *                        (downFactor-1)'th sample.
+     * @param[in] downFactor  The downsampling factor.  This will retain
+     *                        every (downFactor-1)'th sample.  This must be
+     *                        positive.
      * @param[in] mode  The processing mode.  By default this
      *                  is for post-processing.
      * @param[in] precision   The precision of the filter.  By default
      *                        this is double precision.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if downFactor is invalid.
      */
-    int initialize(const int downFactor,
+    void initialize(const int downFactor,
                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
@@ -88,26 +88,29 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const;
+    bool isInitialized(void) const noexcept;
     /*!
      * @brief Estimates the space required to hold the downsampled signal.
-     * @param[in] n   The length of the signal to downsample.
+     * @param[in] n   The length of the signal to downsample.  This must
+     *                be non-negative.
      * @result The number of points required to store the output signal.
-     *         If negative then there was a failure.
+     * @throws std::runtime_error if the module is not initialized.
+     * @throws std::invalid_argument if n is negative.
      */
     int estimateSpace(const int n) const;
     /*!
      * @brief Gets the downsampling factor.
      * @result The downsampling factor.
      */
-    int getDownsampleFactor(void) const;
+    int getDownsampleFactor(void) const noexcept;
     /*!
      * @brief Sets the initial conditions of the downsampler which is the phase.
      * @param[in] phase  Phase of downsampler.  This must be in the 
      *                   range [0, getDownsampleFactor()].
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if phase is out of range.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int setInitialConditions(const int phase);
+    void setInitialConditions(const int phase);
     /*!
      * @{
      * @brief Applies the downsampler to the data.
@@ -115,25 +118,26 @@ public:
      * @param[in] x        The signal to downsample.
      * @param[in] ny       The maximum number of samples in y.  One can
      *                     estimate ny by using estimateSpace(). 
-     * @param[out] nyDown  The number of defined downsampled points
-     *                     in y.
+     * @param[out] nyDown  The number of defined downsampled points in y.
      * @param[out] y       The downsampled signal.  This has dimension
      *                     [ny] however  only the first [nyDown] points
      *                     are defined.
      * @result 0 indicates success.
+     * @throws std::invalid_argument if x or y is NULL.
+     * @throws std::runtime_error if the module is not initialized.
      */
-    int apply(const int nx, const double x[],
-              const int ny, int *nyDown, double y[]);
-    int apply(const int nx, const float x[],
-              const int ny, int *nyDown, float y[]);
+    void apply(const int nx, const double x[],
+               const int ny, int *nyDown, double y[]);
+    void apply(const int nx, const float x[],
+               const int ny, int *nyDown, float y[]);
     /*! @} */
     /*!
      * @brief Resets the initial conditions to the phase set in 
      *        setInitialConditions.  If setInitialConditions was not
      *        called then this will set the phase to 0.
-     * @result 0 indicates success.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int resetInitialConditions(void);
+    void resetInitialConditions(void);
     /*! 
      * @brief Clears the module and resets all parameters.
      */

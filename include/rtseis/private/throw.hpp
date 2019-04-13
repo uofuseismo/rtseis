@@ -38,6 +38,22 @@ inline std::string makeInvalidArgumentError(
     throw std::invalid_argument(throwMsg); \
 }
 #endif
+
+#ifndef RTSEIS_THROW_RTE
+#define RTSEIS_THROW_RTE(fmt, ...) \
+{ \
+    char msgData[512]; \
+    memset(msgData, 0, 512*sizeof(char)); \
+    sprintf(msgData, "%s[ERROR]: (%s:%s:line=%d) ", ANSI_COLOR_RED, __FILE__, __func__, __LINE__ ); \
+    do \
+    {  \
+        snprintf(&msgData[strlen(msgData)], 512, fmt, __VA_ARGS__); \
+    } while(0); \
+    sprintf(msgData, "%s%s\n", msgData, ANSI_COLOR_RESET); \
+    std::string throwMsg(msgData); \
+    throw std::runtime_error(throwMsg); \
+}
+#endif
 /*
 
 #ifndef RTSEIS_THROW_IA

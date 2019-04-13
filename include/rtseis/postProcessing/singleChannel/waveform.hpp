@@ -585,6 +585,19 @@ public:
                const TaperParameters::Type window = TaperParameters::Type::HAMMING);
     /*! @} */
 
+    /*! @name Resampling
+     * @{
+     */
+    /*!
+     * @brief Downsamples a signal.
+     * @param[in] nq  The downsampling factor.  Every (nq - 1)'th sample will
+     *                be retained.  This must be positive.
+     * @throws std::invalid_argument if nq is negative.
+     */
+    void downsample(const int nq);
+    /*! @} */
+
+
     /*! @name Utilities
      * @{
      */ 

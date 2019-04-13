@@ -3,7 +3,7 @@ project(RTSeis VERSION 0.1.1 LANGUAGES C CXX)
 enable_testing()
 
 ##########################################################################################
-#                    Define the compiler standard, OpenMP, and Python                    #
+#              Define the compiler standard, OpenMP, and Python, and GTest               #
 ##########################################################################################
 include(FindOpenMP QUIET)
 if (OPENMP_FOUND)
@@ -43,6 +43,8 @@ if (RTSEIS_WRAP_PYTHON)
    message(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
    find_package(pybind11 REQUIRED)
 endif()
+
+find_package(GTest REQUIRED)
 
 ##########################################################################################
 #                                       Include Directories                              #
@@ -163,20 +165,20 @@ ADD_EXECUTABLE(testPPSC
                #testing/modules/classicSTALTA.cpp)
 # The core library utilities - do these first
 target_link_libraries(testUtils
-                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY} ${GTEST_BOTH_LIBRARIES})
 target_include_directories(testUtils
-                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS})
+                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS} ${GTEST_INCLUDE_DIRS})
 # Single-channel post-processing
 target_link_libraries(testPPSC
-                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY} ${GTEST_BOTH_LIBRARIES})
 #SET_PROPERTY(TARGET testUtils   PROPERTY CXX_STANDARD 17)
 target_include_directories(testPPSC
-                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS})
+                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS} ${GTEST_INCLUDE_DIRS})
 
-ADD_TEST(NAME utils
+add_test(NAME utils
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testUtils)
-ADD_TEST(NAME singleChannlePostProcessing
+add_test(NAME singleChannlePostProcessing
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testPPSC
          DEPENDS utils)
