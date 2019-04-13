@@ -47,6 +47,15 @@ tsum = 0
 for i in range(niter):
     trace.set_data(a+i)
     start = time.time()
+    trace.downsample(7)
+    tsum = tsum + time.time() - start
+    y = trace.get_data()
+avgDownsample = tsum/niter
+
+tsum = 0
+for i in range(niter):
+    trace.set_data(a+i)
+    start = time.time()
     trace.taper(5, "hamming")
     tsum = tsum + time.time() - start
 avgTaper = tsum/niter
@@ -152,15 +161,25 @@ for i in range(niter):
     convolve(a, ramp, 'full')
     tsum = tsum + time.time() - start
 avgConvolveObspy = tsum/niter
+
+tsum = 0
+for i in range(niter):
+    traceObspy.data = a + 1
+    start = time.time()
+    traceObspy.decimate(5, no_filter=True)
+    tsum = tsum + time.time() - start
+avgDownsampleObspy = tsum/niter
+
 #print("Average SciPy convolve time %e (s)"%(avgConvolveObspy))
 
-print("Average demean time:    Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgDemeanObspy,    avgDemean,    avgDemeanObspy/avgDemean))
-print("Average detrend time:   Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgDetrendObspy,   avgDetrend,   avgDetrendObspy/avgDetrend))
-print("Average taper time:     Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgTaperObspy,     avgTaper,     avgTaperObspy/avgTaper))
-print("Average convolve time:  Scipy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgConvolveObspy,  avgConvolve,  avgConvolveObspy/avgConvolve))
-print("Average FIR time:       Scipy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgFirFilterObspy, avgFirFilter, avgFirFilterObspy/avgFirFilter))
-print("Average LP SOS time:    Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgLPSosFilterObspy, avgLPSosFilter, avgLPSosFilterObspy/avgLPSosFilter))
-print("Average BP SOS time:    Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgBPSosFilterObspy, avgBPSosFilter, avgBPSosFilterObspy/avgBPSosFilter))
+print("Average demean time:     Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgDemeanObspy,    avgDemean,    avgDemeanObspy/avgDemean))
+print("Average detrend time:    Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgDetrendObspy,   avgDetrend,   avgDetrendObspy/avgDetrend))
+print("Average taper time:      Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgTaperObspy,     avgTaper,     avgTaperObspy/avgTaper))
+print("Average convolve time:   Scipy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgConvolveObspy,  avgConvolve,  avgConvolveObspy/avgConvolve))
+print("Average FIR time:        Scipy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgFirFilterObspy, avgFirFilter, avgFirFilterObspy/avgFirFilter))
+print("Average LP SOS time:     Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgLPSosFilterObspy, avgLPSosFilter, avgLPSosFilterObspy/avgLPSosFilter))
+print("Average BP SOS time:     Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgBPSosFilterObspy, avgBPSosFilter, avgBPSosFilterObspy/avgBPSosFilter))
+print("Average downsample time: Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgDownsampleObspy,  avgDownsample, avgDownsampleObspy/avgDownsample))
 """
 from ctypes import cdll
 from ctypes import c_int

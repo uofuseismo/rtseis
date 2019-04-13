@@ -26,6 +26,8 @@ public:
     void demean(void);
     /// Detrend
     void detrend(void);
+    /// Downsampler
+    void downsample(const int nq);
     /// Generic FIR filter data
     void firFilter(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &taps);
     /// Generic IIR filter data using biquad second-order sections

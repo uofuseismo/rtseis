@@ -92,6 +92,32 @@ void Waveform::detrend(void)
     return;
 }
 
+/// Downsample
+void Waveform::downsample(const int nq)
+{
+    if (nq < 1)
+    {
+        throw std::invalid_argument("nq = " + std::to_string(nq)
+                                   + "must be positive");
+    }
+    try
+    {
+        waveform_->downsample(nq);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        fprintf(stderr, "%s", ia.what());
+        throw std::invalid_argument("Downsample failed");
+    }
+    catch (const std::runtime_error &rt)
+    {
+        fprintf(stderr, "%s", rt.what());
+        throw std::invalid_argument("Internal in downsample error");
+    }
+    return;
+}
+
+/// FIR filter
 void Waveform::firFilter(py::array_t<double, py::array::c_style | py::array::forcecast> &taps)
 {
     if (taps.size() < 1)
@@ -339,6 +365,9 @@ void init_pp_waveform(py::module &m)
                               "Removes the mean from the time series");
     singleChannelWaveform.def("detrend", &PBPostProcessing::Waveform::detrend,
                               "Removes the trend from the time series");
+    singleChannelWaveform.def("downsample", &PBPostProcessing::Waveform::downsample,
+                              "Downsamples sample signal by integer factor",
+                              py::arg("nq"));
     singleChannelWaveform.def("fir_filter", &PBPostProcessing::Waveform::firFilter,
                               py::arg("taps"));
 
