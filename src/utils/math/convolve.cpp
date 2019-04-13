@@ -12,10 +12,8 @@
 using namespace::RTSeis::Utilities::Math;
 
 
-static IppEnum getImplementation(const Convolve::Implementation implementation);
-static std::pair<int,int> computeTrimIndices(
-    const Convolve::Mode mode,
-    const int n1, const int n2);
+static IppEnum getImplementation(Convolve::Implementation implementation);
+static std::pair<int,int> computeTrimIndices(Convolve::Mode mode, int n1, int n2);
 
 std::vector<double>
 Convolve::convolve(const std::vector<double> &a,
@@ -114,7 +112,6 @@ void Convolve::convolve(const int src1Len, const double a[],
     len = i2 - i1;
     ippsCopy_64f(&pDst[i1], c, len);
     ippsFree(pDst);
-    return;
 }
 
 //============================================================================//
@@ -223,7 +220,6 @@ void Convolve::correlate(const int src1Len, const double a[],
     len = i2 - i1;
     ippsCopy_64f(&pDst[i1], c, len);
     ippsFree(pDst);
-    return;
 }
 
 //============================================================================//
@@ -311,7 +307,6 @@ void Convolve::autocorrelate(const int src1Len, const double a[],
         ippsCopy_64f(&pDst[1], &scratch[len], len-1); 
         ippsFree(pDst);
         // Trim the full autocorrelation
-        std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src1Len);
         int i1 = indexes.first;
         int i2 = indexes.second;
         len = i2 - i1; 
@@ -319,7 +314,6 @@ void Convolve::autocorrelate(const int src1Len, const double a[],
         ippsFree(scratch);
     }
     *nc = fullLen;
-    return;
 }
 
 //============================================================================//
@@ -338,7 +332,7 @@ int Convolve::computeConvolutionLength(const int n1, const int n2,
  * @result The corresponding IPP implementation enum.
  * @ingroup rtseis_utils_convolve
  */
-static IppEnum getImplementation(const Convolve::Implementation implementation)
+IppEnum getImplementation(Convolve::Implementation implementation)
 {
     if (implementation == Convolve::Implementation::FFT)
     {   
@@ -364,9 +358,7 @@ static IppEnum getImplementation(const Convolve::Implementation implementation)
  * @result The start and stop index from which to copy the full convolution.
  * @ingroup rtseis_utils_convolve
  */
-static std::pair<int,int> computeTrimIndices(
-    const Convolve::Mode mode,
-    const int n1, const int n2)
+std::pair<int,int> computeTrimIndices(Convolve::Mode mode, int n1,  int n2)
 {
     int lc;
     int nLeft = 0;
@@ -382,8 +374,6 @@ static std::pair<int,int> computeTrimIndices(
     else if (mode == Convolve::Mode::VALID)
     {
         lc = std::max(n1,n2) - std::min(n1,n2) + 1;
-        nLeft = 0;
-        nRight = 0;
         if (n2 > n1)
         {
             nLeft = n1/2 + 1;

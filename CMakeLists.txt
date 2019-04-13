@@ -52,6 +52,8 @@ find_package(GTest REQUIRED)
 
 include_directories(
    ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${IPP_INCLUDE_DIR}
+   ${MKL_INCLUDE_DIR}
 )
 set(PRIVATE_INCLUDE_DEPENDS ${IPP_INCLUDE_DIR} ${MKL_INCLUDE_DIR})
 message("Include directories:" ${PRIVATE_INCLUDE_DEPENDS})

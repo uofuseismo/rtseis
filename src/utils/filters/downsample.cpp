@@ -3,7 +3,6 @@
 #include <cassert>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
-#define IPPS_CORE_SRC 1
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/log.h"
@@ -14,15 +13,12 @@ class Downsample::DownsampleImpl
 {
 public:
     /// Default constructor
-    DownsampleImpl(void)
-    {
-        return;
-    }
+    DownsampleImpl() = default;
+
     /// Copy constructor
     DownsampleImpl(const DownsampleImpl &downsample)
     {
         *this = downsample;
-        return;
     }
     /// (Deep) copy operator
     DownsampleImpl& operator=(const DownsampleImpl &downsample)
@@ -37,9 +33,9 @@ public:
         return *this;
     }
     /// Default destructor
-    ~DownsampleImpl(void) = default;
+    ~DownsampleImpl() = default;
     /// Clears memory and resets the module
-    void clear(void)
+    void clear()
     {
         phase0_ = 0;
         downFactor_ = 0;
@@ -47,7 +43,6 @@ public:
         mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         precision_ = RTSeis::Precision::DOUBLE;
         linit_ = false;
-        return;
     }
     //--------------------------------------------------------------------//
     /// Initialize the filter
@@ -65,7 +60,7 @@ public:
         return 0;
     }
     /// Determines if the module is initialized
-    bool isInitialized(void) const
+    bool isInitialized() const
     {
         return linit_;
     }
@@ -78,7 +73,7 @@ public:
         return pDstLen;  
     }
     /// Gets the downsampling factor
-    int getDownsampleFactor(void) const
+    int getDownsampleFactor() const
     {
         return downFactor_;
     }
@@ -95,7 +90,7 @@ public:
         return 0;
     }
     /// Resets the initial conditions
-    int resetInitialConditions(void)
+    int resetInitialConditions()
     {
         phase_ = phase0_;
         return 0;
@@ -157,7 +152,7 @@ public:
         if (status != ippStsNoErr)
         {
             RTSEIS_ERRMSG("%s", "Failed to downsample signal");
-           return -1;
+            return -1;
         }
         // Weird unhandled exception
         if (pEst < 0 || pEst >= nx){pEst = pDstLen;}
@@ -182,28 +177,21 @@ private:
 
 //============================================================================//
 
-Downsample::Downsample(void) :
+Downsample::Downsample() :
     pDownsample_(std::make_unique<DownsampleImpl>())
 {
-    return;
 }
 
-Downsample::~Downsample(void)
-{
-    clear();
-    return;
-}
+Downsample::~Downsample() = default;
 
 Downsample::Downsample(const Downsample &downsample)
 {
     *this = downsample;
-    return;
 }
 
-Downsample::Downsample(Downsample &&downsample)
+Downsample::Downsample(Downsample &&downsample) noexcept
 {
     *this = std::move(downsample); 
-    return;
 }
 
 Downsample& Downsample::operator=(const Downsample &downsample)
@@ -215,7 +203,7 @@ Downsample& Downsample::operator=(const Downsample &downsample)
     return *this;
 }
 
-Downsample& Downsample::operator=(Downsample &&downsample)
+Downsample& Downsample::operator=(Downsample &&downsample) noexcept
 {
     if (&downsample == this){return *this;}
     pDownsample_ = std::move(downsample.pDownsample_);
@@ -232,13 +220,11 @@ void Downsample::initialize(const int downFactor,
         RTSEIS_THROW_IA("Downsampling factor=%d must be positive", downFactor);
     }
     pDownsample_->initialize(downFactor, mode, precision);
-    return;
 }
 
-void Downsample::clear(void)
+void Downsample::clear()
 {
     if (pDownsample_){pDownsample_->clear();}
-    return;
 }
 
 void Downsample::setInitialConditions(const int phase)
@@ -250,17 +236,15 @@ void Downsample::setInitialConditions(const int phase)
         RTSEIS_THROW_IA("phase=%d must be in range[0,%d]", phase, downFactor-1);
     }
     pDownsample_->setInitialConditions(phase);
-    return;
 }
 
-void Downsample::resetInitialConditions(void)
+void Downsample::resetInitialConditions()
 {
     if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Downsampler not initialized");
     }
     pDownsample_->resetInitialConditions();
-    return;
 }
 
 void Downsample::apply(const int nx, const double x[], const int ny,
@@ -283,8 +267,7 @@ void Downsample::apply(const int nx, const double x[], const int ny,
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "Error y is NULL");}
-        RTSEIS_THROW_IA("%s", "Invalid argument");
+        RTSEIS_THROW_IA("%s", "Error y is NULL");
     }
     int ierr = pDownsample_->apply(nx, x, nyDown, y);
 #ifdef DEBUG
@@ -293,9 +276,7 @@ void Downsample::apply(const int nx, const double x[], const int ny,
     if (ierr != 0)
     {
         RTSEIS_THROW_RTE("%s", "Failed to apply downsampler");
-        return;
     }
-    return;
 }
 
 void Downsample::apply(const int nx, const float x[], const int ny, 
@@ -318,8 +299,7 @@ void Downsample::apply(const int nx, const float x[], const int ny,
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "Error y is NULL");}
-        RTSEIS_THROW_IA("%s", "Invalid argument");
+        RTSEIS_THROW_IA("%s", "Error y is NULL");
     }
     int ierr = pDownsample_->apply(nx, x, nyDown, y);
 #ifdef DEBUG
@@ -330,10 +310,9 @@ void Downsample::apply(const int nx, const float x[], const int ny,
         RTSEIS_THROW_IA("%s", "Failed to apply downsampler");
         return;
     }
-    return;
 }
 
-bool Downsample::isInitialized(void) const noexcept
+bool Downsample::isInitialized() const noexcept
 {
     return pDownsample_->isInitialized();
 }
@@ -345,7 +324,7 @@ int Downsample::estimateSpace(const int n) const
     return pDownsample_->estimateSpace(n);
 }
  
-int Downsample::getDownsampleFactor(void) const noexcept
+int Downsample::getDownsampleFactor() const noexcept
 {
     return pDownsample_->getDownsampleFactor();
 }

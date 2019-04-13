@@ -14,7 +14,7 @@ jobs:
           name: Print the Current Time
           command: date
       - run:
-          name: Build the code
+          name: Configure the code
           command: |
             export CC=gcc-7
             export CXX=g++-7

@@ -33,7 +33,7 @@ public:
     /*!
      * @brief Default constructor.
      */
-    Downsample(void);
+    Downsample();
     /*!
      * @brief Copy constructor.
      * @param[in] downsample  Downsampling class from which to initialize.
@@ -44,7 +44,7 @@ public:
      * @param[in,out] downsample  Downsampling class to move to this class.
      *                            On exit downsample's behavior is undefined.
      */
-    Downsample(Downsample &&downsample);
+    Downsample(Downsample &&downsample) noexcept;
     /*! @} */
 
     /*! @name Operators
@@ -61,13 +61,13 @@ public:
      * @param[in,out] downsample  On exit this will no longer be usable. 
      * @result A downsample class whose memory was moved from the input class.
      */
-    Downsample& operator=(Downsample &&downsample);
+    Downsample& operator=(Downsample &&downsample) noexcept;
     /*! @} */
 
     /*!
      * @brief Default destructor.
      */
-    ~Downsample(void);
+    ~Downsample();
 
     /*!
      * @brief Initializes the downsampler.
@@ -81,14 +81,14 @@ public:
      * @throws std::invalid_argument if downFactor is invalid.
      */
     void initialize(const int downFactor,
-                   const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                   const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
+                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const noexcept;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Estimates the space required to hold the downsampled signal.
      * @param[in] n   The length of the signal to downsample.  This must
@@ -102,7 +102,7 @@ public:
      * @brief Gets the downsampling factor.
      * @result The downsampling factor.
      */
-    int getDownsampleFactor(void) const noexcept;
+    int getDownsampleFactor() const noexcept;
     /*!
      * @brief Sets the initial conditions of the downsampler which is the phase.
      * @param[in] phase  Phase of downsampler.  This must be in the 
@@ -137,11 +137,11 @@ public:
      *        called then this will set the phase to 0.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void resetInitialConditions(void);
+    void resetInitialConditions();
     /*! 
      * @brief Clears the module and resets all parameters.
      */
-    void clear(void);
+    void clear();
 private:
     class DownsampleImpl;
     std::unique_ptr<DownsampleImpl> pDownsample_; 
