@@ -20,7 +20,7 @@ int Polynomial::polyval(const std::vector<std::complex<double>> &p,
                         const std::vector<std::complex<double>> &x,
                         std::vector<std::complex<double>> &y)
 {
-    if (p.size() < 1)
+    if (p.empty())
     {
         RTSEIS_ERRMSG("%s", "No points in coefficients in p");
         y.resize(0);
@@ -103,7 +103,7 @@ int Polynomial::polyval(const std::vector<double> &p,
                         const std::vector<double> &x,
                         std::vector<double> &y)
 {
-    if (p.size() < 1)
+    if (p.empty())
     {
         RTSEIS_ERRMSG("%s", "No points in coefficients in p");
         y.resize(0);
@@ -324,7 +324,7 @@ int Polynomial::roots(const std::vector<double> &coeffs,
     // Set space for companion matrix
     int n   = nord;
     int lda = std::max(8, nord);
-    double *a = new double[lda*lda];
+    auto *a = new double[lda*lda];
     memset(a, 0, static_cast<size_t> (lda*lda)*sizeof(double));
     double ami = 1.0/coeffs[0]; //coefficient on highest order term
     // Fill out the non-zeros of the companion matrix

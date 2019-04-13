@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/transforms.hpp"
 #include "rtseis/log.h"

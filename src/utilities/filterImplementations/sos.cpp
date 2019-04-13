@@ -12,10 +12,8 @@ class SOSFilter::SOSFilterImpl
 {
 public:
     /// Default constructor
-    SOSFilterImpl(void)
-    {
-        return;
-    }
+    SOSFilterImpl() = default;
+
     /// Copy constructor
     SOSFilterImpl(const SOSFilterImpl &sos)
     {
@@ -53,13 +51,12 @@ public:
         return *this;
     }
     /// Default constructor
-    ~SOSFilterImpl(void)
+    ~SOSFilterImpl()
     {
         clear();
-        return;
     }
     /// Clears the memory off the module
-    void clear(void)
+    void clear()
     {
         if (pTaps64f_ != nullptr){ippsFree(pTaps64f_);}
         if (dlySrc64f_ != nullptr){ippsFree(dlySrc64f_);}
@@ -90,7 +87,6 @@ public:
         mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         precision_ = RTSeis::Precision::DOUBLE;
         linit_ = false;
-        return;
     }
     //========================================================================//
     int initialize(const int ns,
@@ -187,17 +183,17 @@ public:
         return 0;
     }
     /// Determines if the module is initialized
-    bool isInitialized(void) const
+    bool isInitialized() const
     {
         return linit_;
     }
     /// Determines the length of the initial conditions
-    int getInitialConditionLength(void) const
+    int getInitialConditionLength() const
     {
         return 2*nsections_;
     }
     /// Gets the number of sections
-    int getNumberOfSections(void) const
+    int getNumberOfSections() const
     {
         return nsections_;
     }
@@ -219,7 +215,7 @@ public:
         return 0;
     }
     /// Resets the initial conditions
-    int resetInitialConditions(void)
+    int resetInitialConditions()
     {
         if (precision_ == RTSeis::Precision::DOUBLE)
         {
@@ -371,28 +367,21 @@ private:
 
 //============================================================================//
 
-SOSFilter::SOSFilter(void) :
+SOSFilter::SOSFilter() :
     pSOS_(std::make_unique<SOSFilterImpl>())
 {
-    return;
 }
 
-SOSFilter::~SOSFilter(void)
-{
-    clear();
-    return;
-}
+SOSFilter::~SOSFilter() = default;
 
-void SOSFilter::clear(void)
+void SOSFilter::clear()
 {
     pSOS_->clear();
-    return;
 }
 
 SOSFilter::SOSFilter(const SOSFilter &sos)
 {
     *this = sos;
-    return;
 }
 
 /*
@@ -428,11 +417,11 @@ int SOSFilter::initialize(const int ns,
 {
     clear();
     // Checks
-    if (ns < 1 || bs == NULL || as == NULL)
+    if (ns < 1 || bs == nullptr || as == nullptr)
     {
-        if (ns < 1){RTSEIS_ERRMSG("%s", "No sections\n");}
-        if (bs == NULL){RTSEIS_ERRMSG("%s", "bs is NULL\n");}
-        if (as == NULL){RTSEIS_ERRMSG("%s", "as is NULL\n");}
+        if (ns < 1){RTSEIS_ERRMSG("%s", "No sections");}
+        if (bs == nullptr){RTSEIS_ERRMSG("%s", "bs is NULL");}
+        if (as == nullptr){RTSEIS_ERRMSG("%s", "as is NULL");}
         return -1;
     }
     // Verify the highest order coefficients make sense
@@ -478,7 +467,7 @@ int SOSFilter::setInitialConditions(const int nz, const double zi[])
     return 0;
 }
 
-int SOSFilter::resetInitialConditions(void)
+int SOSFilter::resetInitialConditions()
 {
     if (!isInitialized())
     {
@@ -535,7 +524,7 @@ int SOSFilter::apply(const int n, const float x[], float y[])
     return 0;
 }
 
-int SOSFilter::getInitialConditionLength(void) const
+int SOSFilter::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -545,7 +534,7 @@ int SOSFilter::getInitialConditionLength(void) const
     return pSOS_->getInitialConditionLength();
 }
 
-int SOSFilter::getNumberOfSections(void) const
+int SOSFilter::getNumberOfSections() const
 {
     if (!isInitialized())
     {
@@ -555,7 +544,7 @@ int SOSFilter::getNumberOfSections(void) const
     return pSOS_->getNumberOfSections();
 }
 
-bool SOSFilter::isInitialized(void) const
+bool SOSFilter::isInitialized() const
 {
     return pSOS_->isInitialized();
 }

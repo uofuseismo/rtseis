@@ -12,8 +12,8 @@
 using namespace::RTSeis::Utilities::Math;
 
 
-static IppEnum getImplementation(Convolve::Implementation implementation);
-static std::pair<int,int> computeTrimIndices(Convolve::Mode mode, int n1, int n2);
+static IppEnum getImplementation(const Convolve::Implementation implementation);
+static std::pair<int,int> computeTrimIndices(const Convolve::Mode mode, const int n1, const int n2);
 
 std::vector<double>
 Convolve::convolve(const std::vector<double> &a,
@@ -332,7 +332,7 @@ int Convolve::computeConvolutionLength(const int n1, const int n2,
  * @result The corresponding IPP implementation enum.
  * @ingroup rtseis_utils_convolve
  */
-IppEnum getImplementation(Convolve::Implementation implementation)
+IppEnum getImplementation(const Convolve::Implementation implementation)
 {
     if (implementation == Convolve::Implementation::FFT)
     {   
@@ -358,7 +358,8 @@ IppEnum getImplementation(Convolve::Implementation implementation)
  * @result The start and stop index from which to copy the full convolution.
  * @ingroup rtseis_utils_convolve
  */
-std::pair<int,int> computeTrimIndices(Convolve::Mode mode, int n1,  int n2)
+std::pair<int,int> computeTrimIndices(const Convolve::Mode mode,
+                                      const int n1,  const int n2)
 {
     int lc;
     int nLeft = 0;

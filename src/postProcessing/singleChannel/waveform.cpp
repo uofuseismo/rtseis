@@ -865,7 +865,6 @@ void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
     if (nb < 1)
     {
         RTSEIS_THROW_IA("%s", "No filter taps");
-        return;
     }
     // Initialize filter
     RTSeis::Utilities::FilterImplementations::FIRFilter firFilter;
@@ -913,7 +912,6 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
         if (na < 1){RTSEIS_THROW_IA("%s", "No denominator coefficients");}
         if (nb < 1){RTSEIS_THROW_IA("%s", "No numerator coefficients");}
         RTSEIS_THROW_IA("%s", "No filter coefficients");
-        return;
     }
     // Initialize filter
     if (!lremovePhase)

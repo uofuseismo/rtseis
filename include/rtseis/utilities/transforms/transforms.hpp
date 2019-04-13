@@ -95,7 +95,7 @@ public:
 
     /*!
       * @brief Initializes the real-to-complex Fourier transform class.
-      * @param[in] length           The length of the signal to transform.  
+      * @param[in] length          The length of the signal to transform.  
       *                            This must be greater than or equal to 2.
       *                            If this is a power of 2 then the FFT will
       *                            be used instead of the DFT.

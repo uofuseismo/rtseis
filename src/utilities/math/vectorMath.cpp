@@ -33,11 +33,11 @@ int RTSeis::Utilities::Math::VectorMath::divide(
                    num.data(), num.data()+nNum, den.data(), res.data(),
                    std::divides< std::complex<double> > ());
 #else
-    const Ipp64fc *pSrc1 = static_cast<const Ipp64fc *>
-                           (static_cast<const void *> (den.data()));
-    const Ipp64fc *pSrc2 = static_cast<const Ipp64fc *>
-                           (static_cast<const void *> (num.data()));
-    Ipp64fc *pDst  = static_cast<Ipp64fc *> (static_cast<void *> (res.data()));
+    auto *pSrc1 = static_cast<const Ipp64fc *>
+                  (static_cast<const void *> (den.data()));
+    auto *pSrc2 = static_cast<const Ipp64fc *>
+                  (static_cast<const void *> (num.data()));
+    auto *pDst  = static_cast<Ipp64fc *> (static_cast<void *> (res.data()));
     IppStatus status = ippsDiv_64fc(pSrc1, pSrc2, pDst, nNum); 
     if (status != ippStsNoErr)
     {
@@ -57,8 +57,8 @@ int RTSeis::Utilities::Math::VectorMath::real(
     int n = static_cast<int> (z.size());
     r.resize(n);
     if (n <= 0){return 0;}
-    const Ipp64fc *pSrc = static_cast<const Ipp64fc *>
-                          (static_cast<const void *> (z.data()));
+    auto *pSrc = static_cast<const Ipp64fc *>
+                 (static_cast<const void *> (z.data()));
     Ipp64f *pDst  = r.data();
     IppStatus status = ippsReal_64fc(pSrc, pDst, n); 
     if (status != ippStsNoErr)
@@ -111,7 +111,7 @@ template int RTSeis::Utilities::Math::VectorMath::copysign<float>(
 template<typename T> bool RTSeis::Utilities::Math::VectorMath::isSorted(
     const std::vector<T> &x)
 {
-    bool lsorted = true;
+    bool lsorted;
 #ifdef __INTEL_COMPILER
     //lsorted = std::is_sorted(pstl::execution::unseq, x.begin(), x.end(),
     //                           std::less_equal<T>());

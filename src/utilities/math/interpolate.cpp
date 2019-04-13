@@ -61,8 +61,7 @@ void Interpolate::interpft(
         throw std::invalid_argument("Inverse transform inquiry failed");
     }
     // Initialize the forward transform
-    IppsDFTSpec_R_64f *pDFTForwardSpec
-        = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeF);
+    auto *pDFTForwardSpec = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeF);
     Ipp8u *pDFTInitBuf = ippsMalloc_8u(std::max(sizeInitF, sizeInitI));
     status = ippsDFTInit_R_64f(npts, 
                                IPP_FFT_DIV_FWD_BY_N,
@@ -76,8 +75,7 @@ void Interpolate::interpft(
         throw std::invalid_argument("Forward transform init failed");
     }
     // Initialize the inverse transform
-    IppsDFTSpec_R_64f *pDFTInverseSpec
-        = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeI);
+    auto *pDFTInverseSpec = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeI);
     status = ippsDFTInit_R_64f(npnew,
                                IPP_FFT_DIV_FWD_BY_N,
                                ippAlgHintNone,
@@ -105,24 +103,22 @@ void Interpolate::interpft(
     ippsFree(pDst);
     ippsFree(pDFTForwardSpec);
     ippsFree(pDFTInverseSpec);
-    return;
 }
 
 class Interp1D::Interp1DImpl
 {
     public:
         /// Default constructor
-        Interp1DImpl(void){return;}
-        /// Copy constructor
-        Interp1DImpl(const Interp1DImpl &interp1d)
+        Interp1DImpl()
         {
-            *this = interp1d;
+            std::memset(&task, 0, sizeof(DFTaskPtr));
         }
+        /// Can enable copy construction once task is re-initialized
+        Interp1DImpl(const Interp1DImpl &interp1d) = delete;
         /// Destructor
-        ~Interp1DImpl(void)
+        ~Interp1DImpl()
         {
             clear();
-            return;
         }
         /// Copy assignment operator
         Interp1DImpl &operator=(const Interp1DImpl &interp1d)
@@ -133,12 +129,12 @@ class Interp1D::Interp1DImpl
             return *this; 
         }
         /// Releases the memory on the interpolator
-        void clear(void)
+        void clear()
         {
             xin.clear();
             vin.clear();
             if (lhaveTask){dfDeleteTask(&task);}
-            if (scoeff){delete[] scoeff;}
+            delete[] scoeff;
             scoeff = nullptr;
             xmin = 0;
             xmax = 0;
@@ -148,10 +144,9 @@ class Interp1D::Interp1DImpl
             splineIC    = DF_NO_IC;
             nwork = 0;
             method = Interp1D::Method::NEAREST;
-            luniform = false;
+            //luniform = false;
             lhaveTask = false;
             linit = false;
-            return;
         }
         /// Builds the interpolator
         int initialize(const std::vector<double> &x,
@@ -165,7 +160,7 @@ class Interp1D::Interp1DImpl
             constexpr int ny = 1; // Function to interpolate is scalar
             nwork = std::max(8, ny*splineOrder*(nx - 1));
             // Create the data fitting task
-            DFTaskPtr task;
+            //DFTaskPtr task;
             MKL_INT status = dfdNewTask1D(&task, nx, x.data(), DF_NO_HINT,
                                           ny, v.data(), DF_NO_HINT);
             lhaveTask = true;
@@ -176,9 +171,9 @@ class Interp1D::Interp1DImpl
                 return -1;
             }
             // Set spline parameters in the data fitting task
-            double *bc = NULL;
-            double *ic = NULL;
-            double *scoeff = new double[nwork]; // Holds 
+            double *bc = nullptr;
+            double *ic = nullptr;
+            scoeff = new double[nwork]; // Holds
             status = dfdEditPPSpline1D(task, splineOrder, splineType, splineBC,
                                        bc, splineIC, ic, scoeff, DF_NO_HINT);
             if (status != DF_STATUS_OK)
@@ -220,7 +215,7 @@ class Interp1D::Interp1DImpl
             nwork = std::max(8, ny*splineOrder*(nx - 1));
             double xpts[2] = {x.first, x.second};
             // Create the data fitting task
-            DFTaskPtr task;
+            //DFTaskPtr task;
             MKL_INT status = dfdNewTask1D(&task, nx, xpts, DF_UNIFORM_PARTITION,
                                           ny, v.data(), DF_NO_HINT);
             lhaveTask = true;
@@ -231,9 +226,9 @@ class Interp1D::Interp1DImpl
                 return -1; 
             }
             // Set spline parameters in the data fitting task
-            double *bc = NULL;
-            double *ic = NULL;
-            double *scoeff = new double[nwork]; // Holds 
+            double *bc = nullptr;
+            double *ic = nullptr;
+            scoeff = new double[nwork]; // Holds
             status = dfdEditPPSpline1D(task, splineOrder, splineType, splineBC,
                                        bc, splineIC, ic, scoeff, DF_NO_HINT);
             if (status != DF_STATUS_OK)
@@ -256,7 +251,7 @@ class Interp1D::Interp1DImpl
             xmin = x.first;
             xmax = x.second;
             // Save data
-            luniform = true;
+            //luniform = true;
             double dx = 0;
             if (nx > 1){dx = (xmax - xmin)/static_cast<double> (nx - 1);}
             xin.resize(nx); 
@@ -345,9 +340,9 @@ class Interp1D::Interp1DImpl
            }
            // Compute cells of interpolant points
            MKL_INT status;
-           MKL_INT *cell = static_cast<MKL_INT *>
-                           (mkl_malloc(xq.size()*sizeof(MKL_INT), 64));
-           MKL_INT nsite = static_cast<MKL_INT> (xq.size());
+           auto *cell = static_cast<MKL_INT *>
+                        (mkl_malloc(xq.size()*sizeof(MKL_INT), 64));
+           auto nsite = static_cast<MKL_INT> (xq.size());
            if (lsorted)
            {
                status = dfdSearchCells1D(task, DF_METHOD_STD, nsite, xqData,
@@ -408,16 +403,15 @@ class Interp1D::Interp1DImpl
                }
            }
            delete[] cell;
-           xqData = nullptr;
            return ierr;
         }
         /// Checks if the class is initialized
-        bool isInitialized(void) const
+        bool isInitialized() const
         {
             return linit;
         }
         /// Gets the interolation method
-        Interp1D::Method getMethod(void) const
+        Interp1D::Method getMethod() const
         {
             return method;
         }
@@ -435,22 +429,17 @@ class Interp1D::Interp1DImpl
         MKL_INT splineIC    = DF_NO_IC;
         int nwork = 0;
         Interp1D::Method method = Interp1D::Method::NEAREST;
-        bool luniform = false;
+        //bool luniform = false;
         bool lhaveTask = false;
         bool linit = false;
 };
 
-Interp1D::Interp1D(void) :
+Interp1D::Interp1D() :
     pImpl(std::unique_ptr<Interp1DImpl>())
 {
-    return;
 }
 
-Interp1D::~Interp1D(void)
-{
-    return;
-}
-
+Interp1D::~Interp1D() = default;
 
 void Interp1D::initialize(const std::vector<double> &x,
                           const std::vector<double> &v,
@@ -463,7 +452,7 @@ void Interp1D::initialize(const std::vector<double> &x,
     }
     if (method == Method::NEAREST)
     {
-        if (x.size() < 1)
+        if (x.empty())
         {
             throw std::invalid_argument("At least 1 point for nearest");
         }
@@ -501,7 +490,6 @@ void Interp1D::initialize(const std::vector<double> &x,
         RTSEIS_ERRMSG("%s", "Initialization failed");
         throw std::invalid_argument("Initialization failed");
     }
-    return;
 }
 
 void Interp1D::initialize(const int npts,
@@ -558,7 +546,6 @@ void Interp1D::initialize(const int npts,
         RTSEIS_ERRMSG("%s", "Initialization failed");
         throw std::invalid_argument("Initialization failed");
     }   
-    return;
 }
 
 
@@ -574,7 +561,6 @@ void Interp1D::apply(const std::vector<double> &xq,
     if (xq.size() != vq.size())
     {
         throw std::invalid_argument("xq.size() != vq.size()");
-        return;
     }
     bool lsorted = false;
     if (!lxqSorted){lsorted = VectorMath::isSorted(xq);}
@@ -583,7 +569,6 @@ void Interp1D::apply(const std::vector<double> &xq,
     {
         throw std::invalid_argument("Internal failure");
     }
-    return;
 }
 
 /*

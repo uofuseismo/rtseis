@@ -87,31 +87,31 @@ set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 
 #SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
-    src/utils/verbosity.c
-    src/utils/design/filterDesigner.cpp
-    src/utils/design/response.cpp
-    src/utils/design/iir.cpp
-    src/utils/design/fir.cpp
-    src/utils/design/analogProtype.cpp
-    src/utils/design/windowFunctions.cpp
-    src/utils/filterRepresentations/ba.cpp
-    src/utils/filterRepresentations/fir.cpp
-    src/utils/filterRepresentations/sos.cpp
-    src/utils/filterRepresentations/zpk.cpp
-    src/utils/filters/downsample.cpp
-    src/utils/filters/firfilter.cpp
-    src/utils/filters/firfilterMR.cpp
-    src/utils/filters/iirFilter.cpp
-    src/utils/filters/iiriirFilter.cpp
-    src/utils/filters/medianFilter.cpp
-    src/utils/filters/sos.cpp
-    src/utils/math/convolve.cpp
-    src/utils/math/interpolate.cpp
-    src/utils/math/polynomial.cpp
-    src/utils/math/vectorMath.cpp
-    src/utils/normalization/signBit.cpp
-    src/utils/transforms/dft.cpp
-    src/utils/transforms/dftUtils.cpp)
+    src/utilities/verbosity.c
+    src/utilities/design/filterDesigner.cpp
+    src/utilities/design/response.cpp
+    src/utilities/design/iir.cpp
+    src/utilities/design/fir.cpp
+    src/utilities/design/analogProtype.cpp
+    src/utilities/design/windowFunctions.cpp
+    src/utilities/filterRepresentations/ba.cpp
+    src/utilities/filterRepresentations/fir.cpp
+    src/utilities/filterRepresentations/sos.cpp
+    src/utilities/filterRepresentations/zpk.cpp
+    src/utilities/filterImplementations/downsample.cpp
+    src/utilities/filterImplementations/firfilter.cpp
+    src/utilities/filterImplementations/multiRateFIRFilter.cpp
+    src/utilities/filterImplementations/iirFilter.cpp
+    src/utilities/filterImplementations/iiriirFilter.cpp
+    src/utilities/filterImplementations/medianFilter.cpp
+    src/utilities/filterImplementations/sos.cpp
+    src/utilities/math/convolve.cpp
+    src/utilities/math/interpolate.cpp
+    src/utilities/math/polynomial.cpp
+    src/utilities/math/vectorMath.cpp
+    src/utilities/normalization/signBit.cpp
+    src/utilities/transforms/dft.cpp
+    src/utilities/transforms/dftUtils.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c
 #    src/ipps/downsample.c 
@@ -124,10 +124,9 @@ SET(MODULES_SRCS
     src/modules/classicSTALTA.cpp)
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
-    src/processing/singleChannel/postProcessing.cpp
-    src/processing/singleChannel/envelope.cpp
-    src/processing/singleChannel/taper.cpp
-    #src/processing/singleChannel/filter.cpp
+    src/postProcessing/singleChannel/waveform.cpp
+    src/postProcessing/singleChannel/envelope.cpp
+    src/postProcessing/singleChannel/taper.cpp
     )
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
 

@@ -27,7 +27,7 @@ public:
     /*!
      * @brief Default constructor.
      */
-    SOSFilter(void);
+    SOSFilter();
     /*!
      * @brief A copy constructor.
      * @param[in] sos  The SOS class from which to initialize.
@@ -44,7 +44,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~SOSFilter(void);
+    ~SOSFilter();
 
     /*!
      * @brief Initializes the second order section filter.
@@ -73,12 +73,12 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const;
+    bool isInitialized() const;
     /*!
      * @brief Returns the length of the initial conditions.
      * @result The length of the initial condtions array.
      */
-    int getInitialConditionLength(void) const;
+    int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions for the filter.  This should
      *        be called prior to filter application as it will reset
@@ -110,18 +110,18 @@ public:
      *        conditions set when SOSFilter::setInitialConditions()
      *        was called.
      */
-    int resetInitialConditions(void);
+    int resetInitialConditions();
     /*! 
      * @brief Clears the module and resets all parameters.
      */
 
-    void clear(void);
+    void clear();
     /*!
      * @brief Gets the number of second order sections in the filter.
      * @result On successful exit this will be a positive number that
      *         represents the number of second order sections.
      */
-    int getNumberOfSections(void) const;
+    int getNumberOfSections() const;
 
 private:
     class SOSFilterImpl;
