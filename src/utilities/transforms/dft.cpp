@@ -156,8 +156,8 @@ public:
             order_ = orderWork;
             length_ = n2;
         }
-        lenft_ = length_/2 + 1;
-        nwork_ = std::max(length_, 2*lenft_);
+        lenft_ = length_;
+        nwork_ = 2*lenft_;
         // Initialize the appropriate transform
         IppStatus status;
         int sizeInit;

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cassert>
 #include <string>
 #include <cfloat>
 #include <cmath>
@@ -24,6 +25,9 @@ int transforms_nextPow2_test(void);
 int transforms_phase_test(void);
 int transforms_unwrap_test(void);
 int transforms_test_dftr2c(void);
+int transforms_test_dft(void);
+int fft(const int nx, const std::complex<double> *x, 
+        const int ny, std::complex<double> *y);
 int ifft(const int nx, const std::complex<double> *x, 
          const int ny, std::complex<double> *y);
 int rfft(const int nx, double x[], const int n,
@@ -39,24 +43,40 @@ int rtseis_test_utils_transforms(void)
         RTSEIS_ERRMSG("%s", "Failed nextpow2 test");
         return EXIT_FAILURE;
     }
+    RTSEIS_INFOMSG("%s", "Passed nextPow2 test");
+
     ierr = transforms_phase_test();
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed phase test");
         return EXIT_FAILURE;
     }
+    RTSEIS_INFOMSG("%s", "Passed phase test");
+
     ierr = transforms_unwrap_test();
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed to unwrap phase");
         return EXIT_FAILURE;
     }
+    RTSEIS_INFOMSG("%s", "Passed unwrap test");
+
     ierr = transforms_test_dftr2c();
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute rdft");
         return EXIT_FAILURE;
     }
+    RTSEIS_INFOMSG("%s", "Passed rdft test");
+
+    ierr = transforms_test_dft();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute dft");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed dft test");
+
     return EXIT_SUCCESS;
 }
 
@@ -113,38 +133,41 @@ int transforms_nextPow2_test(void)
 int transforms_unwrap_test(void)
 {
     int n = 23;
-    double p[23] = {0, -1.5728, -1.5747, -1.5772, -1.5790,
-                    -1.5816, -1.5852, -1.5877, -1.5922,
-                    -1.5976, -1.6044, -1.6129, -1.6269,
-                    -1.6512, -1.6998, -1.8621,  1.7252,
-                     1.6124,  1.5930,  1.5916,  1.5708,
-                     1.5708,  1.5708};
-    double qref[23] = {0.00000,  -1.57280,  -1.57470,  -1.57720,
-                       -1.57900,  -1.58160,  -1.58520,  -1.58770,
-                       -1.59220,  -1.59760,  -1.60440,  -1.61290,
-                       -1.62690,  -1.65120,  -1.69980,  -1.86210,
-                       -4.557985307179586,  -4.670785307179586,
-                       -4.690185307179586,  -4.691585307179587,
-                       -4.712385307179586,  -4.712385307179586,
-                       -4.712385307179586};
-    double qref2[23] = {1.000000000000000,  -3.710385307179586,
-                       -3.708485307179586,  -3.705985307179586,
-                       -3.704185307179586,  -3.701585307179586,
-                       -3.697985307179586,  -3.695485307179586,
-                       -3.690985307179586,  -3.685585307179586,
-                       -3.678785307179586,  -3.670285307179586,
-                       -3.656285307179586,  -3.631985307179586,
-                       -3.583385307179586,  -3.421085307179586,
-                       -0.725200000000000,  -0.612400000000000,
-                       -0.593000000000000,  -0.591600000000000,
-                       -0.570800000000000,  -0.570800000000000,
-                       -0.570800000000000};
+    std::vector<double> p{0, -1.5728, -1.5747, -1.5772, -1.5790,
+                          -1.5816, -1.5852, -1.5877, -1.5922,
+                          -1.5976, -1.6044, -1.6129, -1.6269,
+                          -1.6512, -1.6998, -1.8621,  1.7252,
+                           1.6124,  1.5930,  1.5916,  1.5708,
+                           1.5708,  1.5708};
+    std::vector<double> qref{0.00000,  -1.57280,  -1.57470,  -1.57720,
+                            -1.57900,  -1.58160,  -1.58520,  -1.58770,
+                            -1.59220,  -1.59760,  -1.60440,  -1.61290,
+                            -1.62690,  -1.65120,  -1.69980,  -1.86210,
+                            -4.557985307179586,  -4.670785307179586,
+                            -4.690185307179586,  -4.691585307179587,
+                            -4.712385307179586,  -4.712385307179586,
+                            -4.712385307179586};
+    std::vector<double> qref2{1.000000000000000,  -3.710385307179586,
+                             -3.708485307179586,  -3.705985307179586,
+                             -3.704185307179586,  -3.701585307179586,
+                             -3.697985307179586,  -3.695485307179586,
+                             -3.690985307179586,  -3.685585307179586,
+                             -3.678785307179586,  -3.670285307179586,
+                             -3.656285307179586,  -3.631985307179586,
+                             -3.583385307179586,  -3.421085307179586,
+                             -0.725200000000000,  -0.612400000000000,
+                             -0.593000000000000,  -0.591600000000000,
+                             -0.570800000000000,  -0.570800000000000,
+                             -0.570800000000000};
     // Should run with default tol = M_PI
-    double q[23];
-    int ierr = DFTUtilities::unwrap(n, p, q);
-    if (ierr != 0)
+    std::vector<double> q;
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to called unwrap");
+         q = DFTUtilities::unwrap(p);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<n; i++)
@@ -158,10 +181,13 @@ int transforms_unwrap_test(void)
     // Switch tolerance to 90 degrees and adjust p
     for (int i=0; i<n; i++){p[i] =-p[i] + 1;}
     double tol = M_PI/2;
-    ierr = DFTUtilities::unwrap(n, p, q, tol);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to called unwrap");
+        q = DFTUtilities::unwrap(p, tol);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<n; i++)
@@ -178,10 +204,10 @@ int transforms_unwrap_test(void)
 int transforms_phase_test(void)
 {
     const int n = 7;
-    const double tr[7] = {-0.785398163397448, 0.463647609000806,
+    std::vector<double> tr{-0.785398163397448, 0.463647609000806,
                           -0.3217505543966, 0.244978663126864,
                            0, 1.570796326794897, 0};
-    std::complex<double> z[7];
+    std::vector<std::complex<double>> z(7);
     z[0] = std::complex<double> (1, -1);
     z[1] = std::complex<double> (2, +1);
     z[2] = std::complex<double> (3, -1);
@@ -189,11 +215,14 @@ int transforms_phase_test(void)
     z[4] = std::complex<double> (0, +0);
     z[5] = std::complex<double> (0, +1);
     z[6] = std::complex<double> (1, +0);
-    double angle[7];
-    int ierr = DFTUtilities::phase(n, z, angle);
-    if (ierr != 0)
+    std::vector<double> angle;
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute phase");
+        angle = DFTUtilities::phase(z);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<n; i++)
@@ -206,10 +235,13 @@ int transforms_phase_test(void)
     } 
 
     bool lwantDeg = true;
-    ierr = DFTUtilities::phase(n, z, angle, lwantDeg);
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute phase");
+        angle = DFTUtilities::phase(z, lwantDeg);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
         return EXIT_FAILURE;
     }
     for (int i=0; i<n; i++)
@@ -221,6 +253,186 @@ int transforms_phase_test(void)
         }
     }
     return EXIT_SUCCESS; 
+}
+
+int transforms_test_dft(void)
+{
+    std::vector<std::complex<double>> x5(5);
+    x5[0] = std::complex<double> (0.293848340517710, 0.543040331839914);
+    x5[1] = std::complex<double> (0.432658290043139, 0.507949811338692);
+    x5[2] = std::complex<double> (0.638136660660825, 0.014141443357630);
+    x5[3] = std::complex<double> (0.523377526876359, 0.431524418557386);
+    x5[4] = std::complex<double> (0.146439036982003, 0.982433436513920);
+    std::vector<std::complex<double>> y5ref(5);
+    y5ref[0] = std::complex<double> ( 2.034459855080035, 2.479089441607542);
+    y5ref[1] = std::complex<double> (-1.163477761938224, 0.303378415338802);
+    y5ref[2] = std::complex<double> ( 0.302336705735982,-0.584079752541479);
+    y5ref[3] = std::complex<double> ( 0.066216063691746,-0.465893684778681);
+    y5ref[4] = std::complex<double> ( 0.229706840019013, 0.982707239573387);
+    std::vector<std::complex<double>> y8ref(8);
+    y8ref[0] = std::complex<double> ( 2.034459855080035,+2.479089441607542);
+    y8ref[1] = std::complex<double> ( 0.761711158054026,-1.699508261045320);
+    y8ref[2] = std::complex<double> (-0.121423890379805, 1.602051561829424);
+    y8ref[3] = std::complex<double> ( 0.861724646436443,-0.531316766704685);
+    y8ref[4] = std::complex<double> ( 0.122388221241041,+0.600140981815385);
+    y8ref[5] = std::complex<double> (-0.438609664267351,-0.455551269624340);
+    y8ref[6] = std::complex<double> (-0.274274675942418,+1.420613088162984);
+    y8ref[7] = std::complex<double> (-0.595188926080287,+0.928803878678324);
+
+    std::vector<std::complex<double>> y5(5), y8(8), y5fftw(5),
+                                      x5inv(5), x5invref(5);
+    fft(x5.size(), x5.data(), y5fftw.size(), y5fftw.data());
+    ifft(y5ref.size(), y5ref.data(), x5invref.size(), x5invref.data());
+    try
+    {
+        DFT dft;
+        dft.initialize(x5.size());
+        assert(dft.getInverseTransformLength() == 5);
+        //ASSERT_EQUAL(dft.getInverseTransformLength(), 5);
+        assert(dft.getTransformLength() == 5);
+        //ASSERT_EQUAL(dft.getTransformLengt(), 5);
+        dft.forwardTransform(5, x5.data(), 5, y5.data()); 
+        dft.inverseTransform(5, y5.data(), 5, x5inv.data());
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    // Check forward transform
+    for (size_t i=0; i<y5ref.size(); i++)
+    {
+        if (std::abs(y5ref[i] - y5[i]) > 1.e-12)
+        {
+            RTSEIS_ERRMSG("Failed to compute dft %ld %e",
+                           i, std::abs(y5ref[i] - y5[i]));
+            return EXIT_FAILURE;
+        }
+    }
+    // Check that inverse transform is covered
+    for (size_t i=0; i<x5inv.size(); i++)
+    {
+        if (std::abs(x5inv[i] - x5[i]) > 1.e-12 ||
+            std::abs(x5invref[i] - x5inv[i]) > 1.e-12)
+        {
+           RTSEIS_ERRMSG("Failed to compute idft %ld %e %e",
+                          i, std::abs(x5[i] - x5inv[i]),
+                          std::abs(x5invref[i] - x5inv[i]));
+           return EXIT_FAILURE; 
+        }
+    }
+    // Try padding
+    try
+    {
+        DFT dft;
+        dft.initialize(8);
+        assert(dft.getInverseTransformLength() == 8); 
+        //ASSERT_EQUAL(dft.getInverseTransformLength(), 8);
+        assert(dft.getTransformLength() == 8); 
+        //ASSERT_EQUAL(dft.getTransformLengt(), 8);
+        dft.forwardTransform(5, x5.data(), 8, y8.data());
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    for (auto i=0; i<y8.size(); i++)
+    {
+        if (std::abs(y8[i] - y8ref[i]) > 1.e-12)
+        {
+            RTSEIS_ERRMSG("Failed to compute dft %d %e",
+                           i, std::abs(y8[i] - y8ref[i]));
+        }
+    }
+    // Do a larger test
+    int niter = 50;
+    int np0 = 12001;
+    std::vector<std::complex<double>> x(np0+1), y(np0+1),
+                                      yref(np0+1), xinv(np0+1);
+    for (int i=0; i<np0+1; i++)
+    {
+        x[i] = std::complex<double> (static_cast<double> (rand())/RAND_MAX,
+                                     static_cast<double> (rand())/RAND_MAX);
+    }
+    for (int j=0; j<2; j++)
+    { 
+        // Compute reference solution with FFTw
+        int npts = np0 + j;
+        fft(npts, x.data(), npts, yref.data()); 
+        // Try again with IPP
+        try
+        {
+            DFT dft;
+            dft.initialize(npts);
+            dft.forwardTransform(npts, x.data(), npts, y.data());
+            dft.inverseTransform(npts, y.data(), npts, xinv.data()); 
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("%s", ia.what());
+            return EXIT_FAILURE;
+        }
+        double emax  = 0;
+        double emaxi = 0;
+        for (int i=0; i<npts; i++)
+        { 
+            emax  = std::max(emax,  std::abs(y[i] - yref[i]));
+            emaxi = std::max(emaxi, std::abs(x[i] - xinv[i]));
+        }
+        if (emax > 1.e-12)
+        {
+            RTSEIS_ERRMSG("%s", "Forward transform failed");
+        }
+        if (emaxi > 1.e-12)
+        {
+            RTSEIS_ERRMSG("%s", "Inverse transform failed");
+        }
+        // Stress test
+        if (j == 1)
+        {
+            DFT dft;
+            dft.initialize(npts);
+            auto timeStart = std::chrono::high_resolution_clock::now();
+            for (int i=0; i<niter; i++)
+            {
+                dft.forwardTransform(npts, x.data(), npts, y.data());
+            }
+            auto timeEnd = std::chrono::high_resolution_clock::now();
+            emax = 0;
+            for (int i=0; i<npts; i++)
+            {
+                emax  = std::max(emax,  std::abs(y[i] - yref[i]));
+            }
+            if (emax > 1.e-12)
+            {
+                RTSEIS_ERRMSG("%s", "Forward transform failed");
+            }
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            fprintf(stdout, "Average DFT time %.8lf (s)\n",
+                    tdif.count()/static_cast<double>(niter));
+ 
+            timeStart = std::chrono::high_resolution_clock::now();
+            for (int i=0; i<niter; i++)
+            {
+                dft.inverseTransform(npts, y.data(), npts, xinv.data());
+            }
+            timeEnd = std::chrono::high_resolution_clock::now();
+            emaxi = 0;
+            for (int i=0; i<npts; i++)
+            {   
+                emaxi = std::max(emaxi, std::abs(x[i] - xinv[i]));
+            }
+            if (emaxi > 1.e-12)
+            {
+                RTSEIS_ERRMSG("%s", "Inverse transform failed");
+            }
+            tdif = timeEnd - timeStart;
+            fprintf(stdout, "Average inverse DFT time %.8lf (s)\n",
+                    tdif.count()/static_cast<double>(niter));
+        }
+    }
+    return EXIT_SUCCESS;
 }
 
 int transforms_test_dftr2c(void)
@@ -337,7 +549,7 @@ int transforms_test_dftr2c(void)
                 return EXIT_FAILURE;
             }
             std::chrono::duration<double> tdif = timeEnd - timeStart;
-            fprintf(stdout, "Average DFT time %.8lf (s)\n",
+            fprintf(stdout, "Average real DFT time %.8lf (s)\n",
                     tdif.count()/static_cast<double>(niter)); 
  
         }
@@ -423,7 +635,7 @@ int transforms_test_dftr2c(void)
                 return EXIT_FAILURE;
             }
             std::chrono::duration<double> tdif = timeEnd - timeStart;
-            fprintf(stdout, "Average FFT time %.8lf (s)\n",
+            fprintf(stdout, "Average real FFT time %.8lf (s)\n",
                     tdif.count()/static_cast<double>(niter)); 
  
         }
@@ -439,6 +651,54 @@ int transforms_test_dftr2c(void)
 //============================================================================//
 //                              Private functions                             //
 //============================================================================//
+
+int fft(const int nx, const std::complex<double> *x,
+        const int ny, std::complex<double> *y)
+{
+    if (nx < 1 || ny < 1)
+    {
+        if (nx < 1){RTSEIS_ERRMSG("%s", "nx must be positive");}
+        if (ny < 1){RTSEIS_ERRMSG("%s", "ny must be positive");}
+        return -1; 
+    }
+    if (x == nullptr || y == nullptr)
+    {
+        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
+        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        return -1; 
+    }
+    // Set space and make plan
+    auto n = ny;
+    size_t nbytes = sizeof(fftw_complex)*static_cast<size_t> (n);
+    fftw_complex *in  = static_cast<fftw_complex *> (fftw_malloc(nbytes));
+    memset(in, 0, nbytes);
+    fftw_complex *out = reinterpret_cast<fftw_complex *> (y);
+    fftw_plan p = fftw_plan_dft_1d(n, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    // Equal size transforms
+    if (nx == ny) 
+    {   
+        std::memcpy(in, x, nbytes);
+    }   
+    // Truncate x to length of output array y
+    else if (nx > ny) 
+    {
+        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (ny);
+        std::memcpy(in, x, ncopy);
+    }   
+    // Pad x to length of output array y
+    else //if (nx < ny) 
+    {
+        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (nx);
+        std::memcpy(in, x, ncopy);
+    }
+    // Transform
+    fftw_execute(p);
+    // Free plan and data
+    fftw_destroy_plan(p);
+    fftw_free(in);
+    fftw_cleanup();
+    return 0;
+}
 
 int ifft(const int nx, const std::complex<double> *x,
          const int ny, std::complex<double> *y)
@@ -474,16 +734,10 @@ int ifft(const int nx, const std::complex<double> *x,
         std::memcpy(in, x, ncopy);
     }
     // Pad x to length of output array y
-    else if (nx < ny) 
+    else //if (nx < ny) 
     {
         size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (nx);
         std::memcpy(in, x, ncopy);
-    }
-    else
-    {
-        RTSEIS_ERRMSG("Could not classify job (nx,ny)=(%d,%d)", nx, ny);
-        fftw_destroy_plan(p);
-        return -1;
     }
     // Transform
     fftw_execute(p);

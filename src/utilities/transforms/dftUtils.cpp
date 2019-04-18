@@ -1,12 +1,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
+#include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
-#include <ipps.h>
 
 
 using namespace RTSeis::Utilities::Transforms;
@@ -14,21 +16,26 @@ using namespace RTSeis::Utilities::Transforms;
 #pragma omp declare simd
 static double rem(const double x, double y);
 
-int DFTUtilities::unwrap(const int n, const double p[], double q[],
-                         const double tol)
+std::vector<double> DFTUtilities::unwrap(const std::vector<double> &p,
+                                         const double tol) 
 {
-    if (n <= 0){return 0;}
+    std::vector<double> q;
+    if (p.empty()){return q;}
+    q.resize(p.size());
+    unwrap(static_cast<int> (p.size()), p.data(), q.data(), tol); 
+    return q;
+}
+
+void DFTUtilities::unwrap(const int n, const double p[], double q[],
+                          const double tol)
+{
+    if (n <= 0){return;}
     if (p == nullptr || q == nullptr)
     {
-        if (p == nullptr){RTSEIS_ERRMSG("%s", "p is NULL");}
-        if (q == nullptr){RTSEIS_ERRMSG("%s", "q is NULL");}
-        return -1;
+        if (p == nullptr){RTSEIS_THROW_IA("%s", "p is NULL");}
+        RTSEIS_THROW_IA("%s", "q is NULL");
     }
-    if (tol < 0)
-    {
-        RTSEIS_ERRMSG("Tolerance = %lf cannot be negative", tol);
-        return -1;
-    }
+    if (tol < 0){RTSEIS_THROW_IA("Tolerance = %lf cannot be negative", tol);}
     double pmin;
     ippsMin_64f(p, n, &pmin);
     const double twopi = 2*M_PI;
@@ -38,7 +45,7 @@ int DFTUtilities::unwrap(const int n, const double p[], double q[],
         q[i] = rem(p[i] - pmin, twopi) + pmin;
     }
     // Differentiate phases
-    double *b = new double[n];
+    std::vector<double> b(n);
     b[0] = q[0];
     #pragma omp simd
     for (int i=1; i<n; i++)
@@ -59,41 +66,46 @@ int DFTUtilities::unwrap(const int n, const double p[], double q[],
         cumsume = cumsume + e; // Integrate to get corrections
         q[i] = q[i] + cumsume;
     }
-    delete[] b;
-    return 0;
+    return;
 }
 
-int DFTUtilities::phase(const int n, const std::complex<double> z[],
-                        double phi[],
-                        const bool lwantDeg)
+std::vector<double>
+DFTUtilities::phase(const std::vector<std::complex<double>> &z, 
+                    const bool lwantDeg)
 {
-    if (n <= 0){return 0;} 
+    std::vector<double> phi;
+    if (z.empty()){return phi;} 
+    phi.resize(z.size());
+    phase(static_cast<int> (z.size()), z.data(), phi.data(), lwantDeg); 
+    return phi;
+}
+
+void DFTUtilities::phase(const int n, const std::complex<double> z[],
+                         double phi[],
+                         const bool lwantDeg)
+{
+    if (n <= 0){return;} 
     if (z == nullptr || phi == nullptr)
     {
-        if (z == nullptr){RTSEIS_ERRMSG("%s", "z is NULL");}
-        if (phi == nullptr){RTSEIS_ERRMSG("%s", "phi is NULL");}
-        return -1;
+        if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
+        RTSEIS_THROW_IA("%s", "phi is NULL");
     }
     const Ipp64fc *pSrc = reinterpret_cast<const Ipp64fc *> (z);
+#ifdef DEBUG
     IppStatus status = ippsPhase_64fc(pSrc, phi, n); 
-    if (status != ippStsNoErr)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute phi");
-        return -1;
-    }
-    if (lwantDeg)
-    {
-        ippsMulC_64f_I(180.0/M_PI, phi, n); 
-    }
-    return 0;
+    assert(status == ippStsNoErr);
+#else
+    ippsPhase_64fc(pSrc, phi, n); 
+#endif
+    if (lwantDeg){ippsMulC_64f_I(180.0/M_PI, phi, n);}
+    return;
 }
 
 int DFTUtilities::nextPow2(const int n)
 {
     if (n < 0)
     {
-        RTSEIS_ERRMSG("n=%d must be positive", n);
-        return 0;
+        RTSEIS_THROW_IA("n=%d must be positive", n);
     }
     // Simple base cases
     if (n == 0){return 1;}
@@ -108,8 +120,7 @@ int DFTUtilities::nextPow2(const int n)
     // Catch any overflow problems associated with int32_t and uint64_t
     if (n2t != static_cast<uint64_t> (n2))
     {
-        RTSEIS_ERRMSG("%s", "Overflow error");
-        return 0;
+        RTSEIS_THROW_RTE("%s", "Overflow error");
     }
     return n2;
 }
