@@ -728,8 +728,69 @@ void DFTRealToComplex::inverseTransform(const int lenft,
     return;
 } 
 
+void DFTRealToComplex::inverseTransform(const int lenft,
+                             const std::complex<float> x[],
+                             const int maxy, float y[])
+{
+    if (!pImpl->isInitialized())
+    {
+        RTSEIS_THROW_RTE("%s", "Class is not initialized");
+    }
+    if (x == nullptr || y == nullptr)
+    {
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    int ftLen = getTransformLength();
+    int length = getInverseTransformLength();
+    if (lenft > ftLen || maxy < length)
+    {
+        if (maxy < length)
+        {
+            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, length);
+        }
+        RTSEIS_THROW_IA("lenft = %d cannot exceed %d", lenft, ftLen);
+    }
+    int ierr = pImpl->inverseTransform(lenft, x, y); 
+    if (ierr != 0)
+    {
+        RTSEIS_THROW_RTE("%s", "Failed to compute inverse transform");
+    }
+    return;
+}
+
 void DFTRealToComplex::forwardTransform(const int n, const double x[],
                              const int maxy, std::complex<double> y[])
+{
+    if (!pImpl->isInitialized())
+    {
+        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
+    }
+    if (x == nullptr || y == nullptr)
+    {
+        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
+        RTSEIS_THROW_RTE("%s", "y is NULL");
+    }
+    int lenft = getTransformLength();
+    int length = getInverseTransformLength();
+    if (maxy < lenft || n > length)
+    {
+        if (maxy < lenft)
+        {
+            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, lenft);
+        }
+        RTSEIS_THROW_IA("n = %d cannot exceed %d", n, length);
+    }
+    int ierr = pImpl->forwardTransform(n, x, y);
+    if (ierr != 0)
+    {
+        RTSEIS_THROW_RTE("%s", "Failed to apply forward transform");
+    }
+    return;
+}
+
+void DFTRealToComplex::forwardTransform(const int n, const float x[],
+                             const int maxy, std::complex<float> y[])
 {
     if (!pImpl->isInitialized())
     {
