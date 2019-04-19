@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <valarray>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/private/throw.hpp"
@@ -45,7 +46,7 @@ void DFTUtilities::unwrap(const int n, const double p[], double q[],
         q[i] = rem(p[i] - pmin, twopi) + pmin;
     }
     // Differentiate phases
-    std::vector<double> b(n);
+    std::valarray<double> b(n);
     b[0] = q[0];
     #pragma omp simd
     for (int i=1; i<n; i++)

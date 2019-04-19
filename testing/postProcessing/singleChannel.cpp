@@ -137,7 +137,7 @@ int testFilter(const std::vector<double> &x)
         PostProcessing::SingleChannel::Waveform waveform; 
         waveform.setData(x);
         waveform.firFilter(fir);
-        waveform.getData(y);     
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -203,7 +203,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
         waveform.sosLowpassFilter(order, fc,
                                   SingleChannel::IIRPrototype::CHEBYSHEV1,
                                   ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -252,7 +252,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
         waveform.sosHighpassFilter(order, fc,
                                    SingleChannel::IIRPrototype::BESSEL,
                                    ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -300,7 +300,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
         waveform.sosBandpassFilter(order, fc,
                                    SingleChannel::IIRPrototype::BUTTERWORTH,
                                    ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -345,7 +345,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
         waveform.sosBandstopFilter(order, fc,
                                    SingleChannel::IIRPrototype::BESSEL,
                                    ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -411,7 +411,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
         waveform.iirLowpassFilter(order, fc,
                                   SingleChannel::IIRPrototype::CHEBYSHEV1,
                                   ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -457,7 +457,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
         waveform.iirHighpassFilter(order, fc,
                                    SingleChannel::IIRPrototype::BESSEL,
                                    ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -502,7 +502,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
         waveform.iirBandpassFilter(order, fc,
                                    SingleChannel::IIRPrototype::BUTTERWORTH,
                                    ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -548,7 +548,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
         waveform.iirBandstopFilter(order, fc,
                                    SingleChannel::IIRPrototype::BESSEL,
                                    ripple, lzeroPhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -608,7 +608,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
         waveform.firLowpassFilter(ntaps, fc,
                                   SingleChannel::FIRWindow::HAMMING,
                                   lremovePhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -654,7 +654,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
         waveform.firHighpassFilter(ntaps, fc,
                                    SingleChannel::FIRWindow::BLACKMAN_OPT,
                                    lremovePhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -703,7 +703,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
                                    SingleChannel::FIRWindow::HANN,
                                    lremovePhase);
         waveform.releaseDataPointer();
-        waveform.getData(y);
+        y = waveform.getData();
     }
     catch (const std::invalid_argument &ia)
     {
@@ -747,7 +747,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
         waveform.firBandstopFilter(ntaps, fc,
                                    SingleChannel::FIRWindow::BARTLETT,
                                    lremovePhase);
-        waveform.getData(y);
+        y = waveform.getData();
     }    
     catch (const std::invalid_argument &ia)
     {
@@ -782,7 +782,7 @@ int testDownsample(const std::vector<double> &x)
         {
             waveform.setData(x);
             waveform.downsample(iq);
-            waveform.getData(y);
+            y = waveform.getData();
         }
         catch (std::exception &e)
         {
@@ -838,7 +838,7 @@ int testDemean(void)
     {
         waveform.setData(x);    // Set waveform data to demean
         waveform.demean();      // Demean the data
-        waveform.getData(y);    // Get the demeaned data in a vector, y
+        y = waveform.getData(); // Get the demeaned data in a vector, y
     }
     catch (std::invalid_argument &ia)
     {
@@ -877,9 +877,9 @@ int testDetrend(void)
     PostProcessing::SingleChannel::Waveform waveform;
     try 
     {
-        waveform.setData(x);    // Set the data to detrend
-        waveform.detrend();     // Detrend
-        waveform.getData(y);    // Get the detrended data in a vector, y
+        waveform.setData(x);     // Set the data to detrend
+        waveform.detrend();      // Detrend
+        y = waveform.getData();  // Get the detrended data in a vector, y
     }   
     catch (std::invalid_argument &ia)
     {
@@ -953,17 +953,17 @@ int testTaper(void)
         double pct = 100*(0.2*2); // SAC to RTSeis; 20 pct of signal
         waveform.setData(x100);
         waveform.taper(pct, SC::TaperParameters::HAMMING);
-        waveform.getData(yHamming100);
+        yHamming100 = waveform.getData();
 
         pct = 100*(0.1*2); // SAC to RTSeis; 20 pct of signal
         waveform.setData(x100);
         waveform.taper(pct, SC::TaperParameters::HANN);
-        waveform.getData(yHann100);
+        yHann100 = waveform.getData();
 
         pct = 100*(0.3*2); // SAC to RTSeis; 60 pct of signal
         waveform.setData(x100);
         waveform.taper(pct, SC::TaperParameters::SINE);
-        waveform.getData(ySine100); 
+        ySine100 = waveform.getData(); 
     }
     catch (const std::invalid_argument &ia)
     {
@@ -1002,17 +1002,17 @@ int testTaper(void)
         double pct = 100*(0.05*2); // SAC to RTSeis; 10 pct of signal
         waveform.setData(x101);
         waveform.taper(pct, SC::TaperParameters::HAMMING);
-        waveform.getData(yHamming101);
+        yHamming101 = waveform.getData();
 
         pct = 100*(0.1*2); // SAC to RTSeis; 20 pct of signal
         waveform.setData(x101);
         waveform.taper(pct, SC::TaperParameters::HANN);
-        waveform.getData(yHann101);
+        yHann101 = waveform.getData();
 
         pct = 100*(0.15*2); // SAC to RTSeis; 30 pct of signal
         waveform.setData(x101);
         waveform.taper(pct, SC::TaperParameters::SINE);
-        waveform.getData(ySine101); 
+        ySine101 = waveform.getData(); 
     }   
     catch (const std::invalid_argument &ia)
     {   

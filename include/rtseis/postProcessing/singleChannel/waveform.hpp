@@ -192,9 +192,9 @@ public:
     void releaseDataPointer(void) noexcept;
     /*!
      * @brief Gets the processed waveform data.
-     * @param[out] y  The processed waveform data.
+     * @result The processed waveform data.
      */
-    void getData(std::vector<double> &y);
+    std::vector<double> getData(void);
     /*!
      * @brief Gets the prcoessed waveform data.
      * @param[in] nwork  Max number of points allocated to y.

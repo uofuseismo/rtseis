@@ -112,7 +112,8 @@ SET(UTILS_SRCS
     src/utilities/normalization/signBit.cpp
     src/utilities/transforms/dft.cpp
     src/utilities/transforms/dftRealToComplex.cpp
-    src/utilities/transforms/dftUtils.cpp)
+    src/utilities/transforms/dftUtils.cpp
+    src/utilities/transforms/hilbert.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c
 #    src/ipps/downsample.c 

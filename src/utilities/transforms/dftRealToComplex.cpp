@@ -397,6 +397,77 @@ public:
         }
         return 0;
     }
+    /// Forward transform
+    int forwardTransform(const int n, const float x[],
+                         std::complex<float> y[])
+    {
+        // In this case the entire signal would be zero-padded
+        if (n <= 0)
+        {
+            Ipp32f *pDst = reinterpret_cast<Ipp32f *> (y);
+            ippsZero_32f(pDst, 2*lenft_);
+            return 0;
+        }
+        // Get handle to output
+        IppStatus status;
+        Ipp32f *pDst = reinterpret_cast<Ipp32f *> (y);
+        // No need to zero-pad
+        if (n == length_)
+        {
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTFwd_RToCCS_32f(x, pDst,
+                                               pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    return -1;
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTFwd_RToCCS_32f(x, pDst,
+                                               pDFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    return -1;
+                }
+            }
+        }
+        // Zero-pad
+        else
+        {
+            // Copy data and zero pad
+            ippsCopy_32f(x, work32f_, n);
+            ippsZero_32f(&work32f_[n], length_-n);
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTFwd_RToCCS_32f(work32f_, pDst,
+                                               pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    return -1;
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTFwd_RToCCS_32f(work32f_, pDst,
+                                               pDFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    return -1;
+                }
+            }
+        }
+        return 0;
+    }
     /// Inverse transform
     int inverseTransform(const int lenft,
                          const std::complex<double> x[],
@@ -467,6 +538,76 @@ public:
         }
         return 0;
     }
+    /// Inverse transform
+    int inverseTransform(const int lenft,
+                         const std::complex<float> x[],
+                         float y[])
+    {
+        // In this case the entire signal would be zero-padded
+        if (lenft <= 0)
+        {
+            Ipp32f *pDst = static_cast<Ipp32f *> (y);
+            ippsZero_32f(pDst, length_);
+            return 0;
+        }
+        IppStatus status;
+        // No need to zero-pad
+        if (lenft == lenft_)
+        {
+            // Get handle to data
+            const Ipp32f *pSrc = reinterpret_cast<const Ipp32f *> (x);
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTInv_CCSToR_32f(pSrc, y, pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    return -1; 
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTInv_CCSToR_32f(pSrc, y, pDFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    return -1;
+                }
+            }
+        }
+        else
+        {
+            // Copy data and zero pad
+            const Ipp32f *xTemp = reinterpret_cast<const Ipp32f *> (x);
+            ippsCopy_32f(xTemp, work32f_, 2*lenft);
+            ippsZero_32f(&work32f_[2*lenft], 2*(lenft_-lenft));
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTInv_CCSToR_32f(work32f_, y,
+                                               pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    return -1;
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTInv_CCSToR_32f(work32f_, y,
+                                               pDFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    return -1;
+                }
+            }
+        }
+        return 0;
+    }
 private:
     /// State structure for double FFT
     IppsFFTSpec_R_64f *pFFTSpec64_ = nullptr;
@@ -525,14 +666,14 @@ DFTRealToComplex& DFTRealToComplex::operator=(const DFTRealToComplex &dftr2c)
     return *this;
 }
 
-void DFTRealToComplex::clear()
+void DFTRealToComplex::clear() noexcept
 {
     pImpl->clear();
     return;
 }
 
 
-int DFTRealToComplex::initialize(
+void DFTRealToComplex::initialize(
     const int length,
     const FourierTransformImplementation implementation,
     const RTSeis::Precision precision)
@@ -541,8 +682,7 @@ int DFTRealToComplex::initialize(
     // Check the inputs
     if (length < 2)
     {
-        if (length < 2){RTSEIS_ERRMSG("Length=%d must be at least 2", length);}
-        return -1;
+        RTSEIS_THROW_IA("Length=%d must be at least 2", length);
     }
     bool ldoFFT = false;
     if (implementation == FourierTransformImplementation::FFT)
@@ -552,26 +692,23 @@ int DFTRealToComplex::initialize(
     int ierr = pImpl->initialize(length, ldoFFT, precision);
     if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Failed ot initialize DFT");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Failed ot initialize DFT");
     }
-    return 0;
+    return;
 }
 
-int DFTRealToComplex::inverseTransform(const int lenft,
+void DFTRealToComplex::inverseTransform(const int lenft,
                              const std::complex<double> x[],
                              const int maxy, double y[])
 {
     if (!pImpl->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class is not intiialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class is not initialized");
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
-        return -1;
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
     }
     int ftLen = getTransformLength();
     int length = getInverseTransformLength();
@@ -579,36 +716,29 @@ int DFTRealToComplex::inverseTransform(const int lenft,
     {
         if (maxy < length)
         {
-            RTSEIS_ERRMSG("maxy = %d must be at least %d", maxy, length);
+            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, length);
         }
-        if (lenft > ftLen)
-        {
-            RTSEIS_ERRMSG("lenft = %d cannot exceed %d", lenft, ftLen);
-        }
-        return -1;
+        RTSEIS_THROW_IA("lenft = %d cannot exceed %d", lenft, ftLen);
     }
     int ierr = pImpl->inverseTransform(lenft, x, y);
     if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Failed to compute inverse transform");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Failed to compute inverse transform");
     }
-    return 0;
+    return;
 } 
 
-int DFTRealToComplex::forwardTransform(const int n, const double x[],
+void DFTRealToComplex::forwardTransform(const int n, const double x[],
                              const int maxy, std::complex<double> y[])
 {
     if (!pImpl->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class is not intiialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
-        return -1;
+        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
+        RTSEIS_THROW_RTE("%s", "y is NULL");
     }
     int lenft = getTransformLength();
     int length = getInverseTransformLength();
@@ -616,29 +746,23 @@ int DFTRealToComplex::forwardTransform(const int n, const double x[],
     {
         if (maxy < lenft)
         {
-            RTSEIS_ERRMSG("maxy = %d must be at least %d", maxy, lenft);
+            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, lenft);
         }
-        if (n > length)
-        {
-            RTSEIS_ERRMSG("n = %d cannot exceed %d", n, length);
-        }
-        return -1;
+        RTSEIS_THROW_IA("n = %d cannot exceed %d", n, length);
     }
     int ierr = pImpl->forwardTransform(n, x, y);
     if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Failed to apply forward transform");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Failed to apply forward transform");
     }
-    return 0;
+    return;
 }
 
 int DFTRealToComplex::getTransformLength() const
 {
     if (!pImpl->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class is not intiialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
     return pImpl->getTransformLength();
 }
@@ -647,8 +771,7 @@ int DFTRealToComplex::getInverseTransformLength() const
 {
     if (!pImpl->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class is not intiialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
     return pImpl->getInverseTransformLength();
 }
@@ -657,8 +780,7 @@ int DFTRealToComplex::getMaximumInputSignalLength() const
 {
     if (!pImpl->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class is not intiialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
     return pImpl->getMaximumInputSignalLength();
 }

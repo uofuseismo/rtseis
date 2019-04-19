@@ -9,9 +9,9 @@
 #include <pstl/execution>
 #endif
 #define RTSEIS_LOGGING 1
+#include <ipps.h>
 #include "rtseis/log.h"
 #include "rtseis/utilities/math/vectorMath.hpp"
-#include <ipps.h>
 
 int RTSeis::Utilities::Math::VectorMath::divide(
     const std::vector<std::complex<double>> &den,

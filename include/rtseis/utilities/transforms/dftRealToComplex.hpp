@@ -91,9 +91,9 @@ public:
       *                            will be applied.
       * @result 0 indicates success.
       */
-     int initialize(const int length,
-                    const FourierTransformImplementation implementation = FourierTransformImplementation::DFT,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+     void initialize(const int length,
+                     const FourierTransformImplementation implementation = FourierTransformImplementation::DFT,
+                     const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
      /*!
       * @brief Fourier transforms a real-valued time domain signal to the
       *        frequency domain.   The transform is defined as 
@@ -112,12 +112,15 @@ public:
       *                  getTransformLength() points are defined. 
       *                  Here, y[0] is the zero-frequency and 
       *                  y[getTransformLength()-1] is the Nyquist.
-      * @result 0 indicates success.
+      * @throws std::invalid_argument if any arguments are invalid.
+      * @throws std::runtime_error if the class is not initialized.
       */
-     int forwardTransform(const int n,
-                          const double x[],
-                          const int maxy,
-                          std::complex<double> y[]);
+     void forwardTransform(const int n,
+                           const double x[],
+                           const int maxy,
+                           std::complex<double> y[]);
+     /*! @copydoc forwardTransform */
+
      /*!
       * @brief Inverse transforms complex-valued frequency domian signal
       *        to a real-valued time domain signal.  The transform is
@@ -146,11 +149,12 @@ public:
       *                    This has dimension [maxy] however only
       *                    the first getMaximumSignalLength() points
       *                    are defined.
-      * @result 0 indicates success.
+      * @throws std::invalid_argument if any arguments are invalid.
+      * @throws std::runtime_error if the class is not initialized.
       */
-     int inverseTransform(const int lenft,
-                          const std::complex<double> x[],
-                          const int maxy, double y[]);
+     void inverseTransform(const int lenft,
+                           const std::complex<double> x[],
+                           const int maxy, double y[]);
      /*!
       * @brief Gets the inverse transform length.
       * @result The length of the inverse DFT or FFT.
@@ -181,7 +185,7 @@ public:
      *        using it again.
      * @ingroup rtseis_utils_transforms_dftr2c
      */
-    void clear();
+    void clear() noexcept;
 private:
     class DFTImpl;
     std::unique_ptr<DFTImpl> pImpl;

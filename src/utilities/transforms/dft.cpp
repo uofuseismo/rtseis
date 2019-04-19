@@ -398,6 +398,78 @@ public:
         }
         return 0;
     }
+    /// Forward transform
+    int forwardTransform(const int n, const std::complex<float> x[],
+                         std::complex<float> y[])
+    {
+        // In this case the entire signal would be zero-padded
+        if (n <= 0)
+        {
+            auto *pDst = reinterpret_cast<Ipp32fc *> (y);
+            ippsZero_32fc(pDst, lenft_);
+            return 0;
+        }
+        // Get handle to output
+        IppStatus status;
+        auto *pSrc = reinterpret_cast<const Ipp32fc *> (x);
+        auto *pDst = reinterpret_cast<Ipp32fc *> (y);
+        // No need to zero-pad
+        if (n == length_)
+        {
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTFwd_CToC_32fc(pSrc, pDst,
+                                              pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    return -1;
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTFwd_CToC_32fc(pSrc, pDst,
+                                              pDFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    return -1;
+                }
+            }
+        }
+        // Zero-pad
+        else
+        {
+            // Copy data and zero pad
+            ippsCopy_32fc(pSrc, work32fc_, n);
+            ippsZero_32fc(&work32fc_[n], length_-n);
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTFwd_CToC_32fc(work32fc_, pDst,
+                                              pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    return -1;
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTFwd_CToC_32fc(work32fc_, pDst,
+                                              pDFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    return -1;
+                }
+            }
+        }
+        return 0;
+    }
     /// Inverse transform
     int inverseTransform(const int lenft,
                          const std::complex<double> x[],
@@ -458,6 +530,75 @@ public:
             {
                 status = ippsDFTInv_CToC_64fc(work64fc_, pDst,
                                               pDFTSpec64_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    return -1;
+                }
+            }
+        }
+        return 0;
+    }
+    /// Inverse transform
+    int inverseTransform(const int lenft,
+                         const std::complex<float> x[],
+                         std::complex<float> y[])
+    {
+        // In this case the entire signal would be zero-padded
+        if (lenft <= 0)
+        {
+            auto *pDst = reinterpret_cast<Ipp32fc *> (y);
+            ippsZero_32fc(pDst, length_);
+            return 0;
+        }
+        IppStatus status;
+        auto *pSrc = reinterpret_cast<const Ipp32fc *> (x);
+        auto *pDst = reinterpret_cast<Ipp32fc *> (y);
+        // No need to zero-pad
+        if (lenft == lenft_)
+        {
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTInv_CToC_32fc(pSrc, pDst, pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    return -1; 
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTInv_CToC_32fc(pSrc, pDst, pDFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    return -1;
+                }
+            }
+        }
+        else
+        {
+            // Copy data and zero pad
+            ippsCopy_32fc(pSrc, work32fc_, lenft);
+            ippsZero_32fc(&work32fc_[lenft], lenft_-lenft);
+            // FFT
+            if (ldoFFT_)
+            {
+                status = ippsFFTInv_CToC_32fc(work32fc_, pDst,
+                                              pFFTSpec32_, pBuf_);
+                if (status != ippStsNoErr)
+                {
+                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    return -1;
+                }
+            }
+            // DFT
+            else
+            {
+                status = ippsDFTInv_CToC_32fc(work32fc_, pDst,
+                                              pDFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
                     RTSEIS_ERRMSG("%s", "Error applying inverse DFT");

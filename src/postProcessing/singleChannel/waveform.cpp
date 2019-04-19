@@ -305,8 +305,9 @@ void Waveform::setData(const size_t n, const double x[])
     pImpl->setData(n, x, true);
 }
 
-void Waveform::getData(std::vector<double> &y)
+std::vector<double> Waveform::getData(void)
 {
+    std::vector<double> y;
     int ny = pImpl->getNumberOfOutputSamples();
     y.resize(ny);
     if (ny > 0)
@@ -314,6 +315,7 @@ void Waveform::getData(std::vector<double> &y)
         const double *yout = pImpl->getOutputDataPointer();
         ippsCopy_64f(yout, y.data(), ny);
     }
+    return y;
 }
 
 void Waveform::getData(const size_t nwork, double y[]) const

@@ -13,6 +13,7 @@
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/dftRealToComplex.hpp"
 #include "rtseis/utilities/transforms/dft.hpp"
+#include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
@@ -26,6 +27,7 @@ int transforms_phase_test(void);
 int transforms_unwrap_test(void);
 int transforms_test_dftr2c(void);
 int transforms_test_dft(void);
+int transforms_test_hilbert(void);
 int fft(const int nx, const std::complex<double> *x, 
         const int ny, std::complex<double> *y);
 int ifft(const int nx, const std::complex<double> *x, 
@@ -76,6 +78,14 @@ int rtseis_test_utils_transforms(void)
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed dft test");
+
+    ierr = transforms_test_hilbert();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute hilbert");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed hilbert test");
 
     return EXIT_SUCCESS;
 }
@@ -255,7 +265,91 @@ int transforms_phase_test(void)
     return EXIT_SUCCESS; 
 }
 
-int transforms_test_dft(void)
+int transforms_test_hilbert()
+{
+    std::vector<std::complex<double>> h10(10), h11(11);
+    h10[0] = std::complex<double> (0, 5.50552768);
+    h10[1] = std::complex<double> (1,-0.64983939);
+    h10[2] = std::complex<double> (2,-0.64983939);
+    h10[3] = std::complex<double> (3,-2.10292445);
+    h10[4] = std::complex<double> (4,-2.10292445);
+    h10[5] = std::complex<double> (5,-2.10292445);
+    h10[6] = std::complex<double> (6,-2.10292445);
+    h10[7] = std::complex<double> (7,-0.64983939);
+    h10[8] = std::complex<double> (8,-0.64983939);
+    h10[9] = std::complex<double> (9, 5.50552768); 
+
+    h11[0]  = std::complex<double> ( 0, 6.42868554);
+    h11[1]  = std::complex<double> ( 1,-0.52646724);
+    h11[2]  = std::complex<double> ( 2,-0.23284074);
+    h11[3]  = std::complex<double> ( 3,-2.42253531);
+    h11[4]  = std::complex<double> ( 4,-1.77987433);
+    h11[5]  = std::complex<double> ( 5,-2.93393585);
+    h11[6]  = std::complex<double> ( 6,-1.77987433);
+    h11[7]  = std::complex<double> ( 7,-2.42253531);
+    h11[8]  = std::complex<double> ( 8,-0.23284074);
+    h11[9]  = std::complex<double> ( 9,-0.52646724);
+    h11[10] = std::complex<double> (10, 6.42868554);
+
+    Hilbert hilbert;    
+    std::vector<std::complex<double>> h;
+    std::vector<double> x;
+    int n = 10;
+    x.reserve(n+1);
+    x.resize(n);
+    for (int i=0; i<n; i++){x[i] = static_cast<double> (i);}
+    try
+    {
+        hilbert.initialize(n);
+    }
+    catch (const std::invalid_argument &ia) 
+    { 
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    assert(hilbert.getTransformLength() == n);
+    h.resize(n);
+    hilbert.transform(n, x.data(), h.data());
+    for (auto i=0; i<x.size(); i++)
+    {
+        if (std::abs(h[i] - h10[i]) > 1.e-8)
+        {
+            RTSEIS_ERRMSG("Failed hilbert %d %lf\n", 
+                          i, std::abs(h[i] - h10[i]));
+            return EXIT_FAILURE;
+        }
+    }
+    // Test copy constructor with n = 11
+    n = 11;
+    Hilbert hilbert11;
+    try
+    {
+        hilbert11.initialize(n);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    hilbert = hilbert11;
+    assert(hilbert.getTransformLength() == n);
+    x.resize(n);
+    h.resize(n);
+    for (int i=0; i<x.size(); i++){x[i] = static_cast<double> (i);}
+    hilbert.transform(n, x.data(), h.data());
+    for (auto i=0; i<x.size(); i++)
+    {
+        if (std::abs(h[i] - h11[i]) > 1.e-8)
+        {
+            RTSEIS_ERRMSG("Failed hilbert %d %lf\n", 
+                          i, std::abs(h[i] - h11[i]));
+            return EXIT_FAILURE;
+        }
+    }
+    return EXIT_SUCCESS;
+}
+
+int transforms_test_dft()
 {
     std::vector<std::complex<double>> x5(5);
     x5[0] = std::complex<double> (0.293848340517710, 0.543040331839914);
@@ -288,6 +382,7 @@ int transforms_test_dft(void)
         DFT dft;
         dft.initialize(x5.size());
         assert(dft.getInverseTransformLength() == 5);
+        assert(dft.isInitialized());
         //ASSERT_EQUAL(dft.getInverseTransformLength(), 5);
         assert(dft.getTransformLength() == 5);
         //ASSERT_EQUAL(dft.getTransformLengt(), 5);
@@ -469,12 +564,15 @@ int transforms_test_dftr2c(void)
         }
         // Initialize the DFT
         DFTRealToComplex dft; 
-        ierr = dft.initialize(npts,
-                              FourierTransformImplementation::DFT,
-                              RTSeis::Precision::DOUBLE); 
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to initialize dft");
+            dft.initialize(npts,
+                           FourierTransformImplementation::DFT,
+                           RTSeis::Precision::DOUBLE); 
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("%s", ia.what());
             return EXIT_FAILURE;
         }
         if (dft.getTransformLength() != lendft)
@@ -483,10 +581,13 @@ int transforms_test_dftr2c(void)
             return EXIT_FAILURE;
         }
         std::complex<double> *z = new std::complex<double>[lendft];
-        ierr = dft.forwardTransform(npts, x, lendft, z);
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to forward transform");
+            dft.forwardTransform(npts, x, lendft, z);
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("%s", ia.what());
             return EXIT_FAILURE;
         }
         double error = 0; 
@@ -507,10 +608,13 @@ int transforms_test_dftr2c(void)
             return EXIT_FAILURE;
         }
         double *xinv = new double[npout];
-        ierr = dft.inverseTransform(lendft, z, npout, xinv); 
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to inverse dft");
+            dft.inverseTransform(lendft, z, npout, xinv); 
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("%s", ia.what());
             return EXIT_FAILURE;
         }
         error = 0;
@@ -530,10 +634,13 @@ int transforms_test_dftr2c(void)
             auto timeStart = std::chrono::high_resolution_clock::now();
             for (int kiter=0; kiter<niter; kiter++)
             {
-                ierr = dft.forwardTransform(npts, x, lendft, z); 
-                if (ierr != 0)
+                try
                 {
-                    RTSEIS_ERRMSG("%s", "Failed DFT");
+                    dft.forwardTransform(npts, x, lendft, z); 
+                }
+                catch (const std::exception &e)
+                {
+                    RTSEIS_ERRMSG("%s", e.what());
                     return EXIT_FAILURE;
                 }
             }
@@ -570,10 +677,13 @@ int transforms_test_dftr2c(void)
             return EXIT_FAILURE;
         }
         z = new std::complex<double>[lenfft];
-        ierr = dft.forwardTransform(npts, x, lenfft, z); 
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to forward transform");
+            dft.forwardTransform(npts, x, lenfft, z); 
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("%s", ia.what());
             return EXIT_FAILURE;
         }
         error = 0;  
@@ -593,10 +703,13 @@ int transforms_test_dftr2c(void)
             return EXIT_FAILURE;
         }
         xinv = new double[npout];
-        ierr = dft.inverseTransform(lenfft, z, npout, xinv); 
-        if (ierr != 0)
+        try
         {
-            RTSEIS_ERRMSG("%s", "Failed to inverse fft");
+            dft.inverseTransform(lenfft, z, npout, xinv); 
+        }
+        catch (const std::invalid_argument &ia)
+        {
+            RTSEIS_ERRMSG("%s", ia.what());
             return EXIT_FAILURE;
         }
         error = 0;
@@ -616,10 +729,13 @@ int transforms_test_dftr2c(void)
             auto timeStart = std::chrono::high_resolution_clock::now();
             for (int kiter=0; kiter<niter; kiter++)
             {
-                ierr = dft.forwardTransform(npts, x, lenfft, z);
-                if (ierr != 0)
+                try
                 {
-                    RTSEIS_ERRMSG("%s", "Failed FFT");
+                    dft.forwardTransform(npts, x, lenfft, z);
+                }
+                catch (const std::invalid_argument &ia)
+                {
+                    RTSEIS_ERRMSG("%s", ia.what());
                     return EXIT_FAILURE;
                 }
             }
