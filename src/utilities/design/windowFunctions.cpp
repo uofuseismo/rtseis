@@ -252,7 +252,7 @@ void WindowFunctions::kaiser(const int len, std::vector<double> &window,
         window[0] = 1;
         return;
     }
-#if __cplusplus > 201402L
+#ifdef __STDCPP_MATH_SPEC_FUNCS__ //__cplusplus > 201402L
     double alpha = static_cast<double> (len - 1)/2;
     double i0betai = 1.0/std::cyl_bessel_i(0, beta);
 #ifdef __INTEL_COMPILER

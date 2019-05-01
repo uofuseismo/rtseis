@@ -226,7 +226,7 @@ int windowFunctions_kaiser_test(void)
                             0.436709600995736, 0.288508741610676,
                             0.166678217276960, 0.078225306346850,
                             0.023422141030647};
-#if __cplusplus > 201402L
+#ifdef __STDCPP_MATH_SPEC_FUNCS__ // __cplusplus > 201402L
     double tol = 1.e-14;
 #else
     double tol = 1.e-6;
