@@ -37,21 +37,18 @@ EnvelopeFIRParameters::EnvelopeFIRParameters(
     setFilterLength(n);
     setBeta(beta);
     setPrecision(precision);
-    return;
 }
 
 EnvelopeFIRParameters::EnvelopeFIRParameters(
     const EnvelopeFIRParameters &envfir)
 {
     *this = envfir;
-    return;
 }
 
 EnvelopeFIRParameters::EnvelopeFIRParameters(
-    EnvelopeFIRParameters &&envfir)
+    EnvelopeFIRParameters &&envfir) noexcept
 {
     *this = std::move(envfir);
-    return;
 }
 
 EnvelopeFIRParameters& EnvelopeFIRParameters::operator=(
@@ -66,30 +63,28 @@ EnvelopeFIRParameters& EnvelopeFIRParameters::operator=(
 }
 
 EnvelopeFIRParameters& EnvelopeFIRParameters::operator=(
-    EnvelopeFIRParameters &&envfir)
+    EnvelopeFIRParameters &&envfir) noexcept
 {
     if (&envfir == this){return *this;}
     pImpl = std::move(envfir.pImpl);
     return *this;
 }
 
-EnvelopeFIRParameters::~EnvelopeFIRParameters(void) = default;
+EnvelopeFIRParameters::~EnvelopeFIRParameters() = default;
 
-void EnvelopeFIRParameters::clear(void) noexcept
+void EnvelopeFIRParameters::clear() noexcept
 {
     pImpl->nfir = 301;
     pImpl->beta = 8;
     pImpl->precision = RTSeis::Precision::DOUBLE;
-    return;
 }
 
 void EnvelopeFIRParameters::setBeta(const double beta) noexcept
 {
     pImpl->beta = beta;
-    return;
 }
 
-double EnvelopeFIRParameters::getBeta(void) const noexcept
+double EnvelopeFIRParameters::getBeta() const noexcept
 {
     return pImpl->beta;
 }
@@ -101,10 +96,9 @@ void EnvelopeFIRParameters::setFilterLength(const int nfir)
         RTSEIS_THROW_IA("filter length = %d must be at least 1", nfir);
     }
     pImpl->nfir = nfir;
-    return;
 }
 
-int EnvelopeFIRParameters::getFilterLength(void) const noexcept
+int EnvelopeFIRParameters::getFilterLength() const noexcept
 {
     return pImpl->nfir;
 }
@@ -113,15 +107,14 @@ void EnvelopeFIRParameters::setPrecision(
     const RTSeis::Precision precision) noexcept
 {
     pImpl->precision = precision;
-    return;
 }
 
-RTSeis::Precision EnvelopeFIRParameters::getPrecision(void) const noexcept
+RTSeis::Precision EnvelopeFIRParameters::getPrecision() const noexcept
 {
     return pImpl->precision;
 }
 
-bool EnvelopeFIRParameters::isValid(void) const noexcept
+bool EnvelopeFIRParameters::isValid() const noexcept
 {
     if (pImpl->nfir < 1){return false;}
     return true;
@@ -131,7 +124,6 @@ bool EnvelopeFIRParameters::isValid(void) const noexcept
 //                          DFT Envelope Parameters                           //
 //============================================================================//
 
-/*
 class EnvelopeDFTParameters::EnvelopeDFTParametersImpl
 {
 public:
@@ -141,13 +133,41 @@ public:
 
 EnvelopeDFTParameters::EnvelopeDFTParameters(
     const RTSeis::Precision precision) :
-    pImpl(std::make_unique<EnvelopeDFTParametersImpl> ())
+    pImpl(std::make_unique<EnvelopeDFTParametersImpl>())
 {
     setPrecision(precision);
-    return;
 }
 
-EnvelopeDFTParameters::~EnvelopeDFTParameters(void) default;
+EnvelopeDFTParameters::EnvelopeDFTParameters(
+    const EnvelopeDFTParameters &envdft)
+{
+    *this = envdft;
+}
+
+EnvelopeDFTParameters::EnvelopeDFTParameters(
+    EnvelopeDFTParameters &&envdft) noexcept
+{
+    *this = std::move(envdft);
+}
+
+EnvelopeDFTParameters& EnvelopeDFTParameters::operator=(
+    const EnvelopeDFTParameters &envdft)
+{
+    if (&envdft == this){return *this;}
+    pImpl = std::make_unique<EnvelopeDFTParametersImpl>();
+    pImpl->precision = envdft.pImpl->precision;
+    return *this;
+}
+
+EnvelopeDFTParameters& EnvelopeDFTParameters::operator=(
+    EnvelopeDFTParameters &&envdft) noexcept
+{
+    if (&envdft == this){return *this;}
+    pImpl = std::move(envdft.pImpl);
+    return *this;
+}
+
+EnvelopeDFTParameters::~EnvelopeDFTParameters() = default;
 
 void EnvelopeDFTParameters::setPrecision(
     const RTSeis::Precision precision) noexcept
@@ -156,22 +176,20 @@ void EnvelopeDFTParameters::setPrecision(
     return;
 }
 
-RTSeis::Precision EnvelopeDFTParameters::getPrecision(void) const noexcept
+RTSeis::Precision EnvelopeDFTParameters::getPrecision() const noexcept
 {
     return pImpl->precision;
 }
 
-bool EnvelopeDFTParameters::isValid(void) const
+bool EnvelopeDFTParameters::isValid() const noexcept
 {
     return true;
 }
-*/
 
 //============================================================================//
 //                         Envelope Implementation                            //
 //============================================================================//
 
-/*
 class Envelope::EnvelopeImpl
 {
 public:
@@ -182,14 +200,15 @@ public:
     bool linit = true; // Default DFT implementation will work
 };
 
-Envelope::Envelope(void) :
+Envelope::Envelope() :
     pImpl(std::make_unique<EnvelopeImpl>())
 {
-    return;
 }
 
+Envelope::~Envelope() = default;
+
 Envelope::Envelope(const EnvelopeFIRParameters &envfir) :
-    pImpl(new EnvelopeImpl())
+    pImpl(std::make_unique<EnvelopeImpl> ())
 {
     if (!envfir.isValid())
     {
@@ -213,6 +232,7 @@ Envelope::Envelope(const EnvelopeDFTParameters &envdft) :
     pImpl->linit = true;
     return;  
 }
+/*
 
 void Envelope::apply(const int nx, const double yupper[], const double ylower[])
 {
@@ -265,9 +285,9 @@ void Envelope::apply(const int nx, const double x[], double y[])
     }
     return;
 }
+*/
 
-bool Envelope::isInitialized(void) const
+bool Envelope::isInitialized(void) const noexcept
 {
     return pImpl->linit;
 }
-*/

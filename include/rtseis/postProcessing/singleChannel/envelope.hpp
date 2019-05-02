@@ -51,7 +51,7 @@ public:
      * @param[in,out] envfir  The class to move to this class.  On exit envfir's
      *                        behavior will be undefined.
      */
-    EnvelopeFIRParameters(EnvelopeFIRParameters &&envfir);
+    EnvelopeFIRParameters(EnvelopeFIRParameters &&envfir) noexcept;
     /*! @} */
 
     /*! @name Operators
@@ -68,7 +68,7 @@ public:
      * @param[in,out] envfir  Class to move.  On exit envfir's behavior will
      *                        be undefined.
      */
-    EnvelopeFIRParameters &operator=(EnvelopeFIRParameters &&envfir);
+    EnvelopeFIRParameters &operator=(EnvelopeFIRParameters &&envfir) noexcept;
     /*! @} */
 
     /*! @name Destructors
@@ -77,11 +77,11 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~EnvelopeFIRParameters(void);
+    ~EnvelopeFIRParameters();
     /*!
      * @brief Resets the class.
      */
-    void clear(void) noexcept;
+    void clear() noexcept;
     /*! @} */
 
     /*!
@@ -95,7 +95,7 @@ public:
      * @brief Gets the \f$ \beta \f$ in the FIR Kaiser window design.
      * @result The \f$ \beta \f$ in the window design.
      */
-    double getBeta(void) const noexcept;
+    double getBeta() const noexcept;
 
     /*!
      * @brief Sets the FIR filter length.
@@ -110,7 +110,7 @@ public:
      * @brief Gets the FIR filter length.
      * @result The number of taps in the FIR Hilbert transformer filter.
      */
-    int getFilterLength(void) const noexcept;
+    int getFilterLength() const noexcept;
 
     /*!
      * @brief Defines the precision of the computation.
@@ -122,14 +122,14 @@ public:
      * @result The floating arithmetic precision in which the filter will
      *         be applied.
      */
-    RTSeis::Precision getPrecision(void) const noexcept;
+    RTSeis::Precision getPrecision() const noexcept;
 
     /*!
      * @brief Utility routine to determine if the FIR-based envelope parameters
      *        are correctly set.
      * @result True indicates that the envelope parameters are valid.
      */
-    bool isValid(void) const noexcept;
+    bool isValid() const noexcept;
 private:
     class EnvelopeFIRParametersImpl;
     std::unique_ptr<EnvelopeFIRParametersImpl> pImpl;
@@ -162,7 +162,7 @@ public:
      * @param[in,out] envdft  The class to move to this class.  On exit envdft's
      *                        behavior will be undefined.
      */
-    EnvelopeDFTParameters(EnvelopeDFTParameters &&envdft);
+    EnvelopeDFTParameters(EnvelopeDFTParameters &&envdft) noexcept;
     /*! @} */
 
     /*! @name Operators
@@ -179,7 +179,7 @@ public:
      * @param[in,out] envdft  Class to move.  On exit envdft's behavior will
      *                        be undefined.
      */
-    EnvelopeDFTParameters &operator=(EnvelopeDFTParameters &&envdft);
+    EnvelopeDFTParameters &operator=(EnvelopeDFTParameters &&envdft) noexcept;
     /*! @} */
 
     /*! @name Destructors
@@ -188,11 +188,11 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~EnvelopeDFTParameters(void);
+    ~EnvelopeDFTParameters();
     /*!
      * @brief Resets the class.
      */
-    void clear(void) noexcept;
+    void clear() noexcept;
     /*! @} */
 
     /*! 
@@ -226,7 +226,116 @@ private:
  */
 class Envelope
 {
+    /*! @name Constructors
+     * @{
+     */
+    /*!
+     * @brief Default constructor.  Note, the class is not yet ready to
+     *        be applied to data.
+     */
+    Envelope();
+    /*!
+     * @brief Copy constructor.
+     * @param[in] envelope  Envelope class from which to initialize.
+     */
+    Envelope(const Envelope &envelope);
+    Envelope(Envelope &&envelope) = delete;
+    /*!
+     * @brief Initializes the FIR envelope computation.  This uses an FIR
+     *        Hilbert transformer.
+     * @param[in] firEnvelopeParameters  FIR envelope parameters.
+     * @throws std::invalid_argument if the FIR envelope parameters are invalid.
+     */
+    explicit Envelope(const EnvelopeFIRParameters &firEnvelopeParameters);
+    /*!
+     * @brief Initializes the analytic envelope computation.  This uses
+     *        the Hilbert transform which, in turn, relies on the discrete
+     *        Fourier transform (DFT).
+     * @param[in] dftEnvelopeParameters  The envelope parameters.
+     * @throws std::invalid_argument if the analytic envelope parameters
+     *         are invalid.
+     */
+    explicit Envelope(const EnvelopeDFTParameters &dftEnvelopeParameters);
+    /*! @} */
 
+    /*!
+     * @brief Copy operator.
+     * @param[in] envelope  Envelope class to copy.
+     * @result A deep copy of the input envelope class.
+     */
+    Envelope& operator=(const Envelope &envelope);
+    /*!
+     * @brief Default destructor.
+     */
+    ~Envelope();
+    /*!
+     * @brief Resets the class.  Note, that the parameters must be set again
+     *        prior to applying data.
+     */
+    void clear();
+
+    /*!
+     * @brief Sets the FIR-based envelope parameters.
+     */
+    void setParameters(const EnvelopeFIRParameters &firEnvelopeParameters);
+    /*!
+     * @brief Sets the DFT-based envelope parameters.
+     */
+    void setParameters(const EnvelopeDFTParameters &dftEnvelopeParameters);
+
+    /*!
+     * @brief Indicates whether or not the class is initialized.
+     * @retval True indicates that the class is ready to be applied to data.
+     * @retval False indicates that the class is not yet initialized.
+     */
+    bool isInitialized() const noexcept;
+
+    /*!
+     * @brief Computes the envelope of the signal.
+     * @param[in] nx   The number of points in the input signal.
+     * @param[in] x    The signal from which to compute the envelope.
+     *                 This is an array of dimension [nx].
+     * @param[out] y   The (upper) envelope of the data.  This is an array
+     *                 whose dimension is [nx].
+     * @throws std::runtime_error if the class is not yet initialized.
+     */
+    void apply(const int nx, const double x[], double y[]);
+    /*! 
+     * @brief Computes the envelope of the signal.
+     * @param[in] nx   The number of points in the input signal.
+     * @param[in] x    The signal from which to compute the envelope.
+     *                 This is an array of dimension [nx].
+     * @param[out] y   The (upper) envelope of the data.  This is an array
+     *                 whose dimension is [nx].
+     * @throws std::runtime_error if the class is not yet initialized.
+     */
+    void apply(const int nx, const float x[], float y[]);
+    /*! 
+     * @brief Computes the envelope of the signal.
+     * @param[in] nx       The number of points in the input signal.
+     * @param[in] x        The signal from which to compute the envelope.
+     *                     This is an array of dimension [nx].
+     * @param[out] ylower  The lower envelope of the data.  This is an array
+     *                     whose dimension is [nx].
+     * @param[out] yupper  The upper envelope of the data.  This is an array
+     *                     whose dimension is [nx].
+     * @throws std::runtime_error if the class is not yet initialized.
+     */
+    void apply(const int nx, const double x[],
+               double ylower[], double yupper[]);
+    /*! 
+     * @brief Computes the envelope of the signal.
+     * @param[in] nx       The number of points in the input signal.
+     * @param[in] x        The signal from which to compute the envelope.
+     *                     This is an array of dimension [nx].
+     * @param[out] ylower  The lower envelope of the data.  This is an array
+     *                     whose dimension is [nx].
+     * @param[out] yupper  The upper envelope of the data.  This is an array
+     *                     whose dimension is [nx].
+     * @throws std::runtime_error if the class is not yet initialized.
+     */
+    void apply(const int nx, const float x[],
+               float ylower[], float yupper[]);
 private:
     class EnvelopeImpl;
     std::unique_ptr<EnvelopeImpl> pImpl;
