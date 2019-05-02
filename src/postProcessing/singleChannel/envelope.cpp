@@ -238,7 +238,31 @@ void Envelope::apply(const int nx, const double x[], double y[])
         if (y == nullptr){RTSEIS_THROW_IA("%s", "y is NULL");}
         RTSEIS_THROW_IA("%s", "Invalid arrays");
     }
-
+    // Remove the mean
+    double pMean;
+    ippsMean_64f(x, nx, &pMean);
+    ippsSubC_64f(x, pMean, y); 
+    // Compute the absolute value of the analytic signal (hilbert transform)
+    if (pImpl->implementation == ANALYTIC)
+    {
+        // Compute the Hilbert transform
+        Utilities::Transforms::Hilbert hilbert;
+        hilbert(nx, RTSeis::Precision::DOUBLE);
+        auto *yhilb = static_cast<std::complex<double> *> (IppsMalloc_64fc(nx));
+        hilbert.apply(nx, y, yhilb); 
+        // Take the absolute value of the analytic signal then restore mean
+        auto *yhilbIPP = static_cast<Ipp64fc *> (yhilb);
+        ippsPowerSpectr_64fc(yhilbIPP, y, nx); 
+        // Now add in the mean
+        ippsAddC_64f_I(y, pMean, nx);
+        ippsFree(yhilb);
+    }
+    // Perform FIR filtering
+    else
+    {
+        Utilities::FilterImplementations::FIRFilter firReal;
+        Utilities::FilterImplementations::FIRFilter firImag;
+    }
     return;
 }
 
