@@ -595,8 +595,39 @@ public:
      * @throws std::invalid_argument if nq is negative.
      */
     void downsample(const int nq);
+    /*!
+     * @brief Decimates a signal.
+     * @param[in] nq  The downsampling factor.  Every (nq - 1)'th sample will
+     *                be retained.  This must be positive.  Moreover, for 
+     *                downsampling factors greater than 13 it may be better
+     *                to break this operation into decimation stages.
+     * @param[in] nfir   The length of the FIR filter.  Note, that if this even
+     *                   then it will be increased by one sample to better 
+     *                   correct the FIR filter's group delay.
+     * @param[in] rollf  The normalized corner frequency of the lowpass filter.
+     *                   This must be in the range (0,1).
+     * @throws std::invalid_argument if any arguments are incorrect.
+     */
+    void decimate(const int nq, const int nfir, const double rollf = 0.9);
     /*! @} */
 
+    /*! @name Envelope 
+     * @{
+     */
+    /*!
+     * @brief Computes the envelope of the signal using an FIR Hilbert
+     *        transformer.
+     * @param[in] nfir  The number of FIR coefficients in the Hilbert
+     *                  transformer.  This must be positive.
+     * @throws std::invalid_argument if nfir is not positive.
+     */
+    void envelope(const int nfir);
+    /*!
+     * @brief Computes the envelope of the signal by computing the absolute
+     *        value of the analytic signal.
+     */
+    void envelope();
+    /*! @} */
 
     /*! @name Utilities
      * @{

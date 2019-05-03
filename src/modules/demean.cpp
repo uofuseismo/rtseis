@@ -13,12 +13,11 @@ using namespace RTSeis::PostProcessing::SingleChannel;
 class DemeanParameters::DemeanParms
 {
     public:
-        void clear(void)
+        void clear()
         {
             precision_ = RTSeis::Precision::DOUBLE;
             mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
             linit_ = true;
-            return;
         }
         RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
         RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
@@ -29,15 +28,11 @@ class Demean::DemeanImpl
 {
     public:
         /// Default constructor
-        DemeanImpl(void)
-        {
-            return;
-        }
+        DemeanImpl() = default;
         /// Copy constructor
         DemeanImpl(const DemeanImpl &demean)
         {
             *this = demean;
-            return;
         }
         /// Deep copy operator
         DemeanImpl& operator=(const DemeanImpl &demean)
@@ -49,24 +44,21 @@ class Demean::DemeanImpl
             return *this;
         }
         /// Destructor
-        ~DemeanImpl(void)
+        ~DemeanImpl()
         {
             clear();
-            return;
         }
         /// Resets the module
-        void clear(void)
+        void clear()
         {
             parms_.clear();
             mean_ = 0;
             linit_ = true; // Module always ready to roll 
-            return;
         }
         /// Sets the parameters
         void setParameters(const DemeanParameters &parameters)
         {
             parms_ = parameters;
-            return;
         }
         /// Removes mean from data
         int apply(const int nx, const double x[], double y[])
@@ -103,13 +95,11 @@ DemeanParameters::DemeanParameters(const RTSeis::Precision precision) :
     pDemeanParmsImpl_(std::make_unique<DemeanParms>())
 {
     pDemeanParmsImpl_->precision_ = precision;
-    return;
 }
 
 DemeanParameters::DemeanParameters(const DemeanParameters &parameters)
 {
     *this = parameters;
-    return;
 }
 
 DemeanParameters&
@@ -124,51 +114,43 @@ DemeanParameters&
     return *this;
 }
 
-DemeanParameters::~DemeanParameters(void)
-{
-    clear();
-    return;
-}
+DemeanParameters::~DemeanParameters() = default;
 
-void DemeanParameters::clear(void)
+void DemeanParameters::clear()
 {
     pDemeanParmsImpl_->clear();
-    return;
 }
 
-RTSeis::Precision DemeanParameters::getPrecision(void) const
+RTSeis::Precision DemeanParameters::getPrecision() const
 {
     return pDemeanParmsImpl_->precision_;
 }
 
-RTSeis::ProcessingMode DemeanParameters::getProcessingMode(void) const
+RTSeis::ProcessingMode DemeanParameters::getProcessingMode() const
 {
     return pDemeanParmsImpl_->mode_;
 }
 
-bool DemeanParameters::isInitialized(void) const
+bool DemeanParameters::isInitialized() const
 {
     return pDemeanParmsImpl_->linit_;
 }
 //============================================================================//
 
-Demean::Demean(void) :
+Demean::Demean() :
     pDemean_(std::make_unique<DemeanImpl>())
 {
-    return;
 }
 
 Demean::Demean(const Demean &demean)
 {
     *this = demean;
-    return;
 }
 
 Demean::Demean(const DemeanParameters &parameters) :
     pDemean_(std::make_unique<DemeanImpl>())
 {
     setParameters(parameters);
-    return;
 }
 
 Demean& Demean::operator=(const Demean &demean)
@@ -180,16 +162,11 @@ Demean& Demean::operator=(const Demean &demean)
     return *this;
 }
 
-Demean::~Demean(void)
-{
-    clear();
-    return;
-}
+Demean::~Demean() = default;
 
-void Demean::clear(void)
+void Demean::clear()
 {
     pDemean_->clear();
-    return;
 }
 
 void Demean::setParameters(const DemeanParameters &parameters)
@@ -200,7 +177,6 @@ void Demean::setParameters(const DemeanParameters &parameters)
         RTSEIS_THROW_IA("%s", "Parameters not correctly initialized");
     }
     pDemean_->setParameters(parameters);
-    return;
 }
 
 void Demean::apply(const int nx, const double x[], double y[])
@@ -210,11 +186,9 @@ void Demean::apply(const int nx, const double x[], double y[])
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        RTSEIS_THROW_IA("%s", "Invalid argument");
+        RTSEIS_THROW_IA("%s", "y is null");
     }
     pDemean_->apply(nx, x, y);
-    return;
 }
 
 void Demean::apply(const int nx, const float x[], float y[])
@@ -224,10 +198,8 @@ void Demean::apply(const int nx, const float x[], float y[])
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        RTSEIS_THROW_IA("%s", "Invalid arguments");
+        RTSEIS_THROW_IA("%s", "y is null");
     }
     pDemean_->apply(nx, x, y);
-    return;
 }
 

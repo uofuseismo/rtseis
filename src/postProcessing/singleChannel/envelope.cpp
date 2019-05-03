@@ -1,8 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
+#include <complex>
+#include <ipps.h>
 #include "rtseis/postProcessing/singleChannel/envelope.hpp"
-#include "rtseis/utilities/windowFunctions.hpp"
+//#include "rtseis/utilities/windowFunctions.hpp"
+#include "rtseis/utilities/transforms/hilbert.hpp"
+#include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "rtseis/private/throw.hpp"
 #include "rtseis/enums.h"
 
@@ -173,7 +177,6 @@ void EnvelopeDFTParameters::setPrecision(
     const RTSeis::Precision precision) noexcept
 {
     pImpl->precision = precision;
-    return;
 }
 
 RTSeis::Precision EnvelopeDFTParameters::getPrecision() const noexcept
@@ -217,7 +220,6 @@ Envelope::Envelope(const EnvelopeFIRParameters &envfir) :
     }
     pImpl->envfir = envfir;
     pImpl->linit = true;
-    return;  
 }
 
 Envelope::Envelope(const EnvelopeDFTParameters &envdft) :
@@ -230,51 +232,57 @@ Envelope::Envelope(const EnvelopeDFTParameters &envdft) :
     }
     pImpl->envdft = envdft;
     pImpl->linit = true;
-    return;  
 }
-/*
 
-void Envelope::apply(const int nx, const double yupper[], const double ylower[])
+void Envelope::apply(const int nx, const double x[],
+                     double yupper[], double ylower[])
 {
+    pImpl->mean = 0;
     if (nx <= 0){return;}
+    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
     if (yupper == nullptr){RTSEIS_THROW_IA("%s", "yupper is null");}
     if (ylower == nullptr){RTSEIS_THROW_IA("%s", "ylower is null");}
-    apply(nx, x, y);
-    // Compute the lower envelope from the upper envelope
-
+    apply(nx, x, yupper);
+    // Compute the lower envelope from the upper envelope.
+    // |Hilbert| = yUpper - mean
+    // yLower =-|Hilbert| + mean
+    // yLower =-(yUpper - mean) + mean =-yUpper + mean
+    #pragma omp simd
+    for (int i=0; i<nx; i++)
+    {
+        ylower[i] =-yupper[i] + pImpl->mean;
+    }
     return; 
 }
 
 void Envelope::apply(const int nx, const double x[], double y[])
 {
-    if (nx <= 0){return;}
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_IA("%s", "Envelope not initialized");
-    }
+    pImpl->mean = 0;
+    if (nx <= 0){return;} // Nothing to do
+    if (!isInitialized()){RTSEIS_THROW_IA("%s", "Envelope not initialized");}
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is NULL");}
-        RTSEIS_THROW_IA("%s", "Invalid arrays");
+        RTSEIS_THROW_IA("%s", "y is NULL");
     }
     // Remove the mean
     double pMean;
     ippsMean_64f(x, nx, &pMean);
-    ippsSubC_64f(x, pMean, y); 
+    ippsSubC_64f(x, pMean, y, nx); 
+    pImpl->mean = pMean;
     // Compute the absolute value of the analytic signal (hilbert transform)
-    if (pImpl->implementation == ANALYTIC)
+    if (pImpl->implementation == Implementation::ANALYTIC)
     {
         // Compute the Hilbert transform
         Utilities::Transforms::Hilbert hilbert;
-        hilbert(nx, RTSeis::Precision::DOUBLE);
-        auto *yhilb = static_cast<std::complex<double> *> (IppsMalloc_64fc(nx));
-        hilbert.apply(nx, y, yhilb); 
+        hilbert.initialize(nx, RTSeis::Precision::DOUBLE);
+        auto yhilb = reinterpret_cast<std::complex<double> *> (ippsMalloc_64fc(nx));
+        hilbert.transform(nx, y, yhilb); 
         // Take the absolute value of the analytic signal then restore mean
-        auto *yhilbIPP = static_cast<Ipp64fc *> (yhilb);
-        ippsPowerSpectr_64fc(yhilbIPP, y, nx); 
+        Ipp64fc *yhilbIPP = reinterpret_cast<Ipp64fc *> (yhilb);
+        ippsMagnitude_64fc(yhilbIPP, y, nx);
         // Now add in the mean
-        ippsAddC_64f_I(y, pMean, nx);
+        ippsAddC_64f_I(pMean, y, nx);
         ippsFree(yhilb);
     }
     // Perform FIR filtering
@@ -282,12 +290,20 @@ void Envelope::apply(const int nx, const double x[], double y[])
     {
         Utilities::FilterImplementations::FIRFilter firReal;
         Utilities::FilterImplementations::FIRFilter firImag;
+        // If the filter length is odd then the real filter need not be applied
+        int nfir = pImpl->envfir.getFilterLength(); 
+        if (nfir%2 == 1)
+        {
+            //firImag.intiialize( RTSeis::Implementation::POST_PROCESSING, RTSeis::Precision::DOUBLE); 
+        }
+        else
+        {
+RTSEIS_THROW_RTE("%s", "Even case not yet implemented");
+        }
     }
-    return;
 }
-*/
 
-bool Envelope::isInitialized(void) const noexcept
+bool Envelope::isInitialized() const noexcept
 {
     return pImpl->linit;
 }

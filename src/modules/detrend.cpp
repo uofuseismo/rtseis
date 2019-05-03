@@ -11,7 +11,7 @@ using namespace RTSeis::PostProcessing::SingleChannel;
 class DetrendParameters::DetrendParmsImpl
 {
 public:
-    void clear(void)
+    void clear()
     {
         precision_ = RTSeis::Precision::DOUBLE;
         mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
@@ -25,15 +25,11 @@ public:
 class Detrend::DetrendImpl
 {
 public:
-    DetrendImpl(void)
-    { 
-        return;
-    }
+    DetrendImpl() = default;
     /// Copy constructor
     DetrendImpl(const DetrendImpl &detrend)
     {
         *this = detrend;
-        return;
     }
     /// Deep copy operator
     DetrendImpl& operator=(const DetrendImpl &detrend)
@@ -46,22 +42,17 @@ public:
         return *this;
     }
     /// Destructor
-    ~DetrendImpl(void)
-    {
-        clear();
-        return;
-    }
+    ~DetrendImpl() = default;
     /// Resets the module
-    void clear(void)
+    void clear()
     {
         parms_.clear();
         b0_ = 0;
         b1_ = 0;
         linit_ = true; // This module is always ready to roll
-        return;
     }
     /// Sets the parameters for the class
-    int setParameters(const DetrendParameters parameters)
+    int setParameters(const DetrendParameters &parameters)
     {
         clear();
         parms_ = parameters;
@@ -88,8 +79,8 @@ public:
         b1_ = 0;
         if (nx < 2){return 0;} 
         computeLinearRegressionCoeffs(nx, x); 
-        float b0 = static_cast<float> (b0_);
-        float b1 = static_cast<float> (b1_);
+        auto b0 = static_cast<float> (b0_);
+        auto b1 = static_cast<float> (b1_);
         #pragma omp simd
         for (int i=0; i<nx; i++)
         {
@@ -120,7 +111,7 @@ public:
         double var_x;
         // Mean of x - analytic formula for evenly spaced samples starting
         // at indx 0. This is computed by simplifying Gauss's formula.
-        uint64_t len64 = static_cast<uint64_t> (length);
+        auto len64 = static_cast<uint64_t> (length);
         mean_x = 0.5*static_cast<double> (len64 - 1);
         // Note, the numerator is the sum of consecutive squared numbers.
         // In addition we simplify.
@@ -150,7 +141,7 @@ public:
         float mean_y32;
         // Mean of x - analytic formula for evenly spaced samples starting
         // at indx 0.  This is computed by simplifying Gauss's formula.
-        uint64_t len64 = static_cast<uint64_t> (length);
+        auto len64 = static_cast<uint64_t> (length);
         mean_x = 0.5*static_cast<double> (len64 - 1); 
         // Note, the numerator is the sum of consecutive squared numbers.
         // In addition we simplify.
@@ -198,13 +189,11 @@ DetrendParameters::DetrendParameters(const RTSeis::Precision precision) :
     pImpl(std::make_unique<DetrendParmsImpl>())
 {
     pImpl->precision_ = precision;
-    return;
 }
 
 DetrendParameters::DetrendParameters(const DetrendParameters &parameters)
 {
     *this = parameters;
-    return;
 }
 
 DetrendParameters&
@@ -218,53 +207,43 @@ DetrendParameters&
     return *this;
 }
 
-DetrendParameters::~DetrendParameters(void) = default;
-/*
-{
-    //clear();
-    return;
-}
-*/
+DetrendParameters::~DetrendParameters() = default;
 
-void DetrendParameters::clear(void)
+void DetrendParameters::clear()
 {
     pImpl->clear();
-    return;
 }
 
-RTSeis::Precision DetrendParameters::getPrecision(void) const
+RTSeis::Precision DetrendParameters::getPrecision() const
 {
     return pImpl->precision_;
 }
 
-RTSeis::ProcessingMode DetrendParameters::getProcessingMode(void) const
+RTSeis::ProcessingMode DetrendParameters::getProcessingMode() const
 {
     return pImpl->mode_;
 }
 
-bool DetrendParameters::isInitialized(void) const
+bool DetrendParameters::isInitialized() const
 {
     return pImpl->linit_;
 }
 //============================================================================//
-Detrend::Detrend(void) :
+Detrend::Detrend() :
     pDetrend_(std::make_unique<DetrendImpl>())
 {
     clear();
-    return;
 }
 
 Detrend::Detrend(const Detrend &detrend)
 {
     *this = detrend;
-    return;
 }
 
 Detrend::Detrend(const DetrendParameters &parameters) : 
     pDetrend_(std::make_unique<DetrendImpl>())
 {
     setParameters(parameters);
-    return;
 }
 
 Detrend& Detrend::operator=(const Detrend &detrend)
@@ -272,21 +251,18 @@ Detrend& Detrend::operator=(const Detrend &detrend)
     if (&detrend == this){return *this;}
     if (pDetrend_){pDetrend_->clear();}
     //pDetrend_ = std::make_unique<DetrendImpl> (*detrend.pDetrend_);
-    pDetrend_ = std::unique_ptr<DetrendImpl>
-                (new DetrendImpl(*detrend.pDetrend_));
+    pDetrend_ = std::make_unique<DetrendImpl> (*detrend.pDetrend_);
     return *this;
 }
 
-Detrend::~Detrend(void)
+Detrend::~Detrend()
 {
     clear();
-    return;
 }
 
-void Detrend::clear(void)
+void Detrend::clear()
 {
     pDetrend_->clear();
-    return;
 }
 
 void Detrend::setParameters(const DetrendParameters &parameters)
@@ -297,7 +273,6 @@ void Detrend::setParameters(const DetrendParameters &parameters)
         RTSEIS_THROW_IA("%s", "Detrend parameters are malformed");
     }
     pDetrend_->setParameters(parameters);
-    return;
 }
 
 void Detrend::apply(const int nx, const double x[], double y[])
@@ -309,11 +284,9 @@ void Detrend::apply(const int nx, const double x[], double y[])
     {
         if (nx < 2){RTSEIS_THROW_IA("%s", "At least 2 points required");}
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        RTSEIS_THROW_IA("%s", "Invalid argument");
+        RTSEIS_THROW_IA("%s", "y is null");
     }
     pDetrend_->apply(nx, x, y);
-    return;
 }
 
 void Detrend::apply(const int nx, const float x[], float y[])
@@ -325,9 +298,7 @@ void Detrend::apply(const int nx, const float x[], float y[])
     {
         if (nx < 2){RTSEIS_THROW_IA("%s", "At least 2 points required");}
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is null");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is null");}
-        RTSEIS_THROW_IA("%s", "Invalid argument");
+        RTSEIS_THROW_IA("%s", "y is null");
     }
     pDetrend_->apply(nx, x, y);
-    return;
 }
