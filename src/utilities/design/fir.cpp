@@ -231,6 +231,21 @@ FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
     return fir;
 }
 
+
+/*
+std::pair<FilterRepresentations::FIR, FilterRepresentations::FIR>
+FIR::FIRHilbertTransform(const int n,
+                         const double beta)
+{
+    // Check inputs
+    if (n < 1){RTSEIS_THROW_IA("n=%d must be positive", n);}
+    // Create a kaiser window
+    kaiser = WindowFunctions::kaiser(n, beta); 
+    // Construct ideal Hilbert filter truncated to desired length
+    constexpr double fc = 1;
+     
+}
+*/
 /*!
  * @brief Utility function to return the IPP window from the given
  *        design window.

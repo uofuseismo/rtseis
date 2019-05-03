@@ -67,7 +67,7 @@ int rtseis_test_utils_windowFunctions(void)
 
 int windowFunctions_bartlett_test(void)
 {
-    std::vector<double> win20, win19; //double win20[20], win19[19];
+    std::vector<double> win20(20), win19(19); //double win20[20], win19[19];
     const double w20[20] = {
                    0, 0.105263157894737, 0.210526315789474,
                    0.315789473684211,  0.421052631578947,   0.526315789473684,
@@ -86,7 +86,7 @@ int windowFunctions_bartlett_test(void)
                    0};
     try
     {
-        bartlett(20, win20);
+        bartlett(20, win20.data());
     }
     catch (std::exception &e)
     {
@@ -103,7 +103,7 @@ int windowFunctions_bartlett_test(void)
     }
     try
     {
-        bartlett(19, win19);
+        bartlett(19, win19.data());
     }
     catch (std::exception &e)
     {   
@@ -123,7 +123,7 @@ int windowFunctions_bartlett_test(void)
 
 int windowFunctions_hann_test(void)
 {
-    std::vector<double> win20, win19; //double win20[20], win19[19];
+    std::vector<double> win20(20), win19(19); //double win20[20], win19[19];
     const double w20[20] = {0,
    0.027091379149683,
    0.105429745301803,
@@ -166,7 +166,7 @@ int windowFunctions_hann_test(void)
                    };
     try
     {
-        hann(20, win20);
+        hann(20, win20.data());
     }
     catch (std::exception &e)
     {   
@@ -183,7 +183,7 @@ int windowFunctions_hann_test(void)
     }
     try
     {
-        hann(19, win19);
+        hann(19, win19.data());
     }
     catch (std::exception &e)
     {   
@@ -203,7 +203,7 @@ int windowFunctions_hann_test(void)
 
 int windowFunctions_kaiser_test(void)
 {
-    std::vector<double> win20, win19; //double win20[20], win19[19];
+    std::vector<double> win20(20), win19(19); //double win20[20], win19[19];
     // beta = 2.5
     const double k20[20] = {0.303966229415369, 0.406333120777527,
                             0.511011861080447, 0.614155742009957,
@@ -233,7 +233,7 @@ int windowFunctions_kaiser_test(void)
 #endif
     try
     {
-        kaiser(20, win20, 2.5);
+        kaiser(20, win20.data(), 2.5);
     }
     catch (std::exception &e)
     {
@@ -250,7 +250,7 @@ int windowFunctions_kaiser_test(void)
     }
     try
     {
-        kaiser(19, win19, 5.5);
+        kaiser(19, win19.data(), 5.5);
     }
     catch (std::exception &e)
     {
@@ -270,7 +270,7 @@ int windowFunctions_kaiser_test(void)
 
 int windowFunctions_blackman_test(void)
 {
-    std::vector<double> win20, win19; //double win20[20], win19[19];
+    std::vector<double> win20(20), win19(19); //double win20[20], win19[19];
     const double w20[20] = { 0,
    0.010222619901394,
    0.045068584273067,
@@ -312,7 +312,7 @@ int windowFunctions_blackman_test(void)
                    0};
     try
     {
-        blackman(20, win20);
+        blackman(20, win20.data());
     }
     catch (std::exception &e)
     {
@@ -329,7 +329,7 @@ int windowFunctions_blackman_test(void)
     }
     try
     {
-        blackman(19, win19);
+        blackman(19, win19.data());
     }
     catch (std::exception &e)
     {
@@ -349,7 +349,7 @@ int windowFunctions_blackman_test(void)
 
 int windowFunctions_hamming_test(void)
 {
-    std::vector<double> win20, win19; //double win20[20], win19[19];
+    std::vector<double> win20(20), win19(19); //double win20[20], win19[19];
     const double w20[20] = {0.080000000000000,
    0.104924068817708,
    0.176995365677659,
@@ -392,7 +392,7 @@ int windowFunctions_hamming_test(void)
  
     try
     {
-        hamming(20, win20);
+        hamming(20, win20.data());
     }
     catch (std::exception &e)
     {
@@ -409,7 +409,7 @@ int windowFunctions_hamming_test(void)
     }
     try
     {
-        hamming(19, win19);
+        hamming(19, win19.data());
     }
     catch (std::exception &e)
     {
@@ -513,11 +513,11 @@ int windowFunctions_sine_test(void)
 0.2454854871407995,
 0.08257934547233267};
 */
-    std::vector<double> win20, win19;
+    std::vector<double> win20(20), win19(19);
     try 
     {   
-        sine(20, win20);
-        sine(19, win19);
+        sine(20, win20.data());
+        sine(19, win19.data());
     }
     catch (std::exception &e) 
     {   

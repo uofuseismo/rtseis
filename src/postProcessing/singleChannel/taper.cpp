@@ -207,27 +207,27 @@ void Taper::apply(const int nx, const double x[], double y[])
     // of the module can't change so we can just use the old window.
     if (pImpl->winLen0 != m)
     {
-        pImpl->w8.reserve(m); // Prevent reallocations in a bit
+        pImpl->w8.resize(m); // Prevent reallocations in a bit
         TaperParameters::Type type = pImpl->parms.getTaperType();
         if (type == TaperParameters::Type::HAMMING)
         {
-            RTSeis::Utilities::WindowFunctions::hamming(m, pImpl->w8);
+            RTSeis::Utilities::WindowFunctions::hamming(m, pImpl->w8.data());
         }
         else if (type == TaperParameters::Type::BLACKMAN)
         {
-            RTSeis::Utilities::WindowFunctions::blackman(m, pImpl->w8);
+            RTSeis::Utilities::WindowFunctions::blackman(m, pImpl->w8.data());
         }
         else if (type == TaperParameters::Type::HANN)
         {
-            RTSeis::Utilities::WindowFunctions::hann(m, pImpl->w8);
+            RTSeis::Utilities::WindowFunctions::hann(m, pImpl->w8.data());
         }
         else if (type == TaperParameters::Type::BARTLETT)
         {
-            RTSeis::Utilities::WindowFunctions::bartlett(m, pImpl->w8);
+            RTSeis::Utilities::WindowFunctions::bartlett(m, pImpl->w8.data());
         }
         else if (type == TaperParameters::SINE)
         {
-            RTSeis::Utilities::WindowFunctions::sine(m, pImpl->w8);
+            RTSeis::Utilities::WindowFunctions::sine(m, pImpl->w8.data());
         }
         else
         {

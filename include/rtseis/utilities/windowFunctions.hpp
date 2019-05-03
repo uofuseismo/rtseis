@@ -20,11 +20,22 @@ namespace WindowFunctions
  *            w_n = 0.54 - 0.46 \cos \left ( \frac{2 \pi n}{L - 1} \right )
  *        \f$
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Hamming window.
+ * @result The Hamming window of length len.
  * @throws std::invalid_argument if len is not positive.
  */
-void hamming(const int len, std::vector<double> &window);
-void hamming(const int len, std::vector<float>  &window);
+//std::vector<double> hamming(const int len);
+//std::vector<float> hamming(const int len);
+/*!
+ * @brief Creates a Hamming window which is defined as
+ *        \f$ 
+ *            w_n = 0.54 - 0.46 \cos \left ( \frac{2 \pi n}{L - 1} \right )
+ *        \f$
+ * @param[in] len      The window length.  This must be positive.
+ * @param[out] window  The Hamming window of length len.
+ * @throws std::invalid_argument if len is not positive.
+ */
+void hamming(const int len, double window[]);
+void hamming(const int len, float window[]);
 
 /*!
  * @brief Creates a Hann window which is defined as
@@ -32,12 +43,12 @@ void hamming(const int len, std::vector<float>  &window);
  *            w_n = 0.5 - 0.5 \cos \left ( \frac{2 \pi n}{L - 1} \right )
  *        \f$
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Hanning window. 
- * @result 0 indicates success.
+ * @param[out] window  The Hann window of length len.
  * @throws std::invalid_argment if len is not positive.
  */
-void hann(const int len, std::vector<double> &window);
-void hann(const int len, std::vector<float>  &window);
+void hann(const int len, double window[]);
+void hann(const int len, float window[]);
+
 /*!
  * @brief Creates a Blackman window which is defined as
  *        \f$ 
@@ -47,25 +58,27 @@ void hann(const int len, std::vector<float>  &window);
  *         + 0.08 \cos \left ( \frac{4 \pi n}{L-1} \right )
  *        \f$
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Blackman window.
+ * @param[out] window  The Blackman window of length len.
  * @throws std::invalid_argument if len is not positive.
  */
-void blackman(const int len, std::vector<double> &window);
-void blackman(const int len, std::vector<float>  &window);
+void blackman(const int len, double window[]);
+void blackman(const int len, float window[]);
+
 /*!
  * @brief Creates a sine window which is defined as
  *        \f$
  *           w_n = \sin
  *                 \left (
-                     \frac{\pi n}{L - 1}
-  *                \right )
+ *                   \frac{\pi n}{L - 1}
+ *                 \right )
  *        \f$.
- * @param[in] len     the window length.  This must be positive.
- * @param[out] window  The sine window.
+ * @param[in] len      The window length.  This must be positive.
+ * @param[out] window  The sine window of length len.
  * @throws std::invalid_argument if len is not postiive.
  */
-void sine(const int len, std::vector<double> &window);
-void sine(const int len, std::vector<float>  &window);
+void sine(const int len, double window[]);
+void sine(const int len, float window[]);
+
 /*!
  * @brief Creates a Bartlett window which is defined as
  *        \f$
@@ -77,11 +90,12 @@ void sine(const int len, std::vector<float>  &window);
  *                 \right . 
  *        \f$
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Bartlett window.
- * @result 0 indicates success.
+ * @param[out] window  The Bartlett window of length len.
+ * @throw std::invalid_argument if len is not positive.
  */
-void bartlett(const int len, std::vector<double> &window);
-void bartlett(const int len, std::vector<float>  &window);
+void bartlett(const int len, double window[]);
+void bartlett(const int len, float window[]);
+
 /*!
  * @brief Creates a Kaiser window which is defined as
  *        \f$
@@ -92,20 +106,18 @@ void bartlett(const int len, std::vector<float>  &window);
  *                { I_0 \left ( \beta \right ) } 
  *        \f$ where \f$ N = L - 1 \f$ and \f$ L \f$ is the length.
  * @param[in] len      The window length.  This must be positive.
- * @param[out] window  The Bartlett window.  This has dimension [len].
  * @param[in] beta     An optional parameter that controls the sidelobe 
  *                     attenuation of the Fourier transform window.  The
  *                     default is \f$ \beta = 0.5 \f$.
+ * @param[out] window  The Kaiser window of length len.
  * @throws std::invalid_argument if len is negative or beta is negative. 
  * @bug For whatever reason IPP does not adequately compute Bessel functions.
  *      If using a C++14 or lesser compiler then the Kaiser window accuracy
  *      will only be valid to 6 digits.  C++17 will compute a high-accuracy
  *      Bessel function using an intrinsic.
  */
-void kaiser(const int len, std::vector<double> &window,
-            const double beta = 0.5);
-void kaiser(const int len, std::vector<float>  &window,
-            const float beta = 0.5f);
+void kaiser(const int len, double window[], const double beta = 0.5);
+void kaiser(const int len, float window[], const float beta = 0.5f);
 
 /*!
  * @}

@@ -4,20 +4,29 @@
 #include <stdexcept>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities;
 
-void WindowFunctions::hamming(const int len, std::vector<double> &window)
+/*
+std::vector<double> WindowFunctions::hamming(const int len)
 {
-    if (len < 1)
+    if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+    std::vector<double> window(len);
+    hamming(len, window.data());
+    return window;
+}
+*/
+
+void WindowFunctions::hamming(const int len, double window[])
+{
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("%s", "Length must be positive");}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -29,47 +38,103 @@ void WindowFunctions::hamming(const int len, std::vector<double> &window)
         window[1] = 0.08;
         return;
     }
-    ippsSet_64f(1, window.data(), len);
-    ippsWinHamming_64f_I(window.data(), len);
+    ippsSet_64f(1, window, len);
+    ippsWinHamming_64f_I(window, len);
     return;
 }
 
-void WindowFunctions::hamming(const int len, std::vector<float> &window)
+/*
+std::vector<float> WindowFunctions::hamming(const int len)
 {
     if (len < 1)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
         throw std::invalid_argument("Length must be positive");
     }
-    window.resize(len);
+    std::vector<float> window(len);
+    hamming(len, window.data());
+    return window;
+}
+*/
+
+void WindowFunctions::hamming(const int len, float window[])
+{
+    if (len < 1 || window == nullptr)
+    {
+        if (len < 1){RTSEIS_THROW_IA("%s", "Length must be positive");}
+        RTSEIS_THROW_IA("%s", "window is NULL");
+    }
     if (len == 1)
     {
         window[0] = 1;
         return;
     }
     if (len == 2)
-    {
+    {   
         window[0] = 0.08f;
         window[1] = 0.08f;
         return;
     }
-    ippsSet_32f(1, window.data(), len); 
-    ippsWinHamming_32f_I(window.data(), len);
+    ippsSet_32f(1, window, len);
+    ippsWinHamming_32f_I(window, len);
+    return;
+}
+//============================================================================//
+
+void WindowFunctions::hann(const int len, double window[])
+{
+    if (len < 1 || window == nullptr)
+    {
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
+    }
+    if (len == 1)
+    {
+        window[0] = 1;
+        return;
+    }
+    if (len == 2)
+    {
+        window[0] = 0;
+        window[1] = 0;
+        return;
+    }
+    ippsSet_64f(1, window, len);
+    ippsWinHann_64f_I(window, len);
+    return;
+}
+
+void WindowFunctions::hann(const int len, float window[])
+{
+    if (len < 1 || window == nullptr)
+    {
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
+    }
+    if (len == 1)
+    {
+        window[0] = 1;
+        return;
+    }
+    if (len == 2)
+    {
+        window[0] = 0;
+        window[1] = 0;
+        return;
+    }
+    ippsSet_32f(1, window, len);
+    ippsWinHann_32f_I(window, len);
     return;
 }
 
 //============================================================================//
 
-void WindowFunctions::hann(const int len, std::vector<double> &window)
+void WindowFunctions::bartlett(const int len, double window[])
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -81,20 +146,18 @@ void WindowFunctions::hann(const int len, std::vector<double> &window)
         window[1] = 0;
         return;
     }
-    ippsSet_64f(1, window.data(), len);
-    ippsWinHann_64f_I(window.data(), len);
+    ippsSet_64f(1, window, len);
+    ippsWinBartlett_64f_I(window, len);
     return;
 }
 
-void WindowFunctions::hann(const int len, std::vector<float> &window)
+void WindowFunctions::bartlett(const int len, float window[])
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -106,74 +169,20 @@ void WindowFunctions::hann(const int len, std::vector<float> &window)
         window[1] = 0;
         return;
     }
-    ippsSet_32f(1, window.data(), len);
-    ippsWinHann_32f_I(window.data(), len);
+    ippsSet_32f(1, window, len);
+    ippsWinBartlett_32f_I(window, len);
     return;
 }
 
 //============================================================================//
 
-void WindowFunctions::bartlett(const int len, std::vector<double> &window)
+void WindowFunctions::sine(const int len, double window[])
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
-    if (len == 1)
-    {
-        window[0] = 1;
-        return;
-    }
-    if (len == 2)
-    {
-        window[0] = 0;
-        window[1] = 0;
-        return;
-    }
-    ippsSet_64f(1, window.data(), len);
-    ippsWinBartlett_64f_I(window.data(), len);
-    return;
-}
-
-void WindowFunctions::bartlett(const int len, std::vector<float> &window)
-{
-    if (len < 1)
-    {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
-    }
-    window.resize(len);
-    if (len == 1)
-    {
-        window[0] = 1;
-        return;
-    }
-    if (len == 2)
-    {
-        window[0] = 0;
-        window[1] = 0;
-        return;
-    }
-    ippsSet_32f(1, window.data(), len);
-    ippsWinBartlett_32f_I(window.data(), len);
-    return;
-}
-
-//============================================================================//
-
-void WindowFunctions::sine(const int len, std::vector<double> &window)
-{
-    if (len < 1)
-    {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
-    }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -188,7 +197,6 @@ void WindowFunctions::sine(const int len, std::vector<double> &window)
         window[i] = std::sin(pidmi*(static_cast<double> (i)));
     }
     window[len-1] = 0;
-
 /*
     // I don't agree with scipy's implementation.
     double pidmi = M_PI/static_cast<double> (len);
@@ -201,15 +209,13 @@ void WindowFunctions::sine(const int len, std::vector<double> &window)
     return;
 }
 
-void WindowFunctions::sine(const int len, std::vector<float> &window)
+void WindowFunctions::sine(const int len, float window[])
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -237,16 +243,14 @@ void WindowFunctions::sine(const int len, std::vector<float> &window)
 
 //============================================================================//
 
-void WindowFunctions::kaiser(const int len, std::vector<double> &window,
+void WindowFunctions::kaiser(const int len, double window[],
                              const double beta)
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -260,65 +264,55 @@ void WindowFunctions::kaiser(const int len, std::vector<double> &window,
 #endif
     for (int i=0; i<len; i++)
     {
-        double dn = static_cast<double> (i);
+        auto dn = static_cast<double> (i);
         double argSqrt = 1 - std::pow((dn - alpha)/alpha, 2);
         double arg = beta*std::sqrt(argSqrt);
         window[i] = std::abs(std::cyl_bessel_i(0, arg)*i0betai);
     }
 #else
     double alpha = (2*beta)/static_cast<double> (len - 1);
-    ippsSet_64f(1, window.data(), len);
-    IppStatus status = ippsWinKaiser_64f_I(window.data(), len, alpha);
+    ippsSet_64f(1, window, len);
+    IppStatus status = ippsWinKaiser_64f_I(window, len, alpha);
     if (status != ippStsNoErr)
     {
-        window.resize(0);
-        RTSEIS_ERRMSG("beta=%lf is too large", beta);
-        std::invalid_argument("beta is too large");
-        return;
+        RTSEIS_THROW_RTE("beta=%lf is too large for IPP", beta);
     }
 #endif
     return;
 }
 
-void WindowFunctions::kaiser(const int len, std::vector<float> &window,
+void WindowFunctions::kaiser(const int len, float window[],
                              const float beta)
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
         return;
     }
     float alpha = (2*beta)/static_cast<float> (len - 1); 
-    ippsSet_32f(1, window.data(), len);
-    IppStatus status = ippsWinKaiser_32f_I(window.data(), len, alpha);
+    ippsSet_32f(1, window, len);
+    IppStatus status = ippsWinKaiser_32f_I(window, len, alpha);
     if (status != ippStsNoErr)
     {
-        window.resize(0);
-        RTSEIS_ERRMSG("beta=%f too large", beta);
-        std::invalid_argument("beta is too large"); 
-        return; 
+        RTSEIS_THROW_RTE("beta=%f is too large for IPP", beta);
     }
     return;
 }
 
 //============================================================================//
 
-void WindowFunctions::blackman(const int len, std::vector<double> &window)
+void WindowFunctions::blackman(const int len, double window[])
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -330,20 +324,18 @@ void WindowFunctions::blackman(const int len, std::vector<double> &window)
         window[1] = 0;
         return;
     }
-    ippsSet_64f(1, window.data(), len);
-    ippsWinBlackmanStd_64f_I(window.data(), len);
+    ippsSet_64f(1, window, len);
+    ippsWinBlackmanStd_64f_I(window, len);
     return;
 }
 
-void WindowFunctions::blackman(const int len, std::vector<float> &window)
+void WindowFunctions::blackman(const int len, float window[])
 {
-    if (len < 1)
+    if (len < 1 || window == nullptr)
     {
-        window.resize(0);
-        if (len < 1){RTSEIS_ERRMSG("Length = %d must be positive", len);}
-        throw std::invalid_argument("Length must be positive");
+        if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+        RTSEIS_THROW_IA("%s", "window is NULL");
     }
-    window.resize(len);
     if (len == 1)
     {
         window[0] = 1;
@@ -355,7 +347,7 @@ void WindowFunctions::blackman(const int len, std::vector<float> &window)
         window[1] = 0;
         return;
     }
-    ippsSet_32f(1, window.data(), len);
-    ippsWinBlackmanStd_32f_I(window.data(), len);
+    ippsSet_32f(1, window, len);
+    ippsWinBlackmanStd_32f_I(window, len);
     return;
 }
