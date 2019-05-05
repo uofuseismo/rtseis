@@ -15,4 +15,4 @@ Next, descend into rtseis and build the documentation
     cd rtseis
     doxygen Doxyfile
 
-Finally, open the documentation with a web browser.  This should provide usage examples and build instructions.
+Finally, open the documentation with a web browser.  This should provide build examples and usage instructions.
