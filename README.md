@@ -15,4 +15,4 @@ Next, descend into rtseis and build the documentation
     cd rtseis
     doxygen Doxyfile
 
-Finally, open the documentation with a web browser.  This should provide build examples and usage instructions.
+Finally, open the documentation with a web browser.  This should provide build examples and usage instructions.  For GCC users, an always valid build example is in .circleci/config.yml.
