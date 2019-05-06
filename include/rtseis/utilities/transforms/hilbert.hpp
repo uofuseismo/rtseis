@@ -13,7 +13,7 @@ namespace Transforms
 {
 
 /*!
- * @class Hilbert hilbert.hpp "includertseis/utilities/transforms/hilbert.hpp"
+ * @class Hilbert hilbert.hpp "include/rtseis/utilities/transforms/hilbert.hpp"
  * @brief Computes the Hilbert transform of a signal.
  * @ingroup rtseis_utils_transforms_dft
  */
@@ -53,13 +53,13 @@ public:
       */
     ~Hilbert();
     /*!
-     * @brief Resets the modules and releases all memory.
+     * @brief Resets the module and releases all memory.
      */
     void clear() noexcept;
 
     /*!
      * @brief Checks if the class is initialized.
-     * @result True indicates that the class is inititalized.
+     * @result True indicates that the class is initialized.
      */
     bool isInitialized() noexcept;
     /*!
@@ -71,6 +71,8 @@ public:
     /*!
      * @brief Initializes the Hilbert transformer.
      * @param[in] n   The number of samples in the signal to transform.
+     * @param[in] precision  Defines the underlying precision of the Hilbert
+     *                       transform calculation.
      * @throws std::invalid_argument if n is not positive.
      */
     void initialize(const int n,
@@ -84,7 +86,7 @@ public:
      * @param[out] h  The Hilbert transformed signal.  This is an array
      *                of dimension [n].
      * @throws std::invalid_argument n is incorrect or if x or h are NULL.
-     * @throws std::runtime_error if the class is not initialzied.
+     * @throws std::runtime_error if the class is not initialized.
      */
     void transform(const int n, const double x[], std::complex<double> h[]);
     //void transform(const int n, const float x[], std::complex<float> h[]); 
