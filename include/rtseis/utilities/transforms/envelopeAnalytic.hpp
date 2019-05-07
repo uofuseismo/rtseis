@@ -33,7 +33,27 @@ public:
      * @param[in] envelope  Class from which to initialize.
      */
     EnvelopeAnalytic(const EnvelopeAnalytic &envelope);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] envelope  Class from which this class is initialized.
+     *                          On exit envelope's behavior is undefined.
+     */
+    EnvelopeAnalytic(EnvelopeAnalytic &&envelope) noexcept;
     /*! @} */
+
+    /*!
+     * @brief Copy assignment operator.
+     * @param[in] envelope  Envelope class to copy.
+     * @result A deep copy of the input envelope class.
+     */
+    EnvelopeAnalytic& operator=(const EnvelopeAnalytic &envelope);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] envelope  On exit this class is moved.  
+     *                          On entry envelope's behavior is undefined.
+     * @result envelope has been moved to this class.
+     */
+    EnvelopeAnalytic& operator=(EnvelopeAnalytic &&envelope) noexcept;
 
     /*! @name Destructors
      */
@@ -77,6 +97,9 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      */
     void transform(const int n, const double x[], double yupper[]);
+private:
+    class EnvelopeAnalyticImpl;
+    std::unique_ptr<EnvelopeAnalyticImpl> pImpl;
 };
 
 }

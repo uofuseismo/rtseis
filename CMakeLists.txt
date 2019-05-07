@@ -113,7 +113,8 @@ SET(UTILS_SRCS
     src/utilities/transforms/dft.cpp
     src/utilities/transforms/dftRealToComplex.cpp
     src/utilities/transforms/dftUtils.cpp
-    src/utilities/transforms/hilbert.cpp)
+    src/utilities/transforms/hilbert.cpp
+    src/utilities/transforms/envelopeAnalytic.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c
 #    src/ipps/downsample.c 

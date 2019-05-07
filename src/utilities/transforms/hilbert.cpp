@@ -148,7 +148,7 @@ Hilbert::Hilbert(Hilbert &&hilbert) noexcept
 Hilbert& Hilbert::operator=(const Hilbert &hilbert)
 {
     if (&hilbert == this){return *this;}
-    if (pImpl){pImpl->clear();}
+    if (pImpl){pImpl.reset();}
     pImpl = std::make_unique<HilbertImpl> (*hilbert.pImpl);
     return *this;
 }
