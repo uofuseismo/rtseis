@@ -3,11 +3,11 @@
 #include <cmath>
 #include <vector>
 #include <cassert>
+#include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/log.h"
-#include <ipps.h>
 
 using namespace::RTSeis::Utilities::Math;
 
@@ -28,8 +28,7 @@ Convolve::convolve(const std::vector<double> &a,
     if (src1Len < 1 || src2Len < 1)
     {
         if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
-        if (src2Len < 1){RTSEIS_THROW_IA("%s", "No points in b");}
-        RTSEIS_THROW_IA("%s", "Invalid length");
+        RTSEIS_THROW_IA("%s", "No points in b");
     }
     std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
     int len = indexes.second - indexes.first;
@@ -56,8 +55,7 @@ void Convolve::convolve(const int src1Len, const double a[],
         if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
         if (src2Len < 1){RTSEIS_THROW_IA("%s", "No points in b");}
         if (a == nullptr){RTSEIS_THROW_IA("%s", "a is NULL");}
-        if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
-        RTSEIS_THROW_IA("%s", "Invalid lengths");
+        RTSEIS_THROW_IA("%s", "b is NULL");
     }
     std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
     int fullLen = indexes.second - indexes.first;
@@ -131,8 +129,7 @@ Convolve::correlate(const std::vector<double> &a,
     if (src1Len < 1 || src2Len < 1)
     {
         if (src1Len < 1){RTSEIS_THROW_IA("%s", "No points in a");}
-        if (src2Len < 1){RTSEIS_THROW_IA("%s", "No points in b");}
-        RTSEIS_THROW_IA("%s", "Invalid length");
+        RTSEIS_THROW_IA("%s", "No points in b");
     }
     std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
     int len = indexes.second - indexes.first;
@@ -266,8 +263,7 @@ void Convolve::autocorrelate(const int src1Len, const double a[],
        {
            RTSEIS_THROW_IA("maxc = %d must be at least %d", maxc, fullLen);
        }
-       if (c == nullptr){RTSEIS_THROW_IA("%s", "c is NULL");}
-       RTSEIS_THROW_IA("%s", "Invalid arguments");
+       RTSEIS_THROW_IA("%s", "c is NULL");
     }
     // Figure out the buffer size
     int len = (2*src1Len - 1)/2 + 1;
