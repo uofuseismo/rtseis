@@ -87,6 +87,28 @@ FIR1Bandpass(const int order, const std::pair<double,double> &r,
 FilterRepresentations::FIR
 FIR1Bandstop(const int order, const std::pair<double,double> &r,
              const FIRWindow window = FIRWindow::HAMMING);
+/*!
+ * @brief Designs an FIR Hilbert transform using a Kaiser window.
+ * @param[in] order  Order of the filter.  The number of taps is order + 1.
+ *                   If order is even then the real FIR filter will have one
+ *                   non-zero coefficient and every other imaginary coefficient
+ *                   will be non-zero.  This Type III filter is computationally
+ *                   advantageous.
+ *                   If order is odd then then neither the real nor imaginary
+ *                   FIR filters will be sparse.  However, the filter amplitude
+ *                   near the Nyquist frequency, \f$ \pi \f$, is is constant.
+ *                   This Type IV filter will yield a better approximation to
+ *                   the Hilbert transform.
+ * @param[in] beta   The \f$ \beta \f$ used in the Kaiser window.
+ * @result result.first() are the real coefficients of the FIR Hilbert 
+ *         transformer while result.second() are the imaginary coefficients
+ *         of the Hilbert transformer.  Both the real and imaginary filters
+ *         have order + 1 filter taps. 
+ * @throws std::invalid_argument If order is negative or if \f$ \beta \f$
+ *         is too large.
+ */
+std::pair<FilterRepresentations::FIR, FilterRepresentations::FIR>
+HilbertTransformer(const int order, const double beta = 8);
 
 }; /* End FIR */
 
