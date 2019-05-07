@@ -1,3 +1,4 @@
+#include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -29,7 +30,7 @@ int transforms_unwrap_test();
 int transforms_test_dftr2c();
 int transforms_test_dft();
 int transforms_test_hilbert();
-int transforms_test_envelope();
+int transforms_test_envelope(const std::string fileName = "data/envelopeChirp.txt");
 int fft(const int nx, const std::complex<double> *x, 
         const int ny, std::complex<double> *y);
 int ifft(const int nx, const std::complex<double> *x, 
@@ -41,6 +42,7 @@ int irfft(const int nx, const std::complex<double> x[],
 
 int rtseis_test_utils_transforms(void)
 {
+    const std::string dataDir = "data/"; 
     int ierr = transforms_nextPow2_test();
     if (ierr != EXIT_SUCCESS)
     {
@@ -89,7 +91,7 @@ int rtseis_test_utils_transforms(void)
     }
     RTSEIS_INFOMSG("%s", "Passed hilbert test");
 
-    ierr = transforms_test_envelope();
+    ierr = transforms_test_envelope(dataDir + "/envelopeChirpReference.txt");
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute envelope");
@@ -775,7 +777,7 @@ int transforms_test_dftr2c(void)
     return EXIT_SUCCESS;
 }
 
-int transforms_test_envelope()
+int transforms_test_envelope(const std::string fileName)
 {
     Envelope envelope;
     try
@@ -799,9 +801,65 @@ int transforms_test_envelope()
         RTSEIS_ERRMSG("%s", e.what());
         return EXIT_FAILURE;
     }
+    // Load the data
+    std::vector<double> x, upRef, loRef;
+    x.reserve(4000); 
+    upRef.reserve(4000); 
+    loRef.reserve(4000);
+    std::ifstream textFile(fileName);
+    std::string line;
+    while (std::getline(textFile, line))
+    {
+        double xVal, uVal, lVal;
+        std::sscanf(line.c_str(), "%lf %lf %lf\n", &xVal, &uVal, &lVal); 
+        x.push_back(xVal);
+        upRef.push_back(uVal);
+        loRef.push_back(lVal);
+    }
+    int npts = static_cast<int> (x.size());
+    if (npts != 4000)
+    {
+        RTSEIS_ERRMSG("Failed to load %s", fileName.c_str());
+        return EXIT_FAILURE;
+    }
+    assert(npts == 4000);
     // Do a real test
+    std::vector<double> yupper(npts), ylower(npts);
     Envelope envelopeChirp;
-    envelope = envelopeChirp;
+    try
+    {
+        envelopeChirp.initialize(npts, RTSeis::Precision::DOUBLE);
+    } 
+    catch (std::invalid_argument &ia)
+    {
+        RTSEIS_ERRMSG("%s", ia.what());
+        return EXIT_FAILURE;
+    }
+    envelope = envelopeChirp; // Test copy assignment operator
+    assert(envelope.isInitialized()); // Verify it's initialized
+    try
+    {
+        envelope.transform(npts, x.data(), yupper.data(), ylower.data()); 
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s", e.what());
+        return EXIT_FAILURE;
+    }
+    double errorLower;
+    double errorUpper;
+    ippsNormDiff_L1_64f(upRef.data(), yupper.data(), npts, &errorUpper);
+    ippsNormDiff_L1_64f(loRef.data(), ylower.data(), npts, &errorLower);
+    if (errorUpper > 1.e-9)
+    { 
+        RTSEIS_ERRMSG("Failed upper envelope %e", errorUpper);
+        return EXIT_FAILURE;
+    }
+    if (errorLower > 1.e-9)
+    {
+        RTSEIS_ERRMSG("Failed lower envelope %e", errorLower);
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 

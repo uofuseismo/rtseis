@@ -6,6 +6,6 @@ function envelopeTest()
   % Write the data
   fileID = fopen('envelopeChirpReference.txt','w');
   for i=1:length(q)
-     fprintf(fileID, '%.15e %.13e %13e\n', q(i), up(i), lo(i));
+     fprintf(fileID, '%.15e %.13e %.13e\n', q(i), up(i), lo(i));
   end
   end

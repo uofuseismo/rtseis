@@ -170,10 +170,14 @@ void Envelope::transform(const int n, const double x[],
         return;
     } 
     // Compute the lower envelope from the upper envelope.
-    // |Hilbert| = yUpper - mean
-    // yLower =-|Hilbert| + mean
-    // yLower =-(yUpper - mean) + mean =-yUpper + mean
-    ippsSubCRev_64f(yupper, pImpl->mMean, ylower, n);
+    //  (1) yupper = |Hilbert| + mean
+    //  (2) ylower = |Hilbert| - mean
+    // Expressing |Hilbert| as a function of yupper in Eqn 2
+    //   |Hilbert| = yupper - mean
+    // And substituting into the second equation
+    //   ylower = yupper - mean - mean 
+    //          = yupper - 2*mean
+    ippsSubCRev_64f(yupper, 2*pImpl->mMean, ylower, n);
 }
 
 /// Compute the envelope
