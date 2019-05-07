@@ -14,6 +14,7 @@
 #include "rtseis/utilities/transforms/dftRealToComplex.hpp"
 #include "rtseis/utilities/transforms/dft.hpp"
 #include "rtseis/utilities/transforms/hilbert.hpp"
+#include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
@@ -22,12 +23,13 @@
 
 using namespace RTSeis::Utilities::Transforms;
 
-int transforms_nextPow2_test(void);
-int transforms_phase_test(void);
-int transforms_unwrap_test(void);
-int transforms_test_dftr2c(void);
-int transforms_test_dft(void);
-int transforms_test_hilbert(void);
+int transforms_nextPow2_test();
+int transforms_phase_test();
+int transforms_unwrap_test();
+int transforms_test_dftr2c();
+int transforms_test_dft();
+int transforms_test_hilbert();
+int transforms_test_envelope();
 int fft(const int nx, const std::complex<double> *x, 
         const int ny, std::complex<double> *y);
 int ifft(const int nx, const std::complex<double> *x, 
@@ -86,6 +88,14 @@ int rtseis_test_utils_transforms(void)
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed hilbert test");
+
+    ierr = transforms_test_envelope();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute envelope");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed envelope test");
 
     return EXIT_SUCCESS;
 }
@@ -352,6 +362,7 @@ int transforms_test_hilbert()
 int transforms_test_dft()
 {
     std::vector<std::complex<double>> x5(5);
+
     x5[0] = std::complex<double> (0.293848340517710, 0.543040331839914);
     x5[1] = std::complex<double> (0.432658290043139, 0.507949811338692);
     x5[2] = std::complex<double> (0.638136660660825, 0.014141443357630);
@@ -761,6 +772,36 @@ int transforms_test_dftr2c(void)
         delete[] zrefDFT;
     }
     delete[] x;
+    return EXIT_SUCCESS;
+}
+
+int transforms_test_envelope()
+{
+    Envelope envelope;
+    try
+    {
+        int n = 1;
+        double x[1] = {9};
+        double upRef[1] = {9};
+        double loRef[1] = {9};
+        double up[1], lo[1];
+        envelope.initialize(n, RTSeis::Precision::DOUBLE);
+        envelope.transform(1, x, up, lo);
+        if (std::abs(upRef[0] - up[0]) > 1.e-15 ||
+            std::abs(loRef[0] - lo[0]) > 1.e-15)
+        { 
+            RTSEIS_ERRMSG("%s", "Failed envelope length 1");
+            return EXIT_FAILURE;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s", e.what());
+        return EXIT_FAILURE;
+    }
+    // Do a real test
+    Envelope envelopeChirp;
+    envelope = envelopeChirp;
     return EXIT_SUCCESS;
 }
 

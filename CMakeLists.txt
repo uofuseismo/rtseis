@@ -114,7 +114,7 @@ SET(UTILS_SRCS
     src/utilities/transforms/dftRealToComplex.cpp
     src/utilities/transforms/dftUtils.cpp
     src/utilities/transforms/hilbert.cpp
-    src/utilities/transforms/envelopeAnalytic.cpp)
+    src/utilities/transforms/envelope.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c
 #    src/ipps/downsample.c 
@@ -128,7 +128,6 @@ SET(MODULES_SRCS
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
     src/postProcessing/singleChannel/waveform.cpp
-    src/postProcessing/singleChannel/envelope.cpp
     src/postProcessing/singleChannel/taper.cpp
     )
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})

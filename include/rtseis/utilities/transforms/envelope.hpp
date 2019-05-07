@@ -11,14 +11,14 @@ namespace Transforms
 {
 
 /*!
- * @class EnvelopeAnalytic envelopeAnalytic.hpp "include/rtseis/utilities/transforms/envelopeAnalytic.hpp"
+ * @class Envelope envelope.hpp "include/rtseis/utilities/transforms/envelope.hpp"
  * @brief Computes the envelope of a signal using.  This is for post-processing
  *        only and works by computing the Hilbert transform to obtain
  *        the analytic signal.  Then, by taking the absolute value of the 
- *        analytic signal the Hilbert transform is obtained.
+ *        analytic signal, the envelope is obtained.
  * @sa Hilbert
  */
-class EnvelopeAnalytic
+class Envelope
 {
 public:
     /*!
@@ -27,18 +27,18 @@ public:
     /*!
      * @brief Default constructor.
      */
-    EnvelopeAnalytic(); 
+    Envelope(); 
     /*!
      * @brief Copy constructor.
      * @param[in] envelope  Class from which to initialize.
      */
-    EnvelopeAnalytic(const EnvelopeAnalytic &envelope);
+    Envelope(const Envelope &envelope);
     /*!
      * @brief Move constructor.
      * @param[in,out] envelope  Class from which this class is initialized.
      *                          On exit envelope's behavior is undefined.
      */
-    EnvelopeAnalytic(EnvelopeAnalytic &&envelope) noexcept;
+    Envelope(Envelope &&envelope) noexcept;
     /*! @} */
 
     /*!
@@ -46,21 +46,21 @@ public:
      * @param[in] envelope  Envelope class to copy.
      * @result A deep copy of the input envelope class.
      */
-    EnvelopeAnalytic& operator=(const EnvelopeAnalytic &envelope);
+    Envelope& operator=(const Envelope &envelope);
     /*!
      * @brief Move assignment operator.
      * @param[in,out] envelope  On exit this class is moved.  
      *                          On entry envelope's behavior is undefined.
      * @result envelope has been moved to this class.
      */
-    EnvelopeAnalytic& operator=(EnvelopeAnalytic &&envelope) noexcept;
+    Envelope& operator=(Envelope &&envelope) noexcept;
 
     /*! @name Destructors
      */
     /*!
      * @brief Destructor.
      */
-    ~EnvelopeAnalytic();
+    ~Envelope();
     /*!
      * @brief Resets the module and releases all memory.
      */
@@ -118,8 +118,8 @@ public:
     void transform(const int n, const double x[],
                    double yupper[], double ylower[]);
 private:
-    class EnvelopeAnalyticImpl;
-    std::unique_ptr<EnvelopeAnalyticImpl> pImpl;
+    class EnvelopeImpl;
+    std::unique_ptr<EnvelopeImpl> pImpl;
 };
 
 }

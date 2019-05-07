@@ -3,23 +3,23 @@
 #include <complex>
 #include <ipps.h>
 #include "rtseis/private/throw.hpp"
-#include "rtseis/utilities/transforms/envelopeAnalytic.hpp"
+#include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/hilbert.hpp"
 
 using namespace RTSeis::Utilities::Transforms;
 
-class EnvelopeAnalytic::EnvelopeAnalyticImpl
+class Envelope::EnvelopeImpl
 {
 public: 
     /// Constructor
-    EnvelopeAnalyticImpl() = default;
+    EnvelopeImpl() = default;
     /// Destructor
-    ~EnvelopeAnalyticImpl()
+    ~EnvelopeImpl()
     {
         clear();
     }
     /// Copy constructor
-    EnvelopeAnalyticImpl(const EnvelopeAnalyticImpl &envelope)
+    EnvelopeImpl(const EnvelopeImpl &envelope)
     {
         *this = envelope;
     }
@@ -37,7 +37,7 @@ public:
        mPrecision = RTSeis::Precision::DOUBLE;
     }
     /// Copy assignment operator
-    EnvelopeAnalyticImpl& operator=(const EnvelopeAnalyticImpl &envelope)
+    EnvelopeImpl& operator=(const EnvelopeImpl &envelope)
     {
        if (&envelope == this){return *this;}
        clear();
@@ -73,35 +73,35 @@ public:
 };
 
 /// Constructor
-EnvelopeAnalytic::EnvelopeAnalytic() :
-    pImpl(std::make_unique<EnvelopeAnalyticImpl> ())
+Envelope::Envelope() :
+    pImpl(std::make_unique<EnvelopeImpl> ())
 {
 }
 
 /// Copy constructor
-EnvelopeAnalytic::EnvelopeAnalytic(const EnvelopeAnalytic &envelope)
+Envelope::Envelope(const Envelope &envelope)
 {
     *this = envelope;
 } 
 
 /// Move constructor
-EnvelopeAnalytic::EnvelopeAnalytic(EnvelopeAnalytic &&envelope) noexcept
+Envelope::Envelope(Envelope &&envelope) noexcept
 {
     *this = std::move(envelope);
 }
 
 /// Copy assignment operator
-EnvelopeAnalytic& EnvelopeAnalytic::operator=(const EnvelopeAnalytic &envelope)
+Envelope& Envelope::operator=(const Envelope &envelope)
 {
     if (&envelope == this){return *this;}
     if (pImpl){pImpl.reset();}
-    pImpl = std::make_unique<EnvelopeAnalyticImpl> (*envelope.pImpl);
+    pImpl = std::make_unique<EnvelopeImpl> (*envelope.pImpl);
     return *this;
 }
 
 /// Move assignment oeprator
-EnvelopeAnalytic&
-EnvelopeAnalytic::operator=(EnvelopeAnalytic &&envelope) noexcept
+Envelope&
+Envelope::operator=(Envelope &&envelope) noexcept
 {
     if (&envelope == this){return *this;}
     if (pImpl){pImpl.reset();}
@@ -109,22 +109,22 @@ EnvelopeAnalytic::operator=(EnvelopeAnalytic &&envelope) noexcept
     return *this;
 }
 /// Destructor
-EnvelopeAnalytic::~EnvelopeAnalytic() = default;
+Envelope::~Envelope() = default;
 
 /// Clears the module
-void EnvelopeAnalytic::clear() noexcept
+void Envelope::clear() noexcept
 {
     pImpl->clear();
 }
 
 /// Checks if the module is initialized
-bool EnvelopeAnalytic::isInitialized() noexcept
+bool Envelope::isInitialized() noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Gets the envelope length
-int EnvelopeAnalytic::getTransformLength()
+int Envelope::getTransformLength()
 {
     if (!isInitialized())
     {
@@ -134,8 +134,8 @@ int EnvelopeAnalytic::getTransformLength()
 }
 
 /// Initializes the class
-void EnvelopeAnalytic::initialize(const int n,
-                                  const RTSeis::Precision precision)
+void Envelope::initialize(const int n,
+                          const RTSeis::Precision precision)
 {
     clear();
     if (n < 1){RTSEIS_THROW_IA("n = %d must be positive", n);}
@@ -143,13 +143,18 @@ void EnvelopeAnalytic::initialize(const int n,
     {
         RTSEIS_THROW_IA("%s", "Only double precision implemented at moment");
     }
-    pImpl->mHilbert.initialize(n, precision); 
+    if (n > 1)
+    {
+        pImpl->mHilbert.initialize(n, precision); 
+    }
+    pImpl->mEnvelopeLength = n;
+    pImpl->mPrecision = precision;
     pImpl->mInitialized = true;
 }
 
 /// Compute the upper and lower envelope
-void EnvelopeAnalytic::transform(const int n, const double x[],
-                                 double yupper[], double ylower[])
+void Envelope::transform(const int n, const double x[],
+                         double yupper[], double ylower[])
 {
     if (pImpl){pImpl->mMean = 0;}
     if (ylower == nullptr)
@@ -158,6 +163,12 @@ void EnvelopeAnalytic::transform(const int n, const double x[],
     }
     // Compute the upper envelope
     transform(n, x, yupper); // will throw
+    // Special case
+    if (n == 1)
+    {
+        ylower[0] = yupper[0];
+        return;
+    } 
     // Compute the lower envelope from the upper envelope.
     // |Hilbert| = yUpper - mean
     // yLower =-|Hilbert| + mean
@@ -166,7 +177,7 @@ void EnvelopeAnalytic::transform(const int n, const double x[],
 }
 
 /// Compute the envelope
-void EnvelopeAnalytic::transform(const int n, const double x[], double y[])
+void Envelope::transform(const int n, const double x[], double y[])
 {
     pImpl->mMean = 0;
     if (!isInitialized())
@@ -181,6 +192,13 @@ void EnvelopeAnalytic::transform(const int n, const double x[], double y[])
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    // Special case
+    if (n == 1)
+    {
+        pImpl->mMean = x[0];
+        y[0] = x[0];
+        return;
     }
     // Remove the mean
     double pMean;
@@ -198,7 +216,7 @@ void EnvelopeAnalytic::transform(const int n, const double x[], double y[])
 
 /// Compute the envelope
 /*
-void EnvelopeAnalytic::transform(const int n, const float x[], float y[])
+void Envelope::transform(const int n, const float x[], float y[])
 {
     pImpl->mMean = 0;
     if (!isInitialized())
