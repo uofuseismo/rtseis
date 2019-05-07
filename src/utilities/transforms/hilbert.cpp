@@ -93,6 +93,7 @@ public:
     /// Apply the Hilbert transform
     void transform(const float xr[], std::complex<float> h[])
     {
+/// TODO https://software.intel.com/en-us/ipp-dev-reference-hilbert
         // Transform the input signal
         constexpr std::complex<float> zero = std::complex<float> (0, 0); 
         std::valarray<std::complex<float>> x(zero, mTransformLength);
@@ -210,4 +211,20 @@ void Hilbert::transform(const int n, const double x[],
     return;
 }
 
-
+/*
+void Hilbert::transform(const int n, const float x[], 
+                        std::complex<float> h[])
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (n != pImpl->mTransformLength)
+    {
+        RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mTransformLength);
+    }
+    if (pImpl->mPrecision != RTSeis::Precision::FLOAT)
+    {
+        RTSEIS_THROW_RTE("%s", "Precision switch not yet implemented");
+    }
+    pImpl->transform(x, h); 
+    return;
+}
+*/

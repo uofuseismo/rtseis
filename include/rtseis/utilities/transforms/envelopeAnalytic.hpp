@@ -91,12 +91,32 @@ public:
                     const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
      * @brief Computes the envelope of the signal.
-     * @param[in] n  The number of samples in the signal to transform.
-     *               This cmust equal \c getTransformLength().
+     * @param[in] n   The number of samples in the signal to transform.
+     *                This cmust equal \c getTransformLength().
+     * @param[in] x   The signal to transform.  This is an array whose 
+     *                dimension is [n].
+     * @param[out] yupper  The upper envelope of x.  This is an array whose
+     *                     dimension is [n].
      * @throws std::invalid_argument if n is incorrect or x or yupper are NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
     void transform(const int n, const double x[], double yupper[]);
+    //void transform(const int n, const float x[], float yupper[]);
+    /*! 
+     * @brief Computes the envelope of the signal.
+     * @param[in] n   The number of samples in the signal to transform.
+     *                This cmust equal \c getTransformLength().
+     * @param[in] x   The signal to transform.  This is an array whose 
+     *                dimension is [n].
+     * @param[out] yupper  The upper envelope of x.  This is an array whose
+     *                     dimension is [n].
+     * @param[out] ylower  The lower envelope of x.  This is an array whose
+     *                     dimension is [n].
+     * @throws std::invalid_argument if n is incorrect or x or yupper are NULL.
+     * @throws std::runtime_error if the class is not initialized.
+     */
+    void transform(const int n, const double x[],
+                   double yupper[], double ylower[]);
 private:
     class EnvelopeAnalyticImpl;
     std::unique_ptr<EnvelopeAnalyticImpl> pImpl;
