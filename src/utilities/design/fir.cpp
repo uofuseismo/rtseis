@@ -3,6 +3,9 @@
 #include <vector>
 #include <cmath>
 #include <stdexcept>
+#ifdef DEBUG
+#include <cassert>
+#endif
 #include <ipps.h>
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/design/fir.hpp"
@@ -202,8 +205,17 @@ FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
 std::pair<FilterRepresentations::FIR, FilterRepresentations::FIR>
 FIR::HilbertTransformer(const int order, const double beta)
 {
-    if (order < 1){RTSEIS_THROW_IA("order=%d cannot be negative", order);}
+    if (order < 0){RTSEIS_THROW_IA("order=%d cannot be negative", order);}
     int n = order + 1;
+    // Special case
+    if (n == 1)
+    {
+        std::vector<double> hfiltR(1, 1);
+        std::vector<double> hfiltI(1, 0);
+        FilterRepresentations::FIR realFIR(hfiltR);
+        FilterRepresentations::FIR imagFIR(hfiltI); 
+        return std::pair(realFIR, imagFIR);
+    }
     // Create a kaiser window
     std::vector<double> kaiser(n);
     WindowFunctions::kaiser(n, kaiser.data(), beta);
@@ -226,12 +238,15 @@ FIR::HilbertTransformer(const int order, const double beta)
     std::vector<double> hfiltR(n, 0);
     std::vector<double> hfiltI(n, 0);
     double gain = 0;
-    if (n%2 == 0)
+    if (n%2 == 1)
     {
         // Type III has many zeros
         gain = 1; 
         hfiltR[n/2] = 1;
-        for (int i=1; i<n; i=i+2)
+        // Two cases
+        int istart = 0;
+        if ((n/2)%2 == 0){istart = 1;}
+        for (int i=istart; i<n; i=i+2)
         {
             double ks = kaiser[i]*sinct[i];
             hfiltI[i] = ks*(sin(M_PI*t[i]));
