@@ -54,7 +54,7 @@ FIR1Lowpass(const int order, const double r,
  */
 FilterRepresentations::FIR
 FIR1Highpass(const int order, const double r,
-                  const FIRWindow window = FIRWindow::HAMMING);
+             const FIRWindow window = FIRWindow::HAMMING);
 /*!
  * @brief Designs an FIR bandpass filter using the window method.
  * @param[in] order   Order of filter.  The number of taps is order + 1.
