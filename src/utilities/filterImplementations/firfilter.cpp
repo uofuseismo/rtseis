@@ -12,7 +12,7 @@ class FIRFilter::FIRImpl
 {
 public:
     /// Default constructor
-    FIRImpl(void)
+    FIRImpl()
     {
         return;
     }
@@ -23,7 +23,7 @@ public:
         return;
     }
     /// Default destructor.
-    ~FIRImpl(void)
+    ~FIRImpl()
     {
         clear();
         return;
@@ -65,7 +65,7 @@ public:
         return *this;
     }
     /// Clears memory off the module.
-    void clear(void)
+    void clear() noexcept
     {
         if (pSpec64_ != nullptr){ippsFree(pSpec64_);}
         if (pTaps64_ != nullptr){ippsFree(pTaps64_);}
@@ -399,7 +399,7 @@ int FIRFilter::initialize(const int nb, const double b[],
     return 0;
 }
 
-void FIRFilter::clear(void)
+void FIRFilter::clear() noexcept
 {
     pFIR_->clear();
     return;
@@ -491,7 +491,7 @@ int FIRFilter::getInitialConditionLength(void) const
     return len;
 }
 
-bool FIRFilter::isInitialized(void) const
+bool FIRFilter::isInitialized(void) const noexcept
 {
     bool linit = pFIR_->isInitialized();
     return linit;

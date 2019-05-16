@@ -27,7 +27,7 @@ public:
     /*!
      * @brief Default constructor.
      */
-    FIRFilter(void);
+    FIRFilter();
     /*!
      * @brief Copy constructor.
      * @param[in] fir   FIR class from which to initialize.
@@ -52,7 +52,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~FIRFilter(void);
+    ~FIRFilter();
     /*! @} */
 
     /*!
@@ -77,13 +77,13 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Utility routine to determine the initial condition length.
      * @result A non-negative number is the length of the initial
      *         condition array.
      */
-    int getInitialConditionLength(void) const;
+    int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions for the filter.  This should
      *        be called prior to filter application as it will reset
@@ -120,11 +120,11 @@ public:
      *        set when FIRFilter::setInitialConditions() was called.
      * @result 0 indicates success.
      */
-    int resetInitialConditions(void);
+    int resetInitialConditions();
     /*!
      * @brief Clears the module and resets all parameters.
      */
-    void clear(void);
+    void clear() noexcept;
 private:
     class FIRImpl;
     std::unique_ptr<FIRImpl> pFIR_;
