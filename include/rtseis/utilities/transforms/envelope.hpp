@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILITIES_TRANSFORMS_ENVELOPEANALYTIC_HPP
-#define RTSEIS_UTILITIES_TRANSFORMS_ENVELOPEANALYTIC_HPP 1
+#ifndef RTSEIS_UTILITIES_TRANSFORMS_ENVELOPE_HPP
+#define RTSEIS_UTILITIES_TRANSFORMS_ENVELOPE_HPP 1
 #include <memory>
 #include "rtseis/enums.h"
 
@@ -21,8 +21,8 @@ namespace Transforms
 class Envelope
 {
 public:
-    /*!
-     * @name Constructors
+    /*! @name Constructors
+     * @{
      */
     /*!
      * @brief Default constructor.
@@ -41,6 +41,9 @@ public:
     Envelope(Envelope &&envelope) noexcept;
     /*! @} */
 
+    /*! @name Operators
+     * @{
+     */
     /*!
      * @brief Copy assignment operator.
      * @param[in] envelope  Envelope class to copy.
@@ -54,6 +57,7 @@ public:
      * @result envelope has been moved to this class.
      */
     Envelope& operator=(Envelope &&envelope) noexcept;
+    /*! @} */
 
     /*! @name Destructors
      */
@@ -71,13 +75,13 @@ public:
      * @brief Checks if the class is initialized.
      * @result True indicates that the class is initialized.
      */
-    bool isInitialized() noexcept;
+    bool isInitialized() const noexcept;
     /*! 
      * @brief Gets the length of the envelope.
      * @result The length of the envelope.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getTransformLength();
+    int getTransformLength() const;
 
     /*!
      * @brief Initializes the envelope.

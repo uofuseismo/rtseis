@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_DESIGN_FIR_HPP
-#define RTSEIS_UTILS_DESIGN_FIR_HPP 1
+#ifndef RTSEIS_UTILITIES_DESIGN_FIR_HPP
+#define RTSEIS_UTILITIES_DESIGN_FIR_HPP 1
 #include <utility>
 #include "rtseis/utilities/design/enums.hpp"
 

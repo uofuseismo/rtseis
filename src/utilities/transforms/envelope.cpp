@@ -118,13 +118,13 @@ void Envelope::clear() noexcept
 }
 
 /// Checks if the module is initialized
-bool Envelope::isInitialized() noexcept
+bool Envelope::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Gets the envelope length
-int Envelope::getTransformLength()
+int Envelope::getTransformLength() const
 {
     if (!isInitialized())
     {
