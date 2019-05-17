@@ -16,7 +16,9 @@ namespace Transforms
  *        FIR Hilbert transfomer.
  * @note The post-processing modes and real-time modes yield different results
  *       because the post-processing mode will accomodate the mean of the data
- *       and compensate for the phase delay of the FIR filter.
+ *       and compensate for the phase delay of the FIR filter.  Moreover,
+ *       if running in real-time it is important to remove the mean by first
+ *       applying a high-pass filter.
  * @sa Envelope
  */
 class FIREnvelope
