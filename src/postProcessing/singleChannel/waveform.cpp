@@ -33,6 +33,8 @@
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
+#include "rtseis/utilities/transforms/firEnvelope.hpp"
+#include "rtseis/utilities/transforms/envelope.hpp"
 
 using namespace RTSeis;
 using namespace PostProcessing::SingleChannel;
@@ -584,6 +586,45 @@ void Waveform::downsample(const int nq)
     {
         RTSEIS_ERRMSG("Downsampling failed: %s", ra.what());
     }
+}
+
+//----------------------------------------------------------------------------//
+//                                   Envelope                                 //
+//----------------------------------------------------------------------------//
+
+/// FIR-based
+void Waveform::firEnvelope(const int nfir)
+{
+    if (nfir < 1)
+    {
+        RTSEIS_THROW_IA("Number of FIR coefficients = %d must be positive",
+                        nfir);
+    }
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int nx = pImpl->getLengthOfInputSignal();
+    if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
+    double  *y = pImpl->getOutputDataPointer(); // Handle on output
+    const double *x = pImpl->getInputDataPointer(); // Handle on input
+    Utilities::Transforms::FIREnvelope envelope;
+    envelope.initialize(nfir,
+                        RTSeis::ProcessingMode::POST_PROCESSING,
+                        RTSeis::Precision::DOUBLE);
+    envelope.transform(nx, x, y);
+    pImpl->lfirstFilter_ = false;
+}
+
+/// FFT-based
+void Waveform::envelope()
+{
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int nx = pImpl->getLengthOfInputSignal();
+    if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
+    double  *y = pImpl->getOutputDataPointer(); // Handle on output
+    const double *x = pImpl->getInputDataPointer(); // Handle on input
+    Utilities::Transforms::Envelope envelope;
+    envelope.initialize(RTSeis::Precision::DOUBLE);
+    envelope.transform(nx, x, y);
+    pImpl->lfirstFilter_ = false;
 }
 //----------------------------------------------------------------------------//
 //                           Band-specific Filters                            //

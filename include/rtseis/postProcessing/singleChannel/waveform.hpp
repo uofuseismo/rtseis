@@ -621,7 +621,7 @@ public:
      *                  transformer.  This must be positive.
      * @throws std::invalid_argument if nfir is not positive.
      */
-    void envelope(const int nfir);
+    void firEnvelope(const int nfir);
     /*!
      * @brief Computes the envelope of the signal by computing the absolute
      *        value of the analytic signal.
