@@ -124,14 +124,14 @@ void FIREnvelope::initialize(const int ntaps,
     try
     {
         auto zfir = FilterDesign::FIR::HilbertTransformer(ntaps - 1, beta);
-        std::vector<double> rfir = zfir.first.getFilterTaps();
+        auto rfir = zfir.first.getFilterTaps();
         pImpl->mRealFIRFilter.initialize(rfir.size(), rfir.data(),
-                                        mode, precision,
-                                        direct);
+                                         mode, precision,
+                                         direct);
         auto cfir = zfir.second.getFilterTaps();
         pImpl->mImagFIRFilter.initialize(cfir.size(), cfir.data(),
-                                        mode, precision,
-                                        direct);
+                                         mode, precision,
+                                         direct);
     }
     catch (const std::exception &e) 
     {

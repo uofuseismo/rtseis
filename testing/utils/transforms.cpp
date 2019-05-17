@@ -1,6 +1,7 @@
 #include <fstream>
 #include <cstdio>
 #include <cstdlib>
+#include <numeric>
 #include <cstring>
 #include <cassert>
 #include <string>
@@ -967,7 +968,7 @@ int transforms_test_firEnvelope(const std::string fileName1,
         RTSEIS_ERRMSG("failed 300 with error = %e", error/upRef300.size());
         return EXIT_FAILURE;
     }
-    // Test move construtor
+    // Test move constructor
     FIREnvelope env301;
     try  
     {
@@ -987,6 +988,95 @@ int transforms_test_firEnvelope(const std::string fileName1,
     {    
         RTSEIS_ERRMSG("failed 301 with error = %e", error/upRef301.size());
         return EXIT_FAILURE;
+    }
+    // Remove the mean to make comparison easier
+    double mean;
+    ippsMean_64f(x.data(), x.size(), &mean);
+    ippsSubC_64f_I(mean, x.data(), x.size());
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    env.initialize(300, RTSeis::ProcessingMode::POST_PROCESSING,
+                   RTSeis::Precision::DOUBLE);
+    ippsZero_64f(upRef300.data(), upRef300.size()); 
+    env.transform(x.size(), x.data(), upRef300.data());
+    env.initialize(301, RTSeis::ProcessingMode::POST_PROCESSING,
+                   RTSeis::Precision::DOUBLE);
+    ippsZero_64f(upRef301.data(), upRef301.size());
+    env.transform(x.size(), x.data(), upRef301.data());
+    // Test the real-time component
+    FIREnvelope envrt300, envrt301;
+    std::vector<double> up300(x.size()), up301(x.size());
+    envrt300.initialize(300, RTSeis::ProcessingMode::REAL_TIME,
+                        RTSeis::Precision::DOUBLE);
+    envrt301.initialize(301, RTSeis::ProcessingMode::REAL_TIME,
+                        RTSeis::Precision::DOUBLE); 
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> tdif = timeEnd - timeStart;
+    fprintf(stdout, "Reference time: %.8e (s)\n", tdif.count());
+    std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512, 
+                                 1000, 1024, 1200, 2048, 4000});
+    int npts = x.size();
+    for (auto job=0; job<2; job++)
+    {    
+        for (auto ip=0; ip<packetSize.size(); ip++)
+        {
+            timeStart = std::chrono::high_resolution_clock::now();
+            int nxloc = 0; 
+            int nptsPass = 0; 
+            while (nxloc < npts)
+            {
+                nptsPass = packetSize[ip];
+                if (job == 1)
+                {
+                     nptsPass = std::max(1, nptsPass + rand()%50 - 25);
+                }
+                nptsPass = std::min(nptsPass, npts - nxloc);
+                const double *xptr = x.data() + nxloc;
+                double *yptr300 = up300.data() + nxloc;
+                double *yptr301 = up301.data() + nxloc;
+                try
+                {
+                    envrt300.transform(nptsPass, xptr, yptr300);
+                    envrt301.transform(nptsPass, xptr, yptr301);
+                }
+                catch (const std::exception &e)
+                {
+                    RTSEIS_ERRMSG("%s; failed at job,packet=(%d,%d)",
+                                  e.what(), job, ip);
+                    return EXIT_FAILURE;
+                }
+                nxloc = nxloc + nptsPass;
+            } // Loop on acquisition loop
+            envrt300.resetInitialConditions();
+            envrt301.resetInitialConditions();
+            timeEnd = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> tdif = timeEnd - timeStart;
+            // Need to deal with the impulse response
+            int groupDelay = 301/2;
+            int ncomp = npts - groupDelay;
+            ippsNormDiff_L1_64f(upRef300.data(), up300.data()+groupDelay,
+                                ncomp, &error);
+            if (error > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed 300 rt with error = %e", error);
+            } 
+            ippsNormDiff_L1_64f(upRef301.data(), up301.data()+groupDelay,
+                                ncomp, &error); 
+            if (error > 1.e-10)
+            {
+                RTSEIS_ERRMSG("Failed 300 rt with error = %e", error);
+            }
+            if (job == 0)
+            {
+                fprintf(stdout,
+                        "Passed envfir filter fixed packet size %4d in %.8e (s)\n",
+                        packetSize[ip], tdif.count());
+            }
+            else
+            {
+                fprintf(stdout,
+                        "Passed envfir random in %.8e (s)\n", tdif.count());
+            }
+        }
     }
     return EXIT_SUCCESS;
 }
