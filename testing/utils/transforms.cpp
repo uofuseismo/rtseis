@@ -10,20 +10,22 @@
 #include <algorithm>
 #include <complex>
 #include <vector>
+#include <ipps.h>
+#include <fftw/fftw3.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/dftRealToComplex.hpp"
 #include "rtseis/utilities/transforms/dft.hpp"
 #include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
+#include "rtseis/utilities/transforms/firEnvelope.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
-#include <ipps.h>
-#include <fftw/fftw3.h>
 
 using namespace RTSeis::Utilities::Transforms;
 
+int transforms_test_firEnvelope();
 int transforms_nextPow2_test();
 int transforms_phase_test();
 int transforms_unwrap_test();
@@ -98,6 +100,13 @@ int rtseis_test_utils_transforms(void)
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed envelope test");
+
+    ierr = transforms_test_firEnvelope();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to compute FIR envelope");
+    }
+    RTSEIS_INFOMSG("%s", "Passed FIR envelope test");
 
     return EXIT_SUCCESS;
 }
@@ -858,6 +867,78 @@ int transforms_test_envelope(const std::string fileName)
     if (errorLower > 1.e-9)
     {
         RTSEIS_ERRMSG("Failed lower envelope %e", errorLower);
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+int transforms_test_firEnvelope()
+{
+    // Try a simple case to test the post-processing filtering logic
+    std::vector<double> xSimple{2, 3, 4, 5, 6, 5, 4, 3, 2, 1, 0, -1,
+                               -2, -3, -4, -3, -2, -1, 0};
+    std::vector<double> ySimpleRef1{2.104854409188811, 3.054435023431979,
+                                    4.036561092009176, 5.027493422155269,
+                                    6.000000000000000, 5.027493422155269,
+                                    4.036561092009176, 3.054435023431979,
+                                    2.104854409188811, 1.469790661363077,
+                                    2.104854409188811, 3.054435023431979,
+                                    4.036561092009176, 5.027493422155269,
+                                    6.000000000000000, 5.027493422155269,
+                                    4.036561092009176, 3.054435023431979,
+                                    2.104854409188811};
+    std::vector<double> ySimpleRef2{2.652854154751004, 3.594503058524673,
+                                    4.567414567447291, 5.633676421237045,
+                                    5.633676421237045, 4.567414567447291,
+                                    3.594503058524673, 2.652708722278031,
+                                    1.855246233954807, 1.855246233954807,
+                                    2.652708722278031, 3.594503058524673,
+                                    4.567414567447291, 5.633676421237045,
+                                    5.633676421237045, 4.567414567447291,
+                                    3.594503058524673, 2.652854154751004,
+                                    1.787936920537643};
+    std::vector<double> ySimple(xSimple.size(), 0);
+    FIREnvelope env;
+    try
+    {
+        env.initialize(5, RTSeis::ProcessingMode::POST_PROCESSING,
+                       RTSeis::Precision::DOUBLE);
+        env.transform(xSimple.size(), xSimple.data(), ySimple.data()); 
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s: Failed firEnv test 1", e.what());
+        return EXIT_FAILURE;
+    }
+#ifdef __STDCPP_MATH_SPEC_FUNCS__ // __cplusplus > 201402L
+    double tol = 1.e-13;
+#else
+    double tol = 1.e-5;
+#endif
+    double error;
+    ippsNormDiff_L1_64f(ySimpleRef1.data(), ySimple.data(),
+                        ySimple.size(), &error);
+    if (error > tol)
+    {
+        RTSEIS_ERRMSG("Simple test 1 failed with error = %e", error);
+        return EXIT_FAILURE;
+    }
+    try
+    {
+        env.initialize(6, RTSeis::ProcessingMode::POST_PROCESSING,
+                       RTSeis::Precision::DOUBLE);
+        env.transform(xSimple.size(), xSimple.data(), ySimple.data()); 
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s: Failed firEnv test 1", e.what());
+        return EXIT_FAILURE;
+    }
+    ippsNormDiff_L1_64f(ySimpleRef2.data(), ySimple.data(), 
+                        ySimple.size(), &error);
+    if (error > tol)
+    {
+        RTSEIS_ERRMSG("Simple test 2 failed with error = %e", error);
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

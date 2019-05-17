@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <array>
 #include <ipps.h>
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
 #include "rtseis/utilities/design/fir.hpp"
@@ -24,6 +25,7 @@ public:
         if (&firEnvelope == this){return *this;}
         mRealFIRFilter = firEnvelope.mRealFIRFilter;
         mImagFIRFilter = firEnvelope.mImagFIRFilter;
+        mMean = firEnvelope.mMean;
         mNumberOfTaps = firEnvelope.mNumberOfTaps;
         mZeroPhase = firEnvelope.mZeroPhase;
         mType3 = firEnvelope.mType3;
@@ -35,6 +37,7 @@ public:
 
     FilterImplementations::FIRFilter mRealFIRFilter;
     FilterImplementations::FIRFilter mImagFIRFilter;
+    double mMean = 0;
     int mNumberOfTaps = 0;
     bool mZeroPhase = true;
     bool mType3 = false;
@@ -85,6 +88,7 @@ void FIREnvelope::clear() noexcept
 {
     pImpl->mRealFIRFilter.clear();
     pImpl->mImagFIRFilter.clear();
+    pImpl->mMean = 0;
     pImpl->mNumberOfTaps = 0;
     pImpl->mZeroPhase = true;
     pImpl->mType3 = false;
@@ -178,48 +182,68 @@ void FIREnvelope::resetInitialConditions()
 
 void FIREnvelope::transform(const int n, const double x[], double y[])
 {
+    pImpl->mMean = 0;
     if (n < 1){return;} // Nothing to do
     if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Failed to initialize");
     }
-/*
-    if (x == nullptr || y)
+    if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL";}
-        RTSEIS_THROW_IA("%s", "y is NULL"); 
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
     }
     // Post-processing removes the phase shift
-    if (pImpl->mMode = RTSeis::ProcessingMode::POST_PROCESSING)
+    if (pImpl->mMode == RTSeis::ProcessingMode::POST_PROCESSING)
     {
-        // Get the mean
-
-        // Copy and remove the mean 
-        int nhalf = pImpl->mNumberOfTaps/2;
-        double *xpad  = ippsMalloc_64f(n + nhalf);
-        ippsSubC_64f(x, mean, xpad, n);
-        ippsZero_64f(&xpad[n], nhalf);
-        double *ypadr = ippsMalloc_64f(n + nhalf);
-        double *ypadi = ippsMalloc_64f(n + nhalf);
-        pImpl->mImagFIRFilter.apply(n+nhalf, xpad, ypadi); 
-        ippsFree(xpad);
-        // Take the absolute value
-        ippsMag_64f(x, &ypadi[nhalf], y, n);
-        ippsFree(ypadr);
-        ippsFree(ypadi);
-      
+        // Compute the mean
+        double pMean;
+        ippsMean_64f(x, n, &pMean);
+        pImpl->mMean = pMean;
+        // Remove the mean and pad out the signal
+        // N.B. The group delay is actually + 1 but C wants to shift relative to
+        // a base address so we subtract the one.  Hence, n/2 instead of n/2+1.
+        int groupDelay = pImpl->mNumberOfTaps/2;
+        int npad = n + groupDelay;
+        double *xPad = ippsMalloc_64f(npad);
+        ippsSubC_64f(x, pMean, xPad, n);
+        ippsZero_64f(&xPad[n], groupDelay); // Post-pad with zeros
+        // Now apply the filter and compute absolute value - Type III
+        if (pImpl->mType3)
+        {
+            double *yPadr = xPad;
+            double *yPadi = ippsMalloc_64f(npad);
+            pImpl->mImagFIRFilter.apply(npad, xPad, yPadi); 
+            ippsMagnitude_64f(yPadr, &yPadi[groupDelay], y, n);
+            ippsFree(yPadi);
+        }
+        else
+        {
+            double *yPadr = ippsMalloc_64f(npad);
+            pImpl->mRealFIRFilter.apply(npad, xPad, yPadr);
+            double *yPadi = ippsMalloc_64f(npad);
+            pImpl->mImagFIRFilter.apply(npad, xPad, yPadi);
+            ippsMagnitude_64f(&yPadr[groupDelay], &yPadi[groupDelay], y, n);
+            ippsFree(yPadr);
+            ippsFree(yPadi);
+        }
+        ippsFree(xPad);
+        // Reconstitute the mean
+        ippsAddC_64f_I(pMean, y, n);
     }
     else
     {
-        // Apply the filter and stitch them together
-        for (auto i=0; i<n; i=i+pImpl->chunkSize)
+        // TODO - add a sparse FIR filter for the type III case
+        constexpr int chunkSize = 1024;
+        std::array<double, chunkSize> yrTemp;
+        std::array<double, chunkSize> yiTemp;
+        for (auto ic=0; ic<n; ic=ic+chunkSize)
         {
-            auto nploc = std::min(n-i, pImpl->chunkSize);
-            pImpl->mRealFIRFilter.apply(nploc, &x[i], pImpl->yrWork);
-            pImpl->mImagFIRFilter.apply(nploc, &x[i], pImpl->yiWork);
-            ippsMag_64f(pImpl->yrWork, pImpl->yiWork, &y[i], nploc);
+            auto npfilt = std::min(n - ic, chunkSize);
+            pImpl->mRealFIRFilter.apply(npfilt, &x[ic], yrTemp.data());
+            pImpl->mImagFIRFilter.apply(npfilt, &x[ic], yiTemp.data());
+            ippsMagnitude_64f(yrTemp.data(), yiTemp.data(), &y[ic], npfilt);
         }
     }
-*/
 }
 
