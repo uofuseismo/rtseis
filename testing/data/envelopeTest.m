@@ -8,4 +8,19 @@ function envelopeTest()
   for i=1:length(q)
      fprintf(fileID, '%.15e %.13e %.13e\n', q(i), up(i), lo(i));
   end
+  fclose(fileID);
+
+  [up,lo] = envelope(q, 300);
+  fileID = fopen('envelopeChirpReference300.txt','w');
+  for i=1:length(q)
+     fprintf(fileID, '%.15e %.13e %.13e\n', q(i), up(i), lo(i));
+  end
+  fclose(fileID);
+
+  [up,lo] = envelope(q, 301);
+  fileID = fopen('envelopeChirpReference301.txt','w');
+  for i=1:length(q)
+     fprintf(fileID, '%.15e %.13e %.13e\n', q(i), up(i), lo(i));
+  end
+  fclose(fileID);
   end

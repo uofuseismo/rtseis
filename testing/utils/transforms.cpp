@@ -25,7 +25,6 @@
 
 using namespace RTSeis::Utilities::Transforms;
 
-int transforms_test_firEnvelope();
 int transforms_nextPow2_test();
 int transforms_phase_test();
 int transforms_unwrap_test();
@@ -33,6 +32,12 @@ int transforms_test_dftr2c();
 int transforms_test_dft();
 int transforms_test_hilbert();
 int transforms_test_envelope(const std::string fileName = "data/envelopeChirp.txt");
+int transforms_test_firEnvelope(const std::string fileName1 = "data/envelopeChirp300.txt",
+                                const std::string fileName2 = "data/envelopeChirp301.txt");
+void readEnvelopeFile(const std::string &fileName,
+                      std::vector<double> *x,
+                      std::vector<double> *upRef,
+                      std::vector<double> *loRef);
 int fft(const int nx, const std::complex<double> *x, 
         const int ny, std::complex<double> *y);
 int ifft(const int nx, const std::complex<double> *x, 
@@ -101,7 +106,8 @@ int rtseis_test_utils_transforms(void)
     }
     RTSEIS_INFOMSG("%s", "Passed envelope test");
 
-    ierr = transforms_test_firEnvelope();
+    ierr = transforms_test_firEnvelope(dataDir + "/envelopeChirpReference300.txt",
+                                       dataDir + "/envelopeChirpReference301.txt");
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute FIR envelope");
@@ -800,7 +806,7 @@ int transforms_test_envelope(const std::string fileName)
         envelope.transform(1, x, up, lo);
         if (std::abs(upRef[0] - up[0]) > 1.e-15 ||
             std::abs(loRef[0] - lo[0]) > 1.e-15)
-        { 
+        {
             RTSEIS_ERRMSG("%s", "Failed envelope length 1");
             return EXIT_FAILURE;
         }
@@ -812,19 +818,7 @@ int transforms_test_envelope(const std::string fileName)
     }
     // Load the data
     std::vector<double> x, upRef, loRef;
-    x.reserve(4000); 
-    upRef.reserve(4000); 
-    loRef.reserve(4000);
-    std::ifstream textFile(fileName);
-    std::string line;
-    while (std::getline(textFile, line))
-    {
-        double xVal, uVal, lVal;
-        std::sscanf(line.c_str(), "%lf %lf %lf\n", &xVal, &uVal, &lVal); 
-        x.push_back(xVal);
-        upRef.push_back(uVal);
-        loRef.push_back(lVal);
-    }
+    readEnvelopeFile(fileName, &x, &upRef, &loRef);
     int npts = static_cast<int> (x.size());
     if (npts != 4000)
     {
@@ -838,7 +832,7 @@ int transforms_test_envelope(const std::string fileName)
     try
     {
         envelopeChirp.initialize(npts, RTSeis::Precision::DOUBLE);
-    } 
+    }
     catch (std::invalid_argument &ia)
     {
         RTSEIS_ERRMSG("%s", ia.what());
@@ -872,7 +866,8 @@ int transforms_test_envelope(const std::string fileName)
     return EXIT_SUCCESS;
 }
 
-int transforms_test_firEnvelope()
+int transforms_test_firEnvelope(const std::string fileName1,
+                                const std::string fileName2)
 {
     // Try a simple case to test the post-processing filtering logic
     std::vector<double> xSimple{2, 3, 4, 5, 6, 5, 4, 3, 2, 1, 0, -1,
@@ -941,12 +936,95 @@ int transforms_test_firEnvelope()
         RTSEIS_ERRMSG("Simple test 2 failed with error = %e", error);
         return EXIT_FAILURE;
     }
+    // Do a more substantial post-processing test
+    std::vector<double> x, upRef300, loRef300, upRef301, loRef301;
+    readEnvelopeFile(fileName1, &x, &upRef300, &loRef300);
+    readEnvelopeFile(fileName2, &x, &upRef301, &loRef301);
+    if (upRef300.size() != 4000 || upRef301.size() != 4000)
+    {
+        RTSEIS_ERRMSG("%s", "Failed to load data file");
+        return EXIT_FAILURE;
+    }
+    // Create with copy constructor
+    FIREnvelope env300;
+    try
+    {
+        env300.initialize(300,
+                          RTSeis::ProcessingMode::POST_PROCESSING,
+                          RTSeis::Precision::DOUBLE); 
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s; design n=300 failed", e.what());
+        return EXIT_FAILURE;
+    }
+    env = env300;
+    std::vector<double> up(x.size());
+    env.transform(x.size(), x.data(), up.data());
+    ippsNormDiff_L1_64f(upRef300.data(), up.data(),  upRef300.size(), &error);
+    if (error/upRef300.size() > 1.e-8)
+    {
+        RTSEIS_ERRMSG("failed 300 with error = %e", error/upRef300.size());
+        return EXIT_FAILURE;
+    }
+    // Test move construtor
+    FIREnvelope env301;
+    try  
+    {
+        env301.initialize(301,
+                          RTSeis::ProcessingMode::POST_PROCESSING,
+                          RTSeis::Precision::DOUBLE);
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s; design n=301 failed", e.what());
+        return EXIT_FAILURE;
+    }
+    env = std::move(env301);
+    env.transform(x.size(), x.data(), up.data());
+    ippsNormDiff_L1_64f(upRef301.data(), up.data(),  upRef301.size(), &error);
+    if (error/upRef301.size() > 1.e-8)
+    {    
+        RTSEIS_ERRMSG("failed 301 with error = %e", error/upRef301.size());
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 
 //============================================================================//
 //                              Private functions                             //
 //============================================================================//
+
+// Reads and envelope solution file
+void readEnvelopeFile(const std::string &fileName,
+                      std::vector<double> *x,
+                      std::vector<double> *upRef,
+                      std::vector<double> *loRef)
+{
+    // Load the data
+    x->resize(0);
+    upRef->resize(0);
+    loRef->resize(0);
+    x->reserve(4000); 
+    upRef->reserve(4000); 
+    loRef->reserve(4000);
+    std::ifstream textFile(fileName);
+    std::string line;
+    auto i = 0;
+    while (std::getline(textFile, line))
+    {
+        double xVal, uVal, lVal;
+        std::sscanf(line.c_str(), "%lf %lf %lf\n", &xVal, &uVal, &lVal);
+        x->push_back(xVal);
+        upRef->push_back(uVal);
+        loRef->push_back(lVal);
+        i = i + 1;
+    }
+#ifdef DEBUG
+    auto npts = static_cast<int> (x->size());
+    assert(npts == 4000);
+#endif
+}
 
 int fft(const int nx, const std::complex<double> *x,
         const int ny, std::complex<double> *y)
