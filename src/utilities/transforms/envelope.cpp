@@ -147,6 +147,14 @@ void Envelope::initialize(const int n,
     {
         pImpl->mHilbert.initialize(n, precision); 
     }
+    if (precision == RTSeis::Precision::DOUBLE)
+    {
+        pImpl->mHilb64fc = ippsMalloc_64fc(n);
+    }
+    else
+    {
+        pImpl->mHilb32fc = ippsMalloc_32fc(n);
+    }
     pImpl->mEnvelopeLength = n;
     pImpl->mPrecision = precision;
     pImpl->mInitialized = true;
@@ -211,6 +219,7 @@ void Envelope::transform(const int n, const double x[], double y[])
     pImpl->mMean = pMean;
     // Hilbert transform the signal (yields the analytic signal)
     auto yhilb = reinterpret_cast<std::complex<double> *> (pImpl->mHilb64fc);
+if (yhilb == nullptr){printf("problem\n");}
     pImpl->mHilbert.transform(n, y, yhilb);
     // Take the absolute value to obtain the envelope
     ippsMagnitude_64fc(pImpl->mHilb64fc, y, n); 

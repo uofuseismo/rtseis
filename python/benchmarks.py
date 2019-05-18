@@ -99,8 +99,17 @@ for i in range(niter):
     tsum = tsum + time.time() - start
 avgBPSosFilter = tsum/niter
 
+tsum = 0
+for i in range(niter):
+    trace.set_data(a+1)
+    start = time.time()
+    trace.envelope()
+    tsum = tsum + time.time() - start
+avgEnvelope = tsum/niter
+
 print("ObsPy test...")
 from obspy.core.trace import Trace
+from obspy.signal.filter import envelope
 traceObspy = Trace(data=a) 
 traceObspy.detrend('demean')
 tsum = 0
@@ -170,6 +179,14 @@ for i in range(niter):
     tsum = tsum + time.time() - start
 avgDownsampleObspy = tsum/niter
 
+tsum = 0
+for i in range(niter):
+    traceObspy.data = a + 1
+    start = time.time()
+    lhs = envelope(a) #traceObspy.data)
+    tsum = tsum + time.time() - start
+avgEnvelopeObspy = tsum/niter
+
 #print("Average SciPy convolve time %e (s)"%(avgConvolveObspy))
 
 print("Average demean time:     Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgDemeanObspy,    avgDemean,    avgDemeanObspy/avgDemean))
@@ -180,6 +197,7 @@ print("Average FIR time:        Scipy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avg
 print("Average LP SOS time:     Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgLPSosFilterObspy, avgLPSosFilter, avgLPSosFilterObspy/avgLPSosFilter))
 print("Average BP SOS time:     Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgBPSosFilterObspy, avgBPSosFilter, avgBPSosFilterObspy/avgBPSosFilter))
 print("Average downsample time: Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgDownsampleObspy,  avgDownsample, avgDownsampleObspy/avgDownsample))
+print("Average envelope time:   Obspy %e (s), RTSeis %e (s), SpeedUp %.2fx"%(avgEnvelope, avgEnvelopeObspy, avgEnvelopeObspy/avgEnvelope))
 """
 from ctypes import cdll
 from ctypes import c_int

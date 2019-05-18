@@ -117,6 +117,20 @@ void Waveform::downsample(const int nq)
     return;
 }
 
+void Waveform::firEnvelope(const int nfir)
+{
+    if (nfir < 1)
+    {
+        throw std::invalid_argument("Number of FIR coeffs must be positive");
+    }
+    waveform_->firEnvelope(nfir);
+}
+
+void Waveform::envelope()
+{
+    waveform_->envelope();
+}
+
 /// FIR filter
 void Waveform::firFilter(py::array_t<double, py::array::c_style | py::array::forcecast> &taps)
 {
@@ -370,6 +384,13 @@ void init_pp_waveform(py::module &m)
                               py::arg("nq"));
     singleChannelWaveform.def("fir_filter", &PBPostProcessing::Waveform::firFilter,
                               py::arg("taps"));
+
+    singleChannelWaveform.def("envelope", &PBPostProcessing::Waveform::envelope,
+                              "Computes the envelope using the Fourier transform");
+    singleChannelWaveform.def("fir_envelope", &PBPostProcessing::Waveform::firEnvelope,
+                              "Computes the envelope using a FIR-based Hilbert transformer",
+                              py::arg("nfir") = 301);
+
 
     singleChannelWaveform.def("sos_lowpass_filter", &PBPostProcessing::Waveform::sosLowpassFilter,
                               "Lowpass filters a signal using a biquadratic (second-order-section) filter",

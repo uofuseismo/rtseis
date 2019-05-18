@@ -16,18 +16,21 @@ class Waveform
 {
 public:
     /// Constructor
-    Waveform(void);
+    Waveform();
     /// Destructor
-    ~Waveform(void);
+    ~Waveform();
     /// Convolution
     void convolve(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &s,
                   const std::string &smode);
     /// Demean
-    void demean(void);
+    void demean();
     /// Detrend
-    void detrend(void);
+    void detrend();
     /// Downsampler
     void downsample(const int nq);
+    /// Envelope
+    void firEnvelope(const int nfir);
+    void envelope();
     /// Generic FIR filter data
     void firFilter(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &taps);
     /// Generic IIR filter data using biquad second-order sections
@@ -56,9 +59,9 @@ public:
     /// Set data
     void setData(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &x);
     /// Get data
-    pybind11::array_t<double> getData(void);
+    pybind11::array_t<double> getData();
     /// Checks if class is initialized
-    bool isInitialized(void) const;
+    bool isInitialized() const;
 private:
     std::unique_ptr<RTSeis::PostProcessing::SingleChannel::Waveform> waveform_;
 };
@@ -69,9 +72,9 @@ namespace PBFilterRepresentations
 class FIR
 {
 public:
-    FIR(void);
+    FIR();
     void setTaps(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> taps);
-    pybind11::array_t<double> getTaps(void) const;
+    pybind11::array_t<double> getTaps() const;
 private:
     std::unique_ptr<RTSeis::Utilities::FilterRepresentations::FIR> fir_;
 };
@@ -79,10 +82,10 @@ private:
 class SOS
 {
 public:
-    SOS(void);
-    int getNumberOfSections(void) const;
-    pybind11::array_t<double> getNumeratorCoefficients(void) const;
-    pybind11::array_t<double> getDenominatorCoefficients(void) const;
+    SOS();
+    int getNumberOfSections() const;
+    pybind11::array_t<double> getNumeratorCoefficients() const;
+    pybind11::array_t<double> getDenominatorCoefficients() const;
 private:
     std::unique_ptr<RTSeis::Utilities::FilterRepresentations::SOS> sos_;
 };
@@ -90,11 +93,11 @@ private:
 class BA 
 {
 public:
-    BA(void);
+    BA();
     void setNumeratorCoefficients(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &b);
     void setDenominatorCoefficients(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &x);
-    pybind11::array_t<double> getNumeratorCoefficients(void) const;
-    pybind11::array_t<double> getDenominatorCoefficients(void) const;
+    pybind11::array_t<double> getNumeratorCoefficients() const;
+    pybind11::array_t<double> getDenominatorCoefficients() const;
 private:
     std::unique_ptr<RTSeis::Utilities::FilterRepresentations::BA> ba_;
 };
