@@ -219,7 +219,6 @@ void Envelope::transform(const int n, const double x[], double y[])
     pImpl->mMean = pMean;
     // Hilbert transform the signal (yields the analytic signal)
     auto yhilb = reinterpret_cast<std::complex<double> *> (pImpl->mHilb64fc);
-if (yhilb == nullptr){printf("problem\n");}
     pImpl->mHilbert.transform(n, y, yhilb);
     // Take the absolute value to obtain the envelope
     ippsMagnitude_64fc(pImpl->mHilb64fc, y, n); 
