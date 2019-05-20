@@ -217,10 +217,12 @@ void Envelope::transform(const int n, const double x[], double y[])
     ippsMean_64f(x, n, &pMean);
     ippsSubC_64f(x, pMean, y, n); 
     pImpl->mMean = pMean;
-    // Hilbert transform the signal (yields the analytic signal)
+    // Compute the analytic signal of the data.
     auto yhilb = reinterpret_cast<std::complex<double> *> (pImpl->mHilb64fc);
     pImpl->mHilbert.transform(n, y, yhilb);
-    // Take the absolute value to obtain the envelope
+    // Take the absolute value to obtain the envelope.
+    // |x_r + i x_h| = x_r^2 + x_h^2 where x_r is the input signal 
+    // and x_h is the Hilbert transform of the data.
     ippsMagnitude_64fc(pImpl->mHilb64fc, y, n); 
     // Restore the mean
     ippsAddC_64f_I(pMean, y, n);
