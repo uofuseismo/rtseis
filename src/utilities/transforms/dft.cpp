@@ -3,12 +3,12 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/dft.hpp"
 #include "rtseis/log.h"
-#include <ipps.h>
 
 using namespace RTSeis::Utilities::Transforms;
 
@@ -656,6 +656,13 @@ DFT::DFT(const DFT &dft)
     *this = dft;
 }
 
+/*
+DFT::DFT(DFT &&dft) noexcept
+{
+    *this = std::Move(dft);
+}
+*/
+
 DFT& DFT::operator=(const DFT &dft)
 {
     if (&dft == this){return *this;}
@@ -664,6 +671,15 @@ DFT& DFT::operator=(const DFT &dft)
     pImpl = std::make_unique<DFTImpl> (*dft.pImpl);
     return *this;
 }
+
+/*
+DFT& DFT::operator=(DFT &&dft) noexcept
+{
+    if (&dft == this){return *this;}
+    pImpl = std::move(hilbert.pImpl);
+    return *this;
+}
+*/
 
 void DFT::clear() noexcept
 {

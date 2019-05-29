@@ -18,6 +18,17 @@ enum class FourierTransformImplementation
               its length is a power of 2. */
 };
 
+/*!
+ * @brief Defines the detrending strategy used by the short-time
+ *        Fourier transform.
+ */
+enum class STFTDetrendType
+{
+    REMOVE_NONE,  /*!< Does not modify the data in each segment. */
+    REMOVE_MEAN,  /*!< Removes the mean in each segment. */
+    REMOVE_TREND  /*!< Removes the trend in each segment. */
+};
+
 }; // End Transforms
 }; // End Utilities
 }; // End RTSeis

@@ -13,9 +13,9 @@ namespace Transforms
 {
 
 /*!
- * @class DFT dft.hpp "includertseis/utilities/transforms/dft.hpp" 
+ * @class DFT dft.hpp "include/rtseis/utilities/transforms/dft.hpp" 
  * @brief Handles the discrete Fourier transform of general complex signals.
- * @ingroup rtseis_utils_transforms_dft
+ * @ingroup rtseis_utils_transforms
  */
 class DFT
 {

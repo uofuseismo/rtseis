@@ -16,6 +16,7 @@ namespace Transforms
  *        only and works by computing the Hilbert transform to obtain
  *        the analytic signal.  Then, by taking the absolute value of the 
  *        analytic signal, the envelope is obtained.
+ * @ingroup rtseis_utils_transforms
  * @sa Hilbert
  */
 class Envelope

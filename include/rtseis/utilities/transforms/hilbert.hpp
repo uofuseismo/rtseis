@@ -18,7 +18,7 @@ namespace Transforms
  * @note The Hilbert transform is obtained from the analytic signal, 
  *       \f$ x_a = x_r + i x_h \f$ where \f$ x_r \f$ is the input signal and
  *       \f$ x_h \f$ is the Hilbert transform of the signal.
- * @ingroup rtseis_utils_transforms_dft
+ * @ingroup rtseis_utils_transforms
  */
 class Hilbert
 {
