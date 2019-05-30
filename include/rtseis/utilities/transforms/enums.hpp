@@ -22,7 +22,7 @@ enum class FourierTransformImplementation
  * @brief Defines the detrending strategy used by the short-time
  *        Fourier transform.
  */
-enum class STFTDetrendType
+enum class SlidingWindowDetrendType
 {
     REMOVE_NONE,  /*!< Does not modify the data in each segment. */
     REMOVE_MEAN,  /*!< Removes the mean in each segment. */
