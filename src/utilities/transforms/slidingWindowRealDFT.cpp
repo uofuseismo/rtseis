@@ -1,138 +1,80 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cassert>
+#include <complex> // Put this before fftw
 #include <fftw/fftw3.h>
 #include <ipps.h>
 #include <rtseis/private/throw.hpp>
-#include "rtseis/utilities/transforms/enums.hpp"
+#include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 
-#include <complex>
-#include "rtseis/enums.h"
-#include <memory>
 
 
 using namespace RTSeis::Utilities::Transforms;
 
-/*!
- * @brief This is a utility class that slides a window over a real time series
- *        and computes the DFT in each window.  This is the basis of many 
- *        higher order spectral analysis methods such as the STFT, spectrogram,
- *        and Welch's method.  
- * @note This class is not intended for use by a large audience.  Because it is
- *       foundational to higher-order methods whose results are more desirable
- *       this interface emphasizes efficiency at the sake of clarity.
- * @author Ben Baker, University of Utah
- * @copyright Ben Baker distributed under the MIT license.
- * @date May 2019.
- */
-class SlidingWindowRealDFT
+namespace
 {
-public:
-    /*!
-     * @brief Default constructor.
-     */
-    SlidingWindowRealDFT();
 
-    /*! @name Destructors
-     * @{
-     */
-    /*!
-     * @brief Default destructor.
-     */
-    ~SlidingWindowRealDFT();
-    /*!
-     * @brief Releases memory on the class.
-     */
-    void clear() noexcept;
-    /*! @} */
+inline int padLength64f(const int n, const int alignment=64)
+{
+    auto size = static_cast<int> (sizeof(double));
+    int padLength = 0;
+    auto xmod = (n*size)%alignment;
+    if (xmod != 0){padLength = (alignment - xmod)/size;}
+    auto nptsPadded = n + padLength;
+    return nptsPadded;
+}
 
-    /*!
-     * @brief Initializes the sliding-window real discrete Fourier Transform.
-     * @param[in] nSamples            The number of samples in the signal.
-     *                                This must be positive.
-     * @param[in] nSamplesPerSegment  The number of samples in each DFT segment.
-     * @param[in] dftLength           The length of the DFT.  If the number of
-     *                                samples in each segment results in an 
-     *                                inefficient transform length then this
-     *                                will zero pad zero pad each window to 
-     *                                the desired DFT length.  This must be
-     *                                greater than or equal to
-     *                                nSamplesPerSegment.
-     * @param[in]
-     * @param[in] windowLength        The length of the window.  If 0 then no
-     *                                window function will be applied.
-     *                                Otherwise, this must equal 
-     *                                nSamplesPerSegment.
-     * @param[in] window              The window to apply to each segment.
-     *                                If windowLength is 0 then this is ignored.
-     *                                Otherwise, it is an array of dimension
-     *                                [windowLength].
-     * @param[in] detrendType         Defines the detrend strategy to be 
-     *                                applied to each signal prior to windowing.
-     * @param[in] precision           The precision of the underlying DFT.
-     * @throws std::invalid_argument if any parameters are incorrect.
-     */
-    void initialize(const int nSamples,
-                    const int nSamplesPerSegment,
-                    const int dftLength,
-                    const int nSamplesInOverlap,
-                    const int windowLength,
-                    const double window[],
-                    const SlidingWindowDetrendType detrendType,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+inline int padLength32f(const int n, const int alignment=64)
+{
+    auto size = static_cast<int> (sizeof(float));
+    int padLength = 0;
+    auto xmod = (n*size)%alignment;
+    if (xmod != 0){padLength = (alignment - xmod)/size;}
+    auto nptsPadded = n + padLength;
+    return nptsPadded;
+}
 
-    /*!
-     * @brief Flag indicating whether or not the class is initialized.
-     * @result True indicates that the class is inititalized.
-     */
-    bool isInitialized() const noexcept;
-    /*!
-     * @brief Returns the number of frequencies.
-     * @result The number of frequencies.
-     * @throws std::runtime_error if the class is not intitialized.
-     */
-    int getNumberOfFrequencies() const;
-    /*!
-     * @brief Returns the number of time samples in the sliding window DFT.
-     *        This is the number of columns in the output matrix.
-     * @result The number of time samples or, equivalently, columsn in the
-     *         output matrix.
-     * @throws std::runtime_error if the class is not intitialized.
-     */
-    int getNumberOfTimeSamples() const;
-    /*!
-     * @brief Returns the expected number of samples in the time series.
-     * @result The expected number of samples.
-     * @throws std::runtime_error if the class is not initialized.
-     */
-    int getNumberOfSamples() const;
+inline void removeMean(const int length, double pSrcY[])
+{
+    double pMean;
+    ippsMean_64f(pSrcY, length, &pMean);
+    ippsSubC_64f_I(pMean, pSrcY, length);
+}
 
-    /*!
-     * @brief Computes the sliding window DFT of the real signal.
-     * @param[in] nSamples  The number of samples in the signal.
-     *                      This must match the result of 
-     *                      \c getNumberOfSamples().
-     * @param[in] x         The signal to transform.  This is an array whose
-     *                      dimension is [nSamples].
-     * @param[in] nWork     The workspace allocated to y.  This must be at
-     *                      least \c getNumberOfFrequencies() x 
-     *                            \c getNumberOfTimeSamples().
-     * @param[out] y        This is a row-major matrix containing the
-     *                      DFT's in each window.  Here, the rows correspond
-     *                      to frequency and the columns correspond to time.
-     *                      While this has dimension [nwork] only the first
-     *                      [\c getNumberOfFrequencies() x
-     *                       \c getNumberOfTimeSamples()] samples are valid.
-     * @throws std::invalid_argument if any arguments are invalid.
-     * @throws std::runtime_error if the class is not initalized.
-     * @sa \c getNumberOfTimeSamples(), \c getNumberOfFrequencies()
-     */
-    void transform(const int nSamples, const double x[],
-                   const int nWork, std::complex<double> y[]);
-private:
-    class SlidingWindowRealDFTImpl;
-    std::unique_ptr<SlidingWindowRealDFTImpl> pImpl;
-};
+inline void removeTrend(const int length, double pSrcY[])
+{
+    if (length <= 0){return;}
+    // Mean of x - analytic formula for evenly spaced samples starting
+    // at indx 0. This is computed by simplifying Gauss's formula.
+    auto len64 = static_cast<uint64_t> (length);
+    auto mean_x = 0.5*static_cast<double> (len64 - 1); 
+    // Note, the numerator is the sum of consecutive squared numbers.
+    // In addition we simplify.
+    auto var_x = static_cast<double> ( ((len64 - 1))*(2*(len64 - 1) + 1) )/6.
+               - mean_x*mean_x;
+    double mean_y;
+    ippsMean_64f(pSrcY, length, &mean_y);
+    auto cov_xy = 0.0;
+    #pragma omp simd reduction(+:cov_xy)
+    for (auto i=0; i<length; ++i)
+    {
+        cov_xy = cov_xy + static_cast<double> (i)*pSrcY[i];
+    }
+    // This is computed by expanding (x_i - bar(x))*(y_i - bar(y)),
+    // using the definition of the mean, and simplifying
+    cov_xy = (cov_xy/static_cast<double> (length)) - mean_x*mean_y;
+    auto b1 = cov_xy/var_x;
+    auto b0  = mean_y - b1*mean_x;
+    // Remove the mean
+    #pragma omp simd
+    for (auto i=0; i<length; ++i)
+    {
+        pSrcY[i] = pSrcY[i] - (b0 + b1*static_cast<double> (i));
+    }
+}
+
+}
 
 class SlidingWindowRealDFT::SlidingWindowRealDFTImpl
 {
@@ -157,11 +99,18 @@ public:
         mWindow32f = nullptr;
         mInData64f = nullptr;
         mInData32f = nullptr;
-        mNumberOfSamples = 0;
+        mInDataLength = 0;
+        mOutDataLength = 0;
+        mSamples = 0;
+        mSamplesPerSegment = 0;
+        mSamplesInOverlap = 0;
         mDFTLength = 0;
         mNumberOfFrequencies = 0;
         mNumberOfColumns = 0;
+        mDataOffset = 0;
+        mFTOffset = 0;
         mPrecision = RTSeis::Precision::DOUBLE;
+        mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
         mHaveDoublePlan = false;
         mHaveRealPlan = false;
         mApplyWindow = false;
@@ -169,22 +118,62 @@ public:
     }
 
 //private:
+    /// FFTw plan
     fftw_plan  mDoublePlan;
-    fftwf_plan mFloatPlan;
-    fftw_complex *mOutData64f = nullptr;
-    fftwf_complex *mOutData32f = nullptr;
-    double *mWindow64f = nullptr;
+    /// Holds the data to Fourier transform.  This is an array of dimension
+    /// [mInDataOffset x mNumberOfColumns]
     double *mInData64f = nullptr;
-    float *mWindow32f = nullptr;
+    /// Holds the Fourier transformed data.  This is an array of dimension
+    /// [mOutDataOffset x mNumberOfColumns]
+    fftw_complex *mOutData64f = nullptr;
+    /// Holds the window function.  This is an array of dimension
+    /// [mSamplesPerSegment].  This is used with mApplyWindow.
+    double *mWindow64f = nullptr;
+    /// Holds the FFTw floating arithmetic plan
+    fftwf_plan mFloatPlan;
+    /// Holds the data to Fourier transform.  This is an array of dimension
+    /// [mInDataOffset x mNumberOfColumns]
     float *mInData32f = nullptr;
-    int mNumberOfSamples = 0;
+    /// Holds the Fourier transformed data.  This is an array of dimension
+    /// [mOutDataOffset x mNumberOfColumns]
+    fftwf_complex *mOutData32f = nullptr;
+    /// Holds the window function.  This is an array of dimension
+    /// [mSamples].  This is used with mApplyWindow.
+    float *mWindow32f = nullptr;
+    /// The number of samples in the input signal
+    int mSamples = 0;
+    /// The number of samples in an overlap
+    int mSamplesInOverlap = 0;
+    /// The length of array mInData = mInDataOffset x mNumberOfColumns
+    int mInDataLength = 0;
+    /// The length of array mOutData = mOutDataOffset x mNumberOfColumns
+    int mOutDataLength = 0;
+    /// The length of the DFT.  This is for padding purposes.
     int mDFTLength = 0;
+    /// The number of frequencies. = mDFTLength/2 = 1
     int mNumberOfFrequencies = 0;
+    /// The number of time domain samples where the sliding DFT is tabulated.
     int mNumberOfColumns = 0;
+    /// This is a padded variant of mDFTLength.  The padding ensures 64 bit
+    /// cache alignment for each row of the input data to transform.
+    int mDataOffset = 0;
+    /// This is a padded variant of mNumberOfFrequencies.  The padding ensures
+    /// 64 bit cache alignment ofr each row of the output data to transform.
+    int mFTOffset = 0;
+    /// The number of samples in a segment
+    int mSamplesPerSegment = 0; 
+    /// The precision of the module
     RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
+    /// The detrend strategy
+    SlidingWindowDetrendType mDetrendType
+       = SlidingWindowDetrendType::REMOVE_NONE;
+    /// Flag indicating that I have a plan (for double precision)
     bool mHaveDoublePlan = false;
+    /// Flag indicating that I have a plan (for single precision)
     bool mHaveRealPlan = false;
+    /// Flag indicating whether or not I will apply the window function.
     bool mApplyWindow = false;
+    /// Flag indicating the class is inititalized.
     bool mInitialized = false;
 };
 
@@ -200,7 +189,7 @@ void SlidingWindowRealDFT::clear() noexcept
     pImpl->clear();
 }
 
-/// Initialize DFT
+/// Initialize DFT engine
 void SlidingWindowRealDFT::initialize(const int nSamples,
                                       const int nSamplesPerSegment,
                                       const int dftLength,
@@ -245,11 +234,14 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
     auto cols = static_cast<double> (nSamples - nSamplesInOverlap)
                /static_cast<double> (nSamplesPerSegment - nSamplesInOverlap);
     auto ncols = static_cast<int> (cols);
-    pImpl->mNumberOfSamples = nSamples;
+    pImpl->mSamples = nSamples;
+    pImpl->mSamplesInOverlap = nSamplesInOverlap;
+    pImpl->mSamplesPerSegment = nSamplesPerSegment;
     pImpl->mDFTLength = dftLength;
     pImpl->mNumberOfFrequencies = dftLength/2 + 1;
     pImpl->mNumberOfColumns = ncols;
     pImpl->mPrecision = precision;
+    pImpl->mDetrendType = detrendType;
     if (luseWindow)
     {
         if (precision == RTSeis::Precision::DOUBLE)
@@ -264,52 +256,144 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
         }
     }
     // Initialize the Fourier transform
-    constexpr int rank = 2; // 2D matrix
-    // More natural to make the frequencies the columns and the times the rows
-    int matrixDimensions[2] = {pImpl->mNumberOfColumns,
-                               pImpl->mDFTLength};
-    constexpr int howMany = 1;
-    constexpr int *inembed = NULL;
-    constexpr int *onembed = NULL;
+    constexpr int rank = 1;
+    int nForward[1] = {pImpl->mDFTLength};
+    int howMany = pImpl->mNumberOfColumns;
+    constexpr int istride = 1;
+    constexpr int ostride = 1;
+    constexpr int inembed[1] = {0}; //NULL;
+    constexpr int onembed[1] = {0}; //NULL;
+    // Figure out padding for cache alignment 
     if (precision == RTSeis::Precision::DOUBLE)
     {
-        auto nbytes = static_cast<size_t> (pImpl->mDFTLength)
-                     *sizeof(double);
-        pImpl->mInData64f = static_cast<double *> (fftw_malloc(nbytes));
-        nbytes = static_cast<size_t> (pImpl->mNumberOfFrequencies)
-                *sizeof(fftw_complex);
-        //pImpl->mDoublePlan = fftw_plan_many_dft_r2c(rank, matrixDimensions, howMany, );
+        pImpl->mDataOffset = padLength64f(pImpl->mDFTLength, 64);
+        pImpl->mFTOffset = padLength64f(pImpl->mNumberOfFrequencies, 64);
     }
     else
     {
-        auto nbytes = static_cast<size_t> (pImpl->mDFTLength)
-                     *sizeof(float);
-        nbytes = static_cast<size_t> (pImpl->mNumberOfFrequencies)
-                *sizeof(fftwf_complex);
-        //pImpl->mFloatPlan = fftwf_plan_many_dft_r2c( );
+        pImpl->mDataOffset = padLength32f(pImpl->mDFTLength, 64);
+        pImpl->mFTOffset = padLength32f(pImpl->mNumberOfFrequencies, 64);
     }
+    // Make the real-to-complex Fourier transform plans
+    pImpl->mInDataLength  = pImpl->mDataOffset*pImpl->mNumberOfColumns;
+    pImpl->mOutDataLength = pImpl->mFTOffset*pImpl->mNumberOfColumns;
+    if (precision == RTSeis::Precision::DOUBLE)
+    {
+        auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
+                     *sizeof(double);
+        pImpl->mInData64f = static_cast<double *> (fftw_malloc(nbytes));
+        nbytes = static_cast<size_t> (pImpl->mOutDataLength)
+                *sizeof(fftw_complex);
+        pImpl->mOutData64f 
+            = reinterpret_cast<fftw_complex *> (fftw_malloc(nbytes));
+        pImpl->mDoublePlan = fftw_plan_many_dft_r2c(rank, nForward, howMany,
+                                                    pImpl->mInData64f, inembed,
+                                                    istride, pImpl->mDataOffset,
+                                                    pImpl->mOutData64f, onembed,
+                                                    ostride, pImpl->mFTOffset,
+                                                    FFTW_PATIENT);
+    }
+    else
+    {
+        auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
+                     *sizeof(float);
+        pImpl->mInData32f = static_cast<float *> (fftw_malloc(nbytes));
+        nbytes = static_cast<size_t> (pImpl->mOutDataLength)
+                *sizeof(fftw_complex);
+        pImpl->mOutData32f 
+            = reinterpret_cast<fftwf_complex *> (fftw_malloc(nbytes));
+        pImpl->mFloatPlan = fftwf_plan_many_dft_r2c(rank, nForward, howMany,
+                                                    pImpl->mInData32f, inembed,
+                                                    istride, pImpl->mDataOffset,
+                                                    pImpl->mOutData32f, onembed,
+                                                    ostride, pImpl->mFTOffset,
+                                                    FFTW_PATIENT);
+    }
+    pImpl->mInitialized = true;
 }
 
+/// Gets number of frequencies
 int SlidingWindowRealDFT::getNumberOfFrequencies() const
 {
-    if (!pImpl->mInitialized){RTSEIS_THROW_RTE("%s", "Class not initialized");} 
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");} 
     return pImpl->mNumberOfFrequencies;
 }
 
+/// Gets number of time samples
 int SlidingWindowRealDFT::getNumberOfTimeSamples() const
 {
-    if (!pImpl->mInitialized){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     return pImpl->mNumberOfColumns;
 }
 
+/// Gets number of samples
 int SlidingWindowRealDFT::getNumberOfSamples() const
 {
-    if (!pImpl->mInitialized){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    return pImpl->mNumberOfSamples;
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    return pImpl->mSamples;
 }
 
+/// Determines if the class is intitialized
 bool SlidingWindowRealDFT::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
+/// Gets the precision
+RTSeis::Precision SlidingWindowRealDFT::getPrecision() const
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    return pImpl->mPrecision;
+}
+
+/// Actually perform the transform
+void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
+{
+    // Check the class is initialized and that the inputs are as expected
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (nSamples != getNumberOfSamples())
+    {
+        RTSEIS_THROW_IA("Number of samples = %d must equal %d",
+                        nSamples, getNumberOfSamples());
+    }
+    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    // Handle the float case
+    if (pImpl->mPrecision != RTSeis::Precision::DOUBLE)
+    {
+        RTSEIS_THROW_RTE("%s", "Float precision not yet implemented");
+    }
+    // Loop over the windows
+    auto *window = pImpl->mWindow64f;
+    auto *inData = pImpl->mInData64f;
+    int nDataOffset = pImpl->mDataOffset;
+    int nPtsPerSeg = pImpl->mSamplesPerSegment;
+    int nOverlap   = pImpl->mSamplesInOverlap;
+    int shift = nPtsPerSeg - nOverlap;
+    auto lwindow = pImpl->mApplyWindow;
+    SlidingWindowDetrendType detrendType = pImpl->mDetrendType;
+    for (auto icol=0; icol<pImpl->mNumberOfColumns; ++icol)
+    {
+        auto xIndex = icol*shift; // Extract x
+        auto dataIndex = icol*nDataOffset;
+        auto xptr = &x[xIndex];
+        auto dptr = &inData[dataIndex];
+        assert(xIndex < nSamples);
+        auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
+        // Zero and copy
+        std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(double));
+        std::memcpy(dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
+        // Demean?
+        if (detrendType == SlidingWindowDetrendType::REMOVE_MEAN)
+        {
+            removeMean(ncopy, dptr);
+        }
+        else if (detrendType == SlidingWindowDetrendType::REMOVE_TREND)
+        {
+            removeTrend(ncopy, dptr); 
+        }
+        // Window
+        if (lwindow){ippsMul_64f_I(window, dptr, nPtsPerSeg);}
+    }     
+    // Transform
+    fftw_execute(pImpl->mDoublePlan);
+}

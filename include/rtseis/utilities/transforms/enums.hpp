@@ -26,7 +26,7 @@ enum class SlidingWindowDetrendType
 {
     REMOVE_NONE,  /*!< Does not modify the data in each segment. */
     REMOVE_MEAN,  /*!< Removes the mean in each segment. */
-    REMOVE_TREND  /*!< Removes the trend in each segment. */
+    REMOVE_TREND  /*!< Removes the linear trend in each segment. */
 };
 
 }; // End Transforms
