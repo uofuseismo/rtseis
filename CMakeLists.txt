@@ -160,9 +160,12 @@ ADD_EXECUTABLE(testUtils
                testing/utils/iir.cpp
                testing/utils/response.cpp
                testing/utils/filters.cpp
-               testing/utils/transforms.cpp
+               #testing/utils/transforms.cpp
                testing/utils/normalization.cpp
                testing/utils/windowFunctions.cpp)
+ADD_EXECUTABLE(utilityTests
+               testing/utils/main.cpp
+               testing/utils/transforms.cpp)
 ADD_EXECUTABLE(testPPSC
                testing/postProcessing/singleChannel.cpp)
                #testing/modules/modules.cpp
@@ -170,8 +173,12 @@ ADD_EXECUTABLE(testPPSC
                #testing/modules/classicSTALTA.cpp)
 # The core library utilities - do these first
 target_link_libraries(testUtils
-                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY} ${GTEST_BOTH_LIBRARIES})
+                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
 target_include_directories(testUtils
+                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS} ${GTEST_INCLUDE_DIRS})
+target_link_libraries(utilityTests
+                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY} ${GTEST_BOTH_LIBRARIES})
+target_include_directories(utilityTests
                            PRIVATE ${PRIVATE_INCLUDE_DEPENDS} ${GTEST_INCLUDE_DIRS})
 # Single-channel post-processing
 target_link_libraries(testPPSC
@@ -183,6 +190,9 @@ target_include_directories(testPPSC
 add_test(NAME utils
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testUtils)
+add_test(NAME utilities
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
+         COMMAND utilityTests) 
 add_test(NAME singleChannlePostProcessing
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testPPSC

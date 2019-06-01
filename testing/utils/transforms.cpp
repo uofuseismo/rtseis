@@ -23,6 +23,10 @@
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
+#include <gtest/gtest.h>
+
+namespace
+{
 
 using namespace RTSeis::Utilities::Transforms;
 
@@ -48,6 +52,7 @@ int rfft(const int nx, double x[], const int n,
 int irfft(const int nx, const std::complex<double> x[],
           const int n, double y[]);
 
+/*
 int rtseis_test_utils_transforms(void)
 {
     const std::string dataDir = "data/"; 
@@ -117,58 +122,24 @@ int rtseis_test_utils_transforms(void)
 
     return EXIT_SUCCESS;
 }
+*/
 
-int transforms_nextPow2_test(void)
+//int transforms_nextPow2_test(void)
+TEST(TransformsNextPow2, NextPow2)
 {
-    if (DFTUtilities::nextPow2(0) != 1)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed 0 test");
-        return EXIT_FAILURE;
-    }   
-    if (DFTUtilities::nextPow2(1) != 1)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 1 test");
-        return EXIT_FAILURE;
-    }
-    if (DFTUtilities::nextPow2(2) != 2)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 2 test");
-        return EXIT_FAILURE;
-    }
-    if (DFTUtilities::nextPow2(3) != 4)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 3 test");
-        return EXIT_FAILURE;
-    }
-    if (DFTUtilities::nextPow2(4) != 4)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 4 test");
-        return EXIT_FAILURE;
-    }
-    if (DFTUtilities::nextPow2(5) != 8)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 8 test");
-        return EXIT_FAILURE;
-    }
-    if (DFTUtilities::nextPow2(1200) != 2048)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 1200 test");
-        return EXIT_FAILURE;
-    }
-    if (DFTUtilities::nextPow2(120000) != 131072)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 120000 test");
-        return EXIT_FAILURE;
-    }
-    if (DFTUtilities::nextPow2(131072) != 131072)
-    {
-        RTSEIS_ERRMSG("%s", "Failed 131072 test");
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
+    EXPECT_EQ(DFTUtilities::nextPow2(0), 1);
+    EXPECT_EQ(DFTUtilities::nextPow2(1), 1);
+    EXPECT_EQ(DFTUtilities::nextPow2(2), 2);
+    EXPECT_EQ(DFTUtilities::nextPow2(3), 4);
+    EXPECT_EQ(DFTUtilities::nextPow2(4), 4);
+    EXPECT_EQ(DFTUtilities::nextPow2(5), 8);
+    EXPECT_EQ(DFTUtilities::nextPow2(1200), 2048);
+    EXPECT_EQ(DFTUtilities::nextPow2(120000), 131072);
+    EXPECT_EQ(DFTUtilities::nextPow2(131072), 131072);
 }
 
-int transforms_unwrap_test(void)
+//int transforms_unwrap_test(void)
+TEST(TransformsUnwrap, Unwrap)
 {
     int n = 23;
     std::vector<double> p{0, -1.5728, -1.5747, -1.5772, -1.5790,
@@ -199,52 +170,26 @@ int transforms_unwrap_test(void)
                              -0.570800000000000};
     // Should run with default tol = M_PI
     std::vector<double> q;
-    try
-    {
-         q = DFTUtilities::unwrap(p);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    for (int i=0; i<n; i++)
-    {
-        if (std::abs(q[i] - qref[i]) > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed to unwrap %lf %lf", q[i], qref[i]);
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_NO_THROW(q = DFTUtilities::unwrap(p));
+    double emax;
+    ippsNormDiff_L1_64f(q.data(), qref.data(), n, &emax);
+    EXPECT_TRUE(emax < 1.e-10);
     // Switch tolerance to 90 degrees and adjust p
-    for (int i=0; i<n; i++){p[i] =-p[i] + 1;}
+    for (auto i=0; i<n; ++i){p[i] =-p[i] + 1;}
     double tol = M_PI/2;
-    try
-    {
-        q = DFTUtilities::unwrap(p, tol);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    for (int i=0; i<n; i++)
-    {
-        if (std::abs(q[i] - qref2[i]) > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed to unwrap %lf %lf", q[i], qref2[i]);
-            return EXIT_FAILURE;
-        }
-    }
-    return EXIT_SUCCESS;
+    EXPECT_NO_THROW(q = DFTUtilities::unwrap(p, tol));
+    ippsNormDiff_L1_64f(q.data(), qref2.data(), n, &emax);
+    EXPECT_TRUE(emax < 1.e-10);
 }
 
-int transforms_phase_test(void)
+//int transforms_phase_test(void)
+TEST(TransformsPhase, Phase)
 {
     const int n = 7;
     std::vector<double> tr{-0.785398163397448, 0.463647609000806,
                           -0.3217505543966, 0.244978663126864,
                            0, 1.570796326794897, 0};
+    std::vector<double> tr2 = tr;
     std::vector<std::complex<double>> z(7);
     z[0] = std::complex<double> (1, -1);
     z[1] = std::complex<double> (2, +1);
@@ -254,44 +199,18 @@ int transforms_phase_test(void)
     z[5] = std::complex<double> (0, +1);
     z[6] = std::complex<double> (1, +0);
     std::vector<double> angle;
-    try
-    {
-        angle = DFTUtilities::phase(z);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    for (int i=0; i<n; i++)
-    {
-        if (std::abs(tr[i] - angle[i]) > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed to compute angle %lf %lf", tr[i], angle[i]);
-            return EXIT_FAILURE;
-        } 
-    } 
-
+    EXPECT_NO_THROW(angle = DFTUtilities::phase(z));
+    double emax;
+    ippsNormDiff_L1_64f(angle.data(), tr.data(), n, &emax);
+    EXPECT_TRUE(emax < 1.e-10);
+    // Repeat same test but get result in degrees
     bool lwantDeg = true;
-    try
-    {
-        angle = DFTUtilities::phase(z, lwantDeg);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    for (int i=0; i<n; i++)
-    {
-        if (std::abs(tr[i]*180.0/M_PI - angle[i]) > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed to compute angle %lf %lf", tr[i], angle[i]);
-            return EXIT_FAILURE;
-        }
-    }
-    return EXIT_SUCCESS; 
+    EXPECT_NO_THROW(angle = DFTUtilities::phase(z, lwantDeg));
+    for (auto i=0; i<n; i++){tr2[i] = tr[i]*180.0/M_PI;}
+    ippsNormDiff_L1_64f(angle.data(), tr2.data(), n, &emax);
+    EXPECT_TRUE(emax < 1.e-10);
 }
+/*
 
 int transforms_test_hilbert()
 {
@@ -1081,6 +1000,8 @@ int transforms_test_firEnvelope(const std::string fileName1,
     return EXIT_SUCCESS;
 }
 
+*/
+
 //============================================================================//
 //                              Private functions                             //
 //============================================================================//
@@ -1331,4 +1252,6 @@ int rfft(const int nx, double x[], const int n,
     fftw_cleanup();
     out = nullptr;
     return 0;
+}
+
 }
