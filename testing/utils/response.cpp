@@ -1,17 +1,23 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "utils.hpp"
 #include "rtseis/utilities/design/response.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/log.h"
+#include <gtest/gtest.h>
+
+namespace
+{
 
 using namespace RTSeis;
 using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 
-int rtseis_test_utils_design_freqs(void)
+//int rtseis_test_utils_design_freqs(void)
+TEST(UtilitiesResponseFreqsAndFreqz, FreqsFreqz)
 {
     const int nw = 50;
     const int nf = 41;
@@ -130,31 +136,21 @@ int rtseis_test_utils_design_freqs(void)
         w[i] = 2.0*M_PI*std::pow(10, x1 + static_cast<double> (i)*dx);
     }
     std::vector<std::complex<double>> h;
-    try
+    EXPECT_NO_THROW(h = Response::freqs(ba, w));
+    EXPECT_EQ(h.size(), static_cast<size_t> (nw));
+    double emax = 0;
+    for (auto i=0; i<h.size(); i++)
     {
-        h = Response::freqs(ba, w);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-
-    if (h.size() != static_cast<size_t> (nw))
-    {
-        RTSEIS_ERRMSG("%s", "h is wrong size");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<h.size(); i++)
-    {
-        if (std::abs(h[i] - href1[i]) > 1.e-10)
+        auto res = std::abs(h[i] - href1[i]);
+        emax = std::max(res, emax);
+        if (res > 1.e-10) //std::abs(h[i] - href1[i]) > 1.e-10)
         {
             RTSEIS_ERRMSG("Failed freqs test (%lf,%lf) (%lf,%lf)",
                           std::real(h[i]), std::imag(h[i]),
                           std::real(href1[i]), std::imag(href1[i]));
-            return EXIT_FAILURE;
         }
-    }   
+    }
+    EXPECT_TRUE(emax < 1.e-10);
 
     w.resize(nf);
     double df = (M_PI - 0)/static_cast<double> (nf - 1);
@@ -163,35 +159,25 @@ int rtseis_test_utils_design_freqs(void)
         w[i] = 0 + static_cast<double> (i)*df;
     }  
 
-    try
+    EXPECT_NO_THROW(h = Response::freqz(baz, w));
+    EXPECT_EQ(h.size(), static_cast<size_t> (nf));
+    emax = 0;
+    for (auto i=0; i<h.size(); i++)
     {
-        h = Response::freqz(baz, w);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what()); 
-        return EXIT_FAILURE;
-    }
-
-    if (h.size() != static_cast<size_t> (nf))
-    {
-        RTSEIS_ERRMSG("%s", "h is wrong size");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<h.size(); i++)
-    {
+        auto res = std::abs(h[i] - href2[i]);
+        emax = std::max(res, emax);
         if (std::abs(h[i] - href2[i]) > 1.e-10)
         {
             RTSEIS_ERRMSG("Failed freqs test (%lf,%lf) (%lf,%lf)",
                           std::real(h[i]), std::imag(h[i]),
                           std::real(href2[i]), std::imag(href2[i]));
-            return EXIT_FAILURE;
         }
     }
-    return EXIT_SUCCESS;
+    EXPECT_TRUE(emax < 1.e-10);
 }
 
-int rtseis_test_utils_design_groupDelay(void)
+//int rtseis_test_utils_design_groupDelay(void)
+TEST(UtilitiesResponseGroupDelay, GroupDelay)
 {
     const int nf = 20;
     const std::vector<double> b({4.88711377891e-05, 0.000195484551156,
@@ -214,24 +200,12 @@ int rtseis_test_utils_design_groupDelay(void)
         w[i] =  0 + di*static_cast<double> (i);
     }
     std::vector<double> gd;
-    try
-    {
-        gd = Response::groupDelay(ba, w);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(gd = Response::groupDelay(ba, w));
+    double emax;
+    EXPECT_EQ(gd.size(), static_cast<size_t> (nf));
+    ippsNormDiff_Inf_64f(gd.data(), gdR.data(), nf, &emax);
+    EXPECT_TRUE(emax < 1.e-7);
 
-    for (int i=0; i<nf; i++)
-    {
-        if (std::abs(gd[i] - gdR[i]) > 1.e-7)
-        {
-            RTSEIS_ERRMSG("Failed to compute gd %lf %lf", gd[i], gdR[i]);
-            return EXIT_FAILURE;
-        }
-    }
 /*
     // group_delay((b, a), 20, whole=True)
     ierr = Response::groupDelay(ba, gd, 20, true);
@@ -246,5 +220,6 @@ int rtseis_test_utils_design_groupDelay(void)
     }
 getchar();
 */
-    return EXIT_SUCCESS;
+}
+
 }

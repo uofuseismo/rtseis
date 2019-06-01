@@ -91,6 +91,7 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed FIR window design");
 
+/*
     ierr = rtseis_test_utils_design_freqs();
     if (ierr != EXIT_SUCCESS)
     {
@@ -106,6 +107,7 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed groupDelay test"); 
+*/
 
     ierr = rtseis_test_utils_filters();
     if (ierr != EXIT_SUCCESS)

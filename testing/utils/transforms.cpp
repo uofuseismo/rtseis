@@ -172,13 +172,13 @@ TEST(TransformsUnwrap, Unwrap)
     std::vector<double> q;
     EXPECT_NO_THROW(q = DFTUtilities::unwrap(p));
     double emax;
-    ippsNormDiff_L1_64f(q.data(), qref.data(), n, &emax);
+    ippsNormDiff_Inf_64f(q.data(), qref.data(), n, &emax);
     EXPECT_TRUE(emax < 1.e-10);
     // Switch tolerance to 90 degrees and adjust p
     for (auto i=0; i<n; ++i){p[i] =-p[i] + 1;}
     double tol = M_PI/2;
     EXPECT_NO_THROW(q = DFTUtilities::unwrap(p, tol));
-    ippsNormDiff_L1_64f(q.data(), qref2.data(), n, &emax);
+    ippsNormDiff_Inf_64f(q.data(), qref2.data(), n, &emax);
     EXPECT_TRUE(emax < 1.e-10);
 }
 
@@ -201,13 +201,13 @@ TEST(TransformsPhase, Phase)
     std::vector<double> angle;
     EXPECT_NO_THROW(angle = DFTUtilities::phase(z));
     double emax;
-    ippsNormDiff_L1_64f(angle.data(), tr.data(), n, &emax);
+    ippsNormDiff_Inf_64f(angle.data(), tr.data(), n, &emax);
     EXPECT_TRUE(emax < 1.e-10);
     // Repeat same test but get result in degrees
     bool lwantDeg = true;
     EXPECT_NO_THROW(angle = DFTUtilities::phase(z, lwantDeg));
     for (auto i=0; i<n; i++){tr2[i] = tr[i]*180.0/M_PI;}
-    ippsNormDiff_L1_64f(angle.data(), tr2.data(), n, &emax);
+    ippsNormDiff_Inf_64f(angle.data(), tr2.data(), n, &emax);
     EXPECT_TRUE(emax < 1.e-10);
 }
 /*

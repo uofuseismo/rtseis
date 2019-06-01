@@ -158,14 +158,15 @@ ADD_EXECUTABLE(testUtils
                testing/utils/interpolate.cpp
                testing/utils/fir.cpp
                testing/utils/iir.cpp
-               testing/utils/response.cpp
+               #testing/utils/response.cpp
                testing/utils/filters.cpp
                #testing/utils/transforms.cpp
                testing/utils/normalization.cpp
                testing/utils/windowFunctions.cpp)
 ADD_EXECUTABLE(utilityTests
                testing/utils/main.cpp
-               testing/utils/transforms.cpp)
+               testing/utils/transforms.cpp
+               testing/utils/response.cpp)
 ADD_EXECUTABLE(testPPSC
                testing/postProcessing/singleChannel.cpp)
                #testing/modules/modules.cpp
