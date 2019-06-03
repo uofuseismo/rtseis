@@ -791,13 +791,12 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ./ \
-                         include/rtseis/utilities/design/analogPrototype.hpp \
                          include/rtseis/utilities/design/ \
                          include/rtseis/utilities/math/ \
                          include/rtseis/utilities/filterImplementations/ \
                          include/rtseis/utilities/filterRepresentations/ \
-                         include/rtseis/utilities/transforms/transforms.hpp \
-                         include/rtseis/utilities/normalization/signBit.hpp \
+                         include/rtseis/utilities/transforms \
+                         include/rtseis/utilities/normalization \
                          include/rtseis/postProcessing/singleChannel/ \
                          doc/overview.dox \
                          doc/Utilities.doc \

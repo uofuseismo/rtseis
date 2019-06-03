@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_FILTER_DOWNSAMPLE_HPP
-#define RTSEIS_UTILS_FILTER_DOWNSAMPLE_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTER_DOWNSAMPLE_HPP
+#define RTSEIS_UTILITIES_FILTER_DOWNSAMPLE_HPP 1
 #include <memory>
 #include "rtseis/enums.h"
 
@@ -145,7 +145,7 @@ private:
     class DownsampleImpl;
     std::unique_ptr<DownsampleImpl> pDownsample_; 
 }; // End downsample
-}; // End filters
-}; // End utilities
-}; // End RTSeis
+} // End filters
+} // End utilities
+} // End RTSeis
 #endif

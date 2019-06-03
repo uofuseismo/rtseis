@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_FILTER_MEDIAN_HPP
-#define RTSEIS_UTILS_FILTER_MEDIAN_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTER_MEDIAN_HPP
+#define RTSEIS_UTILITIES_FILTER_MEDIAN_HPP 1
 #include <memory>
 #include "rtseis/enums.h"
 
@@ -120,7 +120,7 @@ public:
     class MedianFilterImpl;
     std::unique_ptr<MedianFilterImpl> pMedian_;
 }; // End medianFilter 
-}; // End filter implementations
-}; // End utilties
-}; // End RTSeis
+} // End filter implementations
+} // End utilties
+} // End RTSeis
 #endif

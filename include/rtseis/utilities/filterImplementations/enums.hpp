@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_FILTER_ENUMS_HPP
-#define RTSEIS_UTILS_FILTER_ENUMS_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTER_ENUMS_HPP
+#define RTSEIS_UTILITIES_FILTER_ENUMS_HPP 1
 
 namespace RTSeis
 {
@@ -39,8 +39,18 @@ enum IIRDFImplementation
                    with Matlab. */
 };
 
-}; // end FilterImplementations
-}; // End Utilities
-}; // End RTSeis
+/*! 
+ * @brief Defines the detrend strategy.
+ * @ingroup rtseis_utils_filters
+ */
+enum DetrendType
+{
+    CONSTANT, /*!< Removes the mean from the time series. */
+    LINEAR    /*!< Removes a best fitting line from the time series. */
+};
+
+} // end FilterImplementations
+} // End Utilities
+} // End RTSeis
 
 #endif

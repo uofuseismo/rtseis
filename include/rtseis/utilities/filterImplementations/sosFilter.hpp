@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_FILTER_SOS_HPP
-#define RTSEIS_UTILS_FILTER_SOS_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTER_SOS_HPP
+#define RTSEIS_UTILITIES_FILTER_SOS_HPP 1
 #include <memory>
 #include "rtseis/enums.h"
 
@@ -128,7 +128,8 @@ private:
     class SOSFilterImpl;
     std::unique_ptr<SOSFilterImpl> pSOS_;
 }; // sos
-}; // filterimplementations
-}; // utilties
-}; // rtseis
+} // filterimplementations
+} // utilties
+} // rtseis
+
 #endif

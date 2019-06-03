@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILS_FILTER_FIR_HPP
-#define RTSEIS_UTILS_FILTER_FIR_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTER_FIR_HPP
+#define RTSEIS_UTILITIES_FILTER_FIR_HPP 1
 #include <memory>
 #include "rtseis/enums.h"
 #include "rtseis/utilities/filterImplementations/enums.hpp"
@@ -128,7 +128,7 @@ private:
     class FIRImpl;
     std::unique_ptr<FIRImpl> pFIR_;
 }; // FIR
-}; // filterimplementations
-}; // utilties
-}; // rtseis
+} // filterimplementations
+} // utilties
+} // rtseis
 #endif
