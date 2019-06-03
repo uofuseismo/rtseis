@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <string>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
 #include "utils.hpp"
 #include "rtseis/utilities/design/response.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
@@ -17,10 +16,9 @@ using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 
 //int rtseis_test_utils_design_freqs(void)
-TEST(UtilitiesResponseFreqsAndFreqz, FreqsFreqz)
+TEST(UtilitiesResponseFreqs, Freqz)
 {
     const int nw = 50;
-    const int nf = 41;
     std::vector<double> bs({1611.7315706,  0.,  0.,  0.,  0.});
     std::vector<double> as({1.00000000e+00,   8.57530241e+00,   1.57767906e+02,
                             7.98628595e+02,   4.76375068e+03,   7.98628595e+03,
@@ -83,8 +81,43 @@ TEST(UtilitiesResponseFreqsAndFreqz, FreqsFreqz)
     href1[47] = std::complex<double> (+0.00022628105324,+0.00003819156150);
     href1[48] = std::complex<double> (+0.00015454510105,+0.00002364289385);
     href1[49] = std::complex<double> (+0.00010564846092,+0.00001466105711);
+
+    const double x1 =-1;
+    const double x2 = 1;
+    const double dx = (x2 - x1)/static_cast<double> (nw - 1);
+    std::vector<double> w(nw); //w.resize(nw);
+    for (int i=0; i<nw; i++)
+    {
+        w[i] = 2.0*M_PI*std::pow(10, x1 + static_cast<double> (i)*dx);
+    }
+    std::vector<std::complex<double>> h;
+    EXPECT_NO_THROW(h = Response::freqs(ba, w));
+    EXPECT_EQ(h.size(), static_cast<size_t> (nw));
+    double emax = 0;
+    for (auto i=0; i<h.size(); i++)
+    {
+        auto res = std::abs(h[i] - href1[i]);
+        emax = std::max(res, emax);
+        if (res > 1.e-10) //std::abs(h[i] - href1[i]) > 1.e-10)
+        {
+            fprintf(stderr, "Failed freqs test (%lf,%lf) (%lf,%lf)",
+                    std::real(h[i]), std::imag(h[i]),
+                    std::real(href1[i]), std::imag(href1[i]));
+        }
+    }
+    EXPECT_TRUE(emax < 1.e-10);
+}
+
+TEST(UtilitiesResponseFreqz, Freqz)
+{
+    const int nf = 41; 
+    std::vector<double> bz({0.056340000000000, -0.000935244000000,
+                           -0.000935244000000,  0.056340000000000});
+    std::vector<double> az({1.000000000000000, -2.129100000000000,
+                            1.783386300000000, -0.543463100000000});
+    BA baz(bz, az);
     // make solution for freqz
-    std::vector<std::complex<double>> href2; href2.resize(nf);
+    std::vector<std::complex<double>> href2(nf);
     href2[0] = std::complex<double> (+0.99987648795559,+0.00000000000000);
     href2[1] = std::complex<double> (+0.95601820836871,-0.24635538126662);
     href2[2] = std::complex<double> (+0.84182473416863,-0.45234494448287);
@@ -126,51 +159,25 @@ TEST(UtilitiesResponseFreqsAndFreqz, FreqsFreqz)
     href2[38] = std::complex<double> (+0.00012115155313,-0.00489427799722);
     href2[39] = std::complex<double> (+0.00003022628902,-0.00244670032556);
     href2[40] = std::complex<double> (-0.00000000000000,-0.00000000000000);
-
-    const double x1 =-1;
-    const double x2 = 1;
-    const double dx = (x2 - x1)/static_cast<double> (nw - 1);
-    std::vector<double> w; w.resize(nw);
-    for (int i=0; i<nw; i++)
-    {
-        w[i] = 2.0*M_PI*std::pow(10, x1 + static_cast<double> (i)*dx);
-    }
-    std::vector<std::complex<double>> h;
-    EXPECT_NO_THROW(h = Response::freqs(ba, w));
-    EXPECT_EQ(h.size(), static_cast<size_t> (nw));
-    double emax = 0;
-    for (auto i=0; i<h.size(); i++)
-    {
-        auto res = std::abs(h[i] - href1[i]);
-        emax = std::max(res, emax);
-        if (res > 1.e-10) //std::abs(h[i] - href1[i]) > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed freqs test (%lf,%lf) (%lf,%lf)",
-                          std::real(h[i]), std::imag(h[i]),
-                          std::real(href1[i]), std::imag(href1[i]));
-        }
-    }
-    EXPECT_TRUE(emax < 1.e-10);
-
-    w.resize(nf);
+    std::vector<double> w(nf);
     double df = (M_PI - 0)/static_cast<double> (nf - 1);
-    for (int i=0; i<nf; i++)
+    for (auto i=0; i<nf; i++)
     {
         w[i] = 0 + static_cast<double> (i)*df;
     }  
-
+    std::vector<std::complex<double>> h;
     EXPECT_NO_THROW(h = Response::freqz(baz, w));
     EXPECT_EQ(h.size(), static_cast<size_t> (nf));
-    emax = 0;
+    double emax = 0;
     for (auto i=0; i<h.size(); i++)
     {
         auto res = std::abs(h[i] - href2[i]);
         emax = std::max(res, emax);
         if (std::abs(h[i] - href2[i]) > 1.e-10)
         {
-            RTSEIS_ERRMSG("Failed freqs test (%lf,%lf) (%lf,%lf)",
-                          std::real(h[i]), std::imag(h[i]),
-                          std::real(href2[i]), std::imag(href2[i]));
+            fprintf(stderr, "Failed freqz test (%lf,%lf) (%lf,%lf)",
+                    std::real(h[i]), std::imag(h[i]),
+                    std::real(href2[i]), std::imag(href2[i]));
         }
     }
     EXPECT_TRUE(emax < 1.e-10);
