@@ -252,7 +252,7 @@ public:
      */
     /*!
      * @brief Removes the mean from the data.
-     * @throws std::invalid_argument if there is no data.
+     * @throws std::runtime_error if there is no data.
      *
      * @snippet testing/postProcessing/singleChannel.cpp ppSCDemeanExample
      */
@@ -261,8 +261,7 @@ public:
      * @brief Removes a best fitting line \f$ \hat{y} = a x + b \f$
      *        from the data by first computing \f$ a \f$ and \f$ b \f$
      *        then computing \f$ y - (a x + b) \f$.
-     * @throws std::invalid_argument if there are less than 2 data points  in x.
-     *
+     * @throws std::runtime_error if there is no data.
      * @snippet testing/postProcessing/singleChannel.cpp ppSCDetrendExample
      */
     void detrend(void);

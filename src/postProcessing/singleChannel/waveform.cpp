@@ -506,8 +506,7 @@ void Waveform::demean()
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
-        return;
+        RTSEIS_THROW_RTE("%s", "No data is set on the module");
     }
     // Demean the data
     constexpr Utilities::FilterImplementations::DetrendType type
@@ -531,9 +530,9 @@ void Waveform::demean()
         pImpl->lfirstFilter_ = false;
 */
     }
-    catch (const std::invalid_argument &ia)
+    catch (const std::exception &e)
     {
-        RTSEIS_ERRMSG("%s", ia.what());
+        RTSEIS_ERRMSG("%s", e.what());
         throw std::runtime_error("Algorithmic failure");
     }
 }
@@ -542,10 +541,9 @@ void Waveform::detrend()
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
-    if (len < 2)
+    if (len < 1)
     {
-        RTSEIS_WARNMSG("%s", "At least 2 data points required to detrend");
-        return;
+        RTSEIS_THROW_RTE("%s", "No data iset set on the module");
     }
     // Detrend the data
     constexpr Utilities::FilterImplementations::DetrendType type 

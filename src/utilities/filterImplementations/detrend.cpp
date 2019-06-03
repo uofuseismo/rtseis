@@ -99,10 +99,6 @@ void Detrend::apply(const int nx, const double x[], double *yin[])
     {
         RTSEIS_THROW_RTE("%s", "Class not inititialized");
     }
-    if (pImpl->mType == DetrendType::LINEAR && nx < 2)
-    {   
-        RTSEIS_THROW_IA("%s", "At least 2 data points for linear detrend");
-    }
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -140,10 +136,6 @@ void Detrend::apply(const int nx, const float x[], float *yin[])
     {
         RTSEIS_THROW_RTE("%s", "Class not inititialized");
     }
-    if (pImpl->mType == DetrendType::LINEAR && nx < 2)
-    {
-        RTSEIS_THROW_IA("%s", "At least 2 data points for linear detrend");
-    } 
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -180,14 +172,18 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     float *intercept, float *slope)
 {
     if (length <= 0){return;}
-    if (length < 2 || x == nullptr || *yin == nullptr)
+    if (x == nullptr || *yin == nullptr)
     {
-        if (length < 2)
-        {
-            RTSEIS_THROW_IA("length = %d must be at least 2", length);
-        }
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    // Handle an edge case - this is actually underdetermined
+    if (length < 2)
+    {
+        *yin[0] = 0.f;
+        if (*intercept){*intercept = x[0];}
+        if (*slope){*slope = 0.0f;}
+        return;
     }
     // Mean of x - analytic formula for evenly spaced samples starting
     // at indx 0. This is computed by simplifying Gauss's formula.
@@ -229,14 +225,18 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     double *intercept, double *slope)
 {
     if (length <= 0){return;}
-    if (length < 2 || x == nullptr || *yin == nullptr)
+    if (x == nullptr || *yin == nullptr)
     {
-        if (length < 2)
-        {
-            RTSEIS_THROW_IA("length = %d must be at least 2", length);
-        }
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    // Handle an edge case - this is actually underdetermined
+    if (length < 2)
+    {
+        *yin[0] = 0;
+        if (*intercept){*intercept = x[0];}
+        if (*slope){*slope = 0;}
+        return;
     }
     // Mean of x - analytic formula for evenly spaced samples starting
     // at indx 0. This is computed by simplifying Gauss's formula.
