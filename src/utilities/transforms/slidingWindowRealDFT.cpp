@@ -7,7 +7,7 @@
 #include <ipps.h>
 #include <rtseis/private/throw.hpp>
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
-
+#include "rtseis/utilities/filterImplementations/detrend.hpp"
 
 
 using namespace RTSeis::Utilities::Transforms;
@@ -33,45 +33,6 @@ inline int padLength32f(const int n, const int alignment=64)
     if (xmod != 0){padLength = (alignment - xmod)/size;}
     auto nptsPadded = n + padLength;
     return nptsPadded;
-}
-
-inline void removeMean(const int length, double pSrcY[])
-{
-    double pMean;
-    ippsMean_64f(pSrcY, length, &pMean);
-    ippsSubC_64f_I(pMean, pSrcY, length);
-}
-
-inline void removeTrend(const int length, double pSrcY[])
-{
-    if (length <= 0){return;}
-    // Mean of x - analytic formula for evenly spaced samples starting
-    // at indx 0. This is computed by simplifying Gauss's formula.
-    auto len64 = static_cast<uint64_t> (length);
-    auto mean_x = 0.5*static_cast<double> (len64 - 1); 
-    // Note, the numerator is the sum of consecutive squared numbers.
-    // In addition we simplify.
-    auto var_x = static_cast<double> ( ((len64 - 1))*(2*(len64 - 1) + 1) )/6.
-               - mean_x*mean_x;
-    double mean_y;
-    ippsMean_64f(pSrcY, length, &mean_y);
-    auto cov_xy = 0.0;
-    #pragma omp simd reduction(+:cov_xy)
-    for (auto i=0; i<length; ++i)
-    {
-        cov_xy = cov_xy + static_cast<double> (i)*pSrcY[i];
-    }
-    // This is computed by expanding (x_i - bar(x))*(y_i - bar(y)),
-    // using the definition of the mean, and simplifying
-    cov_xy = (cov_xy/static_cast<double> (length)) - mean_x*mean_y;
-    auto b1 = cov_xy/var_x;
-    auto b0  = mean_y - b1*mean_x;
-    // Remove the mean
-    #pragma omp simd
-    for (auto i=0; i<length; ++i)
-    {
-        pSrcY[i] = pSrcY[i] - (b0 + b1*static_cast<double> (i));
-    }
 }
 
 }
@@ -385,11 +346,15 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
         // Demean?
         if (detrendType == SlidingWindowDetrendType::REMOVE_MEAN)
         {
-            removeMean(ncopy, dptr);
+            double mean;
+            FilterImplementations::removeMean(ncopy, xptr, &dptr, &mean);
         }
         else if (detrendType == SlidingWindowDetrendType::REMOVE_TREND)
         {
-            removeTrend(ncopy, dptr); 
+            double intercept;
+            double slope;
+            FilterImplementations::removeTrend(ncopy, xptr, &dptr,
+                                               &intercept, &slope); 
         }
         // Window
         if (lwindow){ippsMul_64f_I(window, dptr, nPtsPerSeg);}
