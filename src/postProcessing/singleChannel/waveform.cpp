@@ -28,6 +28,7 @@
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/utilities/filterImplementations/detrend.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
@@ -509,8 +510,18 @@ void Waveform::demean()
         return;
     }
     // Demean the data
+    constexpr Utilities::FilterImplementations::DetrendType type
+        = Utilities::FilterImplementations::DetrendType::CONSTANT;
     try
     {
+        Utilities::FilterImplementations::Detrend demean;
+        demean.initialize(type, RTSeis::Precision::DOUBLE);
+        const double *x = pImpl->getInputDataPointer();
+        pImpl->resizeOutputData(len);
+        double *y = pImpl->getOutputDataPointer();
+        demean.apply(len, x, &y);
+        pImpl->lfirstFilter_ = false;
+/* 
         DemeanParameters parms(RTSeis::Precision::DOUBLE);
         Demean demean(parms);
         const double *x = pImpl->getInputDataPointer();
@@ -518,6 +529,7 @@ void Waveform::demean()
         double  *y = pImpl->getOutputDataPointer();
         demean.apply(len, x, y);
         pImpl->lfirstFilter_ = false;
+*/
     }
     catch (const std::invalid_argument &ia)
     {
@@ -536,6 +548,24 @@ void Waveform::detrend()
         return;
     }
     // Detrend the data
+    constexpr Utilities::FilterImplementations::DetrendType type 
+        = Utilities::FilterImplementations::DetrendType::LINEAR;
+    try  
+    {    
+        Utilities::FilterImplementations::Detrend detrend;
+        detrend.initialize(type, RTSeis::Precision::DOUBLE);
+        const double *x = pImpl->getInputDataPointer();
+        pImpl->resizeOutputData(len);
+        double *y = pImpl->getOutputDataPointer();
+        detrend.apply(len, x, &y); 
+        pImpl->lfirstFilter_ = false;
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s", e.what());
+        throw std::runtime_error("Algorithmic failure");
+    }
+/*
     DetrendParameters parms(RTSeis::Precision::DOUBLE);
     Detrend detrend(parms);
     const double *x = pImpl->getInputDataPointer();
@@ -543,6 +573,7 @@ void Waveform::detrend()
     double  *y = pImpl->getOutputDataPointer();
     detrend.apply(len, x, y); 
     pImpl->lfirstFilter_ = false;
+*/
 }
 
 //----------------------------------------------------------------------------//

@@ -78,6 +78,8 @@ public:
      * @param[out] y  The demeaned or detrended data.  This is an arra of
      *                dimension [nx].
      * @throws std::invalid_argument if nx is positive and x or y is NULL.
+     * @throws std::invalid_argument if nx is 1 and the detrend type is
+     *         linear.
      * @throws std::runtime_error if the class is not initialized.
      */
     void apply(const int nx, const double x[], double *y[]);
@@ -104,7 +106,8 @@ void removeMean(const int nx, const float x[], float *y[], float *mean);
 
 /*!
  * @brief Function that removes the linear trend from the data.
- * @param[in] nx          The number of samples in the signal.
+ * @param[in] nx          The number of samples in the signal.  This must be
+ *                        at least 2.
  * @param[in] x           The signal from which to remove the trend.  This is
  *                        an array of dimension [nx].
  * @param[out] y          The detrended version of x.  This is an array of
