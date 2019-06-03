@@ -16,7 +16,7 @@ using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 
 //int rtseis_test_utils_design_freqs(void)
-TEST(UtilitiesResponseFreqs, Freqz)
+TEST(UtilitiesResponse, Freqs)
 {
     const int nw = 50;
     std::vector<double> bs({1611.7315706,  0.,  0.,  0.,  0.});
@@ -108,7 +108,7 @@ TEST(UtilitiesResponseFreqs, Freqz)
     EXPECT_TRUE(emax < 1.e-10);
 }
 
-TEST(UtilitiesResponseFreqz, Freqz)
+TEST(UtilitiesResponse, Freqz)
 {
     const int nf = 41; 
     std::vector<double> bz({0.056340000000000, -0.000935244000000,
@@ -184,7 +184,7 @@ TEST(UtilitiesResponseFreqz, Freqz)
 }
 
 //int rtseis_test_utils_design_groupDelay(void)
-TEST(UtilitiesResponseGroupDelay, GroupDelay)
+TEST(UtilitiesResponse, GroupDelay)
 {
     const int nf = 20;
     const std::vector<double> b({4.88711377891e-05, 0.000195484551156,

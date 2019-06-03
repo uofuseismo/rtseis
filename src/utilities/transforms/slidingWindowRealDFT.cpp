@@ -354,11 +354,11 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
             double intercept;
             double slope;
             FilterImplementations::removeTrend(ncopy, xptr, &dptr,
-                                               &intercept, &slope); 
+                                               &intercept, &slope);
         }
         // Window
         if (lwindow){ippsMul_64f_I(window, dptr, nPtsPerSeg);}
-    }     
+    }
     // Transform
     fftw_execute(pImpl->mDoublePlan);
 }

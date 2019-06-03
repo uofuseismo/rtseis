@@ -821,10 +821,10 @@ int testDownsample(const std::vector<double> &x)
 
 //============================================================================//
 
-int testDemean(void)
+int testDemean()
 {
     // Do two passes
-    for (int j=0; j<2; j++)
+    for (auto j=0; j<2; j++)
     {
     // Create a reference signal from which to remove the mean
     std::vector<double> x;
@@ -841,9 +841,9 @@ int testDemean(void)
         waveform.demean();      // Demean the data
         y = waveform.getData(); // Get the demeaned data in a vector, y
     }
-    catch (std::invalid_argument &ia)
+    catch (std::runtime_error &rt)
     {
-        fprintf(stderr, "Demean failed %s\n", ia.what()); 
+        fprintf(stderr, "Demean failed %s\n", rt.what()); 
         return EXIT_FAILURE;
     }
 //! [ppSCDemeanExample]
@@ -864,9 +864,9 @@ int testDemean(void)
     return EXIT_SUCCESS;
 }
 //============================================================================//
-int testDetrend(void)
+int testDetrend()
 {
-    for (int j=0; j<2; j++)
+    for (auto j=0; j<2; j++)
     {
     std::vector<double> x;
     std::vector<double> y;
@@ -882,9 +882,9 @@ int testDetrend(void)
         waveform.detrend();      // Detrend
         y = waveform.getData();  // Get the detrended data in a vector, y
     }   
-    catch (std::invalid_argument &ia)
+    catch (std::runtime_error &rt)
     {
-        fprintf(stderr, "Detrend failed %s\n", ia.what()); 
+        fprintf(stderr, "Detrend failed %s\n", rt.what()); 
         return EXIT_FAILURE;
     }   
 //! [ppSCDetrendExample]
@@ -900,7 +900,7 @@ int testDetrend(void)
     return EXIT_SUCCESS;
 }
 //============================================================================//
-int testTaper(void)
+int testTaper()
 {
     // Load the reference solutions
     std::vector<double> yHamming100Ref(100);

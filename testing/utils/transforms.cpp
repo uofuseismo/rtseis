@@ -30,15 +30,6 @@ namespace
 
 using namespace RTSeis::Utilities::Transforms;
 
-int transforms_nextPow2_test();
-int transforms_phase_test();
-int transforms_unwrap_test();
-int transforms_test_dftr2c();
-int transforms_test_dft();
-int transforms_test_hilbert();
-int transforms_test_envelope(const std::string fileName = "data/envelopeChirp.txt");
-int transforms_test_firEnvelope(const std::string fileName1 = "data/envelopeChirp300.txt",
-                                const std::string fileName2 = "data/envelopeChirp301.txt");
 void readEnvelopeFile(const std::string &fileName,
                       std::vector<double> *x,
                       std::vector<double> *upRef,
@@ -49,8 +40,8 @@ int ifft(const int nx, const std::complex<double> *x,
          const int ny, std::complex<double> *y);
 int rfft(const int nx, double x[], const int n,
          const int ny, std::complex<double> y[]);
-int irfft(const int nx, const std::complex<double> x[],
-          const int n, double y[]);
+//int irfft(const int nx, const std::complex<double> x[],
+//          const int n, double y[]);
 
 /*
 int rtseis_test_utils_transforms(void)
@@ -125,7 +116,7 @@ int rtseis_test_utils_transforms(void)
 */
 
 //int transforms_nextPow2_test(void)
-TEST(TransformsNextPow2, NextPow2)
+TEST(UtilitiesTransforms, NextPow2)
 {
     EXPECT_EQ(DFTUtilities::nextPow2(0), 1);
     EXPECT_EQ(DFTUtilities::nextPow2(1), 1);
@@ -139,7 +130,7 @@ TEST(TransformsNextPow2, NextPow2)
 }
 
 //int transforms_unwrap_test(void)
-TEST(TransformsUnwrap, Unwrap)
+TEST(UtilitiesTransforms, Unwrap)
 {
     int n = 23;
     std::vector<double> p{0, -1.5728, -1.5747, -1.5772, -1.5790,
@@ -173,17 +164,17 @@ TEST(TransformsUnwrap, Unwrap)
     EXPECT_NO_THROW(q = DFTUtilities::unwrap(p));
     double emax;
     ippsNormDiff_Inf_64f(q.data(), qref.data(), n, &emax);
-    EXPECT_TRUE(emax < 1.e-10);
+    ASSERT_LE(emax, 1.e-10);
     // Switch tolerance to 90 degrees and adjust p
     for (auto i=0; i<n; ++i){p[i] =-p[i] + 1;}
     double tol = M_PI/2;
     EXPECT_NO_THROW(q = DFTUtilities::unwrap(p, tol));
     ippsNormDiff_Inf_64f(q.data(), qref2.data(), n, &emax);
-    EXPECT_TRUE(emax < 1.e-10);
+    ASSERT_LE(emax, 1.e-10);
 }
 
 //int transforms_phase_test(void)
-TEST(TransformsPhase, Phase)
+TEST(UtilitiesTransforms, Phase)
 {
     const int n = 7;
     std::vector<double> tr{-0.785398163397448, 0.463647609000806,
@@ -202,101 +193,17 @@ TEST(TransformsPhase, Phase)
     EXPECT_NO_THROW(angle = DFTUtilities::phase(z));
     double emax;
     ippsNormDiff_Inf_64f(angle.data(), tr.data(), n, &emax);
-    EXPECT_TRUE(emax < 1.e-10);
+    ASSERT_LE(emax, 1.e-10);
     // Repeat same test but get result in degrees
     bool lwantDeg = true;
     EXPECT_NO_THROW(angle = DFTUtilities::phase(z, lwantDeg));
     for (auto i=0; i<n; i++){tr2[i] = tr[i]*180.0/M_PI;}
     ippsNormDiff_Inf_64f(angle.data(), tr2.data(), n, &emax);
-    EXPECT_TRUE(emax < 1.e-10);
-}
-/*
-
-int transforms_test_hilbert()
-{
-    std::vector<std::complex<double>> h10(10), h11(11);
-    h10[0] = std::complex<double> (0, 5.50552768);
-    h10[1] = std::complex<double> (1,-0.64983939);
-    h10[2] = std::complex<double> (2,-0.64983939);
-    h10[3] = std::complex<double> (3,-2.10292445);
-    h10[4] = std::complex<double> (4,-2.10292445);
-    h10[5] = std::complex<double> (5,-2.10292445);
-    h10[6] = std::complex<double> (6,-2.10292445);
-    h10[7] = std::complex<double> (7,-0.64983939);
-    h10[8] = std::complex<double> (8,-0.64983939);
-    h10[9] = std::complex<double> (9, 5.50552768); 
-
-    h11[0]  = std::complex<double> ( 0, 6.42868554);
-    h11[1]  = std::complex<double> ( 1,-0.52646724);
-    h11[2]  = std::complex<double> ( 2,-0.23284074);
-    h11[3]  = std::complex<double> ( 3,-2.42253531);
-    h11[4]  = std::complex<double> ( 4,-1.77987433);
-    h11[5]  = std::complex<double> ( 5,-2.93393585);
-    h11[6]  = std::complex<double> ( 6,-1.77987433);
-    h11[7]  = std::complex<double> ( 7,-2.42253531);
-    h11[8]  = std::complex<double> ( 8,-0.23284074);
-    h11[9]  = std::complex<double> ( 9,-0.52646724);
-    h11[10] = std::complex<double> (10, 6.42868554);
-
-    Hilbert hilbert;    
-    std::vector<std::complex<double>> h;
-    std::vector<double> x;
-    int n = 10;
-    x.reserve(n+1);
-    x.resize(n);
-    for (int i=0; i<n; i++){x[i] = static_cast<double> (i);}
-    try
-    {
-        hilbert.initialize(n);
-    }
-    catch (const std::invalid_argument &ia) 
-    { 
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    assert(hilbert.getTransformLength() == n);
-    h.resize(n);
-    hilbert.transform(n, x.data(), h.data());
-    for (auto i=0; i<x.size(); i++)
-    {
-        if (std::abs(h[i] - h10[i]) > 1.e-8)
-        {
-            RTSEIS_ERRMSG("Failed hilbert %d %lf\n", 
-                          i, std::abs(h[i] - h10[i]));
-            return EXIT_FAILURE;
-        }
-    }
-    // Test copy constructor with n = 11
-    n = 11;
-    Hilbert hilbert11;
-    try
-    {
-        hilbert11.initialize(n);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    hilbert = hilbert11;
-    assert(hilbert.getTransformLength() == n);
-    x.resize(n);
-    h.resize(n);
-    for (int i=0; i<x.size(); i++){x[i] = static_cast<double> (i);}
-    hilbert.transform(n, x.data(), h.data());
-    for (auto i=0; i<x.size(); i++)
-    {
-        if (std::abs(h[i] - h11[i]) > 1.e-8)
-        {
-            RTSEIS_ERRMSG("Failed hilbert %d %lf\n", 
-                          i, std::abs(h[i] - h11[i]));
-            return EXIT_FAILURE;
-        }
-    }
-    return EXIT_SUCCESS;
+    ASSERT_LE(emax, 1.e-10);
 }
 
-int transforms_test_dft()
+//int transforms_test_dft()
+TEST(UtilitiesTransforms, dft)
 {
     std::vector<std::complex<double>> x5(5);
 
@@ -325,284 +232,191 @@ int transforms_test_dft()
                                       x5inv(5), x5invref(5);
     fft(x5.size(), x5.data(), y5fftw.size(), y5fftw.data());
     ifft(y5ref.size(), y5ref.data(), x5invref.size(), x5invref.data());
-    try
-    {
-        DFT dft;
-        dft.initialize(x5.size());
-        assert(dft.getInverseTransformLength() == 5);
-        assert(dft.isInitialized());
-        //ASSERT_EQUAL(dft.getInverseTransformLength(), 5);
-        assert(dft.getTransformLength() == 5);
-        //ASSERT_EQUAL(dft.getTransformLengt(), 5);
-        dft.forwardTransform(5, x5.data(), 5, y5.data()); 
-        dft.inverseTransform(5, y5.data(), 5, x5inv.data());
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+
+    DFT dft;
+    EXPECT_NO_THROW(dft.initialize(x5.size()));
+    EXPECT_TRUE(dft.isInitialized());
+    ASSERT_EQ(dft.getInverseTransformLength(), 5);
+    ASSERT_EQ(dft.getTransformLength(), 5);
+    EXPECT_NO_THROW(dft.forwardTransform(5, x5.data(), 5, y5.data()));
+    EXPECT_NO_THROW(dft.inverseTransform(5, y5.data(), 5, x5inv.data()));
     // Check forward transform
-    for (size_t i=0; i<y5ref.size(); i++)
+    double emax = 0;
+    for (auto i=0; i<y5ref.size(); i++)
     {
+        emax = std::max(emax, std::abs(y5ref[i] - y5[i]));
         if (std::abs(y5ref[i] - y5[i]) > 1.e-12)
         {
-            RTSEIS_ERRMSG("Failed to compute dft %ld %e",
-                           i, std::abs(y5ref[i] - y5[i]));
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed to compute dft %d %e",
+                    i, std::abs(y5ref[i] - y5[i]));
         }
     }
+    ASSERT_LE(emax, 1.e-12);
     // Check that inverse transform is covered
-    for (size_t i=0; i<x5inv.size(); i++)
+    emax = 0;
+    for (auto i=0; i<x5inv.size(); i++)
     {
+        emax = std::max(emax, std::abs(x5inv[i] - x5[i]));
+        emax = std::max(emax, std::abs(x5invref[i] - x5inv[i]));
         if (std::abs(x5inv[i] - x5[i]) > 1.e-12 ||
             std::abs(x5invref[i] - x5inv[i]) > 1.e-12)
         {
-           RTSEIS_ERRMSG("Failed to compute idft %ld %e %e",
-                          i, std::abs(x5[i] - x5inv[i]),
-                          std::abs(x5invref[i] - x5inv[i]));
-           return EXIT_FAILURE; 
+           fprintf(stderr, "Failed to compute idft %d %e %e",
+                   i, std::abs(x5[i] - x5inv[i]),
+                   std::abs(x5invref[i] - x5inv[i]));
         }
     }
+    ASSERT_LE(emax, 1.e-12);
+
     // Try padding
-    try
-    {
-        DFT dft;
-        dft.initialize(8);
-        assert(dft.getInverseTransformLength() == 8); 
-        //ASSERT_EQUAL(dft.getInverseTransformLength(), 8);
-        assert(dft.getTransformLength() == 8); 
-        //ASSERT_EQUAL(dft.getTransformLengt(), 8);
-        dft.forwardTransform(5, x5.data(), 8, y8.data());
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(dft.initialize(8));
+    ASSERT_EQ(dft.getInverseTransformLength(), 8);
+    ASSERT_EQ(dft.getTransformLength(), 8);
+    EXPECT_NO_THROW(dft.forwardTransform(5, x5.data(), 8, y8.data()));
+    emax = 0;
     for (auto i=0; i<y8.size(); i++)
     {
+        emax = std::max(emax, std::abs(y8[i] - y8ref[i]));
         if (std::abs(y8[i] - y8ref[i]) > 1.e-12)
         {
-            RTSEIS_ERRMSG("Failed to compute dft %d %e",
-                           i, std::abs(y8[i] - y8ref[i]));
+            fprintf(stderr, "Failed to compute dft %d %e",
+                    i, std::abs(y8[i] - y8ref[i]));
         }
     }
+    ASSERT_LE(emax, 1.e-12);
     // Do a larger test
     int niter = 50;
     int np0 = 12001;
     std::vector<std::complex<double>> x(np0+1), y(np0+1),
                                       yref(np0+1), xinv(np0+1);
-    for (int i=0; i<np0+1; i++)
+    for (auto i=0; i<np0+1; i++)
     {
         x[i] = std::complex<double> (static_cast<double> (rand())/RAND_MAX,
                                      static_cast<double> (rand())/RAND_MAX);
     }
-    for (int j=0; j<2; j++)
+    for (auto j=0; j<2; j++)
     { 
         // Compute reference solution with FFTw
         int npts = np0 + j;
         fft(npts, x.data(), npts, yref.data()); 
         // Try again with IPP
-        try
-        {
-            DFT dft;
-            dft.initialize(npts);
-            dft.forwardTransform(npts, x.data(), npts, y.data());
-            dft.inverseTransform(npts, y.data(), npts, xinv.data()); 
-        }
-        catch (const std::invalid_argument &ia)
-        {
-            RTSEIS_ERRMSG("%s", ia.what());
-            return EXIT_FAILURE;
-        }
-        double emax  = 0;
+        EXPECT_NO_THROW(dft.initialize(npts));
+        EXPECT_NO_THROW(dft.forwardTransform(npts, x.data(), npts, y.data()));
+        EXPECT_NO_THROW(dft.inverseTransform(npts, y.data(), npts, xinv.data()));
+        emax  = 0;
         double emaxi = 0;
-        for (int i=0; i<npts; i++)
+        for (auto i=0; i<npts; i++)
         { 
             emax  = std::max(emax,  std::abs(y[i] - yref[i]));
             emaxi = std::max(emaxi, std::abs(x[i] - xinv[i]));
         }
-        if (emax > 1.e-12)
-        {
-            RTSEIS_ERRMSG("%s", "Forward transform failed");
-        }
-        if (emaxi > 1.e-12)
-        {
-            RTSEIS_ERRMSG("%s", "Inverse transform failed");
-        }
+        ASSERT_LE(emax, 1.e-12);
+        ASSERT_LE(emaxi, 1.e-12);
         // Stress test
         if (j == 1)
         {
-            DFT dft;
-            dft.initialize(npts);
+            DFT dftStress;
+            dftStress.initialize(npts);
             auto timeStart = std::chrono::high_resolution_clock::now();
-            for (int i=0; i<niter; i++)
+            for (auto i=0; i<niter; i++)
             {
-                dft.forwardTransform(npts, x.data(), npts, y.data());
+                dftStress.forwardTransform(npts, x.data(), npts, y.data());
             }
             auto timeEnd = std::chrono::high_resolution_clock::now();
             emax = 0;
-            for (int i=0; i<npts; i++)
+            for (auto i=0; i<npts; i++)
             {
                 emax  = std::max(emax,  std::abs(y[i] - yref[i]));
             }
-            if (emax > 1.e-12)
-            {
-                RTSEIS_ERRMSG("%s", "Forward transform failed");
-            }
+            ASSERT_LE(emax, 1.e-12);
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             fprintf(stdout, "Average DFT time %.8lf (s)\n",
                     tdif.count()/static_cast<double>(niter));
  
             timeStart = std::chrono::high_resolution_clock::now();
-            for (int i=0; i<niter; i++)
+            for (auto i=0; i<niter; i++)
             {
-                dft.inverseTransform(npts, y.data(), npts, xinv.data());
+                dftStress.inverseTransform(npts, y.data(), npts, xinv.data());
             }
             timeEnd = std::chrono::high_resolution_clock::now();
             emaxi = 0;
-            for (int i=0; i<npts; i++)
+            for (auto i=0; i<npts; i++)
             {   
                 emaxi = std::max(emaxi, std::abs(x[i] - xinv[i]));
             }
-            if (emaxi > 1.e-12)
-            {
-                RTSEIS_ERRMSG("%s", "Inverse transform failed");
-            }
+            ASSERT_LE(emaxi, 1.e-12);
             tdif = timeEnd - timeStart;
             fprintf(stdout, "Average inverse DFT time %.8lf (s)\n",
                     tdif.count()/static_cast<double>(niter));
         }
     }
-    return EXIT_SUCCESS;
 }
 
-int transforms_test_dftr2c(void)
+
+//int transforms_test_dftr2c(void)
+TEST(UtilitiesTransforms, dftr2c)
 {
     int niter = 50;
     int np0 = 12001;
     double *x = new double[np0+1];
-    for (int i=0; i<np0+1; i++)
+    for (auto i=0; i<np0+1; i++)
     {
         x[i] = static_cast<double> (rand())/RAND_MAX;
     }
 
-    for (int j=0; j<2; j++)
+    for (auto j=0; j<2; j++)
     {
-        int npts = np0 + j;
+        auto npts = np0 + j;
         // Compute a DFT w/ FFTw
-        int lendft = npts/2 + 1;
+        auto lendft = npts/2 + 1;
         std::complex<double> *zrefDFT = new std::complex<double>[lendft];
-        int ierr = rfft(npts, x, npts, lendft, zrefDFT);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to compute rdft");
-            return EXIT_FAILURE;
-        }
+        ASSERT_EQ(rfft(npts, x, npts, lendft, zrefDFT), 0);
         // Compute an FFT w/ FFTw
-        int np2 = DFTUtilities::nextPow2(npts);
-        int lenfft = np2/2 + 1;
+        auto np2 = DFTUtilities::nextPow2(npts);
+        auto lenfft = np2/2 + 1;
         std::complex<double> *zrefFFT = new std::complex<double>[lenfft];
-        ierr = rfft(npts, x, np2, lenfft, zrefFFT); 
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to compute rfft");
-            return EXIT_FAILURE;
-        }
+        ASSERT_EQ(rfft(npts, x, np2, lenfft, zrefFFT), 0);
         // Initialize the DFT
         DFTRealToComplex dft; 
-        try
-        {
-            dft.initialize(npts,
-                           FourierTransformImplementation::DFT,
-                           RTSeis::Precision::DOUBLE); 
-        }
-        catch (const std::invalid_argument &ia)
-        {
-            RTSEIS_ERRMSG("%s", ia.what());
-            return EXIT_FAILURE;
-        }
-        if (dft.getTransformLength() != lendft)
-        {
-            RTSEIS_ERRMSG("%s", "Inconsistent sizes");
-            return EXIT_FAILURE;
-        }
+        EXPECT_NO_THROW(dft.initialize(npts,
+                        FourierTransformImplementation::DFT,
+                        RTSeis::Precision::DOUBLE));
+        ASSERT_EQ(dft.getTransformLength(), lendft);
         std::complex<double> *z = new std::complex<double>[lendft];
-        try
-        {
-            dft.forwardTransform(npts, x, lendft, z);
-        }
-        catch (const std::invalid_argument &ia)
-        {
-            RTSEIS_ERRMSG("%s", ia.what());
-            return EXIT_FAILURE;
-        }
+        EXPECT_NO_THROW(dft.forwardTransform(npts, x, lendft, z));
         double error = 0; 
-        for (int i=0; i<lendft; i++)
+        for (auto i=0; i<lendft; i++)
         {
             error = std::max(error, std::abs(z[i] - zrefDFT[i]));
         }
-        if (error > 1.e-11)
-        {
-            RTSEIS_ERRMSG("Failed to compute dft %.10e", error);
-            return EXIT_FAILURE;
-        }
+        ASSERT_LE(error, 1.e-11);
         // Inverse DFT
-        int npout = dft.getInverseTransformLength(); 
-        if (npout != npts)
-        {
-            RTSEIS_ERRMSG("%s", "Size inconsitency");
-            return EXIT_FAILURE;
-        }
+        auto npout = dft.getInverseTransformLength(); 
+        ASSERT_EQ(npout, npts);
         double *xinv = new double[npout];
-        try
-        {
-            dft.inverseTransform(lendft, z, npout, xinv); 
-        }
-        catch (const std::invalid_argument &ia)
-        {
-            RTSEIS_ERRMSG("%s", ia.what());
-            return EXIT_FAILURE;
-        }
+        EXPECT_NO_THROW(dft.inverseTransform(lendft, z, npout, xinv));
         error = 0;
-        for (int i=0; i<npts; i++)
+        for (auto i=0; i<npts; i++)
         {
             error = std::max(error, std::abs(x[i] - xinv[i]));
         }
-        if (error > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed to compute idft %.10e", error);
-            return EXIT_FAILURE;
-        } 
+        ASSERT_LE(error, 1.e-10);
         delete[] xinv;
         // Stress test it
         if (j == 1)
         {
             auto timeStart = std::chrono::high_resolution_clock::now();
-            for (int kiter=0; kiter<niter; kiter++)
+            for (auto kiter=0; kiter<niter; kiter++)
             {
-                try
-                {
-                    dft.forwardTransform(npts, x, lendft, z); 
-                }
-                catch (const std::exception &e)
-                {
-                    RTSEIS_ERRMSG("%s", e.what());
-                    return EXIT_FAILURE;
-                }
+                EXPECT_NO_THROW(dft.forwardTransform(npts, x, lendft, z));
             }
             auto timeEnd = std::chrono::high_resolution_clock::now();
             error = 0;
-            for (int i=0; i<lendft; i++)
+            for (auto i=0; i<lendft; i++)
             {
                 error = std::max(error, std::abs(z[i] - zrefDFT[i]));
             }
-            if (error > 1.e-11)
-            {
-                RTSEIS_ERRMSG("Failed to compute dft %.10e", error);
-                return EXIT_FAILURE;
-            }
+            ASSERT_LE(error, 1.e-11);
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             fprintf(stdout, "Average real DFT time %.8lf (s)\n",
                     tdif.count()/static_cast<double>(niter)); 
@@ -610,94 +424,44 @@ int transforms_test_dftr2c(void)
         }
         delete[] z;
         // Redo this for an FFT
-        dft.initialize(npts,
-                       FourierTransformImplementation::FFT,
-                       RTSeis::Precision::DOUBLE);
-        if (ierr != 0)
-        {
-            RTSEIS_ERRMSG("%s", "Failed to initialize fft");
-            return EXIT_FAILURE;
-        }
-        if (dft.getTransformLength() != lenfft)
-        {
-            RTSEIS_ERRMSG("Inconsistent sizes %d %d",
-                          dft.getTransformLength(), lenfft);
-            return EXIT_FAILURE;
-        }
+        EXPECT_NO_THROW(dft.initialize(npts,
+                        FourierTransformImplementation::FFT,
+                        RTSeis::Precision::DOUBLE));
+        ASSERT_EQ(dft.getTransformLength(), lenfft);
         z = new std::complex<double>[lenfft];
-        try
-        {
-            dft.forwardTransform(npts, x, lenfft, z); 
-        }
-        catch (const std::invalid_argument &ia)
-        {
-            RTSEIS_ERRMSG("%s", ia.what());
-            return EXIT_FAILURE;
-        }
+        EXPECT_NO_THROW(dft.forwardTransform(npts, x, lenfft, z));
         error = 0;  
-        for (int i=0; i<lenfft; i++)
+        for (auto i=0; i<lenfft; i++)
         {
             error = std::max(error, std::abs(z[i] - zrefFFT[i]));
         }
-        if (error > 1.e-12)
-        {
-            RTSEIS_ERRMSG("Failed to compute fft %.10e", error);
-            return EXIT_FAILURE;
-        }
+        ASSERT_LE(error, 1.e-12);
         npout = dft.getInverseTransformLength(); 
-        if (npout != np2)
-        {
-            RTSEIS_ERRMSG("%s", "Size inconsitency");
-            return EXIT_FAILURE;
-        }
+        ASSERT_EQ(npout, np2);
         xinv = new double[npout];
-        try
-        {
-            dft.inverseTransform(lenfft, z, npout, xinv); 
-        }
-        catch (const std::invalid_argument &ia)
-        {
-            RTSEIS_ERRMSG("%s", ia.what());
-            return EXIT_FAILURE;
-        }
+        EXPECT_NO_THROW(dft.inverseTransform(lenfft, z, npout, xinv));
         error = 0;
-        for (int i=0; i<npts; i++)
+        for (auto i=0; i<npts; i++)
         {
             error = std::max(error, std::abs(x[i] - xinv[i]));
         }
-        if (error > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed to compute ifft %.10e", error);
-            return EXIT_FAILURE;
-        }
+        ASSERT_LE(error, 1.e-10);
         delete[] xinv;
         // Stress test it
         if (j == 1)
         {
             auto timeStart = std::chrono::high_resolution_clock::now();
-            for (int kiter=0; kiter<niter; kiter++)
+            for (auto kiter=0; kiter<niter; kiter++)
             {
-                try
-                {
-                    dft.forwardTransform(npts, x, lenfft, z);
-                }
-                catch (const std::invalid_argument &ia)
-                {
-                    RTSEIS_ERRMSG("%s", ia.what());
-                    return EXIT_FAILURE;
-                }
+                EXPECT_NO_THROW(dft.forwardTransform(npts, x, lenfft, z));
             }
             auto timeEnd = std::chrono::high_resolution_clock::now();
             error = 0;  
-            for (int i=0; i<lenfft; i++)
+            for (auto i=0; i<lenfft; i++)
             {
                 error = std::max(error, std::abs(z[i] - zrefFFT[i]));
             }
-            if (error > 1.e-12)
-            {
-                RTSEIS_ERRMSG("Failed to compute fft %.10e", error);
-                return EXIT_FAILURE;
-            }
+            ASSERT_LE(error, 1.e-12);
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             fprintf(stdout, "Average real FFT time %.8lf (s)\n",
                     tdif.count()/static_cast<double>(niter)); 
@@ -709,86 +473,117 @@ int transforms_test_dftr2c(void)
         delete[] zrefDFT;
     }
     delete[] x;
-    return EXIT_SUCCESS;
 }
 
-int transforms_test_envelope(const std::string fileName)
+TEST(UtilitiesTransforms, Hilbert)
 {
-    Envelope envelope;
-    try
+    std::vector<std::complex<double>> h10(10), h11(11);
+    h10[0] = std::complex<double> (0, 5.50552768);
+    h10[1] = std::complex<double> (1,-0.64983939);
+    h10[2] = std::complex<double> (2,-0.64983939);
+    h10[3] = std::complex<double> (3,-2.10292445);
+    h10[4] = std::complex<double> (4,-2.10292445);
+    h10[5] = std::complex<double> (5,-2.10292445);
+    h10[6] = std::complex<double> (6,-2.10292445);
+    h10[7] = std::complex<double> (7,-0.64983939);
+    h10[8] = std::complex<double> (8,-0.64983939);
+    h10[9] = std::complex<double> (9, 5.50552768);
+
+    h11[0]  = std::complex<double> ( 0, 6.42868554);
+    h11[1]  = std::complex<double> ( 1,-0.52646724);
+    h11[2]  = std::complex<double> ( 2,-0.23284074);
+    h11[3]  = std::complex<double> ( 3,-2.42253531);
+    h11[4]  = std::complex<double> ( 4,-1.77987433);
+    h11[5]  = std::complex<double> ( 5,-2.93393585);
+    h11[6]  = std::complex<double> ( 6,-1.77987433);
+    h11[7]  = std::complex<double> ( 7,-2.42253531);
+    h11[8]  = std::complex<double> ( 8,-0.23284074);
+    h11[9]  = std::complex<double> ( 9,-0.52646724);
+    h11[10] = std::complex<double> (10, 6.42868554);
+    Hilbert hilbert;    
+    std::vector<std::complex<double>> h;
+    std::vector<double> x;
+    int n = 10;
+    x.reserve(n+1);
+    x.resize(n);
+    for (auto i=0; i<n; i++){x[i] = static_cast<double> (i);}
+    EXPECT_NO_THROW(hilbert.initialize(n));
+    EXPECT_EQ(hilbert.getTransformLength(), n);
+    h.resize(n);
+    hilbert.transform(n, x.data(), h.data());
+    double emax = 0;
+    for (auto i=0; i<x.size(); i++)
     {
-        int n = 1;
-        double x[1] = {9};
-        double upRef[1] = {9};
-        double loRef[1] = {9};
-        double up[1], lo[1];
-        envelope.initialize(n, RTSeis::Precision::DOUBLE);
-        envelope.transform(1, x, up, lo);
-        if (std::abs(upRef[0] - up[0]) > 1.e-15 ||
-            std::abs(loRef[0] - lo[0]) > 1.e-15)
+        emax = std::max(emax, std::abs(h[i] - h10[i]));
+        if (std::abs(h[i] - h10[i]) > 1.e-8)
         {
-            RTSEIS_ERRMSG("%s", "Failed envelope length 1");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed hilbert %d %lf\n", 
+                    i, std::abs(h[i] - h10[i]));
         }
     }
-    catch (const std::exception &e)
+    ASSERT_LE(emax, 1.e-8);
+    // Test copy constructor with n = 11
+    n = 11;
+    Hilbert hilbert11;
+    EXPECT_NO_THROW(hilbert11.initialize(n));
+    hilbert = hilbert11;
+    EXPECT_EQ(hilbert.getTransformLength(), n);
+    x.resize(n);
+    h.resize(n);
+    for (auto i=0; i<x.size(); i++){x[i] = static_cast<double> (i);}
+    hilbert.transform(n, x.data(), h.data());
+    emax = 0;
+    for (auto i=0; i<x.size(); i++)
     {
-        RTSEIS_ERRMSG("%s", e.what());
-        return EXIT_FAILURE;
+        emax = std::max(emax, std::abs(h[i] - h11[i]));
+        if (std::abs(h[i] - h11[i]) > 1.e-8)
+        {
+            fprintf(stderr, "Failed hilbert %d %lf\n", 
+                    i, std::abs(h[i] - h11[i]));
+        }
     }
+    ASSERT_LE(emax, 1.e-8);
+}
+
+TEST(UtilitiesTransforms, Envelope)
+{
+    const std::string fileName = "data/envelopeChirpReference.txt";
+    Envelope envelope;
+    // Do an edge case analytically
+    int n = 1;
+    double x1[1] = {9};
+    double upRef1[1] = {9};
+    double loRef1[1] = {9};
+    double up1[1], lo1[1];
+    EXPECT_NO_THROW(envelope.initialize(n, RTSeis::Precision::DOUBLE));
+    EXPECT_NO_THROW(envelope.transform(1, x1, up1, lo1));
+    ASSERT_LE(std::abs(upRef1[0] - up1[0]), 1.e-15);
+    ASSERT_LE(std::abs(loRef1[0] - lo1[0]), 1.e-15);
     // Load the data
     std::vector<double> x, upRef, loRef;
     readEnvelopeFile(fileName, &x, &upRef, &loRef);
-    int npts = static_cast<int> (x.size());
-    if (npts != 4000)
-    {
-        RTSEIS_ERRMSG("Failed to load %s", fileName.c_str());
-        return EXIT_FAILURE;
-    }
-    assert(npts == 4000);
+    auto npts = static_cast<int> (x.size());
+    EXPECT_EQ(npts, 4000);
     // Do a real test
     std::vector<double> yupper(npts), ylower(npts);
     Envelope envelopeChirp;
-    try
-    {
-        envelopeChirp.initialize(npts, RTSeis::Precision::DOUBLE);
-    }
-    catch (std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(envelopeChirp.initialize(npts, RTSeis::Precision::DOUBLE));
     envelope = envelopeChirp; // Test copy assignment operator
-    assert(envelope.isInitialized()); // Verify it's initialized
-    try
-    {
-        envelope.transform(npts, x.data(), yupper.data(), ylower.data()); 
-    }
-    catch (const std::exception &e)
-    {
-        RTSEIS_ERRMSG("%s", e.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_TRUE(envelope.isInitialized()); // Verify it's initialized
+    EXPECT_NO_THROW(envelope.transform(npts, x.data(),
+                    yupper.data(), ylower.data())); 
     double errorLower;
     double errorUpper;
     ippsNormDiff_L1_64f(upRef.data(), yupper.data(), npts, &errorUpper);
     ippsNormDiff_L1_64f(loRef.data(), ylower.data(), npts, &errorLower);
-    if (errorUpper > 1.e-9)
-    { 
-        RTSEIS_ERRMSG("Failed upper envelope %e", errorUpper);
-        return EXIT_FAILURE;
-    }
-    if (errorLower > 1.e-9)
-    {
-        RTSEIS_ERRMSG("Failed lower envelope %e", errorLower);
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
+    ASSERT_LE(errorUpper, 1.e-9);
+    ASSERT_LE(errorLower, 1.e-9);
 }
 
-int transforms_test_firEnvelope(const std::string fileName1,
-                                const std::string fileName2)
+TEST(UtilitiesTransforms, firEnvelope)
 {
+    const std::string fileName1 = "data/envelopeChirpReference300.txt";
+    const std::string fileName2 = "data/envelopeChirpReference301.txt";
     // Try a simple case to test the post-processing filtering logic
     std::vector<double> xSimple{2, 3, 4, 5, 6, 5, 4, 3, 2, 1, 0, -1,
                                -2, -3, -4, -3, -2, -1, 0};
@@ -814,17 +609,10 @@ int transforms_test_firEnvelope(const std::string fileName1,
                                     1.787936920537643};
     std::vector<double> ySimple(xSimple.size(), 0);
     FIREnvelope env;
-    try
-    {
-        env.initialize(5, RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
-        env.transform(xSimple.size(), xSimple.data(), ySimple.data()); 
-    }
-    catch (const std::exception &e)
-    {
-        RTSEIS_ERRMSG("%s: Failed firEnv test 1", e.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(env.initialize(5, RTSeis::ProcessingMode::POST_PROCESSING,
+                    RTSeis::Precision::DOUBLE));
+    EXPECT_NO_THROW(env.transform(xSimple.size(),
+                    xSimple.data(), ySimple.data()));
 #ifdef __STDCPP_MATH_SPEC_FUNCS__ // __cplusplus > 201402L
     double tol = 1.e-13;
 #else
@@ -833,81 +621,40 @@ int transforms_test_firEnvelope(const std::string fileName1,
     double error;
     ippsNormDiff_L1_64f(ySimpleRef1.data(), ySimple.data(),
                         ySimple.size(), &error);
-    if (error > tol)
-    {
-        RTSEIS_ERRMSG("Simple test 1 failed with error = %e", error);
-        return EXIT_FAILURE;
-    }
-    try
-    {
-        env.initialize(6, RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
-        env.transform(xSimple.size(), xSimple.data(), ySimple.data()); 
-    }
-    catch (const std::exception &e)
-    {
-        RTSEIS_ERRMSG("%s: Failed firEnv test 1", e.what());
-        return EXIT_FAILURE;
-    }
+    ASSERT_LE(error, tol);
+
+    EXPECT_NO_THROW(env.initialize(6, RTSeis::ProcessingMode::POST_PROCESSING,
+                    RTSeis::Precision::DOUBLE));
+    EXPECT_NO_THROW(env.transform(xSimple.size(), xSimple.data(),
+                    ySimple.data()));
     ippsNormDiff_L1_64f(ySimpleRef2.data(), ySimple.data(), 
                         ySimple.size(), &error);
-    if (error > tol)
-    {
-        RTSEIS_ERRMSG("Simple test 2 failed with error = %e", error);
-        return EXIT_FAILURE;
-    }
+    ASSERT_LE(error, tol);
     // Do a more substantial post-processing test
     std::vector<double> x, upRef300, loRef300, upRef301, loRef301;
     readEnvelopeFile(fileName1, &x, &upRef300, &loRef300);
     readEnvelopeFile(fileName2, &x, &upRef301, &loRef301);
-    if (upRef300.size() != 4000 || upRef301.size() != 4000)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to load data file");
-        return EXIT_FAILURE;
-    }
+    ASSERT_EQ(upRef300.size(), 4000);
+    ASSERT_EQ(upRef301.size(), 4000);
     // Create with copy constructor
     FIREnvelope env300;
-    try
-    {
-        env300.initialize(300,
-                          RTSeis::ProcessingMode::POST_PROCESSING,
-                          RTSeis::Precision::DOUBLE); 
-    }
-    catch (const std::exception &e)
-    {
-        RTSEIS_ERRMSG("%s; design n=300 failed", e.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(env300.initialize(300,
+                    RTSeis::ProcessingMode::POST_PROCESSING,
+                    RTSeis::Precision::DOUBLE));
     env = env300;
     std::vector<double> up(x.size());
     env.transform(x.size(), x.data(), up.data());
     ippsNormDiff_L1_64f(upRef300.data(), up.data(),  upRef300.size(), &error);
-    if (error/upRef300.size() > 1.e-8)
-    {
-        RTSEIS_ERRMSG("failed 300 with error = %e", error/upRef300.size());
-        return EXIT_FAILURE;
-    }
+    ASSERT_LE(error/upRef300.size(), 1.e-8);
     // Test move constructor
     FIREnvelope env301;
-    try  
-    {
-        env301.initialize(301,
-                          RTSeis::ProcessingMode::POST_PROCESSING,
-                          RTSeis::Precision::DOUBLE);
-    }
-    catch (const std::exception &e)
-    {
-        RTSEIS_ERRMSG("%s; design n=301 failed", e.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(env301.initialize(301,
+                    RTSeis::ProcessingMode::POST_PROCESSING,
+                    RTSeis::Precision::DOUBLE));
     env = std::move(env301);
     env.transform(x.size(), x.data(), up.data());
     ippsNormDiff_L1_64f(upRef301.data(), up.data(),  upRef301.size(), &error);
-    if (error/upRef301.size() > 1.e-8)
-    {    
-        RTSEIS_ERRMSG("failed 301 with error = %e", error/upRef301.size());
-        return EXIT_FAILURE;
-    }
+    ASSERT_LE(error/upRef301.size(), 1.e-8);
     // Remove the mean to make comparison easier
     double mean;
     ippsMean_64f(x.data(), x.size(), &mean);
@@ -940,7 +687,7 @@ int transforms_test_firEnvelope(const std::string fileName1,
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0; 
-            int nptsPass = 0; 
+            int nptsPass = 0;
             while (nxloc < npts)
             {
                 nptsPass = packetSize[ip];
@@ -952,17 +699,8 @@ int transforms_test_firEnvelope(const std::string fileName1,
                 const double *xptr = x.data() + nxloc;
                 double *yptr300 = up300.data() + nxloc;
                 double *yptr301 = up301.data() + nxloc;
-                try
-                {
-                    envrt300.transform(nptsPass, xptr, yptr300);
-                    envrt301.transform(nptsPass, xptr, yptr301);
-                }
-                catch (const std::exception &e)
-                {
-                    RTSEIS_ERRMSG("%s; failed at job,packet=(%d,%d)",
-                                  e.what(), job, ip);
-                    return EXIT_FAILURE;
-                }
+                EXPECT_NO_THROW(envrt300.transform(nptsPass, xptr, yptr300));
+                EXPECT_NO_THROW(envrt301.transform(nptsPass, xptr, yptr301));
                 nxloc = nxloc + nptsPass;
             } // Loop on acquisition loop
             envrt300.resetInitialConditions();
@@ -974,16 +712,10 @@ int transforms_test_firEnvelope(const std::string fileName1,
             int ncomp = npts - groupDelay;
             ippsNormDiff_L1_64f(upRef300.data(), up300.data()+groupDelay,
                                 ncomp, &error);
-            if (error > 1.e-10)
-            {
-                RTSEIS_ERRMSG("Failed 300 rt with error = %e", error);
-            } 
+            ASSERT_LE(error, 1.e-10);
             ippsNormDiff_L1_64f(upRef301.data(), up301.data()+groupDelay,
                                 ncomp, &error); 
-            if (error > 1.e-10)
-            {
-                RTSEIS_ERRMSG("Failed 300 rt with error = %e", error);
-            }
+            ASSERT_LE(error, 1.e-10);
             if (job == 0)
             {
                 fprintf(stdout,
@@ -997,10 +729,7 @@ int transforms_test_firEnvelope(const std::string fileName1,
             }
         }
     }
-    return EXIT_SUCCESS;
 }
-
-*/
 
 //============================================================================//
 //                              Private functions                             //
@@ -1138,6 +867,7 @@ int ifft(const int nx, const std::complex<double> *x,
     return 0;
 }
 
+/*
 int irfft(const int nx, const std::complex<double> x[],
           const int n, double y[])
 {
@@ -1201,6 +931,7 @@ int irfft(const int nx, const std::complex<double> x[],
     fftw_cleanup();
     return 0;
 } 
+*/
 
 int rfft(const int nx, double x[], const int n,
          const int ny, std::complex<double> y[])
