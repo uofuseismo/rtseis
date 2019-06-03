@@ -29,7 +29,7 @@ public:
     DFT(void);
     /*!
      * @brief Copy constructor.
-     * @param[in] dftr2c  Class from which to initialize from.
+     * @param[in] dft  Class from which to initialize from.
      */
     DFT(const DFT &dft);
     /*!

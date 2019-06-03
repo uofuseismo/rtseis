@@ -35,6 +35,7 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed interpolation test");
 
+/*
     ierr = rtseis_test_utils_convolve();
     if (ierr != EXIT_SUCCESS)
     {   
@@ -42,6 +43,7 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed convolve test");
+*/
 
     ierr = rtseis_test_utils_polynomial();
     if (ierr != EXIT_SUCCESS)

@@ -31,7 +31,7 @@ public:
      * @brief Default constructor.
      */
     SignBit();
-    /*
+    /*!
      * @brief Copy constructor.
      * @param[in] signBit  Sign-bit class from which to initialize.
      */

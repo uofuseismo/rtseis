@@ -105,7 +105,7 @@ TEST(UtilitiesResponse, Freqs)
                     std::real(href1[i]), std::imag(href1[i]));
         }
     }
-    EXPECT_TRUE(emax < 1.e-10);
+    EXPECT_LE(emax, 1.e-10);
 }
 
 TEST(UtilitiesResponse, Freqz)
@@ -180,7 +180,7 @@ TEST(UtilitiesResponse, Freqz)
                     std::real(href2[i]), std::imag(href2[i]));
         }
     }
-    EXPECT_TRUE(emax < 1.e-10);
+    EXPECT_LE(emax, 1.e-10);
 }
 
 //int rtseis_test_utils_design_groupDelay(void)
@@ -211,7 +211,7 @@ TEST(UtilitiesResponse, GroupDelay)
     double emax;
     EXPECT_EQ(gd.size(), static_cast<size_t> (nf));
     ippsNormDiff_Inf_64f(gd.data(), gdR.data(), nf, &emax);
-    EXPECT_TRUE(emax < 1.e-7);
+    EXPECT_LE(emax, 1.e-7);
 
 /*
     // group_delay((b, a), 20, whole=True)

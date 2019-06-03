@@ -32,7 +32,7 @@ public:
     Hilbert();
     /*!
      * @brief Copy constructor.
-     * @param[in] dftr2c  Class from which to initialize from.
+     * @param[in] hilbert  Class from which to initialize from.
      */
     Hilbert(const Hilbert &hilbert);
     /*! @} */
@@ -42,7 +42,7 @@ public:
      */
     /*!
      * @brief Copy operator.
-     * @param[in] dftr2c  DFTRealToComplex class to copy.
+     * @param[in] hilbert  The hilbert class to copy.
      * @result A deep copy of the input class.
      */
     Hilbert& operator=(const Hilbert &hilbert);

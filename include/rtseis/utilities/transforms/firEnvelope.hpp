@@ -134,6 +134,7 @@ public:
      * @throws std::runtime_error if the class is not inititalized.
      */
     void transform(const int n, const double x[], double y[]);
+    /*! @copydoc transform */
     void transform(const int n, const float x[], float y[]);
     /*!
      * @brief Resets the initial conditions of the underlying FIR filters.
