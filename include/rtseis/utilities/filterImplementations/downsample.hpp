@@ -112,7 +112,6 @@ public:
      */
     void setInitialConditions(const int phase);
     /*!
-     * @{
      * @brief Applies the downsampler to the data.
      * @param[in] nx       The number data points in x.
      * @param[in] x        The signal to downsample.
@@ -128,9 +127,9 @@ public:
      */
     void apply(const int nx, const double x[],
                const int ny, int *nyDown, double y[]);
+    /*! @copydoc apply */
     void apply(const int nx, const float x[],
                const int ny, int *nyDown, float y[]);
-    /*! @} */
     /*!
      * @brief Resets the initial conditions to the phase set in 
      *        setInitialConditions.  If setInitialConditions was not

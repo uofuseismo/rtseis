@@ -280,7 +280,6 @@ public:
      *                          done because FIR filters are not required to
      *                          have linear phase responses (i.e., a constant
      *                          group delay).
-     * @param[in] implementation  Defines the implementation.
      * @throws std::invalid_argument if the filter is invalid.
      * @note It is the responsibility of the user to ensure that the
      *       signal sampling rate and the sampling rate used in the digital
@@ -350,7 +349,7 @@ public:
      * @param[in] lremovePhase  If true then the phase shift is to be removed.
      * @throws std::invalid_argument if the number of taps or critical frequency
      *         is invalid.
-     * @sa firBandpassfilter
+     * @sa firBandpassFilter()
      */
     void firBandstopFilter(const int ntaps, const std::pair<double,double> fc,
                            const FIRWindow window,
@@ -441,7 +440,6 @@ public:
      * @param[in] ripple  Controls the ripple size in Chebyshev I and 
      *                    Chebyshev II design.
      * @param[in] lzeroPhase  If true then the phase shift is removed.
-     * @param[in] implementation  Defines the IIR implementation. 
      * @throws std::invalid_argument if the order isn't positive or the ripple
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa sosLowpassFilter()
@@ -459,7 +457,6 @@ public:
      * @param[in] ripple  Controls the ripple size in Chebyshev I and 
      *                    Chebyshev II design.
      * @param[in] lzeroPhase  If true then the phase shift is removed.
-     * @param[in] implementation  Defines the IIR implementation. 
      * @throws std::invalid_argument if the order isn't positive or the ripple
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa sosLowpassFilter()
@@ -479,9 +476,9 @@ public:
      *        to the time series.
      * @param[in] ba   The digital IIR filter stored as feed-forward and
      *                 feed-back coefficients.
-     * @param[in] lremovePhase  If true, then this removes the phase distortion
-     *                          by applying the filter to both the time forward
-     *                          and time reversed signal.
+     * @param[in] lzeroPhase  If true, then this removes the phase distortion
+     *                        by applying the filter to both the time forward
+     *                        and time reversed signal.
      * @note For higher-order filters this can be less numerically stable than
      *        an SOS implementation.
      * @throws std::invalid_argument if the filter is invalid.
@@ -502,7 +499,7 @@ public:
      * @param[in] lzeroPhase  If true then the phase shift is removed.
      * @throws std::invalid_argument if the order isn't positive or the ripple
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
-     * @sa sosLowpassFilter
+     * @sa sosLowpassFilter()
      */
     void iirLowpassFilter(const int order, const double fc,
                           const IIRPrototype prototype,
@@ -534,7 +531,6 @@ public:
      * @param[in] ripple  Controls the ripple size in Chebyshev I and 
      *                    Chebyshev II design.
      * @param[in] lzeroPhase  If true then the phase shift is removed.
-     * @param[in] implementation  Defines the IIR implementation. 
      * @throws std::invalid_argument if the order isn't positive or the ripple
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa iirLowpassFilter()
@@ -553,7 +549,6 @@ public:
      * @param[in] ripple  Controls the ripple size in Chebyshev I and 
      *                    Chebyshev II design.
      * @param[in] lzeroPhase  If true then the phase shift is removed.
-     * @param[in] implementation  Defines the IIR implementation. 
      * @throws std::invalid_argument if the order isn't positive or the ripple
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa sosLowpassFilter()

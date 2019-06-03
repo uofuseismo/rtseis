@@ -88,7 +88,8 @@ The following prerequisites must be satisfied prior to building the software
 - A C++14 compliant compiler.
 - <a href="https://git-scm.com/">git</a>
 - <a href="https://cmake.org/">CMake</a> v3.6
-- <a href="https://software.intel.com/en-us/mkl">MKL</a> and 
+- <a href="https://github.com/google/googletest">Google Test</a>
+- <a href="https://software.intel.com/en-us/mkl">MKL</a> and
 <a href="https://software.intel.com/en-us/intel-ipp">IPP</a> are both required.
 They can be obtained using yum by following the directions
 <a href="https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-yum-repo">here</a> 
@@ -114,6 +115,7 @@ export IPP_DIR=/opt/intel/ipp
 export IPP_LIB_ROOT=${IPP_DIR}/lib/intel64
 export MKL_DIR=/opt/intel/mkl
 export MKL_LIB_ROOT=${MKL_DIR}/lib/intel64
+export GTEST_ROOT=/usr/local
 export BUILD_DIR=build
 if [ -d ${BUILD_DIR} ]; then
    echo "Removing build directory" ${BUILD_DIR}
@@ -124,6 +126,8 @@ cd ${BUILD_DIR}
 cmake .. \
 -DCMAKE_C_FLAGS="-g3 -O2 -Wall" \
 -DCMAKE_CXX_FLAGS="-g3 -O2 -Wall" \
+-DGTEST_INCLUDE_DIRS="/usr/local/include" \
+-DGTEST_BOTH_LIBRARIES="/usr/local/lib/libgtest.a;/local/lib/libgtest_main.a" \
 -DIPP_INCLUDE_DIR=${IPP_DIR}/include \
 -DIPP_LIBRARY="${IPP_LIB_ROOT}/libipps.so;${IPP_LIB_ROOT}/libippvm.so;${IPP_LIB_ROOT}/libippcore.so" \
 -DMKL_INCLUDE_DIR="${MKL_DIR}/include" \

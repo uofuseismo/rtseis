@@ -41,13 +41,16 @@ int test_normalization_signBit(void)
     double *y = new double[npts];
     double *yref = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    int ierr = signBit.apply(npts, x, y); 
-    auto timeEnd = std::chrono::high_resolution_clock::now();
-    if (ierr != 0)
+    try
     {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
+        signBit.apply(npts, x, y); 
+    }
+    catch (std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s", e.what());
         return EXIT_FAILURE;
-    }   
+    }
+    auto timeEnd = std::chrono::high_resolution_clock::now();
     for (int i=0; i<npts; i++)
     {
         double sign =-1;
@@ -82,8 +85,11 @@ int test_normalization_signBit(void)
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = signBitRT.apply(nptsPass, &x[nxloc], &y[nxloc]);
-                if (ierr != 0)
+                try
+                {
+                    signBitRT.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                }
+                catch (std::exception &e)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply onebit filter");
                     return EXIT_FAILURE;

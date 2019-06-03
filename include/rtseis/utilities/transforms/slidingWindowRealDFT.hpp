@@ -140,7 +140,7 @@ public:
      *                     be in the range [0, \c getNumberOfColumns()-1]. 
      * @throws std::invalid_argument if the class precision is DOUBLE or
      *         iWindow is out of bounds.
-     * @sa \c getPrecision()
+     * @sa \c getNumberOfColumns(), \c getPrecision()
      */
     const std::complex<double> *getTransform64f(const int iWindow) const;
     /*! 
@@ -149,7 +149,7 @@ public:
      *                     be in the range [0, \c getNumberOfColumns()-1]. 
      * @throws std::invalid_argument if the class precision is DOUBLE or
      *         iWindow is out of bounds.
-     * @sa \c getPrecision()
+     * @sa \c getNumberOfColumns(), \c getPrecision()
      */
     const std::complex<float> *getTransform32f(const int iWindow) const;
 private:

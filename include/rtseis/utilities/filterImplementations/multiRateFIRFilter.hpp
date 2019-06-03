@@ -147,7 +147,6 @@ public:
      */
     int estimateSpace(const int n) const;
     /*!
-     * @{
      * @brief Applies the multi-rate filter to the signal.
      * @param[in] n       Number of points in the signal.
      * @param[in] x       The signal to filter.  This has dimension [n].
@@ -160,9 +159,9 @@ public:
      */
     int apply(const int n, const double x[],
               const int nywork, int *ny, double y[]);
+    /*! @copydoc apply */
     int apply(const int n, const float x[],
               const int nywork, int *ny, float y[]);
-    /*! @} */
 
     /*!
      * @brief Resets the initial conditions to those set in

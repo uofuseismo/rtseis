@@ -96,7 +96,6 @@ public:
      */
     int setInitialConditions(const int nz, const double zi[]);
     /*!
-     * @{
      * @brief Appplies the median filter to the array x.
      * @param[in] n   Number of points in x.
      * @param[in] x   The signal to filter.  This has dimension [n].
@@ -104,8 +103,8 @@ public:
      * @result 0 indicates success.
      */
     int apply(const int n, const double x[], double y[]);
+    /*! @copydoc apply */
     int apply(const int n, const float x[], float y[]);
-    /*! @} */
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions

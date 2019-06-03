@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <memory>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/log.h"
 #include "rtseis/utilities/normalization/signBit.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
@@ -11,8 +12,8 @@ using namespace RTSeis::Utilities::Normalization;
 class SignBit::SignBitImpl
 {
     public:
-        SignBitImpl(void){return;}
-        ~SignBitImpl(void){linit = false;}
+        SignBitImpl() = default;
+        ~SignBitImpl() = default;
         SignBitImpl& operator=(const SignBitImpl &sb)
         {
             if (&sb == this){return *this;}
@@ -23,17 +24,12 @@ class SignBit::SignBitImpl
 };
 
 
-SignBit::SignBit(void) :
+SignBit::SignBit() :
     pSignBit_(new SignBitImpl())
 {
-    return;
 }
 
-SignBit::~SignBit(void)
-{
-    clear();
-    return;
-}
+SignBit::~SignBit() = default;
 
 SignBit::SignBit(const SignBit &signBit)
 {
@@ -49,78 +45,70 @@ SignBit& SignBit::operator=(const SignBit &signBit)
     return *this;
 }
 
-void SignBit::clear(void)
+void SignBit::clear() noexcept
 {
     pSignBit_->linit = false;
-    return;
 }
 
-int SignBit::initialize(void)
+void SignBit::initialize() noexcept
 {
     clear();
     pSignBit_->linit = true;
-    return 0;
 }
 
-bool SignBit::isInitialized(void) const
+bool SignBit::isInitialized() const noexcept
 {
     return pSignBit_->linit;
 }
 
-int SignBit::setInitialConditions(void)
+void SignBit::setInitialConditions()
 {
     if (!isInitialized())
     {
-        RTSEIS_WARNMSG("%s", "signBit not initialized");
+        RTSEIS_THROW_RTE("%s", "signBit not initialized");
     }
-    return 0;
 }
 
-int SignBit::resetInitialConditions(void)
+void SignBit::resetInitialConditions()
 {
     if (!isInitialized())
     {
-        RTSEIS_WARNMSG("%s", "signBit not initialized");
+        RTSEIS_THROW_RTE("%s", "signBit not initialized");
     }
-    return 0;
 }
 
-int SignBit::apply(const int nx, const double x[], double y[])
+void SignBit::apply(const int nx, const double x[], double y[])
 {
-    if (nx <= 0){return 0;}
+    if (nx <= 0){return;}
     if (!isInitialized())
     {
-        RTSEIS_WARNMSG("%s", "signBit not initialized");
+        RTSEIS_THROW_RTE("%s", "signBit not initialized");
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
-        return -1;
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
     }
 #ifdef __INTEL_COMPILER
     #pragma forceinline
 #endif
     RTSeis::Utilities::Math::VectorMath::copysign(nx, x, y);
-    return 0;
 }
 
-int SignBit::apply(const int nx, const float x[], float y[])
+void SignBit::apply(const int nx, const float x[], float y[])
 {
-    if (nx <= 0){return 0;} 
+    if (nx <= 0){return;} 
     if (!isInitialized())
     {
-        RTSEIS_WARNMSG("%s", "signBit not initialized");
+        RTSEIS_THROW_RTE("%s", "signBit not initialized");
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
-        return -1; 
+        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
+        RTSEIS_THROW_RTE("%s", "y is NULL");
     }
 #ifdef __INTEL_COMPILER
     #pragma forceinline
 #endif
     RTSeis::Utilities::Math::VectorMath::copysign(nx, x, y);
-    return 0;
 }

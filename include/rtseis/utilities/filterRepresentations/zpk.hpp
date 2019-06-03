@@ -98,7 +98,7 @@ public:
      * @brief Sorts the poles.
      * @param[in] ascending  If true then the poles will be sorted in
      *                       increasing order of magnitude.
-     * @param[in] ascending  If false then the poles will be sorted in
+     *                       If false then the poles will be sorted in
      *                       decreasing order of magnitude.
      */
     void sortPoles(bool ascending=true);
@@ -106,7 +106,7 @@ public:
      * @brief Sorts the zeros.
      * @param[in] ascending  If true then the zeros will be sorted in
      *                       increasing order of magnitude.
-     * @param[in] ascending  If false then the zeors will be sorted in
+     *                       If false then the zeors will be sorted in
      *                       decreasing order of magnitude.
      */
     void sortZeros(bool ascending=true);

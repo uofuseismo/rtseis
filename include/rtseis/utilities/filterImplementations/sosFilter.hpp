@@ -101,6 +101,7 @@ public:
      * @param[out] y  The filtered signal.  This has dimension [n].
      */
     int apply(const int n, const double x[], double y[]);
+    /*! @copydoc apply */
     int apply(const int n, const float x[], float y[]);
     /*! @} */
 
