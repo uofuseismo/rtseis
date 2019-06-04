@@ -14,10 +14,6 @@ namespace
 
 using namespace RTSeis::Utilities::Math;
 
-int convolve_convolve_test();
-int convolve_correlate_test();
-int convolve_autocorrelate_test();
-
 /*
 int rtseis_test_utils_convolve(void)
 {
