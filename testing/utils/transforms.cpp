@@ -311,9 +311,8 @@ TEST(UtilitiesTransforms, dft)
             emax = std::max(emax, std::abs(y[i] - yref[i]));
             emaxi= std::max(emaxi,std::abs(x[i] - xinv[i]));
         }
-printf("%d %e %e\n", j, emax, emaxi);
-//        ASSERT_LE(emax, 1.e-12);
-//        ASSERT_LE(emaxi, 1.e-12);
+        ASSERT_LE(emax, 5.e-11);
+        ASSERT_LE(emaxi, 1.e-12);
         // Stress test
         if (j == 1)
         {
@@ -330,7 +329,7 @@ printf("%d %e %e\n", j, emax, emaxi);
             {
                 emax  = std::max(emax,  std::abs(y[i] - yref[i]));
             }
-            ASSERT_LE(emax, 1.e-12);
+            ASSERT_LE(emax, 5.e-11);
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             fprintf(stdout, "Average DFT time %.8lf (s)\n",
                     tdif.count()/static_cast<double>(niter));
