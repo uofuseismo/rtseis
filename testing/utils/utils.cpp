@@ -43,7 +43,6 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed convolve test");
-*/
 
     ierr = rtseis_test_utils_polynomial();
     if (ierr != EXIT_SUCCESS)
@@ -52,6 +51,7 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed polynomial test");
+*/
 
     ierr = rtseis_test_utils_design_iir_ap();
     if (ierr != EXIT_SUCCESS)

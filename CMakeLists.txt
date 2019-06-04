@@ -154,7 +154,7 @@ target_link_libraries(rtseis
 
 ADD_EXECUTABLE(testUtils
                testing/utils/utils.cpp
-               testing/utils/polynomial.cpp
+               #testing/utils/polynomial.cpp
                testing/utils/interpolate.cpp
                testing/utils/fir.cpp
                testing/utils/iir.cpp
@@ -165,6 +165,7 @@ ADD_EXECUTABLE(testUtils
                testing/utils/windowFunctions.cpp)
 ADD_EXECUTABLE(utilityTests
                testing/utils/main.cpp
+               testing/utils/polynomial.cpp
                testing/utils/convolve.cpp
                testing/utils/transforms.cpp
                testing/utils/response.cpp)

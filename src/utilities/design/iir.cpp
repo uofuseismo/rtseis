@@ -485,35 +485,27 @@ ZPK IIR::tf2zpk(const FilterRepresentations::BA &ba)
     #pragma omp simd
     for (size_t i=0; i<b.size(); i++){b[i] = b[i]/k;}
     //  Compute the roots of the numerator
-    constexpr size_t lone = 1;
-    constexpr size_t ltwo = 2;
-    std::vector<std::complex<double>> z(std::max(b.size(), ltwo) - lone);
+    std::vector<std::complex<double>> z; //(std::max(b.size(), ltwo) - lone);
     if (b.size() > 1)
     {
-#ifdef DEBUG
-        assert(Polynomial::roots(b, z) == 0);
-#else
-        Polynomial::roots(b, z);
-#endif
+        z = Polynomial::roots(b);
     }
     else
     {
         RTSEIS_WARNMSG("%s", "Warning no zeros");
+        z.resize(1);
         z[0] = std::complex<double> (1, 0);
     }
     // Compute the roots of the denominator
-    std::vector<std::complex<double>> p(std::max(a.size(), ltwo) - lone);
+    std::vector<std::complex<double>> p; //(std::max(a.size(), ltwo) - lone);
     if (a.size() > 1)
     {
-#ifdef DEBUG
-        assert(Polynomial::roots(a, p) == 0);
-#else
-        Polynomial::roots(a, p);
-#endif
+        p = Polynomial::roots(a);
     }
     else
     {
         RTSEIS_WARNMSG("%s", "No poles");
+        p.resize(1);
         p[0] = std::complex<double> (1, 0); 
     }
     // Make a transfer function
@@ -530,12 +522,12 @@ BA IIR::zpk2tf(const FilterRepresentations::ZPK &zpk) noexcept
     //  (z - z_1)*(z - z_2)*...*(z - z_nzeros)
     std::vector<std::complex<double>> z = zpk.getZeros();
     std::vector<std::complex<double>> bz;
-    Polynomial::poly(z, bz); 
+    bz = Polynomial::poly(z) ;//, bz); 
     // Compute polynomial representation of zeros by expanding:
     //  (z - z_1)*(z - z_2)*...*(z - z_nzeros)
     std::vector<std::complex<double>> p = zpk.getPoles();
     std::vector<std::complex<double>> az;
-    Polynomial::poly(p, az); 
+    az = Polynomial::poly(p); //, az);
     // Introduce gain into the numerator zeros
 #ifdef __INTEL_COMPILER
     #pragma ivdep

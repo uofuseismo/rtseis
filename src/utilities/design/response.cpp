@@ -55,7 +55,7 @@ Response::freqs(const BA &ba, const std::vector<double> &w)
 #endif
     for (size_t i=0; i<b.size(); i++){bz[i] = std::complex<double> (b[i], 0);}
     std::vector<std::complex<double>> hsNum;
-    Math::Polynomial::polyval(bz, s, hsNum);
+    hsNum = Math::Polynomial::polyval(bz, s); //, hsNum);
 
     std::vector<std::complex<double>> az;
     az.resize(a.size());
@@ -64,7 +64,7 @@ Response::freqs(const BA &ba, const std::vector<double> &w)
 #endif
     for (size_t i=0; i<a.size(); i++){az[i] = std::complex<double> (a[i], 0);}
     std::vector<std::complex<double>> hsDen;
-    Math::Polynomial::polyval(az, s, hsDen);
+    hsDen = Math::Polynomial::polyval(az, s); //, hsDen);
     // Compute the transfer function
     Math::VectorMath::divide(hsDen, hsNum, h);
     return h;
@@ -127,10 +127,10 @@ Response::freqz(const BA &ba, const std::vector<double> &w)
     }
     // Evaluate the numerator and denominator polynoimals
     std::vector<std::complex<double>> hzNum;
-    Math::Polynomial::polyval(bz, z, hzNum);
+    hzNum = Math::Polynomial::polyval(bz, z); //, hzNum);
 
     std::vector<std::complex<double>> hzDen;
-    Math::Polynomial::polyval(az, z, hzDen);
+    hzDen = Math::Polynomial::polyval(az, z); //, hzDen);
     // Compute the transfer function: H = Num/Den
     Math::VectorMath::divide(hzDen, hzNum, h); 
     return h;
@@ -178,10 +178,10 @@ Response::groupDelay(const BA &ba,
     }
     // Evaluate the numerator and denominator polynomials at angular frequencies
     std::vector<std::complex<double>> num;
-    Math::Polynomial::polyval(zcr, z, num);
+    num = Math::Polynomial::polyval(zcr, z); //, num);
 
     std::vector<std::complex<double>> den;
-    Math::Polynomial::polyval(zc, z, den);
+    den = Math::Polynomial::polyval(zc, z); //, den);
     // Check for singular elements
     for (size_t i=0; i<w.size(); i++)
     {

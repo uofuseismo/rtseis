@@ -1,13 +1,19 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
+#include <gtest/gtest.h>
+
+namespace
+{
 
 using namespace RTSeis::Utilities::Math;
 
+/*
 int polynomial_poly_test(void);
 int polynomial_roots_test(void);
 int polynomial_polyval_test(void);
@@ -38,10 +44,11 @@ int rtseis_test_utils_polynomial(void)
 
     return EXIT_SUCCESS;
 }
+*/
 
-int polynomial_polyval_test(void)
+//int polynomial_polyval_test(void)
+TEST(UtilitiesPolynomial, polyval)
 {
-    int ierr;
     std::vector<double> x({5, 7, 9, -2});
     std::vector<double> p0({3});
     std::vector<double> p1({3, 2});
@@ -105,167 +112,104 @@ int polynomial_polyval_test(void)
     zyref4.push_back(std::complex<double> (15081,-17547));
     zyref4.push_back(std::complex<double> (-151,-1146));
 
-    
-     
     std::vector<double> y;
-    ierr = Polynomial::polyval(p0, x, y); 
-    if (ierr != 0 || x.size() != y.size())
-    {
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<y.size(); i++)
-    {   
-        if (std::abs(y[i] - yref0[i]) > 1.e-14)
-        {
-            RTSEIS_ERRMSG("Failed polyval0 %lf %lf", y[i], yref0[i]);
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_NO_THROW(y = Polynomial::polyval(p0, x));
+    EXPECT_EQ(x.size(), y.size());
+    double error;
+    ippsNormDiff_Inf_64f(y.data(), yref0.data(), y.size(), &error);
+    ASSERT_LE(error, 1.e-14);
 
-    ierr = Polynomial::polyval(p1, x, y); 
-    if (ierr != 0 || x.size() != y.size())
-    {   
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<y.size(); i++)
-    {
-        if (std::abs(y[i] - yref1[i]) > 1.e-14)
-        {
-            RTSEIS_ERRMSG("%s", "Failed polyval1");
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_NO_THROW(y = Polynomial::polyval(p1, x));
+    EXPECT_EQ(x.size(), y.size());
+    ippsNormDiff_Inf_64f(y.data(), yref1.data(), y.size(), &error);
+    ASSERT_LE(error, 1.e-14);
  
-    ierr = Polynomial::polyval(p2, x, y); 
-    if (ierr != 0 || x.size() != y.size())
-    {
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<y.size(); i++)
-    {   
-        if (std::abs(y[i] - yref2[i]) > 1.e-14)
-        {
-            RTSEIS_ERRMSG("%s", "Failed polyval2");
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_NO_THROW(y = Polynomial::polyval(p2, x));
+    EXPECT_EQ(x.size(), y.size());
+    ippsNormDiff_Inf_64f(y.data(), yref2.data(), y.size(), &error);
+    ASSERT_LE(error, 1.e-14);
 
-    ierr = Polynomial::polyval(p3, x, y); 
-    if (ierr != 0 || x.size() != y.size())
-    {   
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<y.size(); i++)
-    {   
-        if (std::abs(y[i] - yref3[i]) > 1.e-14)
-        {
-            RTSEIS_ERRMSG("%s", "Failed polyval3");
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_NO_THROW(y = Polynomial::polyval(p3, x));
+    EXPECT_EQ(x.size(), y.size());
+    ippsNormDiff_Inf_64f(y.data(), yref3.data(), y.size(), &error);
+    ASSERT_LE(error, 1.e-14);
 
-    ierr = Polynomial::polyval(p4, x, y); 
-    if (ierr != 0 || x.size() != y.size())
-    {
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<y.size(); i++)
-    {
-        if (std::abs(y[i] - yref4[i]) > 1.e-14)
-        {
-            RTSEIS_ERRMSG("%s", "Failed polyval4");
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_NO_THROW(y = Polynomial::polyval(p4, x));
+    EXPECT_EQ(x.size(), y.size());
+    ippsNormDiff_Inf_64f(y.data(), yref4.data(), y.size(), &error);
+    ASSERT_LE(error, 1.e-14);
+
     // Complex
     std::vector<std::complex<double>> zy;
-    ierr = Polynomial::polyval(zp0, zx, zy);
-    if (ierr != 0 || zx.size() != zy.size())
+    EXPECT_NO_THROW(zy = Polynomial::polyval(zp0, zx));
+    EXPECT_EQ(zx.size(), zy.size());
+    error = 0;
+    for (auto i=0; i<zy.size(); i++)
     {
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }   
-    for (size_t i=0; i<zy.size(); i++)
-    {   
+        error = std::max(error, std::abs(zy[i] - zyref0[i]));
         if (std::abs(zy[i] - zyref0[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("%s", "Failed polyval0");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed polyval0\n");
         }
     }
+    ASSERT_LE(error, 1.e-14);
 
-    ierr = Polynomial::polyval(zp1, zx, zy);
-    if (ierr != 0 || zx.size() != zy.size())
+    EXPECT_NO_THROW(zy = Polynomial::polyval(zp1, zx));
+    EXPECT_EQ(zx.size(), zy.size());
+    error = 0;
+    for (auto i=0; i<zy.size(); i++)
     {
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<zy.size(); i++)
-    {
+        error = std::max(error, std::abs(zy[i] - zyref1[i]));
         if (std::abs(zy[i] - zyref1[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("%s", "Failed polyval1");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed polyval1\n");
         }
     }
+    ASSERT_LE(error, 1.e-14);
 
-    ierr = Polynomial::polyval(zp2, zx, zy);
-    if (ierr != 0 || zx.size() != zy.size())
-    { 
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<zy.size(); i++)
-    {   
+    EXPECT_NO_THROW(zy = Polynomial::polyval(zp2, zx));
+    EXPECT_EQ(zx.size(), zy.size());
+    error = 0;
+    for (auto i=0; i<zy.size(); i++)
+    {
+        error = std::max(error, std::abs(zy[i] - zyref2[i]));
         if (std::abs(zy[i] - zyref2[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("%s", "Failed polyval2");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed polyval2\n");
         }
     }
+    ASSERT_LE(error, 1.e-14);
 
-    ierr = Polynomial::polyval(zp3, zx, zy);
-    if (ierr != 0 || zx.size() != zy.size())
-    {   
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<zy.size(); i++)
+    EXPECT_NO_THROW(zy = Polynomial::polyval(zp3, zx));
+    EXPECT_EQ(zx.size(), zy.size());
+    error = 0;
+    for (auto i=0; i<zy.size(); i++)
     {
+        error = std::max(error, std::abs(zy[i] - zyref3[i]));
         if (std::abs(zy[i] - zyref3[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("%s", "Failed polyval3");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed polyval3\n");
         }
     }
+    ASSERT_LE(error, 1.e-14);
 
-    ierr = Polynomial::polyval(zp4, zx, zy);
-    if (ierr != 0 || zx.size() != zy.size())
+    EXPECT_NO_THROW(zy = Polynomial::polyval(zp4, zx));
+    EXPECT_EQ(zx.size(), zy.size());
+    error = 0;
+    for (auto i=0; i<zy.size(); i++)
     {
-        RTSEIS_ERRMSG("%s", "Failed polyval");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<zy.size(); i++)
-    {   
+        error = std::max(error, std::abs(zy[i] - zyref4[i]));
         if (std::abs(zy[i] - zyref4[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("%s", "Failed polyval4");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed polyval4\n");
         }
     }
-
-    return EXIT_SUCCESS;
+    ASSERT_LE(error, 1.e-14);
 }
 
-int polynomial_roots_test(void)
+//int polynomial_roots_test(void)
+TEST(UtilitiesPolynomial, roots)
 {
-    int ierr;
-
     std::vector<std::complex<double>> ref1, ref2;
     ref1.resize(3);
     ref1[0] = std::complex<double> (12.122893784632391, 0);
@@ -281,56 +225,40 @@ int polynomial_roots_test(void)
     p.resize(4);
     p[0] = 1; p[1] =-6; p[2] =-72; p[3] =-27; 
     std::vector<std::complex<double>> roots;
-    ierr = Polynomial::roots(p, roots);
-    if (ierr != 0)
+    EXPECT_NO_THROW(roots = Polynomial::roots(p));
+    EXPECT_EQ(roots.size(), 3);
+    double error = 0;
+    for (auto i=0; i<roots.size(); i++)
     {
-        RTSEIS_ERRMSG("%s", "Failed calling roots");
-        return EXIT_FAILURE;
-    }
-    if (roots.size() != 3)
-    {
-        RTSEIS_ERRMSG("%s", "Wrong size");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<roots.size(); i++)
-    {
+        error = std::max(error, std::abs(roots[i] - ref1[i]));
         if (std::abs(roots[i] - ref1[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("%s", "Failed roots 1 test");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed roots 1 test\n");
         }
     }
+    ASSERT_LE(error, 1.e-14);
 
     p[0] = 1;
     p[1] =-6;
     p[2] = 72;
     p[3] = 27;
-    ierr = Polynomial::roots(p, roots);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed calling roots");
-        return EXIT_FAILURE;
-    }   
-    if (roots.size() != 3)
-    {   
-        RTSEIS_ERRMSG("%s", "Wrong size");
-        return EXIT_FAILURE;
-    }
-    for (size_t i=0; i<roots.size(); i++)
+    EXPECT_NO_THROW(roots = Polynomial::roots(p));
+    EXPECT_EQ(roots.size(), 3);
+    error = 0;
+    for (auto i=0; i<roots.size(); i++)
     {
+        error = std::max(error, std::abs(roots[i] - ref2[i]));
         if (std::abs(roots[i] - ref2[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("%s", "Failed roots 2 test");
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed roots 2 test\n");
         }
     }
- 
-    return EXIT_SUCCESS;
+    ASSERT_LE(error, 1.e-14);
 }
 
-int polynomial_poly_test(void)
+//int polynomial_poly_test(void)
+TEST(UtilitiesPolynomial, poly)
 {
-    int ierr;
     std::vector<std::complex<double>> croots;
     croots.resize(4);
     croots[0] = std::complex<double> (1, 0);
@@ -362,50 +290,27 @@ int polynomial_poly_test(void)
     cref[4] = std::complex<double> (8.6, 0);
 
     std::vector<double> poly;
-    ierr = Polynomial::poly(roots, poly);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to call poly");
-        return EXIT_FAILURE;
-    }
-    if (poly.size() != ref.size())
-    {
-        RTSEIS_ERRMSG("%s", "Inconsistent sizes");
-        return -1;
-    }
-    for (size_t i=0; i<poly.size(); i++)
-    {
-        if (std::abs(poly[i] - ref[i]) > 1.e-14)
-        {
-            RTSEIS_ERRMSG("Real poly failed %lf %lf", poly[i], ref[i]);
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_NO_THROW(poly = Polynomial::poly(roots));
+    EXPECT_EQ(poly.size(), ref.size());
+    double error = 0;
+    ippsNormDiff_Inf_64f(poly.data(), ref.data(), poly.size(), &error);
+    ASSERT_LE(error, 1.e-14);
 
     std::vector<std::complex<double>> cpoly;
-    ierr = Polynomial::poly(croots, cpoly);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to call poly");
-        return EXIT_FAILURE;
-    }
-    if (cpoly.size() != cref.size())
-    {
-        RTSEIS_ERRMSG("%s", "Inconsistent sizes");
-        return -1; 
-    }
+    EXPECT_NO_THROW(cpoly = Polynomial::poly(croots));
+    EXPECT_EQ(cpoly.size(), cref.size());
+    error = 0;
     for (size_t i=0; i<poly.size(); i++)
-    {   
+    {
+        error = std::max(error, std::abs(cpoly[i] - cref[i]));
         if (std::abs(cpoly[i] - cref[i]) > 1.e-14)
         {
-            RTSEIS_ERRMSG("Complex poly failed (%lf,%lf) (%lf,%lf)",
-                          std::real(cpoly[i]), std::imag(cpoly[i]),
-                          std::real(cref[i]),  std::imag(cref[i]));
-            return EXIT_FAILURE;
+            fprintf(stderr, "Complex poly failed (%lf,%lf) (%lf,%lf)\n",
+                    std::real(cpoly[i]), std::imag(cpoly[i]),
+                    std::real(cref[i]),  std::imag(cref[i]));
         }
     }
-
-    return EXIT_SUCCESS;
+    ASSERT_LE(error, 1.e-14);
 }
 
-
+}

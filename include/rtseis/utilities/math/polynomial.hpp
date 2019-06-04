@@ -45,14 +45,12 @@ namespace Polynomial
  *        and \f$ coeffs[0] = c_0 \f$.
  * @param[in] coeffs   The coefficients of the polynomial whose order 
  *                     is defined above.  Note, the coeffs[0] cannot be
- *                     0 and coeffs must have length at least 2.
- * @param[out] roots   The roots of the polynomial.  This has dimension
- *                     [coeffs.size() - 1].
- * @result 0 indicates success.
+ *                     0 and coeffs must have length at least 1.
+ * @result The roots of the polynomial.  This has dimension [coeffs.size() - 1].
+ * @throws std::invalid_argument if coeffs is invalid.
  * @ingroup rtseis_utils_math_polynomial
  */
-int roots(const std::vector<double> &coeffs,
-          std::vector<std::complex<double>> &roots);
+std::vector<std::complex<double>> roots(const std::vector<double> &coeffs);
 /*! @} */
 
 /*!
@@ -62,22 +60,20 @@ int roots(const std::vector<double> &coeffs,
 /*!
  * @brief Returns a polynomial whose roots are given by p.
  * @param[in] p    The polynomial roots.  
- * @param[out] y   The polynomial coefficients corresponding to the
- *                 roots of the given polynomial.  This has dimension
- *                 [p.size()+1] and is ordered so that the last coefficient
- *                 is the constant term and the first coefficient scales
- *                 the highest order polynomial.
- * @result 0 indicates success
+ * @result The polynomial coefficients corresponding to the
+ *         roots of the given polynomial.  This has dimension
+ *         [p.size()+1] and is ordered so that the last coefficient
+ *         is the constant term and the first coefficient scales
+ *        the highest order polynomial.
  * @ingroup rtseis_utils_math_polynomial
  */
-int poly(const std::vector<std::complex<double>> &p,
-         std::vector<std::complex<double>> &y);
+std::vector<std::complex<double>>
+poly(const std::vector<std::complex<double>> &p) noexcept;
 /*!
  * @copydoc poly()
  * @ingroup rtseis_utils_math_polynomial
  */
-int poly(const std::vector<double> &p,
-         std::vector<double> &y);
+std::vector<double> poly(const std::vector<double> &p) noexcept;
 /*! @} */
 
 /*!
@@ -95,29 +91,28 @@ int poly(const std::vector<double> &p,
  *        at points \f$ x_j, j=1,2,...,n_x \f$.
  * @param[in] p    The polynomial coefficients ordered such that the
  *                 highest order coefficient comes first.  This has
- *                 dimension [order+1].
+ *                 dimension [order+1].  Note, p.size() must be positive.
  * @param[in] x    The points at which to evaluate the polynomial.  This
  *                 has dimension [x.size()].
  * @param[out] y   \f$ y = p(x) \f$ evaluated at each \f$ x_i \f$.  This
  *                 has dimension [x.size()].
- * @result 0 indicates success.
+ * @throws std::invalid_argument if p is empty.
  * @ingroup rtseis_utils_math_polynomial 
  */
-int polyval(const std::vector<double> &p,
-            const std::vector<double> &x,
-            std::vector<double> &y);
+std::vector<double> polyval(const std::vector<double> &p,
+                            const std::vector<double> &x);
 /*!
  * @copydoc polyval()
  * @ingroup rtseis_utils_math_polynomial
  */
-int polyval(const std::vector<std::complex<double>> &p,
-            const std::vector<std::complex<double>> &x,
-            std::vector<std::complex<double>> &y);
+std::vector<std::complex<double>>
+polyval(const std::vector<std::complex<double>> &p,
+        const std::vector<std::complex<double>> &x);
 /*! @} */
 
-}; /* End polynomial. */
-}; /* End math. */
-}; /* End utils. */
-}; /* End rtseis. */
+} /* End polynomial. */
+} /* End math. */
+} /* End utils. */
+} /* End rtseis. */
 
 #endif
