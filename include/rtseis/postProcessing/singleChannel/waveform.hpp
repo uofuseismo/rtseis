@@ -194,7 +194,7 @@ public:
      * @brief Gets the processed waveform data.
      * @result The processed waveform data.
      */
-    std::vector<double> getData(void);
+    std::vector<double> getData() const;
     /*!
      * @brief Gets the prcoessed waveform data.
      * @param[in] nwork  Max number of points allocated to y.
@@ -203,7 +203,7 @@ public:
      *                   are accessed.
      * @throws std::invalid_argument if y is NULL or nwork is too small.
      */
-    void getData(const size_t nwork, double y[]) const;
+    void getData(const size_t nwork, double *y[]) const;
     /*!
      * @brief Gets the length of the output signal.
      * @result The length of the output signal, y.

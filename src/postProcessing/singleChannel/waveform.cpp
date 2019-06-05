@@ -308,7 +308,7 @@ void Waveform::setData(const size_t n, const double x[])
     pImpl->setData(n, x, true);
 }
 
-std::vector<double> Waveform::getData(void)
+std::vector<double> Waveform::getData() const
 {
     std::vector<double> y;
     int ny = pImpl->getNumberOfOutputSamples();
@@ -321,7 +321,7 @@ std::vector<double> Waveform::getData(void)
     return y;
 }
 
-void Waveform::getData(const size_t nwork, double y[]) const
+void Waveform::getData(const size_t nwork, double *yIn[]) const
 {
     int leny = pImpl->getNumberOfOutputSamples();
     if (nwork < static_cast<size_t> (leny))
@@ -331,6 +331,7 @@ void Waveform::getData(const size_t nwork, double y[]) const
                                    + std::to_string(leny));
     }
     if (leny == 0){return;}
+    double *y = *yIn;
     if (y == nullptr)
     {
         throw std::invalid_argument("y is NULL");

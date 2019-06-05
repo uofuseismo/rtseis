@@ -303,13 +303,13 @@ void Waveform::setData(py::array_t<double, py::array::c_style | py::array::force
 }
 
 /// Gets the data
-py::array_t<double> Waveform::getData(void)
+py::array_t<double> Waveform::getData()
 {
     size_t ny = waveform_->getOutputLength();
     auto y = py::array_t<double, py::array::c_style> (ny);
     py::buffer_info ybuf = y.request();
-    double *yptr = (double *) (ybuf.ptr);
-    waveform_->getData(ny, yptr);
+    auto yptr = static_cast<double *> (ybuf.ptr);
+    waveform_->getData(ny, &yptr);
     return y;
 /*
     std::vector<double> y;
@@ -318,7 +318,7 @@ py::array_t<double> Waveform::getData(void)
 */
 }
 /// Checks if initialized
-bool Waveform::isInitialized(void) const
+bool Waveform::isInitialized() const
 {
     return true;//waveform_->isInitialized();
 }
