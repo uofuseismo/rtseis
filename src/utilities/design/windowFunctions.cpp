@@ -20,8 +20,9 @@ std::vector<double> WindowFunctions::hamming(const int len)
 }
 */
 
-void WindowFunctions::hamming(const int len, double window[])
+void WindowFunctions::hamming(const int len, double *winIn[])
 {
+    double *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("%s", "Length must be positive");}
@@ -56,8 +57,9 @@ std::vector<float> WindowFunctions::hamming(const int len)
 }
 */
 
-void WindowFunctions::hamming(const int len, float window[])
+void WindowFunctions::hamming(const int len, float *winIn[])
 {
+    float *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("%s", "Length must be positive");}
@@ -80,8 +82,9 @@ void WindowFunctions::hamming(const int len, float window[])
 }
 //============================================================================//
 
-void WindowFunctions::hann(const int len, double window[])
+void WindowFunctions::hann(const int len, double *winIn[])
 {
+    double *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -103,8 +106,9 @@ void WindowFunctions::hann(const int len, double window[])
     return;
 }
 
-void WindowFunctions::hann(const int len, float window[])
+void WindowFunctions::hann(const int len, float *winIn[])
 {
+    float *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -128,8 +132,9 @@ void WindowFunctions::hann(const int len, float window[])
 
 //============================================================================//
 
-void WindowFunctions::bartlett(const int len, double window[])
+void WindowFunctions::bartlett(const int len, double *winIn[])
 {
+    double *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -151,8 +156,9 @@ void WindowFunctions::bartlett(const int len, double window[])
     return;
 }
 
-void WindowFunctions::bartlett(const int len, float window[])
+void WindowFunctions::bartlett(const int len, float *winIn[])
 {
+    float *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -176,8 +182,9 @@ void WindowFunctions::bartlett(const int len, float window[])
 
 //============================================================================//
 
-void WindowFunctions::sine(const int len, double window[])
+void WindowFunctions::sine(const int len, double *winIn[])
 {
+    double *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -209,8 +216,9 @@ void WindowFunctions::sine(const int len, double window[])
     return;
 }
 
-void WindowFunctions::sine(const int len, float window[])
+void WindowFunctions::sine(const int len, float *winIn[])
 {
+    float *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -243,9 +251,10 @@ void WindowFunctions::sine(const int len, float window[])
 
 //============================================================================//
 
-void WindowFunctions::kaiser(const int len, double window[],
+void WindowFunctions::kaiser(const int len, double *winIn[],
                              const double beta)
 {
+    double *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -281,9 +290,10 @@ void WindowFunctions::kaiser(const int len, double window[],
     return;
 }
 
-void WindowFunctions::kaiser(const int len, float window[],
+void WindowFunctions::kaiser(const int len, float *winIn[],
                              const float beta)
 {
+    float *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -306,8 +316,9 @@ void WindowFunctions::kaiser(const int len, float window[],
 
 //============================================================================//
 
-void WindowFunctions::blackman(const int len, double window[])
+void WindowFunctions::blackman(const int len, double *winIn[])
 {
+    double *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
@@ -329,8 +340,9 @@ void WindowFunctions::blackman(const int len, double window[])
     return;
 }
 
-void WindowFunctions::blackman(const int len, float window[])
+void WindowFunctions::blackman(const int len, float *winIn[])
 {
+    float *window = *winIn;
     if (len < 1 || window == nullptr)
     {
         if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}

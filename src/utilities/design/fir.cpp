@@ -218,7 +218,8 @@ FIR::HilbertTransformer(const int order, const double beta)
     }
     // Create a kaiser window
     std::vector<double> kaiser(n);
-    WindowFunctions::kaiser(n, kaiser.data(), beta);
+    double *kaiserData = kaiser.data();
+    WindowFunctions::kaiser(n, &kaiserData, beta);
     // Compute the sinc function where fc = 1 and fc/2 = 0.5
     // Part 1: t = fc/2*((1-n)/2:(n-1)/2)
     std::vector<double> t(n);

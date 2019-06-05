@@ -780,10 +780,9 @@ TEST(UtilitiesTransforms, Spectrogram)
     int nSamplesInOverlap = windowLength - 10;
     std::vector<double> window(windowLength);
     const double beta = 17;
+    double *kdata = window.data();
     EXPECT_NO_THROW(
-       RTSeis::Utilities::WindowFunctions::kaiser(windowLength, window.data(),
-                                                  beta)
-    );
+       RTSeis::Utilities::WindowFunctions::kaiser(windowLength, &kdata, beta));
     EXPECT_NO_THROW(sdft.initialize(nSamples,
                     nSamplesPerSegment,
                     dftLength,

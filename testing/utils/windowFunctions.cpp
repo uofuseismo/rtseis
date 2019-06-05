@@ -11,66 +11,6 @@ namespace
 
 using namespace RTSeis::Utilities::WindowFunctions;
 
-/*
-int windowFunctions_bartlett_test(void);
-int windowFunctions_blackman_test(void);
-int windowFunctions_hann_test(void);
-int windowFunctions_kaiser_test(void);
-int windowFunctions_hamming_test(void);
-int windowFunctions_sine_test(void);
-*/
-
-/*
-int rtseis_test_utils_windowFunctions(void)
-{
-    int ierr;
-
-    ierr = windowFunctions_sine_test();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed sine test");
-        return EXIT_FAILURE;
-    }
-
-    ierr = windowFunctions_hamming_test();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed hamming test");
-        return EXIT_FAILURE;
-    }
-
-    ierr = windowFunctions_blackman_test();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed blackman test");
-        return EXIT_FAILURE;
-    }
-
-    ierr = windowFunctions_hann_test();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed hann test");
-        return EXIT_FAILURE;
-    }
-
-    ierr = windowFunctions_bartlett_test();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed bartlett test");
-        return EXIT_FAILURE;
-    }
-
-    ierr = windowFunctions_kaiser_test();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed kaiser test");
-        return EXIT_FAILURE;
-    }
-    RTSEIS_INFOMSG("%s", "Passed window tests"); 
-    return EXIT_SUCCESS;
-}
-*/
-
 //int windowFunctions_bartlett_test(void)
 TEST(UtilitiesWindowFunctions, bartlett)
 {
@@ -92,10 +32,12 @@ TEST(UtilitiesWindowFunctions, bartlett)
                 0.333333333333333,  0.222222222222222, 0.111111111111111,
                    0};
     double error;
-    EXPECT_NO_THROW(bartlett(20, win20.data()));
+    double *data = win20.data();
+    EXPECT_NO_THROW(bartlett(20, &data));
     ippsNormDiff_Inf_64f(w20, win20.data(), win20.size(), &error);
     ASSERT_LE(error, 1.e-14);
-    EXPECT_NO_THROW(bartlett(19, win19.data()));
+    data = win19.data();
+    EXPECT_NO_THROW(bartlett(19, &data));
     ippsNormDiff_Inf_64f(w19, win19.data(), win19.size(), &error);
     ASSERT_LE(error, 1.e-14);
 }
@@ -145,10 +87,12 @@ TEST(UtilitiesWindowFunctions, hann)
                    0
                    };
     double error;
-    EXPECT_NO_THROW(hann(20, win20.data()));
+    double *data = win20.data();
+    EXPECT_NO_THROW(hann(20, &data));
     ippsNormDiff_Inf_64f(w20, win20.data(), win20.size(), &error);
     ASSERT_LE(error, 1.e-14);
-    EXPECT_NO_THROW(hann(19, win19.data()));
+    data = win19.data();
+    EXPECT_NO_THROW(hann(19, &data));
     ippsNormDiff_Inf_64f(w19, win19.data(), win19.size(), &error);
     ASSERT_LE(error, 1.e-14);
 }
@@ -185,10 +129,12 @@ TEST(UtilitiesWindowFunctions, kaiser)
     double tol = 1.e-6;
 #endif
     double error;
-    EXPECT_NO_THROW(kaiser(20, win20.data(), 2.5));
+    double *data = win20.data();
+    EXPECT_NO_THROW(kaiser(20, &data, 2.5));
     ippsNormDiff_Inf_64f(w20, win20.data(), win20.size(), &error);
     ASSERT_LE(error, tol);
-    EXPECT_NO_THROW(kaiser(19, win19.data(), 5.5));
+    data = win19.data();
+    EXPECT_NO_THROW(kaiser(19, &data, 5.5));
     ippsNormDiff_Inf_64f(w19, win19.data(), win19.size(), &error);
     ASSERT_LE(error, tol);
 }
@@ -237,10 +183,12 @@ TEST(UtilitiesWindowFunctions, blackman)
    0.011437245056564,
                    0};
     double error;
-    EXPECT_NO_THROW(blackman(20, win20.data()));
+    double *data = win20.data();
+    EXPECT_NO_THROW(blackman(20, &data));
     ippsNormDiff_Inf_64f(w20, win20.data(), win20.size(), &error);
     ASSERT_LE(error, 1.e-14);
-    EXPECT_NO_THROW(blackman(19, win19.data()));
+    data = win19.data();
+    EXPECT_NO_THROW(blackman(19, &data));
     ippsNormDiff_Inf_64f(w19, win19.data(), win19.size(), &error);
     ASSERT_LE(error, 1.e-14);
 }
@@ -290,10 +238,12 @@ TEST(UtilitiesWindowFunctions, hamming)
    0.080000000000000};
 
     double error;
-    EXPECT_NO_THROW(hamming(20, win20.data()));
+    double *data = win20.data();
+    EXPECT_NO_THROW(hamming(20, &data));
     ippsNormDiff_Inf_64f(w20, win20.data(), win20.size(), &error);
     ASSERT_LE(error, 1.e-14);
-    EXPECT_NO_THROW(hamming(19, win19.data()));
+    data = win19.data(); 
+    EXPECT_NO_THROW(hamming(19, &data));
     ippsNormDiff_Inf_64f(w19, win19.data(), win19.size(), &error);
     ASSERT_LE(error, 1.e-14);
 }
@@ -386,11 +336,13 @@ TEST(UtilitiesWindowFunctions, sine)
 0.08257934547233267};
 */
     std::vector<double> win20(20), win19(19);
-    EXPECT_NO_THROW(sine(20, win20.data()));
+    double *data = win20.data();
+    EXPECT_NO_THROW(sine(20, &data));
     double error;
     ippsNormDiff_Inf_64f(w20, win20.data(), win20.size(), &error);
     ASSERT_LE(error, 1.e-14);
-    EXPECT_NO_THROW(sine(19, win19.data()));
+    data = win19.data();
+    EXPECT_NO_THROW(sine(19, &data));
     ippsNormDiff_Inf_64f(w19, win19.data(), win19.size(), &error);
     ASSERT_LE(error, 1.e-14);
 }
