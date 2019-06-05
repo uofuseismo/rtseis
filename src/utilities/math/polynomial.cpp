@@ -26,7 +26,7 @@ Polynomial::polyval(const std::vector<std::complex<double>> &p,
         RTSEIS_THROW_IA("%s", "No points in coefficients in p");
     }
     auto norder = p.size() - 1;
-    auto nx = x.size();
+    int nx = static_cast<int> (x.size());
     std::vector<std::complex<double>> y(nx);
     if (nx < 1){return y;}
     // Expand the constant case 
@@ -106,8 +106,8 @@ Polynomial::polyval(const std::vector<double> &p,
     {
         RTSEIS_THROW_IA("%s", "No points in coefficients in p");
     }
-    auto norder = p.size() - 1;
-    auto nx = x.size();
+    int norder = static_cast<int> (p.size()) - 1;
+    int nx = static_cast<int> (x.size());
     std::vector<double> y(nx);
     if (nx < 1){return y;}
     // Expand the constant case 
@@ -170,7 +170,7 @@ Polynomial::polyval(const std::vector<double> &p,
 std::vector<std::complex<double>> 
 Polynomial::poly(const std::vector<std::complex<double>> &p) noexcept
 {
-    auto nord = p.size();
+    int nord = static_cast<int> (p.size());
     std::vector<std::complex<double>> y(nord+1);
     // Special case
     if (nord == 0)
