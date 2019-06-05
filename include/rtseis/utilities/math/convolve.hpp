@@ -99,7 +99,7 @@ convolve(const std::vector<double> &a,
 void convolve(const int na, const double a[],
               const int nb, const double b[],
               const int maxc,
-              int *nc, double c[],
+              int *nc, double *c[],
               const Mode mode = Mode::FULL,
               const Implementation implementation = Implementation::AUTO);
 /*!
@@ -143,7 +143,7 @@ correlate(const std::vector<double> &a,
 void correlate(const int na, const double a[],
                const int nb, const double b[],
                const int maxc,
-               int *nc, double c[],
+               int *nc, double *c[],
                const Mode mode = Mode::FULL,
                const Implementation implementation = Implementation::AUTO);
 /*!
@@ -177,7 +177,7 @@ autocorrelate(const std::vector<double> &a,
  * @ingroup rtseis_utils_math_convolve
  */
 void autocorrelate(const int na, const double a[],
-                   const int maxc, int *nc, double c[],
+                   const int maxc, int *nc, double *c[],
                    const Mode mode = Convolve::Mode::FULL,
                    const Implementation implementation = Implementation::AUTO);
 

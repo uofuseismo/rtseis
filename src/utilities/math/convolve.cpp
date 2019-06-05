@@ -34,8 +34,9 @@ Convolve::convolve(const std::vector<double> &a,
     int len = indexes.second - indexes.first;
     int nc;
     c.resize(len);
-    convolve(src1Len, a.data(), src2Len, b.data(), 
-             len, &nc, c.data(), mode, implementation);
+    double *cdata = c.data();
+    convolve(src1Len, a.data(), src2Len, b.data(),
+             len, &nc, &cdata, mode, implementation);
 #ifdef DEBUG
     assert(nc == static_cast<int> (c.size()));
 #endif
@@ -44,7 +45,7 @@ Convolve::convolve(const std::vector<double> &a,
 
 void Convolve::convolve(const int src1Len, const double a[],
                         const int src2Len, const double b[],
-                        const int maxc, int *nc, double c[],
+                        const int maxc, int *nc, double *cIn[],
                         const Convolve::Mode mode,
                         const Convolve::Implementation implementation)
 {
@@ -59,6 +60,7 @@ void Convolve::convolve(const int src1Len, const double a[],
     }
     std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
     int fullLen = indexes.second - indexes.first;
+    double *c = *cIn;
     if (maxc < fullLen || c == nullptr)
     {
        if (maxc < fullLen)
@@ -135,8 +137,9 @@ Convolve::correlate(const std::vector<double> &a,
     int len = indexes.second - indexes.first;
     int nc;
     c.resize(len);
+    double *cdata = c.data();
     correlate(src1Len, a.data(), src2Len, b.data(),
-              len, &nc, c.data(), mode, implementation);
+              len, &nc, &cdata, mode, implementation);
 #ifdef DEBUG
     assert(nc == static_cast<int> (c.size()));
 #endif
@@ -145,7 +148,7 @@ Convolve::correlate(const std::vector<double> &a,
 
 void Convolve::correlate(const int src1Len, const double a[],
                          const int src2Len, const double b[],
-                         const int maxc, int *nc, double c[],
+                         const int maxc, int *nc, double *cIn[],
                          const Convolve::Mode mode,
                          const Convolve::Implementation implementation)
 {
@@ -161,6 +164,7 @@ void Convolve::correlate(const int src1Len, const double a[],
     }
     std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
     int fullLen = indexes.second - indexes.first;
+    double *c = *cIn;
     if (maxc < fullLen || c == nullptr)
     {
        if (maxc < fullLen)
@@ -234,8 +238,9 @@ Convolve::autocorrelate(const std::vector<double> &a,
     int len = indexes.second - indexes.first;
     int nc;
     c.resize(len);
+    double *cdata = c.data();
     autocorrelate(src1Len, a.data(),
-                  len, &nc, c.data(), mode, implementation);
+                  len, &nc, &cdata, mode, implementation);
 #ifdef DEBUG
     assert(nc == static_cast<int> (c.size()));
 #endif
@@ -243,7 +248,7 @@ Convolve::autocorrelate(const std::vector<double> &a,
 }
 
 void Convolve::autocorrelate(const int src1Len, const double a[],
-                             const int maxc, int *nc, double c[],
+                             const int maxc, int *nc, double *cIn[],
                              const Convolve::Mode mode,
                              const Convolve::Implementation implementation)
 {
@@ -257,6 +262,7 @@ void Convolve::autocorrelate(const int src1Len, const double a[],
     }
     std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src1Len);
     int fullLen = indexes.second - indexes.first;
+    double *c = *cIn;
     if (maxc < fullLen || c == nullptr)
     {
        if (maxc < fullLen)
