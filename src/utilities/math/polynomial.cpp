@@ -25,7 +25,7 @@ Polynomial::polyval(const std::vector<std::complex<double>> &p,
     {
         RTSEIS_THROW_IA("%s", "No points in coefficients in p");
     }
-    auto norder = p.size() - 1;
+    int norder = p.size() - 1;
     int nx = static_cast<int> (x.size());
     std::vector<std::complex<double>> y(nx);
     if (nx < 1){return y;}
@@ -246,7 +246,7 @@ Polynomial::poly(const std::vector<std::complex<double>> &p) noexcept
 std::vector<double>
 Polynomial::poly(const std::vector<double> &p) noexcept
 {
-    auto nord = p.size();
+    int nord = p.size();
     std::vector<double> y(nord+1);
     // Special case
     if (nord == 0)
