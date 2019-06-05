@@ -87,6 +87,7 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed zpk2tf test");
 
+/*
     ierr = rtseis_test_utils_design_fir_fir1();
     if (ierr != EXIT_SUCCESS)
     {
@@ -94,6 +95,7 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed FIR window design");
+*/
 
 /*
     ierr = rtseis_test_utils_design_freqs();
