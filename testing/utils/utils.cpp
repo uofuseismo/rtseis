@@ -11,6 +11,7 @@ int main()
     int ierr;
     rtseis_utils_verbosity_setLoggingLevel(RTSEIS_SHOW_ALL);
 
+/*
     ierr = rtseis_test_utils_windowFunctions();
     if (ierr != EXIT_SUCCESS)
     {
@@ -18,6 +19,7 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed window test");
+*/
 
     ierr = rtseis_test_utils_normalization();
     if (ierr != EXIT_SUCCESS)

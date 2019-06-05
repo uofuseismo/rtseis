@@ -161,11 +161,11 @@ ADD_EXECUTABLE(testUtils
                #testing/utils/response.cpp
                testing/utils/filters.cpp
                #testing/utils/transforms.cpp
-               testing/utils/normalization.cpp
-               testing/utils/windowFunctions.cpp)
+               testing/utils/normalization.cpp)
 ADD_EXECUTABLE(utilityTests
                testing/utils/main.cpp
                testing/utils/polynomial.cpp
+               testing/utils/windowFunctions.cpp
                testing/utils/convolve.cpp
                testing/utils/transforms.cpp
                testing/utils/response.cpp)
