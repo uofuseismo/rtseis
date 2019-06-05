@@ -18,7 +18,7 @@ using namespace RTSeis::Utilities::FilterDesign;
 
 /*! Test FIR-window based filter design (fir1 in matlab). */
 //int rtseis_test_utils_design_fir_fir1(void)
-TEST(UtilitiesDesignFIR, howpass)
+TEST(UtilitiesDesignFIR, lowpass)
 {
     // b = fir1(13, 0.6); % default hamming
     std::vector<double> ref1({-0.001213632932920, -0.006228195759795,
