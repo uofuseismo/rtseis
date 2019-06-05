@@ -92,13 +92,13 @@ public:
      */
     int getNumberOfFrequencies() const;
     /*!
-     * @brief Returns the number of time samples in the sliding window DFT.
-     *        This is the number of columns in the output matrix.
-     * @result The number of time samples or, equivalently, columsn in the
-     *         output matrix.
+     * @brief Returns the number of sliding time windows for which a
+     *        DFT was computed.  This is the number of columns in the
+     *        output matrix.
+     * @result The number of windows.
      * @throws std::runtime_error if the class is not intitialized.
      */
-    int getNumberOfTimeSamples() const;
+    int getNumberOfTransformWindows() const;
     /*!
      * @brief Returns the expected number of samples in the time series.
      * @result The expected number of samples.
@@ -121,35 +121,40 @@ public:
      *                      dimension is [nSamples].
      * @param[in] nWork     The workspace allocated to y.  This must be at
      *                      least \c getNumberOfFrequencies() x 
-     *                            \c getNumberOfTimeSamples().
+     *                            \c getNumberOfTransformWindow()]
      * @param[out] y        This is a row-major matrix containing the
      *                      DFT's in each window.  Here, the rows correspond
      *                      to frequency and the columns correspond to time.
      *                      While this has dimension [nwork] only the first
      *                      [\c getNumberOfFrequencies() x
-     *                       \c getNumberOfTimeSamples()] samples are valid.
+     *                       \c getNumberOfTransformWindows()]
+     *                      samples are valid.
      * @throws std::invalid_argument if any arguments are invalid.
      * @throws std::runtime_error if the class is not initalized.
-     * @sa \c getNumberOfTimeSamples(), \c getNumberOfFrequencies()
+     * @sa \c getNumberOfTransformWindow(), \c getNumberOfFrequencies()
      */
     void transform(const int nSamples, const double x[]);
 
     /*!
      * @brief Gets a pointer to the transform in the iWindow'th window.
      * @param[in] iWindow  The window of the given transform.  This must
-     *                     be in the range [0, \c getNumberOfColumns()-1]. 
-     * @throws std::invalid_argument if the class precision is DOUBLE or
-     *         iWindow is out of bounds.
-     * @sa \c getNumberOfColumns(), \c getPrecision()
+     *                     be in the range 
+     *                     [0, \c getNumberOfTransformWidnwos()-1]. 
+     * @throws std::invalid_argument if iWindow is out of bounds.
+     * @throws std::runtime_error if the class precision is FLOAT 
+     *         or the \c transform() has not yet been called. 
+     * @sa \c transform(), \c getNumberOfTransformWindows(), \c getPrecision()
      */
     const std::complex<double> *getTransform64f(const int iWindow) const;
     /*! 
      * @brief Gets a pointer to the transform in the iWindow'th window.
      * @param[in] iWindow  The window of the given transform.  This must
-     *                     be in the range [0, \c getNumberOfColumns()-1]. 
-     * @throws std::invalid_argument if the class precision is DOUBLE or
-     *         iWindow is out of bounds.
-     * @sa \c getNumberOfColumns(), \c getPrecision()
+     *                     be in the range
+     *                     [0, \c getNumberOfTransformWindows()-1]. 
+     * @throws std::invalid_argument if iWindow is out of bounds.
+     * @throws std::runtime_error if the class precision is DOUBLE
+     *         or the \c transform() has not yet been called. 
+     * @sa \c transform(), \c getNumberOfTransformWindows(), \c getPrecision()
      */
     const std::complex<float> *getTransform32f(const int iWindow) const;
 private:

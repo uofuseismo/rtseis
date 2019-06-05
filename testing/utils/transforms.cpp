@@ -20,7 +20,9 @@
 #include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
+#include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
+#include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
 #include <gtest/gtest.h>
@@ -730,6 +732,90 @@ TEST(UtilitiesTransforms, firEnvelope)
             }
         }
     }
+}
+
+TEST(UtilitiesTransforms, Spectrogram)
+{
+    SlidingWindowRealDFT sdft;
+    // Load the chirp
+    const std::string signalFileName = "data/spectrogramNoisyChirpSignal.txt";
+    const std::string specFileName = "data/spectrogramNoisyChirp.txt";
+    std::ifstream signalFile(signalFileName);
+    std::string line;
+    std::vector<double> sig;
+    sig.reserve(2048);
+    while (std::getline(signalFile, line)) 
+    {
+        double sample;
+        std::sscanf(line.c_str(), "%lf\n", &sample);
+        sig.push_back(sample);
+    }
+    EXPECT_EQ(sig.size(), 2048);
+    // Load the spectrogram
+    std::ifstream specFile(specFileName);
+    std::vector<std::complex<double>> spec;
+    spec.reserve(129*199);
+    int ic = 0;
+    int jc = 0;
+    while (std::getline(specFile, line))
+    {
+        ic = ic + 1;
+        if (ic == 200)
+        {
+            jc = jc + 1;
+            ic = 0;
+            continue;
+        }
+        double re, im;
+        std::sscanf(line.c_str(), "%lf %lf\n", &re, &im);
+        spec.push_back(std::complex<double> (re, im));
+    } 
+    EXPECT_EQ(jc, 129);
+    EXPECT_EQ(spec.size(), 129*199);
+    // Create a Kaiser window
+    int nSamples = 2048;
+    int nSamplesPerSegment = 63;
+    int windowLength = nSamplesPerSegment;
+    int dftLength = 256;
+    int nSamplesInOverlap = windowLength - 10;
+    std::vector<double> window(windowLength);
+    const double beta = 17;
+    EXPECT_NO_THROW(
+       RTSeis::Utilities::WindowFunctions::kaiser(windowLength, window.data(),
+                                                  beta)
+    );
+    EXPECT_NO_THROW(sdft.initialize(nSamples,
+                    nSamplesPerSegment,
+                    dftLength,
+                    nSamplesInOverlap,
+                    windowLength,
+                    window.data(),
+                    SlidingWindowDetrendType::REMOVE_NONE,
+                    RTSeis::Precision::DOUBLE));
+    EXPECT_EQ(sdft.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(sdft.getNumberOfFrequencies(), 129); // Number of rows
+    EXPECT_EQ(sdft.getNumberOfTransformWindows(), 199); // Number of columns
+    EXPECT_NO_THROW(sdft.transform(sig.size(), sig.data()));
+    // Loop on the windows
+    double resmax = 0;
+    for (auto i=0; i<sdft.getNumberOfTransformWindows(); ++i)
+    {
+        const std::complex<double> *cptr = nullptr;
+        EXPECT_NO_THROW(cptr = sdft.getTransform64f(i));
+        for (auto j=0; j<sdft.getNumberOfFrequencies(); j++)
+        {
+            int indx = sdft.getNumberOfTransformWindows()*j + i;
+            double res = std::abs(cptr[j] - spec[indx]);
+            resmax = std::max(resmax, res); 
+            if (res > 1.e-7)
+            {
+                fprintf(stderr, "%d %+lf %+lfi, %+lf %+lfi, %lf\n",
+                        indx, std::real(cptr[j]), std::imag(cptr[j]),
+                        std::real(spec[indx]), std::imag(spec[indx]), res);
+            }
+        }
+    }
+    ASSERT_LE(resmax, 1.e-7);
 }
 
 //============================================================================//

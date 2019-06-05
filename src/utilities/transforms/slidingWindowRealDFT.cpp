@@ -75,6 +75,7 @@ public:
         mHaveDoublePlan = false;
         mHaveRealPlan = false;
         mApplyWindow = false;
+        mHaveTransform = false;
         mInitialized = false;
     }
 
@@ -134,6 +135,8 @@ public:
     bool mHaveRealPlan = false;
     /// Flag indicating whether or not I will apply the window function.
     bool mApplyWindow = false;
+    /// Flag indicating the transform was applied
+    bool mHaveTransform = false;
     /// Flag indicating the class is inititalized.
     bool mInitialized = false;
 };
@@ -215,6 +218,7 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
             pImpl->mWindow32f = ippsMalloc_32f(windowLength);
             ippsConvert_64f32f(window, pImpl->mWindow32f, windowLength);
         }
+        pImpl->mApplyWindow = true;
     }
     // Initialize the Fourier transform
     constexpr int rank = 1;
@@ -243,10 +247,12 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
         auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
                      *sizeof(double);
         pImpl->mInData64f = static_cast<double *> (fftw_malloc(nbytes));
+        memset(pImpl->mInData64f, 0, nbytes);
         nbytes = static_cast<size_t> (pImpl->mOutDataLength)
                 *sizeof(fftw_complex);
         pImpl->mOutData64f 
             = reinterpret_cast<fftw_complex *> (fftw_malloc(nbytes));
+        memset(pImpl->mOutData64f, 0, nbytes);
         pImpl->mDoublePlan = fftw_plan_many_dft_r2c(rank, nForward, howMany,
                                                     pImpl->mInData64f, inembed,
                                                     istride, pImpl->mDataOffset,
@@ -259,10 +265,12 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
         auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
                      *sizeof(float);
         pImpl->mInData32f = static_cast<float *> (fftw_malloc(nbytes));
+        memset(pImpl->mInData32f, 0, nbytes);
         nbytes = static_cast<size_t> (pImpl->mOutDataLength)
                 *sizeof(fftw_complex);
         pImpl->mOutData32f 
             = reinterpret_cast<fftwf_complex *> (fftw_malloc(nbytes));
+        memset(pImpl->mOutData32f, 0, nbytes);
         pImpl->mFloatPlan = fftwf_plan_many_dft_r2c(rank, nForward, howMany,
                                                     pImpl->mInData32f, inembed,
                                                     istride, pImpl->mDataOffset,
@@ -270,6 +278,7 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
                                                     ostride, pImpl->mFTOffset,
                                                     FFTW_PATIENT);
     }
+    pImpl->mHaveTransform = false;
     pImpl->mInitialized = true;
 }
 
@@ -281,7 +290,7 @@ int SlidingWindowRealDFT::getNumberOfFrequencies() const
 }
 
 /// Gets number of time samples
-int SlidingWindowRealDFT::getNumberOfTimeSamples() const
+int SlidingWindowRealDFT::getNumberOfTransformWindows() const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     return pImpl->mNumberOfColumns;
@@ -310,6 +319,7 @@ RTSeis::Precision SlidingWindowRealDFT::getPrecision() const
 /// Actually perform the transform
 void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
 {
+    pImpl->mHaveTransform = false;
     // Check the class is initialized and that the inputs are as expected
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     if (nSamples != getNumberOfSamples())
@@ -324,6 +334,8 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
         RTSEIS_THROW_RTE("%s", "Float precision not yet implemented");
     }
     // Loop over the windows
+    //#pragma omp parallel shared(inData, window) default(None)
+    {
     auto *window = pImpl->mWindow64f;
     auto *inData = pImpl->mInData64f;
     int nDataOffset = pImpl->mDataOffset;
@@ -332,13 +344,16 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
     int shift = nPtsPerSeg - nOverlap;
     auto lwindow = pImpl->mApplyWindow;
     SlidingWindowDetrendType detrendType = pImpl->mDetrendType;
+    //#pragma omp for
     for (auto icol=0; icol<pImpl->mNumberOfColumns; ++icol)
     {
         auto xIndex = icol*shift; // Extract x
         auto dataIndex = icol*nDataOffset;
         auto xptr = &x[xIndex];
         auto dptr = &inData[dataIndex];
+#ifdef DEBUG
         assert(xIndex < nSamples);
+#endif
         auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
         // Zero and copy
         std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(double));
@@ -359,6 +374,55 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
         // Window
         if (lwindow){ippsMul_64f_I(window, dptr, nPtsPerSeg);}
     }
+    } // End parallel
     // Transform
     fftw_execute(pImpl->mDoublePlan);
+    pImpl->mHaveTransform = true;
+}
+
+/// Returns a pointer to the transform in the i'th window
+const std::complex<double> *
+SlidingWindowRealDFT::getTransform64f(const int iWindow) const
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!pImpl->mHaveTransform)
+    {
+        RTSEIS_THROW_RTE("%s", "Transform not yet applied");
+    }
+    if (pImpl->mPrecision != RTSeis::Precision::DOUBLE)
+    {
+        RTSEIS_THROW_RTE("%s", "Precision is FLOAT - call getTransform32f");
+    }
+    if (iWindow < 0 || iWindow >= pImpl->mNumberOfColumns)
+    {
+        RTSEIS_THROW_IA("iWindow = %d must be in range [0,%d]",
+                        iWindow, pImpl->mNumberOfColumns);
+    }
+    int indx = pImpl->mFTOffset*iWindow;
+    auto ptr = reinterpret_cast<const std::complex<double> *>
+               (pImpl->mOutData64f + indx);
+    return ptr; 
+} 
+
+const std::complex<float> *
+SlidingWindowRealDFT::getTransform32f(const int iWindow) const
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!pImpl->mHaveTransform)
+    {
+        RTSEIS_THROW_RTE("%s", "Transform not yet applied");
+    }
+    if (pImpl->mPrecision != RTSeis::Precision::FLOAT)
+    {
+        RTSEIS_THROW_RTE("%s", "Precision is DOUBLE - call getTransform64f");
+    }
+    if (iWindow < 0 || iWindow >= pImpl->mNumberOfColumns)
+    {
+        RTSEIS_THROW_IA("iWindow = %d must be in range [0,%d]",
+                        iWindow, pImpl->mNumberOfColumns);
+    }
+    int indx = pImpl->mFTOffset*iWindow;
+    auto ptr = reinterpret_cast<const std::complex<float> *>
+               (pImpl->mOutData32f + indx);
+    return ptr;
 }
