@@ -11,10 +11,13 @@ variables:
   dockerPass: $(DOCKER_PASS)
   imageName: ubuntu-rtseis  # Replace with the name of the image you want to publish
 
+steps:
+  - script: docker login -u $(dockerId) -p $(dockerPass) $(dockerId)/$(imageName)
+
 resources:
  containers: 
   - container: linux
-    image: bakerb845/ubuntu-rtseis
+    image: $(imageName)
  repositories: 
   - repository: rtseis_code
     type: github
