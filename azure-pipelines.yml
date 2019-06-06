@@ -9,7 +9,7 @@ trigger:
 variables:
   dockerId: $(DOCKER_USER)  # Replace with your Docker ID for Docker Hub or the admin user name for the Azure Container Registry
   dockerPass: $(DOCKER_PASS)
-  imageName: bakerb845/ubuntu-rtseis  # Replace with the name of the image you want to publish
+  imageName: ubuntu-rtseis  # Replace with the name of the image you want to publish
 
 steps:
 - script: |
