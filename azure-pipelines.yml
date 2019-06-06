@@ -6,10 +6,13 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'ubuntu-latest'
-
-
+variables:
+  dockerId: $(DOCKER_USER)  # Replace with your Docker ID for Docker Hub or the admin user name for the Azure Container Registry
+  dockerPass: $(DOCKER_PASS)
+  imageName: bakerb845/ubuntu-rtseis  # Replace with the name of the image you want to publish
 
 steps:
-   - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) bakerb845/ubuntu-rtseis
+- script: |
+    docker build -t $(dockerId)/$(imageName) .
+    docker login -u $(dockerId) -p $(dockerPass)
+    docker pull $(dockerId)/$(imageName)
