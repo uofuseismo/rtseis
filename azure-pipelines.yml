@@ -23,13 +23,3 @@ resources:
     type: github
     name: uofuseismo/rtseis
 
-stages:
-  - stage: Build_stage 
-    jobs:
-      - job: checkout
-        steps: 
-          - bash: |
-              ls
-              ls /
-              which cmake
-            displayName: Where am I? 
