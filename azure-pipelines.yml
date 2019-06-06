@@ -16,9 +16,9 @@ resources:
   - container: linux
     image: bakerb845/ubuntu-rtseis
  repositories: 
-  - repository: source_code
-      type: github
-      name: uofuseismo/rtseis
+  - repository: rtseis_code
+    type: github
+    name: uofuseismo/rtseis
 
 stages:
   - stage: Build_stage 
