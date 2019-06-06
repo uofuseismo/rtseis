@@ -11,8 +11,23 @@ variables:
   dockerPass: $(DOCKER_PASS)
   imageName: ubuntu-rtseis  # Replace with the name of the image you want to publish
 
-steps:
-- script: |
-    docker build -t $(dockerId)/$(imageName) .
-    docker login -u $(dockerId) -p $(dockerPass)
-    docker pull $(dockerId)/$(imageName)
+resources:
+  - container: ubuntu_build_image
+    image: bakerb845/ubuntu-rtseis
+  - repositories: source_code
+    type: github
+    name: uofuseismo/rtseis
+
+stages:
+  - stage: Build_stage 
+    jobs:
+      - job: ubuntu_build  
+        pools:
+          vmImage: ubuntu_build_image
+      - job: checkout
+        steps: 
+          - bash: |
+              ls
+              ls /
+              which cmake
+            displayName: Where am I? 
