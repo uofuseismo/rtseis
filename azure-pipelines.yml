@@ -9,11 +9,17 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+
+
+stages:
+  - stage: build
+    jobs: 
+       job: GetDocker
+       - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) bakerb845/ubuntu-rtseis
+
+
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
+    echo See 
   displayName: 'Run a multi-line script'
