@@ -12,11 +12,13 @@ variables:
   imageName: ubuntu-rtseis  # Replace with the name of the image you want to publish
 
 resources:
-  - container: ubuntu_build_image
+ containers: 
+  - container: linux
     image: bakerb845/ubuntu-rtseis
-  - repositories: source_code
-    type: github
-    name: uofuseismo/rtseis
+ repositories: 
+  - repository: source_code
+      type: github
+      name: uofuseismo/rtseis
 
 stages:
   - stage: Build_stage 
