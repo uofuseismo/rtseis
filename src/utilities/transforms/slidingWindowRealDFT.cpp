@@ -51,7 +51,7 @@ public:
     void clear()
     {
         if (mHaveDoublePlan){fftw_free(mDoublePlan);}
-        if (mHaveRealPlan){fftwf_free(mFloatPlan);}
+        if (mHaveFloatPlan){fftwf_free(mFloatPlan);}
         if (mWindow64f != nullptr){ippsFree(mWindow64f);}
         if (mWindow32f != nullptr){ippsFree(mWindow32f);}
         if (mInData64f != nullptr){fftw_free(mInData64f);}
@@ -73,7 +73,7 @@ public:
         mPrecision = RTSeis::Precision::DOUBLE;
         mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
         mHaveDoublePlan = false;
-        mHaveRealPlan = false;
+        mHaveFloatPlan = false;
         mApplyWindow = false;
         mHaveTransform = false;
         mInitialized = false;
@@ -132,7 +132,7 @@ public:
     /// Flag indicating that I have a plan (for double precision)
     bool mHaveDoublePlan = false;
     /// Flag indicating that I have a plan (for single precision)
-    bool mHaveRealPlan = false;
+    bool mHaveFloatPlan = false;
     /// Flag indicating whether or not I will apply the window function.
     bool mApplyWindow = false;
     /// Flag indicating the transform was applied
@@ -141,11 +141,81 @@ public:
     bool mInitialized = false;
 };
 
+/// Constructor
 SlidingWindowRealDFT::SlidingWindowRealDFT() :
     pImpl(std::make_unique<SlidingWindowRealDFTImpl> ())
 {
 }
 
+/// Copy constructor
+SlidingWindowRealDFT::SlidingWindowRealDFT(const SlidingWindowRealDFT &swdft)
+{
+    *this = swdft;
+}
+
+/// Move constructor
+SlidingWindowRealDFT::SlidingWindowRealDFT(
+    SlidingWindowRealDFT &&swdft) noexcept
+{
+    *this = std::move(swdft);
+}
+
+/// Move assignment operator
+SlidingWindowRealDFT&
+SlidingWindowRealDFT::operator=(SlidingWindowRealDFT &&swdft) noexcept
+{
+    if (&swdft == this){return *this;}
+    pImpl = std::move(swdft.pImpl);
+    return *this;
+}
+
+/// Copy assignment operator
+SlidingWindowRealDFT&
+SlidingWindowRealDFT::operator=(const SlidingWindowRealDFT &swdft)
+{
+    if (&swdft == this){return *this;}
+    if (pImpl){pImpl.reset();}
+    pImpl = std::make_unique<SlidingWindowRealDFTImpl> ();
+    if (!swdft.pImpl->mInitialized){return *this;}
+    int windowLength = 0;
+    double *window = nullptr;
+    if (pImpl->mApplyWindow)
+    {
+         windowLength = swdft.pImpl->mSamplesPerSegment;
+         window = swdft.pImpl->mWindow64f;
+    }
+    // Call initialize so that we get a fresh FFTw context
+    initialize(swdft.pImpl->mSamples,
+               swdft.pImpl->mSamplesPerSegment,
+               swdft.pImpl->mDFTLength,
+               swdft.pImpl->mSamplesInOverlap,
+               windowLength,
+               window,
+               swdft.pImpl->mDetrendType,
+               swdft.pImpl->mPrecision);
+    // Copy the workspace
+    if (pImpl->mPrecision == RTSeis::Precision::DOUBLE)
+    {
+        auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
+                     *sizeof(double);
+        memcpy(pImpl->mInData64f, swdft.pImpl->mInData64f, nbytes);
+        nbytes = static_cast<size_t> (pImpl->mOutDataLength)
+                *sizeof(fftw_complex);
+        memcpy(pImpl->mOutData64f, swdft.pImpl->mOutData64f, nbytes);
+    }
+    else
+    {
+        auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
+                     *sizeof(float);
+        memcpy(pImpl->mInData32f, swdft.pImpl->mInData32f, nbytes);
+        nbytes = static_cast<size_t> (pImpl->mOutDataLength)
+                *sizeof(fftwf_complex);
+        memcpy(pImpl->mOutData32f, swdft.pImpl->mOutData32f, nbytes);
+    }
+    return *this;
+}
+
+/// Destructor
 SlidingWindowRealDFT::~SlidingWindowRealDFT() = default;
 
 void SlidingWindowRealDFT::clear() noexcept
@@ -208,12 +278,10 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
     pImpl->mDetrendType = detrendType;
     if (luseWindow)
     {
-        if (precision == RTSeis::Precision::DOUBLE)
-        {
-            pImpl->mWindow64f = ippsMalloc_64f(windowLength);
-            ippsCopy_64f(window, pImpl->mWindow64f, windowLength);
-        }
-        else
+        // Always copy the window for the copy constructor
+        pImpl->mWindow64f = ippsMalloc_64f(windowLength);
+        ippsCopy_64f(window, pImpl->mWindow64f, windowLength);
+        if (precision == RTSeis::Precision::FLOAT)
         {
             pImpl->mWindow32f = ippsMalloc_32f(windowLength);
             ippsConvert_64f32f(window, pImpl->mWindow32f, windowLength);
@@ -259,6 +327,7 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
                                                     pImpl->mOutData64f, onembed,
                                                     ostride, pImpl->mFTOffset,
                                                     FFTW_PATIENT);
+        pImpl->mHaveDoublePlan = true;
     }
     else
     {
@@ -267,7 +336,7 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
         pImpl->mInData32f = static_cast<float *> (fftw_malloc(nbytes));
         memset(pImpl->mInData32f, 0, nbytes);
         nbytes = static_cast<size_t> (pImpl->mOutDataLength)
-                *sizeof(fftw_complex);
+                *sizeof(fftwf_complex);
         pImpl->mOutData32f 
             = reinterpret_cast<fftwf_complex *> (fftw_malloc(nbytes));
         memset(pImpl->mOutData32f, 0, nbytes);
@@ -277,6 +346,7 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
                                                     pImpl->mOutData32f, onembed,
                                                     ostride, pImpl->mFTOffset,
                                                     FFTW_PATIENT);
+        pImpl->mHaveFloatPlan = true;
     }
     pImpl->mHaveTransform = false;
     pImpl->mInitialized = true;

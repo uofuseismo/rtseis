@@ -27,11 +27,44 @@ namespace Transforms
 class SlidingWindowRealDFT
 {
 public:
+    /*! @name Constructors
+     * @{
+     */
     /*! 
      * @brief Default constructor.
      */
     SlidingWindowRealDFT();
-
+    /*!
+     * @brief Copy constructor.
+     * @param[in] swdft  The sliding window real DFT class to initialize from.
+     */
+    SlidingWindowRealDFT(const SlidingWindowRealDFT &swdft);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] swdft  The sliding window real DFT class to initialize
+     *                       from.  On exit, swdft's behavior will be undefined.
+     */
+    SlidingWindowRealDFT(SlidingWindowRealDFT &&swdft) noexcept;
+    /*! @} */
+ 
+    
+    /*! @name Operators
+     * @{
+     */
+    /*!
+     * @brief Copy assignment operator.
+     * @param[in] swdft  The class to copy.
+     * @result A deep copy of the sliding window real DFT class.
+     */
+    SlidingWindowRealDFT& operator=(const SlidingWindowRealDFT &swdft);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] swdft  The class to move.  On exit swdft's behavior is
+     *                       undefined.
+     * @result The memory that was moved from swdft to this.
+     */
+    SlidingWindowRealDFT& operator=(SlidingWindowRealDFT &&swdft) noexcept;
+    /*! @} */
     /*! @name Destructors
      * @{
      */
