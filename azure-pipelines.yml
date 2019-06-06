@@ -26,9 +26,6 @@ resources:
 stages:
   - stage: Build_stage 
     jobs:
-      - job: ubuntu_build  
-        pool:
-          vmImage: ubuntu_build_image
       - job: checkout
         steps: 
           - bash: |
