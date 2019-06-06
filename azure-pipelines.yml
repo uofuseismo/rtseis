@@ -14,12 +14,4 @@ variables:
 steps:
   - script: docker login -u $(dockerId) -p $(dockerPass) $(dockerId)/$(imageName)
 
-resources:
- containers: 
-  - container: linux
-    image: $(imageName)
- repositories: 
-  - repository: rtseis_code
-    type: github
-    name: uofuseismo/rtseis
 
