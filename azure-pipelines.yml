@@ -11,7 +11,5 @@ pool:
 
 
 
-
-jobs: 
-  job: GetDocker
-    - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) bakerb845/ubuntu-rtseis
+steps:
+   - script: docker login -u $(DOCKER_USER) -p $(DOCKER_PASS) bakerb845/ubuntu-rtseis
