@@ -10,156 +10,32 @@
 #include "rtseis/utilities/design/iir.hpp"
 #include "rtseis/utilities/design/analogPrototype.hpp"
 #include "rtseis/log.h"
+#include <gtest/gtest.h>
+
+namespace
+{
 
 using namespace RTSeis;
 using namespace RTSeis::Utilities::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 
-/*!< IIR SOS analog prototype design. */
-int rtseis_test_utils_design_zpk2sos(void)
-{
-    SOS sos;
-    int n = 4;
-    double Wn[1] = {0.1};
-    const std::vector<double> bsRef1({
-         4.16599204e-04,   8.33198409e-04,   4.16599204e-04,
-         1.00000000e+00,   2.00000000e+00,   1.00000000e+00});
-    const std::vector<double> asRef1({
-         1.,        -1.47967422,  0.55582154,
-         1.,        -1.70096433,  0.78849974});
-    SOS sosRef1(2, bsRef1, asRef1);
-    const std::vector<double> bsRefEll({
-         0.0014154,   0.00248707,  0.0014154,
-         1.,          0.72965193,  1.,
-         1.,          0.17594966,  1.});
-    const std::vector<double> asRefEll({
-         1.,        -1.32543251,  0.46989499,
-         1.,        -1.26117915,  0.6262586,
-         1.,        -1.25707217,  0.86199667});
-    SOS sosRefEll(3, bsRefEll, asRefEll);
-    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
-    try
-    {
-         sos = IIR::designSOSIIRFilter(n, Wn, 5, 60,  
-                                       Bandtype::LOWPASS,
-                                       IIRPrototype::BUTTERWORTH,
-                                       ldigital, SOSPairing::NEAREST);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    sos.setEqualityTolerance(1.e-5);
-    if (sos != sosRef1)
-    {
-        sos.print();
-        sosRef1.print();
-        RTSEIS_ERRMSG("%s", "Filters do not match");
-        return EXIT_FAILURE;
-    }
-    // 
-    std::vector<std::complex<double>> zell;
-    zell.push_back(std::complex<double> (-0.878578886634,  0.47759725707));
-    zell.push_back(std::complex<double> (-0.364825965978,  0.93107572976));
-    zell.push_back(std::complex<double> (-0.0879748281791, 0.996122698068));
-    zell.push_back(std::complex<double> (-0.878578886634, -0.47759725707));
-    zell.push_back(std::complex<double> (-0.364825965978, -0.93107572976));
-    zell.push_back(std::complex<double> (-0.0879748281791,-0.996122698068));
-    std::vector<std::complex<double>> pell;
-    pell.push_back(std::complex<double> (0.662716257451,-0.175220303539)); 
-    pell.push_back(std::complex<double> (0.630589576722,-0.478137415927));
-    pell.push_back(std::complex<double> (0.62853608609, -0.683329390963));
-    pell.push_back(std::complex<double> (0.662716257451,+0.175220303539));
-    pell.push_back(std::complex<double> (0.630589576722,+0.478137415927));
-    pell.push_back(std::complex<double> (0.62853608609, +0.683329390963));
-    double kell = 0.00141539634442;
-    ZPK zpk(zell, pell, kell);
-    try
-    {
-        sos = IIR::zpk2sos(zpk, SOSPairing::NEAREST);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    } 
-    sos.setEqualityTolerance(1.e-5);
-    if (sos != sosRefEll)
-    {
-        sos.print();
-        sosRefEll.print();
-        RTSEIS_ERRMSG("%s", "Filters do not match");
-        return EXIT_FAILURE;
-    }
-    // Test this edge case so i can remove a debugging statement
-    // iirfilter(2, 10/(100), rp=60, btype='lowpass', ftype='cheby1', output='sos')
-    std::vector<double> bsRefCheb1 = {1.2386078193258956e-05,
-                                      2.477215638651791e-05,
-                                      1.2386078193258956e-05};  
-    std::vector<double> asRefCheb1 = {1.0, -1.9502344968431102, 0.999778809616146};
-    SOS sosRefCheb1(1, bsRefCheb1, asRefCheb1);
-    try 
-    {   
-         double Wn2[2] = {10/100., 0};
-         sos = IIR::designSOSIIRFilter(2, Wn2, 60, 0,
-                                       Bandtype::LOWPASS,
-                                       IIRPrototype::CHEBYSHEV1,
-                                       ldigital, SOSPairing::NEAREST);
-    }   
-    catch (const std::invalid_argument &ia)
-    {   
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    } 
-    sos.setEqualityTolerance(1.e-12);
-    if (sos != sosRefCheb1)
-    {   
-        sos.print();
-        sosRefCheb1.print();
-        RTSEIS_ERRMSG("%s", "Filters do not match");
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
-}
-/*! IIR analog prototype design. */
-int rtseis_test_utils_design_iir_ap(void)
+///  IIR analog prototype design. 
+//int rtseis_test_utils_design_iir_ap(void)
+TEST(UtilitiesDesignIIR, analogPrototype)
 {
     double k;
     ZPK zpk, zpkRef;
     std::vector<std::complex<double>> pref;
     std::vector<std::complex<double>> zref;
     // Test butterworth order 1
-    try
-    {
-        zpk = IIR::AnalogPrototype::butter(1);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        fprintf(stderr, "%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(zpk = IIR::AnalogPrototype::butter(1));
     k = 1;
     pref.push_back(std::complex<double> (-1, 0));
     zpkRef = ZPK(zref, pref, k);
-    if (!(zpkRef == zpk))
-    {
-        RTSEIS_ERRMSG("%s", "Failed order 1 butter design");
-        zpkRef.print();
-        zpk.print();
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(zpkRef, zpk);
     zpkRef.clear();
     // Test butterworth order 4
-    try
-    {
-        zpk = IIR::AnalogPrototype::butter(5);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        fprintf(stderr, "%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(zpk = IIR::AnalogPrototype::butter(5));
     pref.clear();
     zref.clear();
     pref.resize(5);
@@ -170,47 +46,19 @@ int rtseis_test_utils_design_iir_ap(void)
     pref[3] = std::complex<double> (-0.80901699437494745,-0.58778525229247303);
     pref[4] = std::complex<double> (-0.30901699437494751,-0.95105651629515353);
     zpkRef = ZPK(zref, pref, k);
-    if (!(zpkRef == zpk))
-    {   
-        RTSEIS_ERRMSG("%s", "Failed order 5 butter design");
-        zpkRef.print();
-        zpk.print();
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(zpkRef, zpk);
     zpkRef.clear();
     // Test order 1 cheby1
-    try
-    {
-        zpk = IIR::AnalogPrototype::cheb1ap(1, 2.2);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        fprintf(stderr, "%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(zpk = IIR::AnalogPrototype::cheb1ap(1, 2.2));
     zref.clear();
     pref.clear();
     pref.resize(1);
     k = 1.2313003041963828;
     pref[0] = std::complex<double> (-1.2313003041963828, 0);
     zpkRef = ZPK(zref, pref, k);
-    if (!(zpkRef == zpk))
-    {   
-        RTSEIS_ERRMSG("%s", "Failed order 1 cheb1 design");
-        zpkRef.print();
-        zpk.print();
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(zpkRef, zpk);
     // Test order 6 cheby1
-    try
-    {
-        zpk = IIR::AnalogPrototype::cheb1ap(6, 0.994);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        fprintf(stderr, "%s", ia.what());
-        return EXIT_FAILURE;
-    }   
+    EXPECT_NO_THROW(zpk = IIR::AnalogPrototype::cheb1ap(6, 0.994));
     zref.clear();
     pref.clear();
     pref.resize(6);
@@ -222,46 +70,18 @@ int rtseis_test_utils_design_iir_ap(void)
     pref[4] = std::complex<double> (-0.17024564688613017,-0.72731257398980587);
     pref[5] = std::complex<double> (-0.062314231644038813,-0.99352745256192398);
     zpkRef = ZPK(zref, pref, k); 
-    if (!(zpkRef == zpk))
-    {   
-        RTSEIS_ERRMSG("%s", "Failed order 1 cheb1 design");
-        zpkRef.print();
-        zpk.print();
-        return EXIT_FAILURE;
-    } 
+    EXPECT_EQ(zpkRef, zpk);
     // Test order 2 cheby2 
-    try
-    {
-        zpk = IIR::AnalogPrototype::cheb2ap(1, 1.1);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        fprintf(stderr, "%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(zpk = IIR::AnalogPrototype::cheb2ap(1, 1.1));
     zref.clear();
     pref.clear();
     pref.resize(1);
     k = 1.862583192806328;
     pref[0] = std::complex<double> (-1.862583192806328,0);
     zpkRef = ZPK(zref, pref, k);
-    if (!(zpkRef == zpk))
-    {
-        RTSEIS_ERRMSG("%s", "Failed order 1 cheb2 design");
-        zpkRef.print();
-        zpk.print();
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(zpkRef, zpk);
     // Test order 6 cheby2 
-    try
-    {
-        zpk = IIR::AnalogPrototype::cheb2ap(6, 1.2);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        fprintf(stderr, "%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(zpk = IIR::AnalogPrototype::cheb2ap(6, 1.2));
     k = 0.8709635899560811;
     zref.resize(6);
     pref.resize(6);
@@ -278,16 +98,11 @@ int rtseis_test_utils_design_iir_ap(void)
     pref[4] = std::complex<double> (-0.12492582633346083,+1.3973824335027194);
     pref[5] = std::complex<double> (-0.024686186266327684,+1.0305393933278832);
     zpkRef = ZPK(zref, pref, k);
-    if (!(zpkRef == zpk))
-    {
-        RTSEIS_ERRMSG("%s", "Failed order 6 cheb2 design");
-        zpkRef.print();
-        zpk.print();
-    }
-    return EXIT_SUCCESS;
+    EXPECT_EQ(zpkRef, zpk);
 }
 //============================================================================//
-int rtseis_test_utils_design_zpk2tf(void)
+//int rtseis_test_utils_design_zpk2tf(void)
+TEST(UtilitiesDesignIIR, zpk2tf)
 {
     std::vector<std::complex<double>> zref;
     std::vector<std::complex<double>> pref;
@@ -307,67 +122,40 @@ int rtseis_test_utils_design_zpk2tf(void)
     pref[4] = std::complex<double> (-0.12492582633346083,+1.3973824335027194);
     pref[5] = std::complex<double> (-0.024686186266327684,+1.0305393933278832);
     ZPK zpkref, zpk;
-    try
-    {
-        zpkref = ZPK(zref, pref, kref);
-    } 
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(zpkref = ZPK(zref, pref, kref));
 
     BA ba;
-    try
-    {
-        ba = IIR::zpk2tf(zpkref);
-        zpk = IIR::tf2zpk(ba);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-    }
+    EXPECT_NO_THROW(ba = IIR::zpk2tf(zpkref));
+    EXPECT_NO_THROW(zpk = IIR::tf2zpk(ba));
     // Poles aren't gauranteed to be in any order so need to look
     std::vector<std::complex<double>> z = zpk.getZeros();
     std::vector<std::complex<double>> p = zpk.getPoles();
     double k = zpk.getGain();
-    if (std::abs(k - kref) > 1.e-13)
-    {
-        RTSEIS_ERRMSG("Failed to compute gain %lf %lf", k, kref);
-        return EXIT_FAILURE;
-    }
-    assert(z.size() == zref.size());
-    for (size_t i=0; i<z.size(); i++)
+    EXPECT_NEAR(k, kref, 1.e-13); //std::abs(k - kref) > 1.e-13)
+    EXPECT_EQ(z.size(), zref.size());
+    for (auto i=0; i<z.size(); i++)
     {
         bool lfound = false;
         for (size_t j=0; j<zref.size(); j++)
         {
             if (std::abs(zref[j] - z[i]) < 1.e-13){lfound = true;}
         }
-        if (!lfound)
+        EXPECT_TRUE(lfound);
+    }
+    assert(p.size() == pref.size());
+    for (auto i=0; i<p.size(); i++)
+    {
+        bool lfound = false;
+        for (size_t j=0; j<pref.size(); j++)
         {
-            RTSEIS_ERRMSG("Failed to find zero %ld", i);
-            return EXIT_FAILURE;
+            if (std::abs(pref[j] - p[i]) < 1.e-13){lfound = true;}
         }
-     }
-     assert(p.size() == pref.size());
-     for (size_t i=0; i<p.size(); i++)
-     {
-         bool lfound = false;
-         for (size_t j=0; j<pref.size(); j++)
-         {
-             if (std::abs(pref[j] - p[i]) < 1.e-13){lfound = true;}
-         }  
-         if (!lfound)
-         {
-             RTSEIS_ERRMSG("Failed to find pole %ld", i);
-             return EXIT_FAILURE;
-         }
-     }
-    return EXIT_SUCCESS;
+        EXPECT_TRUE(lfound);
+    }
 }
 //============================================================================//
-int rtseis_test_utils_design_iir(void)
+//int rtseis_test_utils_design_iir(void)
+TEST(UtilitiesDesignIIR, butterworth)
 {
     int n;
     BA ba;
@@ -389,25 +177,14 @@ int rtseis_test_utils_design_iir(void)
                                   1.753099824111,   -0.162195478751});
     BA butterlp_ref(bref_blp, aref_blp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
-    try
-    {
-        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+    EXPECT_NO_THROW(
+       ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::LOWPASS,
                                     IIRPrototype::BUTTERWORTH,
                                     ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE; 
-    }
-    if ((ba != butterlp_ref))
-    {
-        RTSEIS_ERRMSG("%s", "Failed butterworth lowpass design");
-        butterlp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    );
+    EXPECT_EQ(ba, butterlp_ref);
+
     std::vector<double> bref_bhp({0.402734998170,  -3.624614983529,
                                   14.498459934115, -33.829739846269,
                                   50.744609769404, -50.744609769404, 
@@ -420,25 +197,14 @@ int rtseis_test_utils_design_iir(void)
                                   1.753099824111,  -0.162195478751});
     BA butterhp_ref(bref_bhp, aref_bhp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
                                     Bandtype::HIGHPASS,
                                     IIRPrototype::BUTTERWORTH,
                                     ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE; 
-    }
-    if ((ba != butterhp_ref))
-    {
-        RTSEIS_ERRMSG("%s", "Failed butterworth highpass design");
-        butterhp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    );
+    EXPECT_EQ(ba, butterhp_ref);
+
     std::vector<double> bref_bbp({0.001065394524,   0.000000000000,
                                  -0.009588550712,   0.000000000000,
                                   0.038354202850,  -0.000000000000,
@@ -461,26 +227,15 @@ int rtseis_test_utils_design_iir(void)
                                   0.000355580604});
     BA butterbp_ref(bref_bbp, aref_bbp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
                                     Bandtype::BANDPASS,
                                     IIRPrototype::BUTTERWORTH,
                                     ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE; 
-    }
+    );
     ba.setEqualityTolerance(1.e-10);
-    if (ba != butterbp_ref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed butterworth bandpass design");
-        butterbp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba , butterbp_ref);
+
     std::vector<double> bref_bbs({0.018886917953,  -0.129854892873,
                                   0.566783505349,  -1.746140555257,
                                   4.268033050318,  -8.498908785998,
@@ -503,26 +258,23 @@ int rtseis_test_utils_design_iir(void)
                                   0.000355580604});
     BA butterbs_ref(bref_bbs, aref_bbs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::BANDSTOP,
                                     IIRPrototype::BUTTERWORTH,
                                     ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    );
     ba.setEqualityTolerance(1.e-10); 
-    if (ba != butterbs_ref)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed butterworth bandstop design");
-        butterbs_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba, butterbs_ref);
+}
+
+TEST(UtilitiesDesignIIR, bessel)
+{
+    int n;
+    BA ba; 
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
+    double rp = 5, rs = 60; 
+    double Wn[2];
     //------------------------------------------------------------------------//
     //                           Bessel filter designs                        //
     //------------------------------------------------------------------------//
@@ -538,25 +290,14 @@ int rtseis_test_utils_design_iir(void)
         -0.126843312520});
     BA bessellp_ref(bref_belp, aref_belp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::LOWPASS,
                                     IIRPrototype::BESSEL,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE; 
-    }
-    if ((ba != bessellp_ref))
-    {
-        RTSEIS_ERRMSG("%s", "Failed bessel lowpass design");
-        bessellp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
+    EXPECT_EQ(ba, bessellp_ref);
+
     std::vector<double> bref_behp({
          0.1237642230273, -1.1138780072456,  4.4555120289825, 
        -10.3961947342925, 15.5942921014388, -15.5942921014388, 
@@ -569,25 +310,14 @@ int rtseis_test_utils_design_iir(void)
        -0.0114500047115});
     BA besselhp_ref(bref_behp, aref_behp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
                                     Bandtype::HIGHPASS,
                                     IIRPrototype::BESSEL,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    if (ba != besselhp_ref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed bessel highpass design");
-        besselhp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
+    EXPECT_EQ(ba, besselhp_ref);
+
     std::vector<double> bref_bebp({
           0.000784173933,   0.000000000000,  -0.007057565393,
           0.000000000000,   0.028230261570,  -0.000000000000,
@@ -606,26 +336,15 @@ int rtseis_test_utils_design_iir(void)
           0.000136336255});
     BA besselbp_ref(bref_bebp, aref_bebp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::BANDPASS,
                                     IIRPrototype::BESSEL,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE; 
-    }
+                                    ldigital)
+    );
     ba.setEqualityTolerance(1.e-10);
-    if (ba != besselbp_ref)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed bessel bandpass design");
-        besselbp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba, besselbp_ref);
+
     std::vector<double> bref_bebs({
         0.013644933989,  -0.093814218171,   0.409475147608,
        -1.261506650882,   3.083458581241,  -6.140072702909,
@@ -644,26 +363,23 @@ int rtseis_test_utils_design_iir(void)
         0.000045365626});
     BA besselbs_ref(bref_bebs, aref_bebs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    try
-    {
-        ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
+    EXPECT_NO_THROW(
+       ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::BANDSTOP,
                                     IIRPrototype::BESSEL,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
     ba.setEqualityTolerance(1.e-10); 
-    if (ba != besselbs_ref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed bessel bandstop design");
-        besselbs_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba, besselbs_ref);
+}
+
+TEST(UtilitiesDesignIIR, chebyshev1)
+{
+    int n;
+    BA ba; 
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
+    double rp = 5, rs = 60; 
+    double Wn[2];
     //------------------------------------------------------------------------//
     //                           ChebyI filter designs                        //
     //------------------------------------------------------------------------//
@@ -679,25 +395,14 @@ int rtseis_test_utils_design_iir(void)
         -0.879860177057});
     BA cheby1lp_ref(bref_c1lp, aref_c1lp);
     n = 9, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::LOWPASS,
                                     IIRPrototype::CHEBYSHEV1,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE; 
-    }   
-    if ((ba != cheby1lp_ref))
-    {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 lowpass design");
-        cheby1lp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
+    EXPECT_EQ(ba, cheby1lp_ref);
+
     std::vector<double> bref_c1hp({
          0.156526610694, -1.56526610694, 7.04369748122,
          -18.7831932833, 32.8705882457, -39.4447058949,
@@ -710,26 +415,15 @@ int rtseis_test_utils_design_iir(void)
           0.362045627246});
     BA cheby1hp_ref(bref_c1hp, aref_c1hp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60;
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
                                     Bandtype::HIGHPASS,
                                     IIRPrototype::CHEBYSHEV1,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
     ba.setEqualityTolerance(1.e-10);
-    if ((ba != cheby1hp_ref))
-    {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 highpass design");
-        cheby1hp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba, cheby1hp_ref);
+
     std::vector<double> bref_c1bp({
                         0.000042514612,   0.000000000000,  -0.000382631506,
                        -0.000000000000,   0.001530526024,   0.000000000000,
@@ -748,25 +442,14 @@ int rtseis_test_utils_design_iir(void)
                         0.599734743788});
     BA cheby1bp_ref(bref_c1bp, aref_c1bp);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs,
                        Bandtype::BANDPASS, IIRPrototype::CHEBYSHEV1,
-                       ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+                       ldigital)
+    );
     ba.setEqualityTolerance(1.e-10);
-    if (ba != cheby1bp_ref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 bandpass design");
-        cheby1bp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba, cheby1bp_ref);
+
     std::vector<double> bref_c1bs({
                         0.002146776265,  -0.014759920207,   0.064423289170,
                        -0.198474579554,   0.485124787140,  -0.966026098468,
@@ -785,26 +468,23 @@ int rtseis_test_utils_design_iir(void)
                        -0.464975668856});
     BA cheby1bs_ref(bref_c1bs, aref_c1bs);
     n = 9, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::BANDSTOP,
                                     IIRPrototype::CHEBYSHEV1,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
     ba.setEqualityTolerance(1.e-10);
-    if (ba != cheby1bs_ref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed cheby1 bandstop design");
-        cheby1bs_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba, cheby1bs_ref);
+}
+
+TEST(UtilitiesDesignIIR, chebyshev2)
+{
+    int n;
+    BA ba; 
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
+    double rp = 5, rs = 60; 
+    double Wn[2];
     //------------------------------------------------------------------------//
     //                           ChebyII filter designs                       //
     //------------------------------------------------------------------------//
@@ -820,25 +500,14 @@ int rtseis_test_utils_design_iir(void)
          -0.05771936784473,  0.00377046393483});
     BA cheby2lp_ref(bref_c2lp, aref_c2lp);
     n = 10, Wn[0] = 0.3; Wn[1] = 0; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::LOWPASS,
                                     IIRPrototype::CHEBYSHEV2,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    if ((ba != cheby2lp_ref))
-    {
-        RTSEIS_ERRMSG("%s", "Failed cheby2 lowpass design");
-        cheby2lp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
+    EXPECT_EQ(ba, cheby2lp_ref);
+
     std::vector<double> bref_c2hp({
          0.43293356378981,  -4.22273302625180,   18.63839282119448, 
        -49.02204942735300,  85.08305568194051, -101.81919921855661, 
@@ -851,26 +520,15 @@ int rtseis_test_utils_design_iir(void)
         -2.13561396448704,  0.18743147065574});
     BA cheby2hp_ref(bref_c2hp, aref_c2hp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::HIGHPASS,
                                     IIRPrototype::CHEBYSHEV2,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }   
+                                    ldigital)
+    );
     ba.setEqualityTolerance(1.e-10);
-    if ((ba != cheby2hp_ref))
-    {   
-        RTSEIS_ERRMSG("%s", "Failed cheby2 highpass design");
-        cheby2hp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ba, cheby2hp_ref);
+
     std::vector<double> bref_c2bp({
         0.01780621293436, -0.06696882576862,  0.06108344898157, 
         0.01004581026441,  0.07349345972810, -0.17060184129854, 
@@ -889,25 +547,14 @@ int rtseis_test_utils_design_iir(void)
        0.00318343314108,  -0.00074355290758,  0.00034509546998});
     BA cheby2bp_ref(bref_c2bp, aref_c2bp);
     n = 10, Wn[0] = 0.1; Wn[1] = 0.6; rp = 5; rs = 60; 
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::BANDPASS,
                                     IIRPrototype::CHEBYSHEV2,
-                                    ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("%s", ia.what());
-        return EXIT_FAILURE;
-    }
-    if (ba != cheby2bp_ref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed cheby2 bandpass design");
-        cheby2bp_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
+                                    ldigital)
+    );
+    EXPECT_EQ(ba, cheby2bp_ref);
+
     std::vector<double> bref_c2bs({
              0.03403410673803, -0.16827387273319,  0.54220130005646, 
             -1.26791509475874,  2.42988115437137, -3.89063719715933, 
@@ -924,25 +571,86 @@ int rtseis_test_utils_design_iir(void)
            -0.00759384336523,   0.00122982022910});
     BA cheby2bs_ref(bref_c2bs, aref_c2bs);
     n = 8, Wn[0] = 0.2; Wn[1] = 0.6; rp = 5; rs = 60;
-    try
-    {
+    EXPECT_NO_THROW(
         ba = IIR::designBAIIRFilter(n, Wn, rp, rs, 
                                     Bandtype::BANDSTOP,
                                     IIRPrototype::CHEBYSHEV2,
                                     ldigital);
-    }
-    catch (const std::invalid_argument &ia)
-    {
-        fprintf(stderr, "%s", ia.what());
-        return EXIT_FAILURE;
-    }
+    );
     ba.setEqualityTolerance(1.e-10);
-    if (ba != cheby2bs_ref)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed cheby2 bandstop design");
-        cheby2bs_ref.print(stderr);
-        ba.print(stderr);
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
+    EXPECT_EQ(ba, cheby2bs_ref);
+}
+
+/// IIR SOS analog prototype design.
+//int rtseis_test_utils_design_zpk2sos(void)
+TEST(UtilitiesDesignIIR, zpk2sos)
+{
+    SOS sos;
+    int n = 4;
+    double Wn[1] = {0.1};
+    const std::vector<double> bsRef1({
+         4.16599204e-04,   8.33198409e-04,   4.16599204e-04,
+         1.00000000e+00,   2.00000000e+00,   1.00000000e+00});
+    const std::vector<double> asRef1({
+         1.,        -1.47967422,  0.55582154,
+         1.,        -1.70096433,  0.78849974});
+    SOS sosRef1(2, bsRef1, asRef1);
+    const std::vector<double> bsRefEll({
+         0.0014154,   0.00248707,  0.0014154,
+         1.,          0.72965193,  1., 
+         1.,          0.17594966,  1.});
+    const std::vector<double> asRefEll({
+         1.,        -1.32543251,  0.46989499,
+         1.,        -1.26117915,  0.6262586,
+         1.,        -1.25707217,  0.86199667});
+    SOS sosRefEll(3, bsRefEll, asRefEll);
+    IIRFilterDomain ldigital = IIRFilterDomain::DIGITAL;
+    EXPECT_NO_THROW(
+         sos = IIR::designSOSIIRFilter(n, Wn, 5, 60,  
+                                       Bandtype::LOWPASS,
+                                       IIRPrototype::BUTTERWORTH,
+                                       ldigital, SOSPairing::NEAREST)
+    );  
+    sos.setEqualityTolerance(1.e-5);
+    EXPECT_EQ(sos, sosRef1);
+
+    //  
+    std::vector<std::complex<double>> zell;
+    zell.push_back(std::complex<double> (-0.878578886634,  0.47759725707));
+    zell.push_back(std::complex<double> (-0.364825965978,  0.93107572976));
+    zell.push_back(std::complex<double> (-0.0879748281791, 0.996122698068));
+    zell.push_back(std::complex<double> (-0.878578886634, -0.47759725707));
+    zell.push_back(std::complex<double> (-0.364825965978, -0.93107572976));
+    zell.push_back(std::complex<double> (-0.0879748281791,-0.996122698068));
+    std::vector<std::complex<double>> pell;
+    pell.push_back(std::complex<double> (0.662716257451,-0.175220303539)); 
+    pell.push_back(std::complex<double> (0.630589576722,-0.478137415927));
+    pell.push_back(std::complex<double> (0.62853608609, -0.683329390963));
+    pell.push_back(std::complex<double> (0.662716257451,+0.175220303539));
+    pell.push_back(std::complex<double> (0.630589576722,+0.478137415927));
+    pell.push_back(std::complex<double> (0.62853608609, +0.683329390963));
+    double kell = 0.00141539634442;
+    ZPK zpk(zell, pell, kell);
+    EXPECT_NO_THROW(sos = IIR::zpk2sos(zpk, SOSPairing::NEAREST));
+    sos.setEqualityTolerance(1.e-5);
+    EXPECT_EQ(sos, sosRefEll);
+
+    // Test this edge case so i can remove a debugging statement
+    // iirfilter(2, 10/(100), rp=60, btype='lowpass', ftype='cheby1', output='sos')
+    std::vector<double> bsRefCheb1 = {1.2386078193258956e-05,
+                                      2.477215638651791e-05,
+                                      1.2386078193258956e-05};  
+    std::vector<double> asRefCheb1 = {1.0, -1.9502344968431102, 0.999778809616146};
+    SOS sosRefCheb1(1, bsRefCheb1, asRefCheb1);
+    double Wn2[2] = {10/100., 0}; 
+    EXPECT_NO_THROW(
+         sos = IIR::designSOSIIRFilter(2, Wn2, 60, 0,
+                                       Bandtype::LOWPASS,
+                                       IIRPrototype::CHEBYSHEV1,
+                                       ldigital, SOSPairing::NEAREST)
+    );  
+    sos.setEqualityTolerance(1.e-12);
+    EXPECT_EQ(sos, sosRefCheb1);
+}
+
 }

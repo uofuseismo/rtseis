@@ -156,7 +156,7 @@ ADD_EXECUTABLE(testUtils
                testing/utils/utils.cpp
                #testing/utils/polynomial.cpp
                testing/utils/interpolate.cpp
-               testing/utils/iir.cpp
+               #testing/utils/iir.cpp
                #testing/utils/response.cpp
                testing/utils/filters.cpp
                #testing/utils/transforms.cpp
@@ -165,7 +165,8 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/main.cpp
                testing/utils/polynomial.cpp
                testing/utils/windowFunctions.cpp
-               testing/utils/fir.cpp
+               testing/utils/iir.cpp # TODO change name to designIIR
+               testing/utils/fir.cpp # TODO change name to designFIR
                testing/utils/convolve.cpp
                testing/utils/transforms.cpp
                testing/utils/response.cpp)
