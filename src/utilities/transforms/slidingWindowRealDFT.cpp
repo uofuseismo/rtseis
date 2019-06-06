@@ -185,14 +185,22 @@ SlidingWindowRealDFT::operator=(const SlidingWindowRealDFT &swdft)
          window = swdft.pImpl->mWindow64f;
     }
     // Call initialize so that we get a fresh FFTw context
-    initialize(swdft.pImpl->mSamples,
-               swdft.pImpl->mSamplesPerSegment,
-               swdft.pImpl->mDFTLength,
-               swdft.pImpl->mSamplesInOverlap,
-               windowLength,
-               window,
-               swdft.pImpl->mDetrendType,
-               swdft.pImpl->mPrecision);
+    try
+    {
+        initialize(swdft.pImpl->mSamples,
+                   swdft.pImpl->mSamplesPerSegment,
+                   swdft.pImpl->mDFTLength,
+                   swdft.pImpl->mSamplesInOverlap,
+                   windowLength,
+                   window,
+                   swdft.pImpl->mDetrendType,
+                   swdft.pImpl->mPrecision);
+    }
+    catch (const std::exception &e)
+    {
+        clear();
+        RTSEIS_THROW_RTE("%s", "Failed to initialize class");
+    }
     // Copy the workspace
     if (pImpl->mPrecision == RTSeis::Precision::DOUBLE)
     {

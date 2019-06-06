@@ -26,7 +26,7 @@ public:
     /*!
      * @brief Default constructor.
      */
-    DFT(void);
+    DFT();
     /*!
      * @brief Copy constructor.
      * @param[in] dft  Class from which to initialize from.
@@ -34,7 +34,7 @@ public:
     DFT(const DFT &dft);
     /*!
      * @brief Copy operator.
-     * @param[in] dftr2c  DFTRealToComplex class to copy.
+     * @param[in] dft  DFTRealToComplex class to copy.
      * @result A deep copy of the input class.
      */
     DFT& operator=(const DFT &dft);
@@ -46,7 +46,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~DFT(void);
+    ~DFT();
     /*! @} */
 
     /*!
@@ -144,31 +144,31 @@ public:
       * @result The length of the inverse DFT or FFT.
       * @throws std::runtime_error if the class is not initialized.
       */
-     int getInverseTransformLength(void) const;
+     int getInverseTransformLength() const;
      /*!
       * @brief Gets the length of the transform.
       * @result The length of the DFT or FFT.
       * @throws std::runtime_error if the class is not initialized.
       */
-     int getTransformLength(void) const;
+     int getTransformLength() const;
      /*!
       * @brief Gets the maximum length of the input signal.
       * @result The maximum length of the input signal.
       * @throws std::runtime_error if the class is not initialized.
       */
-     int getMaximumInputSignalLength(void) const;
+     int getMaximumInputSignalLength() const;
      /*!
       * @brief Returns whether or not the class is initialized.
       * @retval True indicates the class is initialized.
       * @retval False indicates the class is not-initialized.
       */
-    bool isInitialized(void) const noexcept;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Releases the memory on the module and resets the
      *        defaults.  The class must be reinitialized before
      *        using it again.
      */
-    void clear(void) noexcept;
+    void clear() noexcept;
 private:
     class DFTImpl;
     std::unique_ptr<DFTImpl> pImpl;

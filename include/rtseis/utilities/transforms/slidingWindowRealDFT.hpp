@@ -37,6 +37,8 @@ public:
     /*!
      * @brief Copy constructor.
      * @param[in] swdft  The sliding window real DFT class to initialize from.
+     * @throws std::runtime_error if the class fails to initialize. 
+     *         This is indicative of an internal error. 
      */
     SlidingWindowRealDFT(const SlidingWindowRealDFT &swdft);
     /*!
@@ -55,6 +57,8 @@ public:
      * @brief Copy assignment operator.
      * @param[in] swdft  The class to copy.
      * @result A deep copy of the sliding window real DFT class.
+     * @throws std::runtime_error if the class fails to initialize.
+     *         This is indicative of an internal error.
      */
     SlidingWindowRealDFT& operator=(const SlidingWindowRealDFT &swdft);
     /*!
@@ -90,7 +94,10 @@ public:
      *                                the desired DFT length.  This must be
      *                                greater than or equal to
      *                                nSamplesPerSegment.
-     * @param[in]
+     * @param[in] nSamplesInOverlap   As the window slides along this defines
+     *                                the number of samples overlapping between
+     *                                the current and prior window.  This must
+     *                                be in the range [0, nSamplesPerSegment-1].
      * @param[in] windowLength        The length of the window.  If 0 then no
      *                                window function will be applied.
      *                                Otherwise, this must equal 
@@ -152,16 +159,6 @@ public:
      *                      \c getNumberOfSamples().
      * @param[in] x         The signal to transform.  This is an array whose
      *                      dimension is [nSamples].
-     * @param[in] nWork     The workspace allocated to y.  This must be at
-     *                      least \c getNumberOfFrequencies() x 
-     *                            \c getNumberOfTransformWindow()]
-     * @param[out] y        This is a row-major matrix containing the
-     *                      DFT's in each window.  Here, the rows correspond
-     *                      to frequency and the columns correspond to time.
-     *                      While this has dimension [nwork] only the first
-     *                      [\c getNumberOfFrequencies() x
-     *                       \c getNumberOfTransformWindows()]
-     *                      samples are valid.
      * @throws std::invalid_argument if any arguments are invalid.
      * @throws std::runtime_error if the class is not initalized.
      * @sa \c getNumberOfTransformWindow(), \c getNumberOfFrequencies()

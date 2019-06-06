@@ -49,6 +49,9 @@ public:
     /*! @name Destructors
      * @{
      */
+    /*!
+     * @brief Destructor
+     */
     ~Detrend();
     /*!
      * @brief Resets the class.

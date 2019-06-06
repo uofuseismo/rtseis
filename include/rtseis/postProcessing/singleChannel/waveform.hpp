@@ -131,7 +131,7 @@ public:
     /*!
      * @brief Default constructor.  The sampling period defaults to unity.
      */
-    Waveform(void); //const double dt = 1);
+    Waveform(); //const double dt = 1);
     /*!
      * @brief Constructs a waveform from time series data.  The sampling
      *        period will be unity.
@@ -157,7 +157,7 @@ public:
     /*!
      * @brief Default destructor.
      */ 
-    ~Waveform(void);
+    ~Waveform();
     /*! @} */
 
     /*!
@@ -189,7 +189,7 @@ public:
      * @note This will reset the number of data points to 0. 
      * @sa \c setDataPointer()
      */
-    void releaseDataPointer(void) noexcept;
+    void releaseDataPointer() noexcept;
     /*!
      * @brief Gets the processed waveform data.
      * @result The processed waveform data.
@@ -208,7 +208,7 @@ public:
      * @brief Gets the length of the output signal.
      * @result The length of the output signal, y.
      */
-    size_t getOutputLength(void) const;
+    size_t getOutputLength() const;
 
     /*! @name Convolution and Correlation
      * @{
@@ -256,15 +256,16 @@ public:
      *
      * @snippet testing/postProcessing/singleChannel.cpp ppSCDemeanExample
      */
-    void demean(void);
+    void demean();
     /*!
      * @brief Removes a best fitting line \f$ \hat{y} = a x + b \f$
      *        from the data by first computing \f$ a \f$ and \f$ b \f$
      *        then computing \f$ y - (a x + b) \f$.
      * @throws std::runtime_error if there is no data.
+     *
      * @snippet testing/postProcessing/singleChannel.cpp ppSCDetrendExample
      */
-    void detrend(void);
+    void detrend();
     /*! @} */
 
     /*! @name Finite Impulse Response Filtering
@@ -637,12 +638,12 @@ public:
      * @brief Gets the sampling period.
      * @result The signal sampling period in seconds.
      */
-    double getSamplingPeriod(void) const noexcept;
+    double getSamplingPeriod() const noexcept;
     /*!
      * @brief Gets the Nyquist frequency of the signal.
      * @result The Nyquist freuqency in Hz.
      */
-    double getNyquistFrequency(void) const noexcept;
+    double getNyquistFrequency() const noexcept;
     /*! @} */
 private:
     class WaveformImpl;
