@@ -26,7 +26,7 @@ If the API documentation is to be generated you will additionally require
 
 In the directory of your choice enter
 
-    git clone https://github.com/bakerb845/rtseis.git
+    git clone https://github.com/uofuseismo/rtseis.git
 
 This will create an rtseis directory.
 
