@@ -32,7 +32,7 @@ TEST(UtilitiesInterpolation, interpft)
     double emax = 0;
     for (auto i=0; i<npts; i++)
     {
-        emax = std::max(emax, fnew[i*iskip] - f[i]);
+        emax = std::max(emax, std::abs(fnew[i*iskip] - f[i]));
         if (std::abs(fnew[i*iskip] - f[i]) > 1.e-12)
         {
             fprintf(stderr, "ft interp failed %lf %lf", f[i], fnew[i*iskip]);
@@ -45,7 +45,7 @@ TEST(UtilitiesInterpolation, interpft)
     {
         auto x = static_cast<double> (i)*dy;
         auto ftrue = std::pow(std::sin(x), 2)*std::cos(x);
-        emax = std::max(ftrue - fnew[i], emax);
+        emax = std::max(emax, std::abs(ftrue - fnew[i]));
         if (std::abs(ftrue - fnew[i]) > 1.e-1)
         {
             fprintf(stderr, "Failed more aggressive check %lf %lf %lf %lf\n",

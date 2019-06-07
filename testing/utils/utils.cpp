@@ -19,7 +19,6 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed window test");
-*/
 
     ierr = rtseis_test_utils_normalization();
     if (ierr != EXIT_SUCCESS)
@@ -28,6 +27,7 @@ int main()
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed normalization test");
+*/
 
 /*
     ierr = rtseis_test_utils_interpolation();
