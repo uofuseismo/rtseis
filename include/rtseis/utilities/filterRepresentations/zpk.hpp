@@ -181,8 +181,8 @@ public:
     class ZPKImpl;
     std::unique_ptr<ZPKImpl> pImpl;
 }; // End ZPK
-}; // End Representations
-}; // End Utilities
-}; // End RTSeis
+} // End Representations
+} // End Utilities
+} // End RTSeis
 
 #endif

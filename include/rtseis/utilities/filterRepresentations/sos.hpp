@@ -153,8 +153,8 @@ private:
     class SOSImpl;
     std::unique_ptr<SOSImpl> pImpl;
 }; // End SOS
-}; // End FilterRepresentations
-}; // End Utilities
-}; // End RTSeis
+} // End FilterRepresentations
+} // End Utilities
+} // End RTSeis
 
 #endif

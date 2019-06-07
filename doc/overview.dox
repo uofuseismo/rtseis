@@ -69,7 +69,6 @@ provide a solution that doesn't require developers to have a Matlab license.
 
 \section section_Acknowledgements Acknowledgements
 
-
 */
 
 //--------------------------------------------------------------------------------------//
@@ -85,7 +84,7 @@ installed.
 \subsection section_installation_prereqs Prerequisites
 
 The following prerequisites must be satisfied prior to building the software
-- A C++14 compliant compiler.
+- A C++17 compliant compiler.
 - <a href="https://git-scm.com/">git</a>
 - <a href="https://cmake.org/">CMake</a> v3.6
 - <a href="https://github.com/google/googletest">Google Test</a>
@@ -124,8 +123,8 @@ fi
 mkdir ${BUILD_DIR}
 cd ${BUILD_DIR}
 cmake .. \
--DCMAKE_C_FLAGS="-g3 -O2 -Wall" \
--DCMAKE_CXX_FLAGS="-g3 -O2 -Wall" \
+-DCMAKE_C_FLAGS="-g -Wall" \
+-DCMAKE_CXX_FLAGS="-g -Wall" \
 -DGTEST_INCLUDE_DIRS="/usr/local/include" \
 -DGTEST_BOTH_LIBRARIES="/usr/local/lib/libgtest.a;/local/lib/libgtest_main.a" \
 -DIPP_INCLUDE_DIR=${IPP_DIR}/include \
@@ -141,20 +140,30 @@ cd ..
 Notice, the RTSEIS_WRAP_PYTHON flag has been toggled on.  If the Python bindings
 are not desired then you can simply remove the last two lines.
 
-The software is now built by descending into the build directory, here named build, and issuing a make command
+OSX users may be required to replaced the *.so with *.dylib.
+
+\subsection section_installation_compile Compilation
+
+RTSeis is now compiled by descending into the build directory, 
+here named build, and issuing a make command
 
 \verbatim
 cd build
 make
 \endverbatim
 
-In the build directory the software is tested with ctest.  For most users, 
+\subsection section_installation_testing Testing
+
+Prior to using the library it is recommended to verify that the salient 
+components are in working order.  To do this, issue the following command
+in the build directory
 
 \verbatim
 make test
 \endverbatim
 
-is sufficient.  However, if more information is required, then
+This should result in a summary indicating that all tests were passed.
+Developers may require more information.  In this case, 
 
 \verbatim
 ctest --verbose
@@ -162,12 +171,85 @@ ctest --verbose
 
 is a useful alternative.
 
-Lastly, the software is installed by executing
+\subsection section_installation_install Installation
+
+By this point RTSeis has been compiled and tested.  The library is installed
+by issuing the following command in the build directory 
 
 \verbatim
 make install
 \endverbatim
 
 Note, the make install command need to be prefaced with sudo.
+
+*/
+
+//----------------------------------------------------------------------------//
+
+/*!
+\page page_utilities Utilities
+\section section_Utilities Utilities
+
+The utilities section of the library defines much of the functionality of the
+library.  The goal of the utilities is to provide many low-level functions
+and classes that can be reorganized into higher-level modules.
+
+<table>
+<caption id="Overview of RTSeis utilities">Utilities</caption>
+<tr><th> Component <th> Description
+<tr><td> RTSeis::Utilities::FilterRepresentations <td> Filter representations.
+<tr><td> RTSeis::Utilities::FilterRepresentations::FIR <td> FIR Filter design.
+<tr><td> RTSeis::Utilities::FilterDesign <td> Filter design utilities.
+<tr><td> RTSeis::Utilities::FilterImplementations <td> Digital filter implementations.
+<tr><td> RTSeis::Utilities::Transforms <td> Fourier transforms, Hilbert transforms, envelopes, and time-frequency analysis.
+<tr><td> RTSeis::Utilities::Math::Convolve <td> Single channel convolution, correlation, and auto-correlation.
+<tr><td> RTSeis::Utilities::Math::Polynomial <td> Polynomial manipulating functions.
+</table> 
+
+\defgroup rtseis_utils Utilities
+\brief Herein lies much of the primitives on which the high-level
+       processing modules are built.  This includes basic mathematical
+       operations, filter design, filter implementations, and transform
+       implementations. 
+\copyright Ben Baker distributed under the MIT license.
+
+  \defgroup rtseis_utils_fr Filter Representations
+  \brief Different representations of filters.  
+  \ingroup rtseis_utils
+
+  \defgroup rtseis_utils_filterDesign Filter Design
+  \brief Utility functions for FIR and IIR filter design.
+  \ingroup rtseis_utils
+  
+    \defgroup rtseis_utils_design_iir IIR Design
+    \brief Utility functions for IIR filter design.
+    \copyright Ben Baker distributed under the MIT license.
+    \ingroup rtseis_utils_filterDesign
+
+    \defgroup rtseis_utils_design_fir FIR Design
+    \brief Utility functions for window-based FIR filter design.
+    \copyright Ben Baker distributed under the MIT license.
+    \ingroup rtseis_utils_filterDesign
+
+    \defgroup rtseis_utils_design_response Response
+    \brief Utility functions for analyzing the response of a filter.
+    \copyright Ben Baker distributed under the MIT license.
+    \ingroup rtseis_utils_filterDesign
+
+  \defgroup rtseis_utils_math Math Utilities
+  \brief Utility functions for performing common mathematical operations.
+  \ingroup rtseis_utils
+
+    \defgroup rtseis_utils_math_polynomial Polynomial
+    \brief Utility functions for polynomial handling.
+    \copyright Ben Baker distributed under the MIT license.
+    \ingroup rtseis_utils_math
+
+  \defgroup rtseis_utils_transforms Transforms
+  \brief These are utilities that enable users to transform data
+         between domains.  Found here are building blocks for Fourier
+         and Hilbert transforms.
+  \copyright Ben Baker distributed under the MIT license.
+  \ingroup rtseis_utils_math
 
 */

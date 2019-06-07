@@ -174,7 +174,7 @@ public:
      */
     /*!
      * @brief Copy assignment operator.
-     * @param[in] demean   Demean class to copy.
+     * @param[in] Taper   The taper class to copy.
      * @result A deep copy of the demean class.
      */
     Taper& operator=(const Taper &Taper);

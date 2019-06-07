@@ -8,11 +8,6 @@ namespace RTSeis
 {
 namespace Utilities
 {
-/*!
- * @defgroup rtseis_utils_fr Filter Representations
- * @brief Different representations of filters.  
- * @ingroup rtseis_utils
- */
 namespace FilterRepresentations
 {
 
@@ -33,7 +28,7 @@ public:
     /*!
      * @brief Default constructor.
      */ 
-    BA(void);
+    BA();
     /*!
      * @brief Constructs a transfer function class from the given numerator
      *        and denminator coefficients.
@@ -93,11 +88,11 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~BA(void);
+    ~BA();
     /*! 
      * @brief Clears the structure.
      */
-    void clear(void) noexcept;
+    void clear() noexcept;
     /*! @} */
 
     /*!
@@ -158,12 +153,12 @@ public:
      * @brief Gets the numerator coefficients.
      * @result The numerator coefficients.
      */
-    std::vector<double> getNumeratorCoefficients(void) const noexcept;
+    std::vector<double> getNumeratorCoefficients() const noexcept;
     /*!
      * @brief Gets the denominator coefficients.
      * @result The denominator coefficients.
      */
-    std::vector<double> getDenominatorCoefficients(void) const noexcept;
+    std::vector<double> getDenominatorCoefficients() const noexcept;
     /*!
      * @brief Sets the equality tolerance.
      */
@@ -172,8 +167,8 @@ private:
     class BAImpl;
     std::unique_ptr<BAImpl> pImpl;
 }; // End BA
-}; // End FilterRepresentations
-}; // End Utilities
-}; // End RTSeis
+} // End FilterRepresentations
+} // End Utilities
+} // End RTSeis
 
 #endif

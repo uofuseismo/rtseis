@@ -65,10 +65,6 @@ void unwrap(const int n, const double p[], double q[],
  *          = \arctan \left ( \frac{ \Im \{z \} }
  *                                 { \Re \{z \} } \right ) \f].
  * @param[in] z     The array of complex numbers of which to compute the angle.
- * @param[out] phi  The phase angle between the real and imaginary 
- *                  parts of z.  This has dimension [n].  By
- *                  default this will be in radians but it can
- *                  optionally be given in degrees.
  * @param[in] lwantDeg  If true then phi is given in degrees.  
  *                      If false then phi is given in radians.
  *                      This is the default.

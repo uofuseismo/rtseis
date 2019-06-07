@@ -142,7 +142,7 @@ private:
     class FIRImpl;
     std::unique_ptr<FIRImpl> pImpl;
 };
-};
-};
-};
+}
+}
+}
 #endif

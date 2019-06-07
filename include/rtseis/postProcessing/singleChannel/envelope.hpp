@@ -40,7 +40,7 @@ public:
      */
     EnvelopeFIRParameters(const int nfir = 301,
                           const double beta = 8.0,
-                          const RTSeis::Precision = RTSeis::Precision::DOUBLE);
+                          const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
      * @brief Copy constructor.
      * @param[in] envfir  The class from which to initialize this class.
@@ -151,7 +151,7 @@ public:
      * @brief Default constructor.
      * @param[in] precision  The precision of the module.
      */
-    EnvelopeDFTParameters(const RTSeis::Precision = RTSeis::Precision::DOUBLE);
+    EnvelopeDFTParameters(const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
      * @brief Copy constructor.
      * @param[in] envdft  The class from which to initialize this class.

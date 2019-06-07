@@ -15,12 +15,6 @@ class ZPK;
 namespace FilterDesign
 {
 
-/*!
- * @defgroup rtseis_utils_design_iir IIR Design
- * @brief Utility functions for IIR filter design.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_filterDesign
- */
 namespace IIR
 {
 
@@ -175,7 +169,7 @@ zpklp2lp(const FilterRepresentations::ZPK &zpkIn, const double w0);
  * @brief Converts a lowpass filter prototype to a highpss filter.
  * @param[in] zpkIn    Input lowpass filter prototype to convert.
  * @param[in] w0       Desired cutoff frequency (rad/s).  This must be >= 0.
- * @param[out] zpkOut  The corresponding highpass filter.
+ * @result The corresponding highpass filter.
  * @throws std::invalid_argument if zpkIn is empty or w0 is invalid.
  * @ingroup rtseis_utils_design_iir
  */

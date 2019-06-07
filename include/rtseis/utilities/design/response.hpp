@@ -13,12 +13,6 @@ class BA;
 };
 namespace FilterDesign
 {
-/*!
- * @defgroup rtseis_utils_design_response Response
- * @brief Utility functions for analyzing the response of a filter.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_filterDesign
- */
 namespace Response
 {
 /*!

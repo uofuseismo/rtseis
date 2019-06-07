@@ -11,19 +11,8 @@ namespace FilterRepresentations
 {
 class FIR;
 }
-/*!
- * @defgroup rtseis_utils_filterDesign Filter Design
- * @brief Utility functions for FIR and IIR filter design.
- * @ingroup rtseis_utils
- */
 namespace FilterDesign
 {
-/*!
- * @defgroup rtseis_utils_design_fir FIR Design
- * @brief Utility functions for window-based FIR filter design.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_filterDesign
- */
 namespace FIR
 {
 

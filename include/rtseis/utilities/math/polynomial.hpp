@@ -5,30 +5,10 @@
 
 namespace RTSeis
 {
-/*!
- * @defgroup rtseis_utils Utilities
- * @brief Herein lies much of the primitives on which the high-level
- *        processing modules are built.  This includes basic mathematical
- *        operations, filter design, filter implementations, and transform
- *        implementations. 
- * @copyright Ben Baker distributed under the MIT license.
- */
 namespace Utilities
 {
-/*!
- * @defgroup rtseis_utils_math Math Utilities
- * @brief Utility functions for performing common mathematical operations.
- * @ingroup rtseis_utils
- */
 namespace Math 
 {
-
-/*!
- * @defgroup rtseis_utils_math_polynomial Polynomial
- * @brief Utility functions for polynomial handling.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_math
- */
 namespace Polynomial
 {
 
@@ -94,8 +74,8 @@ std::vector<double> poly(const std::vector<double> &p) noexcept;
  *                 dimension [order+1].  Note, p.size() must be positive.
  * @param[in] x    The points at which to evaluate the polynomial.  This
  *                 has dimension [x.size()].
- * @param[out] y   \f$ y = p(x) \f$ evaluated at each \f$ x_i \f$.  This
- *                 has dimension [x.size()].
+ * @result \f$ y = p(x) \f$ evaluated at each \f$ x_i \f$.  This has dimension
+ *         [x.size()].
  * @throws std::invalid_argument if p is empty.
  * @ingroup rtseis_utils_math_polynomial 
  */

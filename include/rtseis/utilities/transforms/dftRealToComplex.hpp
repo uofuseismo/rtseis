@@ -9,37 +9,16 @@ namespace RTSeis
 {
 namespace Utilities
 {
-
-/*!
- * @page utilities Utilities
- *
- * @section utilities_overview Overview
- * The functions contained in the utilities section are the building blocks
- * from which RTSeis can develop high-level modules for signals processing. 
- */
-/*!
- * @section Transforms
- * @brief These are utilities that enable users to transform data
- *        between domains.  Found here are building blocks for Fourier
- *        and Hilbert transforms.
- * @copyright Ben Baker distributed under the MIT license.
- * @defgroup rtseis_utils_transforms Transforms
- */    
 namespace Transforms 
 {
 
-/*!
- * @defgroup rtseis_utils_transforms_dft Discrete Fourier Transform
- * @brief Utilities for computing the discrete Fourier transform of a signal.
- * @ingroup rtseis_utils_transforms
- */
 /*!
  * @class DFTRealToComplex dftRealToComplex.hpp "includertseis/utilities/transforms/dftRealToComplex.hpp" 
  * @brief Handles the discrete Fourier transform of real signals.  This
  *        leverages an efficiency that requires that the value of a negative
  *        frequency is a complex conjugate of the corresponding positive
  *        frequency.
- * @ingroup rtseis_utils_transforms_dft
+ * @ingroup rtseis_utils_transforms
  */
 class DFTRealToComplex
 {
