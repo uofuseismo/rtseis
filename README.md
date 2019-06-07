@@ -8,7 +8,7 @@ RTSeis is a toolkit intended to aid in real-time filtering of seismic signals.  
 
 To get started go to the directory of your choosing and get the code
 
-    git clone https://github.com/bakerb845/rtseis.git
+    git clone https://github.com/uofuseismo/rtseis.git
     
 Next, descend into rtseis and build the documentation
 
