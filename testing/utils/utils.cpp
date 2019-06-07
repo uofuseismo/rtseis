@@ -29,6 +29,7 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed normalization test");
 
+/*
     ierr = rtseis_test_utils_interpolation();
     if (ierr != EXIT_SUCCESS)
     {
@@ -37,7 +38,6 @@ int main()
     }
     RTSEIS_INFOMSG("%s", "Passed interpolation test");
 
-/*
     ierr = rtseis_test_utils_convolve();
     if (ierr != EXIT_SUCCESS)
     {   

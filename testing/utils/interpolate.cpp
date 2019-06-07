@@ -6,74 +6,53 @@
 #include <stdexcept>
 #include <vector>
 #include <chrono>
-#define RTSEIS_LOGGING 1
-#include "utils.hpp"
 #include "rtseis/utilities/math/interpolate.hpp"
-#include "rtseis/log.h"
+#include <gtest/gtest.h>
 
-int test_interpolation_interpft(void);
-
-
-int rtseis_test_utils_interpolation(void)
+namespace
 {
-    int ierr;
-    ierr = test_interpolation_interpft();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed interpft test");
-        return EXIT_FAILURE;
-    }
-    RTSEIS_INFOMSG("%s", "Passed interpft test");
-    return EXIT_SUCCESS;
-}
 
-int test_interpolation_interpft(void)
+//int test_interpolation_interpft(void)
+TEST(UtilitiesInterpolation, interpft)
 {
     int npts = 31;
     int npnew = npts*7;
-    double dx = 3.0*M_PI/static_cast<double> (npts - 1);
+    auto dx = 3.0*M_PI/static_cast<double> (npts - 1);
     std::vector<double> f(npts);
-    for (int i=0; i<npts; i++)
+    for (auto i=0; i<npts; i++)
     {
-        double x = static_cast<double> (i)*dx;
+        auto x = static_cast<double> (i)*dx;
         f[i] = std::pow(std::sin(x), 2)*std::cos(x);
     }
     std::vector<double> fnew;
-    try
-    {
-        RTSeis::Utilities::Math::Interpolate::interpft(f, npnew, fnew);
-    }
-    catch (std::invalid_argument &ia)
-    {
-        RTSEIS_ERRMSG("Interpolation failed: %s", ia.what());
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(
+       fnew = RTSeis::Utilities::Math::Interpolate::interpft(f, npnew)
+    );
     int iskip = npnew/npts;
-    for (int i=0; i<npts; i++)
+    double emax = 0;
+    for (auto i=0; i<npts; i++)
     {
+        emax = std::max(emax, fnew[i*iskip] - f[i]);
         if (std::abs(fnew[i*iskip] - f[i]) > 1.e-12)
         {
-            RTSEIS_ERRMSG("ft interp failed %lf %lf", f[i], fnew[i*iskip]);
-            return EXIT_FAILURE;
+            fprintf(stderr, "ft interp failed %lf %lf", f[i], fnew[i*iskip]);
         }
     }
+    EXPECT_LE(emax, 1.e-12);
     double dy = dx/7.;
+    emax = 0;
     for (int i=0; i<npnew; i++)
     {
-        double x = static_cast<double> (i)*dy;
-        double ftrue = std::pow(std::sin(x), 2)*std::cos(x);
+        auto x = static_cast<double> (i)*dy;
+        auto ftrue = std::pow(std::sin(x), 2)*std::cos(x);
+        emax = std::max(ftrue - fnew[i], emax);
         if (std::abs(ftrue - fnew[i]) > 1.e-1)
         {
-            RTSEIS_ERRMSG("Failed more aggressive check %lf %lf %lf %lf\n",
-                          x, ftrue, fnew[i], ftrue - fnew[i]);
-            return EXIT_FAILURE;
+            fprintf(stderr, "Failed more aggressive check %lf %lf %lf %lf\n",
+                    x, ftrue, fnew[i], ftrue - fnew[i]);
         }
     }
-    return EXIT_SUCCESS;
+    EXPECT_LE(emax, 1.e-1);
 }
 
-int test_interpolation_interp1d(void)
-{
-    RTSeis::Utilities::Math::Interpolate::Interp1D interp1d;
-    return EXIT_SUCCESS;
 }

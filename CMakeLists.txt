@@ -155,7 +155,7 @@ target_link_libraries(rtseis
 ADD_EXECUTABLE(testUtils
                testing/utils/utils.cpp
                #testing/utils/polynomial.cpp
-               testing/utils/interpolate.cpp
+               #testing/utils/interpolate.cpp
                #testing/utils/iir.cpp
                #testing/utils/response.cpp
                testing/utils/filters.cpp
@@ -164,6 +164,7 @@ ADD_EXECUTABLE(testUtils
 ADD_EXECUTABLE(utilityTests
                testing/utils/main.cpp
                testing/utils/polynomial.cpp
+               testing/utils/interpolate.cpp
                testing/utils/windowFunctions.cpp
                testing/utils/iir.cpp # TODO change name to designIIR
                testing/utils/fir.cpp # TODO change name to designFIR

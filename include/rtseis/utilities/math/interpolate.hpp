@@ -121,11 +121,12 @@ private:
  *                   will likely be greater than the length of x.
  *                   Otherwise, one should be sure to lowpass filter x
  *                   prior to calling this function to avoid aliasing.
- * @param[out] yint  The interpolate version of x.
+ * @result The interpolated variant of x.  This will have 
+ *         dimension [npnew].
  * @throws std::invalid_argument if npnew is invalid or x is empty.
+ * @throws std::runtime_error if an internal error has occurred. 
  */
-void interpft(const std::vector<double> &x, const int npnew,
-              std::vector<double> &yint);
+std::vector<double> interpft(const std::vector<double> &x, const int npnew);
 
 
 }; // End Interpoalte

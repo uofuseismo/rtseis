@@ -8,6 +8,7 @@
 #include <mkl.h>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/math/interpolate.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/log.h"
@@ -15,27 +16,21 @@
 using namespace RTSeis::Utilities::Math::Interpolate;
 using namespace RTSeis::Utilities::Math;
 
-void Interpolate::interpft(
-    const std::vector<double> &x,
-    const int npnew,
-    std::vector<double> &yint)
+std::vector<double>
+Interpolate::interpft(const std::vector<double> &x, const int npnew)
 {
-    yint.resize(0);
     if (npnew < 1)
     {
-        throw std::invalid_argument("No points at which to intepolate");
+        RTSEIS_THROW_IA("%s", "No points at which to intepolate");
     }
-    int npts = static_cast<int> (x.size());
-    if (npts < 1)
-    {
-        throw std::invalid_argument("x is empty");
-    }
+    auto npts = static_cast<int> (x.size());
+    if (npts < 1){RTSEIS_THROW_IA("%s", "x is empty");}
     // Straight copy case
-    yint.resize(npnew);
+    std::vector<double> yint(npnew);
     if (npts == npnew)
     {
         ippsCopy_64f(x.data(), yint.data(), npnew);
-        return;
+        return yint;
     }
     // Figure out the size of the forward and inverse transforms
     IppStatus status;
@@ -48,7 +43,7 @@ void Interpolate::interpft(
                                   &bufferSizeF);
     if (status != ippStsNoErr)
     {
-        throw std::invalid_argument("Forward transform inquiry failed");
+        RTSEIS_THROW_RTE("%s", "Forward transform inquiry failed");
     }
     status = ippsDFTGetSize_R_64f(npnew,
                                   IPP_FFT_DIV_INV_BY_N,
@@ -58,7 +53,7 @@ void Interpolate::interpft(
                                   &bufferSizeI);
     if (status != ippStsNoErr)
     {   
-        throw std::invalid_argument("Inverse transform inquiry failed");
+        RTSEIS_THROW_RTE("%s", "Inverse transform inquiry failed");
     }
     // Initialize the forward transform
     auto *pDFTForwardSpec = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeF);
@@ -72,7 +67,7 @@ void Interpolate::interpft(
     {
         ippsFree(pDFTForwardSpec);
         ippsFree(pDFTInitBuf);
-        throw std::invalid_argument("Forward transform init failed");
+        RTSEIS_THROW_RTE("%s", "Forward transform init failed");
     }
     // Initialize the inverse transform
     auto *pDFTInverseSpec = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeI);
@@ -87,7 +82,7 @@ void Interpolate::interpft(
         ippsFree(pDFTForwardSpec);
         ippsFree(pDFTInverseSpec);
         ippsFree(pDFTInitBuf);
-        throw std::invalid_argument("Inverse transform init failed");
+        RTSEIS_THROW_RTE("%s", "Inverse transform init failed");
     }
     // Set the workspace
     Ipp8u *pBuf = ippsMalloc_8u(std::max(bufferSizeF, bufferSizeI));
@@ -103,6 +98,7 @@ void Interpolate::interpft(
     ippsFree(pDst);
     ippsFree(pDFTForwardSpec);
     ippsFree(pDFTInverseSpec);
+    return yint;
 }
 
 class Interp1D::Interp1DImpl
