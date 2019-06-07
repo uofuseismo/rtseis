@@ -168,8 +168,8 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/interpolate.cpp
                testing/utils/windowFunctions.cpp
                testing/utils/normalization.cpp
-               testing/utils/iir.cpp # TODO change name to designIIR
-               testing/utils/fir.cpp # TODO change name to designFIR
+               testing/utils/iirDesign.cpp
+               testing/utils/firDesign.cpp
                testing/utils/convolve.cpp
                testing/utils/transforms.cpp
                testing/utils/response.cpp)
