@@ -110,6 +110,9 @@ public:
     /*! @copydoc apply */
     void apply(const int nx, const float x[],
                const int ny, int *nyDown, float *y[]);
+private:
+    class DecimateImpl;
+    std::unique_ptr<DecimateImpl> pImpl;
 };
 
 }

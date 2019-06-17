@@ -98,6 +98,7 @@ SET(UTILS_SRCS
     src/utilities/filterRepresentations/fir.cpp
     src/utilities/filterRepresentations/sos.cpp
     src/utilities/filterRepresentations/zpk.cpp
+    src/utilities/filterImplementations/decimate.cpp
     src/utilities/filterImplementations/detrend.cpp
     src/utilities/filterImplementations/downsample.cpp
     src/utilities/filterImplementations/firfilter.cpp
