@@ -80,7 +80,7 @@ classifyFIRWindow(const FIRWindow windowIn);
                    ProcessingMode::POST_PROCESSING, \
                    Precision::DOUBLE, \
                    Utilities::FilterImplementations::FIRImplementation::DIRECT); \
-    firFilter.apply(npad, xtemp, ytemp); \
+    firFilter.apply(npad, xtemp, &ytemp); \
     ippsFree(xtemp); \
     pImpl->resizeOutputData(len); \
     double *yout = pImpl->getOutputDataPointer(); \
@@ -605,7 +605,7 @@ void Waveform::downsample(const int nq)
         double  *y = pImpl->getOutputDataPointer(); // Handle on output
         const double *x = pImpl->getInputDataPointer(); // Handle on input
         int nyout;
-        downsample.apply(len, x, leny, &nyout, y);  // Finally downsample
+        downsample.apply(len, x, leny, &nyout, &y);  // Finally downsample
 #ifdef DEBUG
         assert(nyout == leny);
 #endif
@@ -953,15 +953,15 @@ void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
     double *yout = pImpl->getOutputDataPointer();
     if (!lremovePhase)
     {
-        firFilter.apply(len, x, yout);
+        firFilter.apply(len, x, &yout);
     }
     else
     {
         double *ywork = ippsMalloc_64f(len);
-        firFilter.apply(len, x,    ywork); // Filter forwards
-        ippsFlip_64f(ywork, yout,  len);   // Reverse y
-        firFilter.apply(len, yout, ywork); // Filter y backwards
-        ippsFlip_64f(ywork, yout,  len);   // Reverse it
+        firFilter.apply(len, x,    &ywork); // Filter forwards
+        ippsFlip_64f(ywork, yout,  len);    // Reverse y
+        firFilter.apply(len, yout, &ywork); // Filter y backwards
+        ippsFlip_64f(ywork, yout,  len);    // Reverse it
         ippsFree(ywork);
     }
     pImpl->lfirstFilter_ = false;
@@ -1000,7 +1000,7 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
         pImpl->resizeOutputData(len);
         const double *x = pImpl->getInputDataPointer();
         double *yout = pImpl->getOutputDataPointer();
-        iirFilter.apply(len, x, yout);
+        iirFilter.apply(len, x, &yout);
     }
     else
     {
@@ -1011,7 +1011,7 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
         pImpl->resizeOutputData(len);
         const double *x = pImpl->getInputDataPointer();
         double *yout = pImpl->getOutputDataPointer();
-        iiriirFilter.apply(len, x, yout);
+        iiriirFilter.apply(len, x, &yout);
     }
     pImpl->lfirstFilter_ = false;
 }
@@ -1047,15 +1047,15 @@ void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
     if (lremovePhase)
     {
         double *ywork = ippsMalloc_64f(len);
-        sosFilter.apply(len, x,    ywork); // Filter forwards
-        ippsFlip_64f(ywork, yout,  len);   // Reverse y
-        sosFilter.apply(len, yout, ywork); // Filter y backwards
-        ippsFlip_64f(ywork, yout,  len);   // Reverse it
+        sosFilter.apply(len, x,    &ywork); // Filter forwards
+        ippsFlip_64f(ywork, yout,  len);    // Reverse y
+        sosFilter.apply(len, yout, &ywork); // Filter y backwards
+        ippsFlip_64f(ywork, yout,  len);    // Reverse it
         ippsFree(ywork);
     }
     else
     {
-        sosFilter.apply(len, x, yout);
+        sosFilter.apply(len, x, &yout);
     }
     pImpl->lfirstFilter_ = false;
 }

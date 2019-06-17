@@ -16,7 +16,7 @@ namespace FilterImplementations
  * @brief Removes the mean or trend from a signal.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
-*/
+ */
 class Detrend
 {
 public:

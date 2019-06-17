@@ -729,9 +729,8 @@ class MultiRateFIRFilter::MultiRateFIRImpl
         bool linit_ = false;
 };
 
-MultiRateFIRFilter::MultiRateFIRFilter(void) :
+MultiRateFIRFilter::MultiRateFIRFilter() :
     pFIR_(new MultiRateFIRImpl())
-    
 {
     return;
 }
@@ -789,13 +788,13 @@ int MultiRateFIRFilter::initialize(
     return 0;
 }
 
-MultiRateFIRFilter::~MultiRateFIRFilter(void)
+MultiRateFIRFilter::~MultiRateFIRFilter()
 {
     clear();
     return;
 }
 
-void MultiRateFIRFilter::clear(void)
+void MultiRateFIRFilter::clear() noexcept
 {
     pFIR_->clear();
     return;
@@ -850,7 +849,7 @@ int MultiRateFIRFilter::setInitialConditions(
 }
 
 int MultiRateFIRFilter::apply(const int n, const double x[],
-                              const int nywork, int *ny, double y[])
+                              const int nywork, int *ny, double *yIn[])
 {
     *ny = 0;
     if (n <= 0){return 0;} // Nothing to do
@@ -869,6 +868,7 @@ int MultiRateFIRFilter::apply(const int n, const double x[],
     {
         RTSEIS_WARNMSG("May have insufficient space %d %d", nywork, nworkEst);
     }
+    double *y = *yIn;
     if (y == nullptr)
     {
         RTSEIS_ERRMSG("%s", "y is NULL");

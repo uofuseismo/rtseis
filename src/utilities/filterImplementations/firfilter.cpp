@@ -184,12 +184,12 @@ public:
         return 0;
     }
     /// Determines if the module is initialized.
-    bool isInitialized(void) const
+    bool isInitialized() const
     {
         return linit_;
     }
     /// Determines the length of the initial conditions.
-    int getInitialConditionLength(void) const
+    int getInitialConditionLength() const
     {
         return order_;
     }
@@ -222,7 +222,7 @@ public:
         return 0;
     }
     /// Resets the initial conditions
-    int resetInitialConditions(void) const
+    int resetInitialConditions() const
     {
         if (order_ > 0)
         {   
@@ -350,13 +350,13 @@ private:
 
 //============================================================================//
 
-FIRFilter::FIRFilter(void) :
+FIRFilter::FIRFilter() :
     pFIR_(new FIRImpl())
 {
     return;
 }
 
-FIRFilter::~FIRFilter(void)
+FIRFilter::~FIRFilter()
 {
     clear();
     return;
@@ -423,7 +423,7 @@ int FIRFilter::setInitialConditions(const int nz, const double zi[])
     return 0;
 }
 
-int FIRFilter::resetInitialConditions(void)
+int FIRFilter::resetInitialConditions()
 {
     if (!isInitialized())
     {
@@ -434,7 +434,7 @@ int FIRFilter::resetInitialConditions(void)
     return 0;
 }
 
-int FIRFilter::apply(const int n, const double x[], double y[])
+int FIRFilter::apply(const int n, const double x[], double *yIn[])
 {
     if (n <= 0){return 0;} // Nothing to do
     if (!isInitialized())
@@ -442,6 +442,7 @@ int FIRFilter::apply(const int n, const double x[], double y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1; 
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "Error x is NULL");}
@@ -457,7 +458,7 @@ int FIRFilter::apply(const int n, const double x[], double y[])
     return 0;
 }
 
-int FIRFilter::apply(const int n, const float x[], float y[])
+int FIRFilter::apply(const int n, const float x[], float *yIn[])
 {
     if (n <= 0){return 0;} // Nothing to do
     if (!isInitialized())
@@ -465,6 +466,7 @@ int FIRFilter::apply(const int n, const float x[], float y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1; 
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "Error x is NULL");}
@@ -480,7 +482,7 @@ int FIRFilter::apply(const int n, const float x[], float y[])
     return 0;
 }
 
-int FIRFilter::getInitialConditionLength(void) const
+int FIRFilter::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -491,7 +493,7 @@ int FIRFilter::getInitialConditionLength(void) const
     return len;
 }
 
-bool FIRFilter::isInitialized(void) const noexcept
+bool FIRFilter::isInitialized() const noexcept
 {
     bool linit = pFIR_->isInitialized();
     return linit;

@@ -126,10 +126,10 @@ public:
      * @throws std::runtime_error if the module is not initialized.
      */
     void apply(const int nx, const double x[],
-               const int ny, int *nyDown, double y[]);
+               const int ny, int *nyDown, double *y[]);
     /*! @copydoc apply */
     void apply(const int nx, const float x[],
-               const int ny, int *nyDown, float y[]);
+               const int ny, int *nyDown, float *y[]);
     /*!
      * @brief Resets the initial conditions to the phase set in 
      *        setInitialConditions.  If setInitialConditions was not
@@ -140,7 +140,7 @@ public:
     /*! 
      * @brief Clears the module and resets all parameters.
      */
-    void clear();
+    void clear() noexcept;
 private:
     class DownsampleImpl;
     std::unique_ptr<DownsampleImpl> pDownsample_; 

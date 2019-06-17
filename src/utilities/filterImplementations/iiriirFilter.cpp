@@ -12,7 +12,7 @@ class IIRIIRFilter::IIRIIRImpl
 {
 public:
     /// Default constructor
-    IIRIIRImpl(void)
+    IIRIIRImpl()
     {
         return;
     }
@@ -23,7 +23,7 @@ public:
         return;
     }
     /// Destructor
-    ~IIRIIRImpl(void)
+    ~IIRIIRImpl()
     {
         clear();
         return;
@@ -211,7 +211,7 @@ public:
     /// Resets the initial conditions to those set in setInitialConditions.
     /// Note, the filter final coefficients are never extracted so the
     /// original filter initial conditions are already set.
-    int resetInitialConditions(void)
+    int resetInitialConditions()
     {
         return 0;
     }
@@ -372,7 +372,7 @@ IIRIIRFilter::~IIRIIRFilter(void)
     return;
 }
 
-void IIRIIRFilter::clear(void)
+void IIRIIRFilter::clear() noexcept
 {
     pIIRIIR_->clear();
     return;
@@ -420,13 +420,13 @@ int IIRIIRFilter::setInitialConditions(const int nz, const double zi[])
     return 0;
 }
 
-bool IIRIIRFilter::isInitialized(void) const
+bool IIRIIRFilter::isInitialized() const noexcept
 {
     bool linit = pIIRIIR_->isInitialized();
     return linit;
 }
 
-int IIRIIRFilter::apply(const int n, const double x[], double y[])
+int IIRIIRFilter::apply(const int n, const double x[], double *yIn[])
 {
     if (n <= 0){return 0;}
     if (!pIIRIIR_->isInitialized())
@@ -434,6 +434,7 @@ int IIRIIRFilter::apply(const int n, const double x[], double y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
@@ -449,7 +450,7 @@ int IIRIIRFilter::apply(const int n, const double x[], double y[])
     return 0;
 }
 
-int IIRIIRFilter::apply(const int n, const float x[], float y[])
+int IIRIIRFilter::apply(const int n, const float x[], float *yIn[])
 {
     if (n <= 0){return 0;} 
     if (!pIIRIIR_->isInitialized())
@@ -457,6 +458,7 @@ int IIRIIRFilter::apply(const int n, const float x[], float y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1; 
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
@@ -472,7 +474,7 @@ int IIRIIRFilter::apply(const int n, const float x[], float y[])
     return 0;
 }
 
-int IIRIIRFilter::resetInitialConditions(void)
+int IIRIIRFilter::resetInitialConditions()
 {
     if (!pIIRIIR_->isInitialized())
     {
@@ -482,7 +484,7 @@ int IIRIIRFilter::resetInitialConditions(void)
     return 0;
 }
 
-int IIRIIRFilter::getInitialConditionLength(void) const
+int IIRIIRFilter::getInitialConditionLength() const
 {
     if (!pIIRIIR_->isInitialized())
     {
@@ -493,7 +495,7 @@ int IIRIIRFilter::getInitialConditionLength(void) const
     return len;
 }
 
-int IIRIIRFilter::getFilterOrder(void) const
+int IIRIIRFilter::getFilterOrder() const
 {
     if (!pIIRIIR_->isInitialized())
     {

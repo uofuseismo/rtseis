@@ -213,16 +213,16 @@ void FIREnvelope::transform(const int n, const double x[], double y[])
         {
             double *yPadr = xPad;
             double *yPadi = ippsMalloc_64f(npad);
-            pImpl->mImagFIRFilter.apply(npad, xPad, yPadi); 
+            pImpl->mImagFIRFilter.apply(npad, xPad, &yPadi); 
             ippsMagnitude_64f(yPadr, &yPadi[groupDelay], y, n);
             ippsFree(yPadi);
         }
         else
         {
             double *yPadr = ippsMalloc_64f(npad);
-            pImpl->mRealFIRFilter.apply(npad, xPad, yPadr);
+            pImpl->mRealFIRFilter.apply(npad, xPad, &yPadr);
             double *yPadi = ippsMalloc_64f(npad);
-            pImpl->mImagFIRFilter.apply(npad, xPad, yPadi);
+            pImpl->mImagFIRFilter.apply(npad, xPad, &yPadi);
             ippsMagnitude_64f(&yPadr[groupDelay], &yPadi[groupDelay], y, n);
             ippsFree(yPadr);
             ippsFree(yPadi);
@@ -240,8 +240,10 @@ void FIREnvelope::transform(const int n, const double x[], double y[])
         for (auto ic=0; ic<n; ic=ic+chunkSize)
         {
             auto npfilt = std::min(n - ic, chunkSize);
-            pImpl->mRealFIRFilter.apply(npfilt, &x[ic], yrTemp.data());
-            pImpl->mImagFIRFilter.apply(npfilt, &x[ic], yiTemp.data());
+            auto yrTempDataPtr = yrTemp.data();
+            auto yiTempDataPtr = yiTemp.data();
+            pImpl->mRealFIRFilter.apply(npfilt, &x[ic], &yrTempDataPtr); //yrTemp.data());
+            pImpl->mImagFIRFilter.apply(npfilt, &x[ic], &yiTempDataPtr); //yiTemp.data());
             ippsMagnitude_64f(yrTemp.data(), yiTemp.data(), &y[ic], npfilt);
         }
     }

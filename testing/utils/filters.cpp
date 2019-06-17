@@ -192,7 +192,7 @@ int filters_iirFilter_test(const int npts, const double x[],
     double *y1 = new double[npts];
     double *y2 = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = iir.apply(npts, x, y1);
+    ierr = iir.apply(npts, x, &y1);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to filter signal");
@@ -216,7 +216,7 @@ int filters_iirFilter_test(const int npts, const double x[],
     std::copy(y1, y1+npts, yref);
     // Repeat for slow
     timeStart = std::chrono::high_resolution_clock::now();
-    ierr = iir_slow.apply(npts, x, y2);
+    ierr = iir_slow.apply(npts, x, &y2);
     timeEnd = std::chrono::high_resolution_clock::now();
     error = 0; 
     for (int i=0; i<npts; i++) 
@@ -246,7 +246,7 @@ int filters_iirFilter_test(const int npts, const double x[],
         return EXIT_FAILURE;
     }
     timeStart = std::chrono::high_resolution_clock::now();
-    ierr = iir2.apply(npts, x, y2);
+    ierr = iir2.apply(npts, x, &y2);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to filter signal");
@@ -290,7 +290,8 @@ int filters_iirFilter_test(const int npts, const double x[],
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = iir.apply(nptsPass, &x[nxloc], &y1[nxloc]);
+                double *y1Temp = &y1[nxloc];
+                ierr = iir.apply(nptsPass, &x[nxloc], &y1Temp);//[nxloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply iir filter");
@@ -344,7 +345,8 @@ int filters_iirFilter_test(const int npts, const double x[],
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25); 
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = iir.apply(nptsPass, &x[nxloc], &y1[nxloc]);
+                double *y1Temp = &y1[nxloc];
+                ierr = iir.apply(nptsPass, &x[nxloc], &y1Temp); //y1[nxloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply iir filter");
@@ -431,7 +433,7 @@ int filters_iiriirFilter_test(const int npts, const double x[],
     }
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = iiriir.apply(npts, x, y); 
+    ierr = iiriir.apply(npts, x, &y); 
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply zero-phase IIR filter");
@@ -497,7 +499,7 @@ int filters_iiriirFilter_test(const int npts, const double x[],
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
         return EXIT_FAILURE;
     }
-    ierr = iiriir.apply(LEN, xi, yi);
+    ierr = iiriir.apply(LEN, xi, &yi);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
@@ -587,7 +589,7 @@ int filters_firMRFilter_test(const int npts, const double x[],
     double *y = new double[npts];
     int ny;
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = firmr.apply(npts, x, npts, &ny, y);
+    ierr = firmr.apply(npts, x, npts, &ny, &y);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
@@ -638,7 +640,8 @@ int filters_firMRFilter_test(const int npts, const double x[],
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 int nwork = npts+1-nyloc;
                 int nyDec = 0;
-                ierr = firmr.apply(nptsPass, &x[nxloc], nwork, &nyDec, &y[nyloc]);
+                double *yptr = &y[nyloc];
+                ierr = firmr.apply(nptsPass, &x[nxloc], nwork, &nyDec, &yptr); //&y[nyloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply firmr filter");
@@ -736,7 +739,7 @@ int filters_firFilter_test(const int npts, const double x[],
     }
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = fir.apply(npts, x, y);
+    ierr = fir.apply(npts, x, &y);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply FIR filter");
@@ -785,7 +788,8 @@ int filters_firFilter_test(const int npts, const double x[],
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = fir.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                double *yptr = &y[nxloc];
+                ierr = fir.apply(nptsPass, &x[nxloc], &yptr);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply fir filter");
@@ -869,7 +873,7 @@ int filters_sosFilter_test(const int npts, const double x[],
         RTSEIS_ERRMSG("%s", "Failed to initialize sos");
         return EXIT_FAILURE;
     }
-    ierr = sos.apply(40, impulse, y40);
+    ierr = sos.apply(40, impulse, &y40);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
@@ -913,7 +917,7 @@ int filters_sosFilter_test(const int npts, const double x[],
     } 
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = sos.apply(npts, x, y);
+    ierr = sos.apply(npts, x, &y);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute post-processing soln");
@@ -961,7 +965,8 @@ int filters_sosFilter_test(const int npts, const double x[],
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = sos.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                double *yptr = &y[nxloc];
+                ierr = sos.apply(nptsPass, &x[nxloc], &yptr); //&y[nxloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply sos filter");
@@ -1169,7 +1174,7 @@ int filters_downsample_test(const int npts, const double x[])
         int ny;
         try
         {
-            downsample.apply(npts, x, npts, &ny, y);
+            downsample.apply(npts, x, npts, &ny, &y);
         }
         catch (const std::exception &e)
         {
@@ -1226,8 +1231,9 @@ int filters_downsample_test(const int npts, const double x[])
                 int nyDec = 0;
                 try
                 {
+                    double *yptr = &y[nyloc];
                     downsample.apply(nptsPass, &x[nxloc],
-                                     npts+1-nyloc, &nyDec, &y[nyloc]);
+                                     npts+1-nyloc, &nyDec, &yptr);//y[nyloc]);
                 }
                 catch (const std::exception &e)
                 {
@@ -1274,8 +1280,9 @@ int filters_downsample_test(const int npts, const double x[])
             int nyDec = 0;
             try
             {
+                double *yptr = &y[nyloc];
                 downsample.apply(nptsPass, &x[nxloc],
-                                 npts+1-nyloc, &nyDec, &y[nyloc]);
+                                 npts+1-nyloc, &nyDec, &yptr);//[nyloc]);
             }
             catch (const std::exception &e)
             {

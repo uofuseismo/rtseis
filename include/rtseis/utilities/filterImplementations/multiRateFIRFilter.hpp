@@ -30,7 +30,7 @@ public:
      * @brief Default constructor.  Note, this class is not yet
      *        inititalized and cannot be used.
      */
-    MultiRateFIRFilter(void);
+    MultiRateFIRFilter();
     /*!
      * @brief Copy constructor.
      * @param[in] firmr  Multi-rate filter class from which to 
@@ -56,7 +56,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~MultiRateFIRFilter(void);
+    ~MultiRateFIRFilter();
     /*! @} */
 
     /*!
@@ -105,13 +105,13 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial conditions array.
      * @result On successful exit this is the length of the initial
      *         conditions array.  On failure this is negative.
      */
-    int getInitialConditionLength(void) const;
+    int getInitialConditionLength() const;
     /*!
      * @brief Applies the zero-phase IIR filter to the data.  Note,
      *        the class must be initialized prior to using this
@@ -158,23 +158,23 @@ public:
      * @result 0 indicates success.
      */
     int apply(const int n, const double x[],
-              const int nywork, int *ny, double y[]);
+              const int nywork, int *ny, double *y[]);
     /*! @copydoc apply */
     int apply(const int n, const float x[],
-              const int nywork, int *ny, float y[]);
+              const int nywork, int *ny, float *y[]);
 
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().
      * @result 0 indicates success.
      */
-    int resetInitialConditions(void);
+    int resetInitialConditions();
     /*!
      * @brief Clears memory and resets the filter.  After applying
      *        this function the filter must be re-initialized prior
      *        to being applied to the data.
      */
-    void clear(void);
+    void clear() noexcept;
 private:
     class MultiRateFIRImpl;
     std::unique_ptr<MultiRateFIRImpl> pFIR_;

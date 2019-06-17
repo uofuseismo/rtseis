@@ -110,9 +110,9 @@ public:
      * @param[in] x   Signal to filter.  This has dimension [n].
      * @param[out] y  The filtered signal.  This has dimension [n].
      */
-    int apply(const int n, const double x[], double y[]);
+    int apply(const int n, const double x[], double *y[]);
     /*! @copydoc apply */
-    int apply(const int n, const float x[], float y[]);
+    int apply(const int n, const float x[], float *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions

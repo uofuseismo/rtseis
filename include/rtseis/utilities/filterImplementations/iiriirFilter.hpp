@@ -26,7 +26,7 @@ public:
      * @brief Default constructor.  Note, this class is not yet 
      *        initialized and cannot be used.
      */
-    IIRIIRFilter(void);
+    IIRIIRFilter();
     /*! 
      * @brief A copy constructor.
      * @param[in] iiriir  The IIRIIRFilter class to initialize from.
@@ -43,7 +43,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~IIRIIRFilter(void);
+    ~IIRIIRFilter();
     /*!
      * @brief Initializes the zero-phase IIR filter.
      * @param[in] nb   The number of numerator coefficients.  This must
@@ -66,13 +66,13 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial conditions array.
      * @result On successful exit this is the length of the initial
      *         conditions array.  On failure this is negative.
      */
-    int getInitialConditionLength(void) const;
+    int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions.
      * @param[in] nz   The length of the initial conditions.  This
@@ -91,7 +91,7 @@ public:
      *                dimension [n].
      * @result 0 indicates success.
      */
-    int apply(const int n, const double x[], double y[]);
+    int apply(const int n, const double x[], double *y[]);
     /*!
      * @brief Applies the zero-phase IIR filter to the data.  Note,
      *        the class must be initialized prior to using this function.
@@ -101,7 +101,7 @@ public:
      *                dimension [n].
      * @result 0 indicates success.
      */
-    int apply(const int n, const float x[], float y[]); 
+    int apply(const int n, const float x[], float *y[]); 
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().  Note, this will not do anything
@@ -109,18 +109,18 @@ public:
      *        IIR filter.
      * @result 0 indicates success.
      */
-    int resetInitialConditions(void); 
+    int resetInitialConditions(); 
     /*!
      * @brief Clears memory and resets the filter.  After applying
      *        this function the filter must be re-initialized prior
      *        to being applied to the data.
      */
-    void clear(void);
+    void clear() noexcept;
     /*!
      * @brief Utilility function to get the filter order.
      * @result The filter order.
      */
-    int getFilterOrder(void) const;
+    int getFilterOrder() const;
 private:
     class IIRIIRImpl;
     std::unique_ptr<IIRIIRImpl> pIIRIIR_;

@@ -374,7 +374,7 @@ SOSFilter::SOSFilter() :
 
 SOSFilter::~SOSFilter() = default;
 
-void SOSFilter::clear()
+void SOSFilter::clear() noexcept
 {
     pSOS_->clear();
 }
@@ -478,7 +478,7 @@ int SOSFilter::resetInitialConditions()
     return 0;
 }
 
-int SOSFilter::apply(const int n, const double x[], double y[]) 
+int SOSFilter::apply(const int n, const double x[], double *yIn[]) 
 {
     if (n <= 0){return 0;}
     if (!isInitialized())
@@ -486,6 +486,7 @@ int SOSFilter::apply(const int n, const double x[], double y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
@@ -501,7 +502,7 @@ int SOSFilter::apply(const int n, const double x[], double y[])
     return 0;
 }
 
-int SOSFilter::apply(const int n, const float x[], float y[])
+int SOSFilter::apply(const int n, const float x[], float *yIn[])
 {
     if (n <= 0){return 0;}
     if (!isInitialized())
@@ -509,6 +510,7 @@ int SOSFilter::apply(const int n, const float x[], float y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
@@ -544,7 +546,7 @@ int SOSFilter::getNumberOfSections() const
     return pSOS_->getNumberOfSections();
 }
 
-bool SOSFilter::isInitialized() const
+bool SOSFilter::isInitialized() const noexcept
 {
     return pSOS_->isInitialized();
 }

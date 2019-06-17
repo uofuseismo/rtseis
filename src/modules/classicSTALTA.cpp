@@ -233,14 +233,14 @@ class ClassicSTALTA::ClassicSTALTAImpl
                 // Compute the squared signal
                 ippsSqr_64f(&x[i], x264f_, nloc);
                 // Compute the numerator average 
-                int ierr = firNum_.apply(nloc, x264f_, ynum64f_);
+                int ierr = firNum_.apply(nloc, x264f_, &ynum64f_);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to filter numerator");
                     return -1;
                 }
                 // Compute the denominator average
-                ierr = firDen_.apply(nloc, x264f_, yden64f_);
+                ierr = firDen_.apply(nloc, x264f_, &yden64f_);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to filter denominator");
@@ -286,14 +286,14 @@ class ClassicSTALTA::ClassicSTALTAImpl
                 // Compute the squared signal
                 ippsSqr_32f(&x[i], x232f_, nloc);
                 // Compute the numerator average 
-                int ierr = firNum_.apply(nloc, x232f_, ynum32f_);
+                int ierr = firNum_.apply(nloc, x232f_, &ynum32f_);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to filter numerator");
                     return -1;
                 }
                 // Compute the denominator average
-                ierr = firDen_.apply(nloc, x232f_, yden32f_);
+                ierr = firDen_.apply(nloc, x232f_, &yden32f_);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to filter denominator");

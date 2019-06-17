@@ -73,7 +73,7 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Returns the length of the initial conditions.
      * @result The length of the initial condtions array.
@@ -100,9 +100,9 @@ public:
      * @param[in] x   The signal to filter.  This has dimension [n].
      * @param[out] y  The filtered signal.  This has dimension [n].
      */
-    int apply(const int n, const double x[], double y[]);
+    int apply(const int n, const double x[], double *y[]);
     /*! @copydoc apply */
-    int apply(const int n, const float x[], float y[]);
+    int apply(const int n, const float x[], float *y[]);
     /*! @} */
 
     /*!
@@ -116,7 +116,7 @@ public:
      * @brief Clears the module and resets all parameters.
      */
 
-    void clear();
+    void clear() noexcept;
     /*!
      * @brief Gets the number of second order sections in the filter.
      * @result On successful exit this will be a positive number that

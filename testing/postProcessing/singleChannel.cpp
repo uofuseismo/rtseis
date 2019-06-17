@@ -187,7 +187,8 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     sosFilt.initialize(ns, bs.data(), as.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    sosFilt.apply(npts, x.data(), ysosRef.data());
+    double *yptr = ysosRef.data();
+    sosFilt.apply(npts, x.data(), &yptr);
     sosFilt.clear();
     // SOS filter
 //! [ppSCSOSLowpassExample]
@@ -234,9 +235,11 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     sosFilt.initialize(ns, bs.data(), as.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    sosFilt.apply(npts, x.data(), ytemp.data());
+    yptr = ytemp.data();
+    sosFilt.apply(npts, x.data(), &yptr);
     std::reverse(ytemp.begin(), ytemp.end());
-    sosFilt.apply(npts, ytemp.data(), ysosRef.data());
+    yptr = ysosRef.data();
+    sosFilt.apply(npts, ytemp.data(), &yptr); //ysosRef.data());
     std::reverse(ysosRef.begin(), ysosRef.end());
     sosFilt.clear();
     // Hammer on the filter designer
@@ -283,9 +286,11 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     sosFilt.initialize(ns, bs.data(), as.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    sosFilt.apply(npts, x.data(), ytemp.data());
+    yptr = ytemp.data();
+    sosFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     std::reverse(ytemp.begin(), ytemp.end());
-    sosFilt.apply(npts, ytemp.data(), ysosRef.data());
+    yptr = ysosRef.data();
+    sosFilt.apply(npts, ytemp.data(), &yptr); //ysosRef.data());
     std::reverse(ysosRef.begin(), ysosRef.end());
     sosFilt.clear();
     for (int j=0; j<1; j++)
@@ -331,7 +336,8 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     sosFilt.initialize(ns, bs.data(), as.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    sosFilt.apply(npts, x.data(), ysosRef.data());
+    yptr = ysosRef.data();
+    sosFilt.apply(npts, x.data(), &yptr); //ysosRef.data());
     sosFilt.clear();
     for (int j=0; j<1; j++)
     {
@@ -395,7 +401,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     iirFilt.initialize(nb, b.data(), na, a.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    iirFilt.apply(npts, x.data(), yiirRef.data());
+    double *yptr = yiirRef.data();
+    iirFilt.apply(npts, x.data(), &yptr); //yiirRef.data());
     iirFilt.clear();
     // IIR filter
 //! [ppSCIIRLowpassExample]
@@ -442,7 +449,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     std::vector<double> ytemp(npts);
     iiriirFilt.initialize(nb, b.data(), na, a.data(),
                           RTSeis::Precision::DOUBLE);
-    iiriirFilt.apply(npts, x.data(), ytemp.data());
+    yptr = ytemp.data();
+    iiriirFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     iiriirFilt.clear();
     // Hammer on the filter designer
     for (int j=0; j<5; j++)
@@ -488,7 +496,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     na = static_cast<int> (a.size());
     iiriirFilt.initialize(nb, b.data(), na, a.data(),
                           RTSeis::Precision::DOUBLE);
-    iiriirFilt.apply(npts, x.data(), ytemp.data());
+    yptr = ytemp.data();
+    iiriirFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     iiriirFilt.clear();
     for (int j=0; j<1; j++)
     {
@@ -534,7 +543,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     iirFilt.initialize(nb, b.data(), na, a.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    iirFilt.apply(npts, x.data(), ytemp.data());
+    yptr = ytemp.data();
+    iirFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     iirFilt.clear();
     for (int j=0; j<1; j++)
     {
@@ -593,7 +603,8 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     firFilt.initialize(ntaps, b.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    firFilt.apply(npts, x.data(), yfirRef.data());
+    double *yptr = yfirRef.data();
+    firFilt.apply(npts, x.data(), &yptr); //yfirRef.data());
     firFilt.clear();
     // FIR filter
 //! [ppSCFIRLowpassExample]
@@ -640,7 +651,8 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     firFilt.initialize(ntaps, b.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    firFilt.apply(npts+nextra, xpad.data(), ytemp.data());
+    yptr = ytemp.data();
+    firFilt.apply(npts+nextra, xpad.data(), &yptr);
     firFilt.clear();
     // Hammer on the filter designer
     for (int j=0; j<5; j++)
@@ -688,7 +700,8 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     xpad = x; 
     xpad.resize(x.size()+nextra, 0);
     ytemp.resize(xpad.size());
-    firFilt.apply(npts+nextra, xpad.data(), ytemp.data());
+    yptr = ytemp.data();
+    firFilt.apply(npts+nextra, xpad.data(), &yptr);
     firFilt.clear();
     // Hammer on the filter designer
     for (int j=0; j<5; j++) 
@@ -733,7 +746,8 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     firFilt.initialize(ntaps, b.data(),
                        RTSeis::ProcessingMode::POST_PROCESSING,
                        RTSeis::Precision::DOUBLE);
-    firFilt.apply(npts, x.data(), ytemp.data());
+    yptr = ytemp.data();
+    firFilt.apply(npts, x.data(), &yptr);
     firFilt.clear();
     // Hammer on the filter designer
     for (int j=0; j<5; j++) 

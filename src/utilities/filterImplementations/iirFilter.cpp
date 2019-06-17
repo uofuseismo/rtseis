@@ -301,7 +301,7 @@ class IIRFilter::IIRFilterImpl
             return 0;
         }
         /// Determines if the filter is initialized
-        bool isInitialized(void) const
+        bool isInitialized() const noexcept
         {
             return linit_;
         }
@@ -607,7 +607,7 @@ IIRFilter::~IIRFilter(void)
     return;
 }
 
-void IIRFilter::clear(void)
+void IIRFilter::clear() noexcept
 {
     pIIR_->clear();
     return;
@@ -643,7 +643,7 @@ int IIRFilter::initialize(const int nb, const double b[],
     return 0;
 }
 
-int IIRFilter::getInitialConditionLength(void) const
+int IIRFilter::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -687,7 +687,7 @@ int IIRFilter::resetInitialConditions(void)
     return 0;
 }
 
-int IIRFilter::apply(const int n, const float x[], float y[])
+int IIRFilter::apply(const int n, const float x[], float *yIn[])
 {
     if (n <= 0){return 0;} // Nothing to do
     if (!isInitialized())
@@ -695,6 +695,7 @@ int IIRFilter::apply(const int n, const float x[], float y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
@@ -709,7 +710,7 @@ int IIRFilter::apply(const int n, const float x[], float y[])
     return 0;
 }
 
-int IIRFilter::apply(const int n, const double x[], double y[])
+int IIRFilter::apply(const int n, const double x[], double *yIn[])
 {
     if (n <= 0){return 0;} // Nothing to do
     if (!isInitialized())
@@ -717,6 +718,7 @@ int IIRFilter::apply(const int n, const double x[], double y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1;
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
@@ -731,7 +733,7 @@ int IIRFilter::apply(const int n, const double x[], double y[])
     return 0;
 }
 
-bool IIRFilter::isInitialized(void) const
+bool IIRFilter::isInitialized() const noexcept
 {
     int len = pIIR_->isInitialized();
     return len;

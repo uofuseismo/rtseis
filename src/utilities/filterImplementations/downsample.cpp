@@ -222,7 +222,7 @@ void Downsample::initialize(const int downFactor,
     pDownsample_->initialize(downFactor, mode, precision);
 }
 
-void Downsample::clear()
+void Downsample::clear() noexcept
 {
     if (pDownsample_){pDownsample_->clear();}
 }
@@ -248,7 +248,7 @@ void Downsample::resetInitialConditions()
 }
 
 void Downsample::apply(const int nx, const double x[], const int ny,
-                       int *nyDown, double y[])
+                       int *nyDown, double *yIn[])
 {
     *nyDown = 0;
     if (nx <= 0){return;} // Nothing to do
@@ -256,6 +256,7 @@ void Downsample::apply(const int nx, const double x[], const int ny,
     {
         RTSEIS_THROW_RTE("%s", "Downsampler not intitialized");
     }
+    double *y = *yIn;
     int pDstLen = pDownsample_->estimateSpace(nx); 
 #ifdef DEBUG
     assert(pDstLen >= 0);
@@ -280,7 +281,7 @@ void Downsample::apply(const int nx, const double x[], const int ny,
 }
 
 void Downsample::apply(const int nx, const float x[], const int ny, 
-                       int *nyDown, float y[])
+                       int *nyDown, float *yIn[])
 {
     *nyDown = 0;
     if (nx <= 0){return;} // Nothing to do
@@ -288,6 +289,7 @@ void Downsample::apply(const int nx, const float x[], const int ny,
     {
         RTSEIS_THROW_RTE("%s", "Downsampler not intitialized");
     }
+    float *y = *yIn;
     int pDstLen = estimateSpace(nx); 
 #ifdef DEBUG
     assert(pDstLen >= 0);

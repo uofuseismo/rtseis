@@ -26,7 +26,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    IIRFilter(void);
+    IIRFilter();
     /*!
      * @brief Copy constructor.
      * @param[in] iir  IIR filter class from which to initialize this class.
@@ -51,7 +51,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~IIRFilter(void);
+    ~IIRFilter();
     /*! @} */
 
     /*!
@@ -79,13 +79,13 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized(void) const;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial conditions array.
      * @result On successful exit this is the length of the initial
      *         conditions array.  On failure this is negative.
      */
-    int getInitialConditionLength(void) const;
+    int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions for the filter.  This should
      *        be called prior to filter application as it will reset
@@ -105,9 +105,9 @@ public:
      * @param[out] y  The filtered signal.  This has dimension [n].
      * @result 0 indicates success.
      */
-    int apply(const int n, const double x[], double y[]);
+    int apply(const int n, const double x[], double *y[]);
     /*! @copydoc apply() */
-    int apply(const int n, const float x[], float y[]);
+    int apply(const int n, const float x[], float *y[]);
     /*!
      * @brief Resets the initial conditions to those set in
      *        \c setInitialConditions().
@@ -119,7 +119,7 @@ public:
      *        this function the filter must be re-initialized prior
      *        to being applied to the data.
      */
-    void clear(void);
+    void clear() noexcept;
 private:
     class IIRFilterImpl;
     std::unique_ptr<IIRFilterImpl> pIIR_;

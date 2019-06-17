@@ -11,16 +11,16 @@ using namespace RTSeis::Utilities::Normalization;
 
 class SignBit::SignBitImpl
 {
-    public:
-        SignBitImpl() = default;
-        ~SignBitImpl() = default;
-        SignBitImpl& operator=(const SignBitImpl &sb)
-        {
-            if (&sb == this){return *this;}
-            linit = sb.linit;
-            return *this;
-        }
-        bool linit = false;
+public:
+    SignBitImpl() = default;
+    ~SignBitImpl() = default;
+    SignBitImpl& operator=(const SignBitImpl &sb)
+    {
+        if (&sb == this){return *this;}
+        linit = sb.linit;
+        return *this;
+    }
+    bool linit = false;
 };
 
 
