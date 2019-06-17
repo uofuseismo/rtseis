@@ -76,8 +76,9 @@ public:
      *         filter length is too small.
      * @note This will design an Hamming window-based filter whose cutoff
      *       frequency is 1/downFactor.  Additionally, when post-processing
-     *       and removing the phase shift, the algorithm may increase
-     *       the filter length.
+     *       and removing the phase shift, the algorithm will increase
+     *       the filter length so that it's group delay + 1 is evenly
+     *       divisible by the downsampling factor.
      */
     void initialize(const int downFactor,
                     const int filterLength = 30,

@@ -71,7 +71,7 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const;
+    bool isInitialized() const noexcept;
     /*!
      * @brief Utility routine to determine the initial condition length.
      * @retval A non-negative number is the length of the initial
@@ -102,9 +102,9 @@ public:
      * @param[out] y  The filtered signal.  This has dimension [n].
      * @result 0 indicates success.
      */
-    int apply(const int n, const double x[], double y[]);
+    int apply(const int n, const double x[], double *y[]);
     /*! @copydoc apply */
-    int apply(const int n, const float x[], float y[]);
+    int apply(const int n, const float x[], float *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions
@@ -115,7 +115,7 @@ public:
     /*! 
      * @brief Clears the module and resets all parameters.
      */
-    void clear();
+    void clear() noexcept;
  private:
     class MedianFilterImpl;
     std::unique_ptr<MedianFilterImpl> pMedian_;

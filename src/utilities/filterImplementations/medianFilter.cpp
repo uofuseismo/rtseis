@@ -326,7 +326,7 @@ MedianFilter& MedianFilter::operator=(const MedianFilter &median)
 MedianFilter::~MedianFilter() = default;
 
 
-void MedianFilter::clear()
+void MedianFilter::clear() noexcept
 {
     pMedian_->clear();
 }
@@ -388,7 +388,7 @@ int MedianFilter::resetInitialConditions()
     return 0;
 }
 
-bool MedianFilter::isInitialized() const
+bool MedianFilter::isInitialized() const noexcept
 {
     bool linit = pMedian_->isInitialized();
     return linit;
@@ -405,7 +405,7 @@ int MedianFilter::getInitialConditionLength() const
     return len;
 }
 
-int MedianFilter::apply(const int n, const double x[], double y[])
+int MedianFilter::apply(const int n, const double x[], double *yIn[])
 {
     if (n <= 0){return 0;} // Nothing to do
     if (!pMedian_->isInitialized())
@@ -413,6 +413,7 @@ int MedianFilter::apply(const int n, const double x[], double y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1; 
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         RTSEIS_ERRMSG("%s", "x is NULL");
@@ -427,7 +428,7 @@ int MedianFilter::apply(const int n, const double x[], double y[])
     return 0;
 }
 
-int MedianFilter::apply(const int n, const float x[], float y[])
+int MedianFilter::apply(const int n, const float x[], float *yIn[])
 {
     if (n <= 0){return 0;} // Nothing to do
     if (!pMedian_->isInitialized())
@@ -435,6 +436,7 @@ int MedianFilter::apply(const int n, const float x[], float y[])
         RTSEIS_ERRMSG("%s", "Class not initialized");
         return -1; 
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         RTSEIS_ERRMSG("%s", "x is NULL");

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <complex>
 #include <vector>
+#include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
@@ -18,7 +19,7 @@
 #include "rtseis/utilities/filterImplementations/enums.hpp"
 #include "rtseis/log.h"
 #include "utils.hpp"
-#include <ipps.h>
+//#include <gtest/gtest.h>
 
 using namespace RTSeis::Utilities::FilterImplementations;
 static int readTextFile(int *npts, double *xPtr[],
@@ -1023,7 +1024,8 @@ int filters_medianFilter_test(const int npts, const double x[],
         RTSEIS_ERRMSG("%s", "Failed to initialize filter");
         return EXIT_FAILURE;
     }
-    ierr = median.apply(8, xin, y8); 
+    double *yptr = &y8[0];
+    ierr = median.apply(8, xin, &yptr);//y8); 
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply filter");
@@ -1040,7 +1042,8 @@ int filters_medianFilter_test(const int npts, const double x[],
     ierr = median.initialize(5,
                              RTSeis::ProcessingMode::POST_PROCESSING,
                              RTSeis::Precision::DOUBLE);
-    ierr = median.apply(8, xin, y8);
+    yptr = &y8[0];
+    ierr = median.apply(8, xin, &yptr);
     for (int i=2; i<8-2; i++)
     {
         if (std::abs(y8[i+2] - yref5[i]) > 1.e-14)
@@ -1063,7 +1066,7 @@ int filters_medianFilter_test(const int npts, const double x[],
                       RTSeis::Precision::DOUBLE);
     auto timeStart = std::chrono::high_resolution_clock::now();
     double *y = new double[npts];
-    ierr = median.apply(npts, x, y);
+    ierr = median.apply(npts, x, &y);
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to compute reference solution");
@@ -1104,7 +1107,8 @@ int filters_medianFilter_test(const int npts, const double x[],
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);  
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                ierr = medianrt.apply(nptsPass, &x[nxloc], &y[nxloc]);
+                double *yptr = &y[nxloc];
+                ierr = medianrt.apply(nptsPass, &x[nxloc], &yptr); //[nxloc]);
                 if (ierr != 0)
                 {
                     RTSEIS_ERRMSG("%s", "Failed to apply median filter");
