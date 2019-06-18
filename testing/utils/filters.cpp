@@ -320,12 +320,16 @@ TEST(UtilitiesFilterImplementations, iir)
     delete[] y2;
     free(x);
 }
-/*
 //============================================================================//
-int filters_iiriirFilter_test(const int npts, const double x[],
-                              const std::string fileName)
+//int filters_iiriirFilter_test(const int npts, const double x[],
+//                              const std::string fileName)
+TEST(UtilitiesFilterImplementations, iiriir)
 {
-    fprintf(stdout, "Testing IIRIIR filter...\n");
+    double *x = NULL;
+    int npts;
+    auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
+    EXPECT_EQ(ierr, 0);
+    const std::string fileName = "data/iiriirReference.txt";
     // Hardwire a bandpass butterworth filter
     const int na = 9;
     const int nb = 9;
@@ -350,49 +354,21 @@ int filters_iiriirFilter_test(const int npts, const double x[],
     // Load a reference solution
     double *yref = nullptr;
     int npref = 0;
-    int ierr = readTextFile(&npref, &yref, fileName);
-    if (ierr != 0 || npts != npref)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to load reference data");
-        return EXIT_FAILURE;
-    } 
+    ierr = readTextFile(&npref, &yref, fileName);
+    EXPECT_EQ(ierr, 0);
+    EXPECT_EQ(npts, npref);
     // Compute the zero-phase IIR filter alternative
     IIRIIRFilter iiriir;
-    //EXPECT_NO_THROW(
-    ierr = iiriir.initialize(nb, b, na, a, RTSeis::Precision::DOUBLE);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        return EXIT_FAILURE;
-    }
-    //)
+    EXPECT_NO_THROW(iiriir.initialize(nb, b, na, a,
+                                      RTSeis::Precision::DOUBLE));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    //EXPECT_NO_THROW(
-    ierr = iiriir.apply(npts, x, &y); 
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply zero-phase IIR filter");
-        return EXIT_FAILURE;
-    }
-    //)
+    EXPECT_NO_THROW(iiriir.apply(npts, x, &y));
     auto timeEnd = std::chrono::high_resolution_clock::now();
     double error = 0;
     ippsNormDiff_L2_64f(y, yref, npts, &error);
     error = error/static_cast<double> (npts);
-    //EXPECT_LE(error, 4.e-2);
-    error = 0;
-    for (int i=0; i<npts; i++)
-    {
-        error = error + std::pow(y[i] - yref[i], 2);
-    }
-    error = std::sqrt(error)/static_cast<double> (npts);
-    if (error > 4.e-2)
-    {
-        RTSEIS_ERRMSG("Failed to compute reference solution; error = %lf",
-                      error);
-        return EXIT_FAILURE;
-    }
+    EXPECT_LE(error, 4.e-2);
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
@@ -434,31 +410,11 @@ int filters_iiriirFilter_test(const int npts, const double x[],
     ippsIIRIIRInit_64f(&pStateIIRIIR, pTaps, ORDER, NULL, pBufIIRIIR );
     ippsIIRIIR_64f(xi, yiRef, LEN, pStateIIRIIR);
     // Repeat with RTSeis
-    //EXPECT_NO_THROW(
-    ierr = iiriir.initialize(ORDER+1, &pTaps[0], ORDER+1, &pTaps[ORDER+1]);
-    //)
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        return EXIT_FAILURE;
-    }
-    //EXPECT_NO_THROW(
-    ierr = iiriir.apply(LEN, xi, &yi);
-    //)
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return EXIT_FAILURE;
-    }
-    ippsNormDiff_Inf_64f(y, yiRef, LEN, &error);
-    //EXPECT_LE(error, 1.e-14);
-    for (int i=0; i<LEN; i++)
-    {
-        if (std::abs(yiRef[i] - yi[i]) > 1.e-14)
-        {
-            RTSEIS_ERRMSG("Failed ref test %lf %lf", yiRef[i], yi[i]);
-        }
-    }
+    EXPECT_NO_THROW(iiriir.initialize(ORDER+1, &pTaps[0],
+                                      ORDER+1, &pTaps[ORDER+1]));
+    EXPECT_NO_THROW(iiriir.apply(LEN, xi, &yi));
+    ippsNormDiff_Inf_64f(yi, yiRef, LEN, &error);
+    EXPECT_LE(error, 1.e-14);
     ippsFree(f1);
     ippsFree(f2);
     ippsFree(pTaps);
@@ -466,12 +422,11 @@ int filters_iiriirFilter_test(const int npts, const double x[],
     delete[] xi;
     delete[] yi;
     delete[] yiRef;
-    return EXIT_SUCCESS;
+    free(x);
 }
 //============================================================================//
-int filters_firMRFilter_test(const int npts, const double x[],
-                             const std::string fileName)
-*/
+//int filters_firMRFilter_test(const int npts, const double x[],
+//                             const std::string fileName)
 TEST(UtiltiesFilterImplementations, multirateFIR)
 {
     double *x = NULL;

@@ -56,11 +56,11 @@ public:
      *                 an array of dimension [na].
      * @param[in] precision  The precision of the filter.  By default
      *                       this is double precision.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    int initialize(const int nb, const double b[],
-                   const int na, const double a[],
-                   const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    void initialize(const int nb, const double b[],
+                    const int na, const double a[],
+                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -69,8 +69,8 @@ public:
     bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial conditions array.
-     * @result On successful exit this is the length of the initial
-     *         conditions array.  On failure this is negative.
+     * @result The length of the initial conditions array.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getInitialConditionLength() const;
     /*!
@@ -79,9 +79,11 @@ public:
      *                 should equal getInitialConditionLength().
      * @param[in] zi   The initial conditions to set.  This has
      *                 has dimension [nwork_]. 
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if nz is invalid or nz is positive
+     *         and zi is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(const int nz, const double zi[]);
     /*!
      * @brief Applies the zero-phase IIR filter to the data.  Note,
      *        the class must be initialized prior to using this function.
@@ -89,27 +91,22 @@ public:
      * @param[in] x   The signal to filter.  This has dimension [n].
      * @param[out] y  The zero-phase IIR filtered signal.  This has
      *                dimension [n].
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if n is positive and x or y is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int apply(const int n, const double x[], double *y[]);
+    void apply(const int n, const double x[], double *y[]);
     /*!
-     * @brief Applies the zero-phase IIR filter to the data.  Note,
-     *        the class must be initialized prior to using this function.
-     * @param[in] n   Number of points in signal.
-     * @param[in] x   The signal to filter.  This has dimension [n].
-     * @param[out] y  The zero-phase IIR filtered signal.  This has
-     *                dimension [n].
-     * @result 0 indicates success.
+     * @copydoc apply
      */
-    int apply(const int n, const float x[], float *y[]); 
+    void apply(const int n, const float x[], float *y[]); 
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().  Note, this will not do anything
      *        as the final conditions are never extracted from the
      *        IIR filter.
-     * @result 0 indicates success.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int resetInitialConditions(); 
+    void resetInitialConditions(); 
     /*!
      * @brief Clears memory and resets the filter.  After applying
      *        this function the filter must be re-initialized prior
@@ -119,6 +116,7 @@ public:
     /*!
      * @brief Utilility function to get the filter order.
      * @result The filter order.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getFilterOrder() const;
 private:
