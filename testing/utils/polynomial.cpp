@@ -1,9 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
+#include <complex>
 #include <string>
+#include <vector>
 #include <ipps.h>
 #include "rtseis/utilities/math/polynomial.hpp"
-#include "rtseis/log.h"
 #include <gtest/gtest.h>
 
 namespace
