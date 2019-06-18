@@ -13,7 +13,6 @@
 #include <vector>
 #include <ipps.h>
 #include <fftw/fftw3.h>
-#define RTSEIS_LOGGING 1
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/dftRealToComplex.hpp"
 #include "rtseis/utilities/transforms/dft.hpp"
@@ -23,8 +22,6 @@
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
-#include "rtseis/log.h"
-#include "utils.hpp"
 #include <gtest/gtest.h>
 
 namespace
@@ -857,14 +854,14 @@ int fft(const int nx, const std::complex<double> *x,
 {
     if (nx < 1 || ny < 1)
     {
-        if (nx < 1){RTSEIS_ERRMSG("%s", "nx must be positive");}
-        if (ny < 1){RTSEIS_ERRMSG("%s", "ny must be positive");}
+        if (nx < 1){fprintf(stderr, "%s", "nx must be positive");}
+        if (ny < 1){fprintf(stderr, "%s", "ny must be positive");}
         return -1; 
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        if (x == nullptr){fprintf(stderr, "%s", "x is NULL");}
+        if (y == nullptr){fprintf(stderr, "%s", "y is NULL");}
         return -1; 
     }
     // Set space and make plan
@@ -905,14 +902,14 @@ int ifft(const int nx, const std::complex<double> *x,
 {
     if (nx < 1 || ny < 1)
     {
-        if (nx < 1){RTSEIS_ERRMSG("%s", "nx must be positive");}
-        if (ny < 1){RTSEIS_ERRMSG("%s", "ny must be positive");}
+        if (nx < 1){fprintf(stderr, "%s", "nx must be positive");}
+        if (ny < 1){fprintf(stderr, "%s", "ny must be positive");}
         return -1; 
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        if (x == nullptr){fprintf(stderr, "%s", "x is NULL");}
+        if (y == nullptr){fprintf(stderr, "%s", "y is NULL");}
         return -1; 
     }
     // Set space and make plan
@@ -959,14 +956,14 @@ int irfft(const int nx, const std::complex<double> x[],
 {
     if (n < 1 || nx < 1)
     {
-        if (n < 1){RTSEIS_ERRMSG("%s", "n must be positive");}
-        if (nx < 1){RTSEIS_ERRMSG("%s", "nx must be positive");}
+        if (n < 1){fprintf(stderr, "%s", "n must be positive");}
+        if (nx < 1){fprintf(stderr, "%s", "nx must be positive");}
         return -1; 
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        if (x == nullptr){fprtinf(stderr, "%s", "x is NULL");}
+        if (y == nullptr){fprintf(stderr, "%s", "y is NULL");}
         return -1;
     }
     int ntf = n/2 + 1;
@@ -1024,20 +1021,20 @@ int rfft(const int nx, double x[], const int n,
 {
     if (n < 1 || nx < 1)
     {
-        if (n < 1){RTSEIS_ERRMSG("%s", "n must be positive");}
-        if (nx < 1){RTSEIS_ERRMSG("%s", "nx must be positive");}
+        if (n < 1){fprintf(stderr, "%s", "n must be positive");}
+        if (nx < 1){fprintf(stderr, "%s", "nx must be positive");}
         return -1;
     }
     int ntf = n/2 + 1;
     if (ny < ntf)
     {
-        RTSEIS_ERRMSG("ny = %d must be at least %d", ny, ntf);
+        fprintf(stderr, "ny = %d must be at least %d", ny, ntf);
         return -1;
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        if (x == nullptr){fprintf(stderr, "%s", "x is NULL");}
+        fprintf(stderr, "%s", "y is NULL");
         return -1;
     }
     size_t nbytes = static_cast<size_t> (n)*sizeof(double);

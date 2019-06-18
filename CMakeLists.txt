@@ -153,16 +153,16 @@ target_link_libraries(rtseis
 #                                        Unit Tests                                     #
 #########################################################################################
 
-ADD_EXECUTABLE(testUtils
-               testing/utils/utils.cpp
+#ADD_EXECUTABLE(testUtils
+#               testing/utils/utils.cpp
                #testing/utils/polynomial.cpp
                #testing/utils/interpolate.cpp
                #testing/utils/iir.cpp
                #testing/utils/response.cpp
-               testing/utils/filters.cpp
+               #testing/utils/filters.cpp
                #testing/utils/transforms.cpp
                #testing/utils/normalization.cpp
-               )
+#               )
 ADD_EXECUTABLE(utilityTests
                testing/utils/main.cpp
                testing/utils/polynomial.cpp
@@ -172,6 +172,7 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/iirDesign.cpp
                testing/utils/firDesign.cpp
                testing/utils/convolve.cpp
+               testing/utils/filters.cpp
                testing/utils/transforms.cpp
                testing/utils/response.cpp)
 ADD_EXECUTABLE(testPPSC
@@ -180,10 +181,10 @@ ADD_EXECUTABLE(testPPSC
                #testing/modules/detrend.cpp
                #testing/modules/classicSTALTA.cpp)
 # The core library utilities - do these first
-target_link_libraries(testUtils
-                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
-target_include_directories(testUtils
-                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS} ${GTEST_INCLUDE_DIRS})
+#target_link_libraries(testUtils
+#                      PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY})
+#target_include_directories(testUtils
+#                           PRIVATE ${PRIVATE_INCLUDE_DEPENDS} ${GTEST_INCLUDE_DIRS})
 target_link_libraries(utilityTests
                       PRIVATE rtseis ${MKL_LIBRARY} ${IPP_LIBRARY} ${GTEST_BOTH_LIBRARIES})
 target_include_directories(utilityTests
@@ -195,9 +196,9 @@ target_link_libraries(testPPSC
 target_include_directories(testPPSC
                            PRIVATE ${PRIVATE_INCLUDE_DEPENDS} ${GTEST_INCLUDE_DIRS})
 
-add_test(NAME utils
-         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
-         COMMAND testUtils)
+#add_test(NAME utils
+#         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
+#         COMMAND testUtils)
 add_test(NAME utilities
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND utilityTests) 

@@ -3,10 +3,7 @@
 #include <string>
 #include <stdexcept>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
-#include "utils.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
-#include "rtseis/log.h"
 #include <gtest/gtest.h>
 
 namespace

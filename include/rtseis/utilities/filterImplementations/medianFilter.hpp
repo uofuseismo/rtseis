@@ -61,11 +61,11 @@ public:
      *                  is for post-processing.
      * @param[in] precision   The precision of the filter.  By default
      *                        this is double precision.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    int initialize(const int n,
-                   const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                   const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    void initialize(const int n,
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
+                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -74,15 +74,15 @@ public:
     bool isInitialized() const noexcept;
     /*!
      * @brief Utility routine to determine the initial condition length.
-     * @retval A non-negative number is the length of the initial
+     * @result A non-negative number is the length of the initial
      *         condition array.
-     * @retval -1 Indicates failure.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getInitialConditionLength() const;
     /*!
      * @brief Returns the group delay of the filter.  Note, that this
      *        shift is required to get a correspondence to Matlab.
-     * @result The group delay.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getGroupDelay() const;
     /*!
@@ -92,26 +92,29 @@ public:
      * @param[in] nz   The median filter initial conditions.  This
      *                 should be equal to getInitialConditionLength().
      * @param[in] zi   The initial conditions.  This has dimension [nz].
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if nz is invalid or nz is positive and
+     *         zi is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(const int nz, const double zi[]);
     /*!
      * @brief Appplies the median filter to the array x.
      * @param[in] n   Number of points in x.
      * @param[in] x   The signal to filter.  This has dimension [n].
      * @param[out] y  The filtered signal.  This has dimension [n].
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if n is positive and x or y is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int apply(const int n, const double x[], double *y[]);
+    void apply(const int n, const double x[], double *y[]);
     /*! @copydoc apply */
-    int apply(const int n, const float x[], float *y[]);
+    void apply(const int n, const float x[], float *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions
      *        set when MedianFilter::setInitialConditions() was called.
-     * @result 0 indicates success.
+     * @throws std::runtime_error if the class is not initialized.
      */ 
-    int resetInitialConditions();
+    void resetInitialConditions();
     /*! 
      * @brief Clears the module and resets all parameters.
      */

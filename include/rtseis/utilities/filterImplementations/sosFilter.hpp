@@ -62,12 +62,13 @@ public:
      * @param[in] precision   The precision of the filter.  By default
      *                        this is double precision.
      * @result 0 indicates success.
+     * @throws std::invalid_argument if ns, bs, or as is invalid.
      */
-    int initialize(const int ns,
-                   const double bs[],
-                   const double as[],
-                   const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                   const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    void initialize(const int ns,
+                    const double bs[],
+                    const double as[],
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
+                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -77,6 +78,7 @@ public:
     /*!
      * @brief Returns the length of the initial conditions.
      * @result The length of the initial condtions array.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getInitialConditionLength() const;
     /*!
@@ -87,9 +89,11 @@ public:
      *                 conditions.  This should be equal to
      *                 getInitialConditionLength().
      * @param[in] zi   The initial conditions.  This has dimension [nz].
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if nz is invalid or if nz is positive
+     *         and zi is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(const int nz, const double zi[]);
 
     /*! @name Filter Application
      * @{
@@ -99,10 +103,12 @@ public:
      * @param[in] n   Number of points in signals.
      * @param[in] x   The signal to filter.  This has dimension [n].
      * @param[out] y  The filtered signal.  This has dimension [n].
+     * @throws std::invalid_argument if n is positive and x or y is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int apply(const int n, const double x[], double *y[]);
+    void apply(const int n, const double x[], double *y[]);
     /*! @copydoc apply */
-    int apply(const int n, const float x[], float *y[]);
+    void apply(const int n, const float x[], float *y[]);
     /*! @} */
 
     /*!
@@ -110,8 +116,9 @@ public:
      *        to the default initial conditions or the initial
      *        conditions set when SOSFilter::setInitialConditions()
      *        was called.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int resetInitialConditions();
+    void resetInitialConditions();
     /*! 
      * @brief Clears the module and resets all parameters.
      */
@@ -119,8 +126,8 @@ public:
     void clear() noexcept;
     /*!
      * @brief Gets the number of second order sections in the filter.
-     * @result On successful exit this will be a positive number that
-     *         represents the number of second order sections.
+     * @result The number of second order sections.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getNumberOfSections() const;
 

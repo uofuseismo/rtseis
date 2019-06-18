@@ -5,8 +5,6 @@
 #include <vector>
 #include <chrono>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
-#include "utils.hpp"
 #include "rtseis/utilities/normalization/signBit.hpp"
 #include <gtest/gtest.h>
 

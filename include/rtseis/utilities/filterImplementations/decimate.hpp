@@ -110,6 +110,13 @@ public:
     /*! @copydoc apply */
     void apply(const int nx, const float x[],
                const int ny, int *nyDown, float *y[]);
+    /*!
+     * @brief Resets the filter to its default initial conditions or the
+     *        initial conditions set by \c setInitialConditions().
+     *        This is useful after a gap.
+     * @throws std::runtime_error if the class is not initialized.
+     */
+    void resetInitialConditions(); 
 private:
     class DecimateImpl;
     std::unique_ptr<DecimateImpl> pImpl;

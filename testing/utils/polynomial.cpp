@@ -2,10 +2,8 @@
 #include <cstdlib>
 #include <string>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/log.h"
-#include "utils.hpp"
 #include <gtest/gtest.h>
 
 namespace

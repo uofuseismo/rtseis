@@ -1,8 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <cassert>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
 #include "rtseis/log.h"
 
@@ -409,129 +411,115 @@ SOSFilter& SOSFilter::operator=(SOSFilter &&sos)
 }
 */
 
-int SOSFilter::initialize(const int ns,
-                          const double bs[],
-                          const double as[],
-                          const RTSeis::ProcessingMode mode,
-                          const RTSeis::Precision precision)
+void SOSFilter::initialize(const int ns,
+                           const double bs[],
+                           const double as[],
+                           const RTSeis::ProcessingMode mode,
+                           const RTSeis::Precision precision)
 {
     clear();
     // Checks
     if (ns < 1 || bs == nullptr || as == nullptr)
     {
-        if (ns < 1){RTSEIS_ERRMSG("%s", "No sections");}
-        if (bs == nullptr){RTSEIS_ERRMSG("%s", "bs is NULL");}
-        if (as == nullptr){RTSEIS_ERRMSG("%s", "as is NULL");}
-        return -1;
+        if (ns < 1){RTSEIS_THROW_IA("%s", "No sections");}
+        if (bs == nullptr){RTSEIS_THROW_IA("%s", "bs is NULL");}
+        RTSEIS_THROW_IA("%s", "as is NULL");
     }
     // Verify the highest order coefficients make sense
-    for (int i=0; i<ns; i++)
+    for (auto i=0; i<ns; i++)
     {
         if (bs[3*i] == 0.0)
         {
-            RTSEIS_ERRMSG("Leading bs coefficient of section %d is zero", i);
-            return -1;
+            RTSEIS_THROW_IA("Leading bs coefficient of section %d is zero", i);
         }
         if (as[3*i] == 0.0)
         {
-            RTSEIS_ERRMSG("Leading as coefficient of section %d is zero", i);
-            return -1;
+            RTSEIS_THROW_IA("Leading as coefficient of section %d is zero", i);
         }
     }
-    int ierr = pSOS_->initialize(ns, bs, as, mode, precision);
+    auto ierr = pSOS_->initialize(ns, bs, as, mode, precision);
+#ifdef DEBUG
+    assert(ierr == 0);
+#endif
     if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Failed to initialize sos filter");
         clear();
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Failed to initialize sos filter");
     }
-    return 0;
 }
 
-int SOSFilter::setInitialConditions(const int nz, const double zi[])
+void SOSFilter::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     resetInitialConditions();
-    int nzRef = pSOS_->getInitialConditionLength();
+    auto nzRef = pSOS_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
-        if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
-        return -1;
+        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
+        RTSEIS_THROW_IA("%s", "zi is NULL");
     }
     pSOS_->setInitialConditions(nz, zi);
-    return 0;
 }
 
-int SOSFilter::resetInitialConditions()
+void SOSFilter::resetInitialConditions()
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     pSOS_->resetInitialConditions();
-    return 0;
 }
 
-int SOSFilter::apply(const int n, const double x[], double *yIn[]) 
+void SOSFilter::apply(const int n, const double x[], double *yIn[]) 
 {
-    if (n <= 0){return 0;}
+    if (n <= 0){return;}
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
-        return -1;
+        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
+        RTSEIS_THROW_RTE("%s", "y is NULL");
     }
-    int ierr = pSOS_->apply(n, x, y); 
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1; 
-    }   
-    return 0;
+#ifdef DEBUG
+    int ierr = pSOS_->apply(n, x, y);
+    assert(ierr == 0);
+#else
+    pSOS_->apply(n, x, y);
+#endif
 }
 
-int SOSFilter::apply(const int n, const float x[], float *yIn[])
+void SOSFilter::apply(const int n, const float x[], float *yIn[])
 {
-    if (n <= 0){return 0;}
+    if (n <= 0){return;}
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
-        return -1;
+        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
+        RTSEIS_THROW_RTE("%s", "y is NULL");
     }
+#ifdef DEBUG
     int ierr = pSOS_->apply(n, x, y);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1;
-    }
-    return 0;
+    assert(ierr == 0);
+#else
+    pSOS_->apply(n, x, y);
+#endif
 }
 
 int SOSFilter::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     return pSOS_->getInitialConditionLength();
 }
@@ -540,8 +528,7 @@ int SOSFilter::getNumberOfSections() const
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     return pSOS_->getNumberOfSections();
 }

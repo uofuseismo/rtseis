@@ -2,14 +2,11 @@
 #include <cstdlib>
 #include <cassert>
 #include <string>
-#define RTSEIS_LOGGING 1
-#include "utils.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/design/iir.hpp"
 #include "rtseis/utilities/design/analogPrototype.hpp"
-#include "rtseis/log.h"
 #include <gtest/gtest.h>
 
 namespace

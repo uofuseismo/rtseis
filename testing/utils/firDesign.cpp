@@ -1,13 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
-#include <ipps.h>
-#define RTSEIS_LOGGING 1
 #include <cmath>
+#include <ipps.h>
 #include "rtseis/utilities/design/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/log.h"
-#include "utils.hpp"
 #include <gtest/gtest.h>
 
 namespace

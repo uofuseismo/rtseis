@@ -2,10 +2,8 @@
 #include <cstdlib>
 #include <string>
 #include <ipps.h>
-#include "utils.hpp"
 #include "rtseis/utilities/design/response.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/log.h"
 #include <gtest/gtest.h>
 
 namespace
