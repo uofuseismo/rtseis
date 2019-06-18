@@ -3,6 +3,7 @@
 #include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "rtseis/log.h"
 
@@ -376,110 +377,96 @@ FIRFilter& FIRFilter::operator=(const FIRFilter &fir)
     return *this;
 }
 
-int FIRFilter::initialize(const int nb, const double b[],
-                          const RTSeis::ProcessingMode mode,
-                          const RTSeis::Precision precision,
-                          FIRImplementation implementation)
+void FIRFilter::initialize(const int nb, const double b[],
+                           const RTSeis::ProcessingMode mode,
+                           const RTSeis::Precision precision,
+                           FIRImplementation implementation)
 {
     clear();
     // Checks
     if (nb < 1 || b == nullptr)
     {
-        if (nb < 1){RTSEIS_ERRMSG("%s", "No b coefficients");}
-        if (b == nullptr){RTSEIS_ERRMSG("%s", "b is NULL");}
-        return -1; 
+        if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
+        RTSEIS_THROW_IA("%s", "b is NULL");
     }
+#ifdef DEBUG
     int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        clear();
-        return -1;
-    } 
-    return 0;
+    assert(ierr == 0);
+#else
+    pFIR_->initialize(nb, b, mode, precision, implementation);
+#endif
 }
 
 void FIRFilter::clear() noexcept
 {
     pFIR_->clear();
-    return;
 }
  
-int FIRFilter::setInitialConditions(const int nz, const double zi[])
+void FIRFilter::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     int nzRef = pFIR_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
-        if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
-        return -1;
+        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
+        RTSEIS_THROW_IA("%s", "zi is NULL");
     }
     pFIR_->setInitialConditions(nz, zi);
-    return 0;
 }
 
-int FIRFilter::resetInitialConditions()
+void FIRFilter::resetInitialConditions()
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     pFIR_->resetInitialConditions();
-    return 0;
 }
 
-int FIRFilter::apply(const int n, const double x[], double *yIn[])
+void FIRFilter::apply(const int n, const double x[], double *yIn[])
 {
-    if (n <= 0){return 0;} // Nothing to do
+    if (n <= 0){return;} // Nothing to do
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1; 
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "Error x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "Error y is NULL");}
-        return -1;
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
+        RTSEIS_THROW_IA("%s", "Error y is NULL");
     }
+#ifdef DEBUG
     int ierr = pFIR_->apply(n, x, y);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1;
-    }
-    return 0;
+    assert(ierr == 0);
+#else
+    pFIR_->apply(n, x, y);
+#endif
+    return;
 }
 
-int FIRFilter::apply(const int n, const float x[], float *yIn[])
+void FIRFilter::apply(const int n, const float x[], float *yIn[])
 {
-    if (n <= 0){return 0;} // Nothing to do
+    if (n <= 0){return;} // Nothing to do
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1; 
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "Error x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "Error y is NULL");}
-        return -1;
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
+        RTSEIS_THROW_IA("%s", "Error y is NULL");
     }
+#ifdef DEBUG
     int ierr = pFIR_->apply(n, x, y); 
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1; 
-    }   
-    return 0;
+    assert(ierr == 0);
+#else
+    pFIR_->apply(n, x, y);
+#endif
 }
 
 int FIRFilter::getInitialConditionLength() const
@@ -499,19 +486,16 @@ bool FIRFilter::isInitialized() const noexcept
     return linit;
 }
 
-int FIRFilter::getInitialConditions(const int nz, double zi[]) const
+void FIRFilter::getInitialConditions(const int nz, double zi[]) const
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class is not yet initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class is not yet initialized");
     }
     int nzLen = getInitialConditionLength();
     if (nzLen > nz)
     {
-        RTSEIS_ERRMSG("nz = %d must be at least %d", nz, nzLen);
-        return -1;
+        RTSEIS_THROW_IA("nz = %d must be at least %d", nz, nzLen);
     }
     pFIR_->getInitialConditions(nz, zi);
-    return 0;
 }

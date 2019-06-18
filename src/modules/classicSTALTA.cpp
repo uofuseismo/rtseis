@@ -111,38 +111,18 @@ class ClassicSTALTA::ClassicSTALTAImpl
             Ipp64f *xsta = ippsMalloc_64f(nsta_);
             double xdiv = 1.0/static_cast<double> (nsta_);
             ippsSet_64f(xdiv, xsta, nsta_);
-            int ierr = firNum_.initialize(nsta_, xsta, modeRT, precision,
-                 RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
-            if (ierr != 0)
-            {
-                RTSEIS_ERRMSG("%s", "Failed to set numerator FIR filter");
-                ippsFree(xsta);
-                clear();
-                return -1;
-            }
+            firNum_.initialize(nsta_, xsta, modeRT, precision,
+              RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
             // Set the initial conditions to 0
             ippsSet_64f(0, xsta, nsta_);
-            ierr = firNum_.setInitialConditions(nsta_-1, xsta); 
+            firNum_.setInitialConditions(nsta_-1, xsta); 
             ippsFree(xsta);
-            if (ierr != 0)
-            {
-                RTSEIS_ERRMSG("%s", "Failed to set numerator ics");
-                clear();
-                return -1;
-            }
             // Set the long-term averaging filter coefficients
             Ipp64f *xlta = ippsMalloc_64f(nlta_);
             xdiv = 1.0/static_cast<double> (nlta_);
             ippsSet_64f(xdiv, xlta, nlta_);
-            ierr = firDen_.initialize(nlta_, xlta, modeRT, precision,
+            firDen_.initialize(nlta_, xlta, modeRT, precision,
                  RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
-            if (ierr != 0)
-            {
-                 RTSEIS_ERRMSG("%s", "Failed to initialize denominator");
-                 ippsFree(xlta);
-                 clear();
-                 return -1;
-            }
             // Set the initial conditions to something large
             double xset = DBL_MAX/static_cast<double> (nlta_)/4.0; 
             if (precision == RTSeis::Precision::FLOAT)
@@ -150,14 +130,8 @@ class ClassicSTALTA::ClassicSTALTAImpl
                  xset = FLT_MAX/static_cast<double> (nlta_)/4.0;
             }
             ippsSet_64f(xset, xlta, nlta_);
-            ierr = firDen_.setInitialConditions(nlta_-1, xlta);
+            firDen_.setInitialConditions(nlta_-1, xlta);
             ippsFree(xlta);
-            if (ierr != 0)
-            {
-                RTSEIS_ERRMSG("%s", "Failed to set denominator ics");
-                clear();
-                return -1;
-            }
             // Initialize workspace
             if (precision == RTSeis::Precision::DOUBLE)
             {
@@ -202,18 +176,8 @@ class ClassicSTALTA::ClassicSTALTAImpl
             if (nzNumRef != nzNum){RTSEIS_ERRMSG("%s", "Shouldn't happen");}
             if (nzDenRef != nzDen){RTSEIS_ERRMSG("%s", "Shouldn't happen");}
             // Set numerator initial conditions
-            int ierr = firNum_.setInitialConditions(nzNumRef, zNum);
-            if (ierr != 0)
-            {
-                 RTSEIS_ERRMSG("%s", "Failed to set numerator ics");
-                 return -1;
-            }
-            ierr = firDen_.setInitialConditions(nzDenRef, zDen);
-            if (ierr != 0)
-            {
-                RTSEIS_ERRMSG("%s", "Failed to set denominator ics");
-                return -1;
-            }
+            firNum_.setInitialConditions(nzNumRef, zNum);
+            firDen_.setInitialConditions(nzDenRef, zDen);
             return 0;
         }
         /// Resets the initial conditions
@@ -233,19 +197,9 @@ class ClassicSTALTA::ClassicSTALTAImpl
                 // Compute the squared signal
                 ippsSqr_64f(&x[i], x264f_, nloc);
                 // Compute the numerator average 
-                int ierr = firNum_.apply(nloc, x264f_, &ynum64f_);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to filter numerator");
-                    return -1;
-                }
+                firNum_.apply(nloc, x264f_, &ynum64f_);
                 // Compute the denominator average
-                ierr = firDen_.apply(nloc, x264f_, &yden64f_);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to filter denominator");
-                    return -1;
-                }
+                firDen_.apply(nloc, x264f_, &yden64f_);
                 // Pointwise division
                 IppStatus status = ippsDiv_64f(yden64f_, ynum64f_, &y[i], nloc);
                 if (status != ippStsNoErr)
@@ -286,19 +240,9 @@ class ClassicSTALTA::ClassicSTALTAImpl
                 // Compute the squared signal
                 ippsSqr_32f(&x[i], x232f_, nloc);
                 // Compute the numerator average 
-                int ierr = firNum_.apply(nloc, x232f_, &ynum32f_);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to filter numerator");
-                    return -1;
-                }
+                firNum_.apply(nloc, x232f_, &ynum32f_);
                 // Compute the denominator average
-                ierr = firDen_.apply(nloc, x232f_, &yden32f_);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to filter denominator");
-                    return -1;
-                }
+                firDen_.apply(nloc, x232f_, &yden32f_);
                 // Pointwise division
                 IppStatus status = ippsDiv_32f(yden32f_, ynum32f_, &y[i], nloc);
                 if (status != ippStsNoErr)
@@ -366,7 +310,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
 
 //============================================================================//
 
-ClassicSTALTAParameters::ClassicSTALTAParameters(void)
+ClassicSTALTAParameters::ClassicSTALTAParameters()
 {
     return;
 }
@@ -484,12 +428,12 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     return;
 }
 
-ClassicSTALTAParameters::~ClassicSTALTAParameters(void)
+ClassicSTALTAParameters::~ClassicSTALTAParameters()
 {
     clear();
 }
 
-void ClassicSTALTAParameters::clear(void)
+void ClassicSTALTAParameters::clear()
 {
     nsta_ = 0;
     nlta_ = 0;
@@ -512,7 +456,7 @@ int ClassicSTALTAParameters::setChunkSize(const size_t chunkSize)
     return 0;
 }
 
-size_t ClassicSTALTAParameters::getChunkSize(void) const
+size_t ClassicSTALTAParameters::getChunkSize() const
 {
     return chunkSize_;
 }
@@ -570,12 +514,12 @@ int ClassicSTALTAParameters::setShortTermAndLongTermWindowSize(
     return 0;
 }
 
-int ClassicSTALTAParameters::getLongTermWindowSize(void) const
+int ClassicSTALTAParameters::getLongTermWindowSize() const
 {
     return nlta_;
 }
 
-int ClassicSTALTAParameters::getShortTermWindowSize(void) const
+int ClassicSTALTAParameters::getShortTermWindowSize() const
 {
     return nsta_;
 }
@@ -598,12 +542,12 @@ RTSeis::Precision ClassicSTALTAParameters::getPrecision(void) const
     return precision_;
 }
 
-bool ClassicSTALTAParameters::isValid(void) const
+bool ClassicSTALTAParameters::isValid() const
 {
     return isValid_;
 }
 
-void ClassicSTALTAParameters::validate_(void)
+void ClassicSTALTAParameters::validate_()
 {
     isValid_ = false;
     if (chunkSize_ < 1){return;}
@@ -630,13 +574,13 @@ ClassicSTALTA::ClassicSTALTA(const ClassicSTALTA &cstalta)
     *this = cstalta;
 }
 
-ClassicSTALTA::~ClassicSTALTA(void)
+ClassicSTALTA::~ClassicSTALTA()
 {
     clear();
     return;
 }
 
-void ClassicSTALTA::clear(void)
+void ClassicSTALTA::clear()
 {
     pSTALTA_->clear();
     return;
@@ -713,7 +657,7 @@ int ClassicSTALTA::setInitialConditions(const int nzNum, const double zNum[],
     return 0;
 }
 
-int ClassicSTALTA::resetInitialConditions(void)
+int ClassicSTALTA::resetInitialConditions()
 {
     if (!isInitialized())
     {
@@ -724,7 +668,7 @@ int ClassicSTALTA::resetInitialConditions(void)
     return 0;
 }
 
-int ClassicSTALTA::getNumeratorInitialConditionLength(void) const
+int ClassicSTALTA::getNumeratorInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -736,7 +680,7 @@ int ClassicSTALTA::getNumeratorInitialConditionLength(void) const
     return nz;
 }
 
-int ClassicSTALTA::getDenominatorInitialConditionLength(void) const
+int ClassicSTALTA::getDenominatorInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -748,7 +692,7 @@ int ClassicSTALTA::getDenominatorInitialConditionLength(void) const
     return nz; 
 }
 
-bool ClassicSTALTA::isInitialized(void) const
+bool ClassicSTALTA::isInitialized() const
 {
     return pSTALTA_->isInitialized();
 }

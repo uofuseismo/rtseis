@@ -66,12 +66,12 @@ public:
      *                        this is double precision.
      * @param[in] implementation  Defines the implementation.
      *                            The default is to use the direct form.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    int initialize(const int nb, const double b[],
-                   const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                   const RTSeis::Precision precision = RTSeis::Precision::DOUBLE,
-                   FIRImplementation implementation = FIRImplementation::DIRECT);
+    void initialize(const int nb, const double b[],
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
+                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE,
+                    FIRImplementation implementation = FIRImplementation::DIRECT);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -80,8 +80,8 @@ public:
     bool isInitialized() const noexcept;
     /*!
      * @brief Utility routine to determine the initial condition length.
-     * @result A non-negative number is the length of the initial
-     *         condition array.
+     * @result The length of the initial condition array.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getInitialConditionLength() const;
     /*!
@@ -92,34 +92,40 @@ public:
      *                 This should be equal to
      *                 getInitialConditionLength().
      * @param[in] zi   The initial conditions.  This has dimension [nz].
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if nz is invalid or nz is positive
+     *         and zi is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(const int nz, const double zi[]);
     /*!
      * @brief Gets a copy of the initial conditions.
      * @param[in] nz   The FIR filter initial condition length.
      *                 This should be equal to
      *                 getInitialConditionLength().
      * @param[out] zi  The initial conditions.  This has dimension [nz].
-     * @result 0 indicate success.
+     * @throws std::invalid_argument if nz is invalid or nz is positive
+     *         and zi is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int getInitialConditions(const int nz, double zi[]) const;
+    void getInitialConditions(const int nz, double zi[]) const;
     /*!
      * @brief Applies the FIR filter to the data.
      * @param[in] n   Number of points in signals.
      * @param[in] x   Signal to filter.  This has dimension [n].
      * @param[out] y  The filtered signal.  This has dimension [n].
+     * @throws std::invalid_argument if n is positive and x or y is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int apply(const int n, const double x[], double *y[]);
+    void apply(const int n, const double x[], double *y[]);
     /*! @copydoc apply */
-    int apply(const int n, const float x[], float *y[]);
+    void apply(const int n, const float x[], float *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions
      *        set when FIRFilter::setInitialConditions() was called.
-     * @result 0 indicates success.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int resetInitialConditions();
+    void resetInitialConditions();
     /*!
      * @brief Clears the module and resets all parameters.
      */

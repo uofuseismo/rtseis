@@ -79,25 +79,25 @@ public:
      *                        is for post-processing.
      * @param[in] precision   The precision of the filter.  By default
      *                        this is double precision.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any arguments are incorrect.
      */
-    int initialize(const int upFactor, const int downFactor,
-                   const int nb, const double b[],
-                   const RTSeis::ProcessingMode mode
-                       = RTSeis::ProcessingMode::POST_PROCESSING,
-                   const RTSeis::Precision precision
-                       = RTSeis::Precision::DOUBLE);
+    void initialize(const int upFactor, const int downFactor,
+                    const int nb, const double b[],
+                    const RTSeis::ProcessingMode mode
+                        = RTSeis::ProcessingMode::POST_PROCESSING,
+                    const RTSeis::Precision precision
+                        = RTSeis::Precision::DOUBLE);
     /*!
      * @copydoc initialize()
      * @param[in] chunkSize   This is an optional tuning parameter.
      */
-    int initialize(const int upFactor, const int downFactor,
-                   const int nb, const double b[],
-                   const int chunkSize,
-                   const RTSeis::ProcessingMode mode 
-                       = RTSeis::ProcessingMode::POST_PROCESSING,
-                   const RTSeis::Precision precision 
-                       = RTSeis::Precision::DOUBLE);
+    void initialize(const int upFactor, const int downFactor,
+                    const int nb, const double b[],
+                    const int chunkSize,
+                    const RTSeis::ProcessingMode mode 
+                        = RTSeis::ProcessingMode::POST_PROCESSING,
+                    const RTSeis::Precision precision 
+                        = RTSeis::Precision::DOUBLE);
     /* @} */
 
     /*!
@@ -108,8 +108,8 @@ public:
     bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial conditions array.
-     * @result On successful exit this is the length of the initial
-     *         conditions array.  On failure this is negative.
+     * @result The length of the initial conditions array.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int getInitialConditionLength() const;
     /*!
@@ -124,26 +124,30 @@ public:
      *                       this is 0.
      * @param[in] downPhase  The initial downsampler phase.  By default
      *                       this is 0.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if any arguments are invalid.
      */
+/*
     int setInitialConditions(const int nz,
                              const double zi[],
                              const int upPhase = 0,
                              const int downPhase = 0);
+*/
     /*!
      * @brief Sets the initial conditions.
      * @param[in] nz   The length of the initial conditions.  This
      *                 should equal getInitialConditionLength().
      * @param[in] zi   The initial conditions to set.  This has
      *                 has dimension [nwork_]. 
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if nz is invalid or nz is positive
+     *         and zi is NULL.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(const int nz, const double zi[]);
     /*!
      * @brief Estimates the space required to store the output signal.
      * @param[in] n  The length of the input signal.
      * @result The array length required to store the output signal.
-     *         If negative than error has occurred.
+     * @throws std::runtime_error if the class is not initialized.
      */
     int estimateSpace(const int n) const;
     /*!
@@ -155,20 +159,22 @@ public:
      * @param[out] ny     The length of the output signal.
      * @param[out] y      The filtered signal.  This has dimension
      *                    [nywork] however only the first [ny] samples are set.
-     * @result 0 indicates success.
+     * @throws std::invalid_argument if n is positive and x is NULL,
+     *         or nywork is too small, or nywork is positive and y is NULL.
+     * @throws std::runtime_error if the class is not initialized
      */
-    int apply(const int n, const double x[],
-              const int nywork, int *ny, double *y[]);
+    void apply(const int n, const double x[],
+               const int nywork, int *ny, double *y[]);
     /*! @copydoc apply */
-    int apply(const int n, const float x[],
-              const int nywork, int *ny, float *y[]);
+    void apply(const int n, const float x[],
+               const int nywork, int *ny, float *y[]);
 
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().
-     * @result 0 indicates success.
+     * @throws std::runtime_error if the class is not initialized.
      */
-    int resetInitialConditions();
+    void resetInitialConditions();
     /*!
      * @brief Clears memory and resets the filter.  After applying
      *        this function the filter must be re-initialized prior

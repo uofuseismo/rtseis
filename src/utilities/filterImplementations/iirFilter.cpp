@@ -5,6 +5,7 @@
 #include <ippversion.h>
 #include <ippcore.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 #include "rtseis/log.h"
 
@@ -613,124 +614,110 @@ void IIRFilter::clear() noexcept
     return;
 }
 
-int IIRFilter::initialize(const int nb, const double b[],
-                          const int na, const double a[],
-                          const RTSeis::ProcessingMode mode,
-                          const RTSeis::Precision precision,
-                          const IIRDFImplementation implementation)
+void IIRFilter::initialize(const int nb, const double b[],
+                           const int na, const double a[],
+                           const RTSeis::ProcessingMode mode,
+                           const RTSeis::Precision precision,
+                           const IIRDFImplementation implementation)
 {
     clear();
     if (nb < 1 || b == nullptr || na < 1 || a == nullptr)
     {
-        if (nb < 1){RTSEIS_ERRMSG("%s", "No numerator coefficients");}
-        if (na < 1){RTSEIS_ERRMSG("%s", "No denominator coefficients");}
-        if (b == nullptr){RTSEIS_ERRMSG("%s", "b is NULL");}
-        if (a == nullptr){RTSEIS_ERRMSG("%s", "a is NULL");}
-        return -1;
+        if (nb < 1){RTSEIS_THROW_IA("%s", "No numerator coefficients");}
+        if (na < 1){RTSEIS_THROW_IA("%s", "No denominator coefficients");}
+        if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
+        RTSEIS_THROW_IA("%s", "a is NULL");
     }
     if (a[0] == 0)
     {
-        RTSEIS_ERRMSG("%s", "a[0] cannot be zero");
-        return -1;
+        RTSEIS_THROW_IA("%s", "a[0] cannot be zero");
     }
+#ifdef DEBUG
     int ierr = pIIR_->initialize(nb, b, na, a, mode, precision, implementation);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        clear();
-        return -1;
-    }
-    return 0;
+    assert(ierr == 0);
+#else
+    pIIR_->initialize(nb, b, na, a, mode, precision, implementation);
+#endif
 }
 
 int IIRFilter::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     return pIIR_->getInitialConditionLength();
 }
 
-int IIRFilter::setInitialConditions(const int nz, const double zi[])
+void IIRFilter::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     int nzRef = pIIR_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
-        if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
-        return -1;
+        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
+        RTSEIS_THROW_IA("%s", "zi is NULL");
     }
     pIIR_->setInitialConditions(nz, zi);
-    return 0;
 }
 
-int IIRFilter::resetInitialConditions(void)
+void IIRFilter::resetInitialConditions()
 {
     if (!isInitialized())
     {   
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1; 
-    }   
-    int ierr = pIIR_->resetInitialConditions();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to reset initial conditions");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
-    return 0;
+#ifdef DEBUG
+    int ierr = pIIR_->resetInitialConditions();
+    assert(ierr == 0);
+#else
+    pIIR_->resetInitialConditions();
+#endif
 }
 
-int IIRFilter::apply(const int n, const float x[], float *yIn[])
+void IIRFilter::apply(const int n, const float x[], float *yIn[])
 {
-    if (n <= 0){return 0;} // Nothing to do
+    if (n <= 0){return;} // Nothing to do
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
     }
+#ifdef DEBUG
     int ierr = pIIR_->apply(n, x, y);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1;
-    }
-    return 0;
+    assert(ierr == 0);
+#else
+    pIIR_->apply(n, x, y);
+#endif
 }
 
-int IIRFilter::apply(const int n, const double x[], double *yIn[])
+void IIRFilter::apply(const int n, const double x[], double *yIn[])
 {
-    if (n <= 0){return 0;} // Nothing to do
+    if (n <= 0){return;} // Nothing to do
     if (!isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
     } 
+#ifdef DEBUG
     int ierr = pIIR_->apply(n, x, y);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return -1;
-    }
-    return 0;
+    assert(ierr == 0);
+#else
+    pIIR_->apply(n, x, y);
+#endif
 }
 
 bool IIRFilter::isInitialized() const noexcept

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/private/throw.hpp"
 #include "rtseis/log.h"
 #include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
 
@@ -749,43 +750,41 @@ MultiRateFIRFilter::operator=(const MultiRateFIRFilter &firmr)
     return *this;
 }
 
-int MultiRateFIRFilter::initialize(
+void MultiRateFIRFilter::initialize(
     const int upFactor, const int downFactor,
     const int nb, const double b[],
     const int chunkSize,
     const RTSeis::ProcessingMode mode,
     const RTSeis::Precision precision)
 {
+    clear();
     if (upFactor < 1 || downFactor < 1 || nb < 1 ||
         b == nullptr || chunkSize < downFactor)
     {
         if (upFactor < 1)
         {
-            RTSEIS_ERRMSG("Upsampling factor=%d must be positive", upFactor);
+            RTSEIS_THROW_RTE("Upsampling factor=%d must be positive", upFactor);
         }
         if (downFactor < 1)
         {
-            RTSEIS_ERRMSG("Downsampling factor=%d must be positive",
-                          downFactor);
+            RTSEIS_THROW_RTE("Downsampling factor=%d must be positive",
+                             downFactor);
         }
-        if (nb < 1){RTSEIS_ERRMSG("No filter taps; nb=%d", nb);}
-        if (downFactor < 1){RTSEIS_ERRMSG("%s", "b is NULL");}
+        if (nb < 1){RTSEIS_THROW_RTE("No filter taps; nb=%d", nb);}
+        if (downFactor < 1){RTSEIS_THROW_RTE("%s", "b is NULL");}
         if (chunkSize < 1)
         {
             RTSEIS_ERRMSG("Chunksize=%d must be positive", chunkSize);
         }
-        clear();
-        return -1; 
     }
+#ifdef DEBUG
     int ierr = pFIR_->initialize(upFactor, downFactor,
                                  nb, b, mode, precision, chunkSize);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        clear();
-        return -1;
-    }
-    return 0;
+    assert(ierr == 0);
+#else
+    pFIR_->initialize(upFactor, downFactor,
+                      nb, b, mode, precision, chunkSize);
+#endif
 }
 
 MultiRateFIRFilter::~MultiRateFIRFilter()
@@ -800,88 +799,72 @@ void MultiRateFIRFilter::clear() noexcept
     return;
 }
 
-int MultiRateFIRFilter::initialize(
+void MultiRateFIRFilter::initialize(
     const int upFactor, const int downFactor,
     const int nb, const double b[],
     const RTSeis::ProcessingMode mode,
     const RTSeis::Precision precision)
 {
-    clear();
-    int ierr = pFIR_->initialize(upFactor, downFactor, nb, b,
-                                 mode, precision, 1024);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        return -1;
-    }
-    return 0;
+    initialize(upFactor, downFactor, nb, b, 1024,
+               mode, precision);
 }
 
 int MultiRateFIRFilter::estimateSpace(const int n) const
 {
     if (!pFIR_->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Module is not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Module is not initialized");
     }
     if (n <= 0){return 0;} // No points
     int len = pFIR_->estimateSpace(n);
     return len;
 }
 
-int MultiRateFIRFilter::setInitialConditions(
+void MultiRateFIRFilter::setInitialConditions(
     const int nz, const double zi[])
 {
     if (!pFIR_->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Class not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
     int nzRef = pFIR_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_ERRMSG("nz=%d should equal %d", nz, nzRef);}
-        if (zi == nullptr){RTSEIS_ERRMSG("%s", "zi is NULL");}
-        return -1;
+        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
+        RTSEIS_THROW_IA("%s", "zi is NULL");
     }
     pFIR_->setInitialConditions(nz, zi);
-    return 0;
 }
 
-int MultiRateFIRFilter::apply(const int n, const double x[],
-                              const int nywork, int *ny, double *yIn[])
+void MultiRateFIRFilter::apply(const int n, const double x[],
+                               const int nywork, int *ny, double *yIn[])
 {
     *ny = 0;
-    if (n <= 0){return 0;} // Nothing to do
-    if (x == nullptr)
-    {
-        RTSEIS_ERRMSG("%s", "x is NULL");
-        return -1;
-    }
+    if (n <= 0){return;} // Nothing to do
     if (!pFIR_->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Module is not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Module is not initialized");
+    }
+    if (x == nullptr)
+    {
+        RTSEIS_THROW_IA("%s", "x is NULL");
     }
     int nworkEst = pFIR_->estimateSpace(n);
     if (nywork < nworkEst)
     {
-        RTSEIS_WARNMSG("May have insufficient space %d %d", nywork, nworkEst);
+        RTSEIS_THROW_IA("Resize nywork =  %d to %d", nywork, nworkEst);
     }
     double *y = *yIn;
     if (y == nullptr)
     {
-        RTSEIS_ERRMSG("%s", "y is NULL");
-        return -1;
+        RTSEIS_THROW_IA("%s", "y is NULL");
     }
+#ifdef DEBUG
     int ierr = pFIR_->apply(n, x, nywork, ny, y);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        *ny = 0;
-        return -1;
-    }
-    return 0; 
+    assert(ierr == 0);
+#else
+    pFIR_->apply(n, x, nywork, ny, y);
+#endif
 }
 
 /*
@@ -921,18 +904,16 @@ int MultiRateFIRFilter::apply(const int n, const float x[],
 }
 */
 
-int MultiRateFIRFilter::resetInitialConditions(void)
+void MultiRateFIRFilter::resetInitialConditions()
 {
     if (!pFIR_->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Module is not initialized");
-        return -1;
+        RTSEIS_THROW_RTE("%s", "Module is not initialized");
     }
+#ifdef DEBUG
     int ierr = pFIR_->resetInitialConditions();
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to reset initial conditions");
-        return -1;
-    }
-    return 0;
+    assert(ierr == 0);
+#else
+    pFIR_->resetInitialConditions();
+#endif
 }

@@ -111,12 +111,19 @@ int rtseis_test_utils_filters(void)
     if (x != nullptr){free(x);}
     return EXIT_SUCCESS;
 }
+*/
 //============================================================================//
-int filters_iirFilter_test(const int npts, const double x[],
-                           const std::string fileName1,
-                           const std::string fileName2)
+//int filters_iirFilter_test(const int npts, const double x[],
+//                           const std::string fileName1,
+//                           const std::string fileName2)
+TEST(UtilitiesFilterImplementations, iir)
 {
-    fprintf(stdout, "Testing IIR filter...\n");
+    double *x = NULL;
+    int npts;
+    auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
+    EXPECT_EQ(ierr, 0);
+    const std::string fileName1 = "data/iirReference1.txt";
+    const std::string fileName2 = "data/iirReference2.txt";
     // Hardwire a high-order butterworth filter
     int na = 9;
     int nb = 9;
@@ -156,81 +163,45 @@ int filters_iirFilter_test(const int npts, const double x[],
     double *yref1 = nullptr;
     double *yref2 = nullptr;
     int npref = 0; 
-    int ierr = readTextFile(&npref, &yref1, fileName1);
-    if (ierr != 0 || npts != npref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to load reference data");
-        return EXIT_FAILURE;
-    }
+    ierr = readTextFile(&npref, &yref1, fileName1);
+    EXPECT_EQ(ierr, 0);
+    EXPECT_EQ(npts, npref);
     ierr = readTextFile(&npref, &yref2, fileName2);
-    if (ierr != 0 || npts != npref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to load reference data 2");
-        return EXIT_FAILURE;
-    }
+    EXPECT_EQ(ierr, 0);
+    EXPECT_EQ(npts, npref);
     // Compute the zero-phase IIR filter alternative
     IIRFilter iir;
     IIRFilter iir_slow;
-    ierr = iir.initialize(nb, b, na, a,
-                          RTSeis::ProcessingMode::POST_PROCESSING,
-                          RTSeis::Precision::DOUBLE,
-                          IIRDFImplementation::DF2_FAST);
-    if (ierr != 0)
-    {    
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        return EXIT_FAILURE;
-    }
-    ierr = iir_slow.initialize(nb, b, na, a,
-                               RTSeis::ProcessingMode::POST_PROCESSING,
-                               RTSeis::Precision::DOUBLE,
-                               IIRDFImplementation::DF2_SLOW);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize slow filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(iir.initialize(nb, b, na, a,
+                                   RTSeis::ProcessingMode::POST_PROCESSING,
+                                   RTSeis::Precision::DOUBLE,
+                                   IIRDFImplementation::DF2_FAST));
+    EXPECT_NO_THROW(iir_slow.initialize(nb, b, na, a,
+                                        RTSeis::ProcessingMode::POST_PROCESSING,
+                                        RTSeis::Precision::DOUBLE,
+                                        IIRDFImplementation::DF2_SLOW));
     double *yref = new double[npts];
     double *yref_slow = new double[npts];
     double *y1 = new double[npts];
     double *y2 = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = iir.apply(npts, x, &y1);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to filter signal");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(iir.apply(npts, x, &y1));
     auto timeEnd = std::chrono::high_resolution_clock::now();
     double error = 0;
-    for (int i=0; i<npts; i++)
-    {
-        error = std::max(std::pow(y1[i] - yref1[i], 2), error);
-    }
+    ippsNormDiff_L2_64f(y1, yref1, npts, &error);
     error = error/static_cast<double> (npts);
-    if (error > 3.e-2)
-    {
-        RTSEIS_ERRMSG("Failed matlab test1: %e\n", error);
-        return EXIT_FAILURE;
-    }
+    EXPECT_LE(error, 3.e-2);
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Fast reference solution 1 computation time %.8lf (s)\n",
             tdif.count());
     std::copy(y1, y1+npts, yref);
+
     // Repeat for slow
     timeStart = std::chrono::high_resolution_clock::now();
-    ierr = iir_slow.apply(npts, x, &y2);
+    EXPECT_NO_THROW(iir_slow.apply(npts, x, &y2));
     timeEnd = std::chrono::high_resolution_clock::now();
-    error = 0; 
-    for (int i=0; i<npts; i++) 
-    {
-        error = std::max(std::pow(y2[i] - yref1[i], 2), error);
-    }
-    error = error/static_cast<double> (npts);
-    if (error > 1.e-10)
-    {
-        RTSEIS_ERRMSG("Failed matlab test1 slow: %e\n", error);
-        return EXIT_FAILURE;
-    }
+    ippsNormDiff_Inf_64f(y2, yref1, npts, &error);
+    EXPECT_LE(error, 1.e-3);
     tdif = timeEnd - timeStart;
     fprintf(stdout, "Slow reference solution 1 computation time %.8lf (s)\n",
             tdif.count());
@@ -238,42 +209,25 @@ int filters_iirFilter_test(const int npts, const double x[],
     // Try a lower order filter - Note the difference in accuracy.
     // I think the filter is a little unstable.
     IIRFilter iir2;
-    ierr = iir2.initialize(nb2, b2, na2, a2,
-                           RTSeis::ProcessingMode::POST_PROCESSING,
-                           RTSeis::Precision::DOUBLE,
-                           IIRDFImplementation::DF2_FAST);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(iir2.initialize(nb2, b2, na2, a2,
+                                    RTSeis::ProcessingMode::POST_PROCESSING,
+                                    RTSeis::Precision::DOUBLE,
+                                    IIRDFImplementation::DF2_FAST));
     timeStart = std::chrono::high_resolution_clock::now();
-    ierr = iir2.apply(npts, x, &y2);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to filter signal");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(iir2.apply(npts, x, &y2));
     timeEnd = std::chrono::high_resolution_clock::now();
     error = 0;
-    for (int i=0; i<npts; i++)
-    {
-        error = std::max(std::pow(y2[i] - yref2[i], 2), error); 
-    }
-    if (error > 1.e-12)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to compute filter 2");
-        return EXIT_FAILURE;
-    }
+    ippsNormDiff_Inf_64f(y2, yref2, npts, &error);
+    EXPECT_LE(error, 1.e-7);
     tdif = timeEnd - timeStart;
     fprintf(stdout, "Fast reference solution 2 computation time %.8lf (s)\n",
             tdif.count());
     // Do a real-time test of high-order filter
     IIRFilter iirrt;
-    ierr = iirrt.initialize(nb, b, na, a,
-                            RTSeis::ProcessingMode::REAL_TIME,
-                            RTSeis::Precision::DOUBLE,
-                            IIRDFImplementation::DF2_FAST);
+    EXPECT_NO_THROW(iirrt.initialize(nb, b, na, a,
+                                     RTSeis::ProcessingMode::REAL_TIME,
+                                     RTSeis::Precision::DOUBLE,
+                                     IIRDFImplementation::DF2_FAST));
     iir = iirrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
@@ -293,26 +247,14 @@ int filters_iirFilter_test(const int npts, const double x[],
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *y1Temp = &y1[nxloc];
-                ierr = iir.apply(nptsPass, &x[nxloc], &y1Temp);//[nxloc]);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to apply iir filter");
-                    return EXIT_FAILURE;
-                }
+                EXPECT_NO_THROW(iir.apply(nptsPass, &x[nxloc], &y1Temp));//[nxloc]);
                 nxloc = nxloc + nptsPass;
             }
             iir.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
-            for (int i=0; i<npts; i++)
-            {
-                if (std::abs(yref[i] - y1[i]) > 1.e-12)
-                {
-                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
-                                  i, yref[i], y1[i]);
-                    return EXIT_FAILURE;
-                }
-            }
+            ippsNormDiff_Inf_64f(yref, y1, npts, &error);
+            EXPECT_LE(error, 1.e-12);
             if (job == 0)
             {
                 fprintf(stdout,
@@ -327,10 +269,10 @@ int filters_iirFilter_test(const int npts, const double x[],
         }
     }
     // Retry this for the slow filter implementation
-    ierr = iir_slow.initialize(nb, b, na, a,
-                               RTSeis::ProcessingMode::REAL_TIME,
-                               RTSeis::Precision::DOUBLE,
-                               IIRDFImplementation::DF2_SLOW);
+    EXPECT_NO_THROW(iir_slow.initialize(nb, b, na, a,
+                                        RTSeis::ProcessingMode::REAL_TIME,
+                                        RTSeis::Precision::DOUBLE,
+                                        IIRDFImplementation::DF2_SLOW));
     iir = iir_slow;
     for (int job=0; job<2; job++)
     {    
@@ -348,26 +290,14 @@ int filters_iirFilter_test(const int npts, const double x[],
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *y1Temp = &y1[nxloc];
-                ierr = iir.apply(nptsPass, &x[nxloc], &y1Temp); //y1[nxloc]);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to apply iir filter");
-                    return EXIT_FAILURE;
-                }
+                EXPECT_NO_THROW(iir.apply(nptsPass, &x[nxloc], &y1Temp)); //y1[nxloc]);
                 nxloc = nxloc + nptsPass;
             }
             iir.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
-            for (int i=0; i<npts; i++) 
-            {
-                if (std::abs(yref_slow[i] - y1[i]) > 1.e-12)
-                {
-                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
-                                  i, yref_slow[i], y1[i]);
-                    return EXIT_FAILURE;
-                }
-            }
+            ippsNormDiff_Inf_64f(yref_slow, y1, npts, &error);
+            EXPECT_LE(error, 1.e-12);
             if (job == 0)
             {
                 fprintf(stdout,
@@ -388,8 +318,9 @@ int filters_iirFilter_test(const int npts, const double x[],
     delete[] yref_slow;
     delete[] y1;
     delete[] y2;
-    return EXIT_SUCCESS;
+    free(x);
 }
+/*
 //============================================================================//
 int filters_iiriirFilter_test(const int npts, const double x[],
                               const std::string fileName)
@@ -540,7 +471,14 @@ int filters_iiriirFilter_test(const int npts, const double x[],
 //============================================================================//
 int filters_firMRFilter_test(const int npts, const double x[],
                              const std::string fileName)
+*/
+TEST(UtiltiesFilterImplementations, multirateFIR)
 {
+    double *x = NULL;
+    int npts;
+    auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
+    EXPECT_EQ(ierr, 0);
+    const std::string fileName = "data/firResampleReference.txt";
     fprintf(stdout, "Testing FIR multirate filter...\n");
     const int nb = 51; 
     int upFactor = 3;
@@ -575,71 +513,46 @@ int filters_firMRFilter_test(const int npts, const double x[],
     // Load a reference solution
     double *yref = nullptr;
     int npref = 0;
-    int ierr = readTextFile(&npref, &yref, fileName);
-    if (ierr != 0)
-    {   
-        RTSEIS_ERRMSG("%s", "Failed to load reference data");
-        return EXIT_FAILURE;
-    }
+    ierr = readTextFile(&npref, &yref, fileName);
+    EXPECT_EQ(ierr, 0);
     // Initialize filter
     //double gain = static_cast<double> (upFactor);
     //ippsMulC_64f(b, gain, bgain, nb); // Fix gain
     MultiRateFIRFilter firmr;
-    ierr = firmr.initialize(upFactor, downFactor, nb, b,
-                            RTSeis::ProcessingMode::POST_PROCESSING,
-                            RTSeis::Precision::DOUBLE);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize fir filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(firmr.initialize(upFactor, downFactor, nb, b,
+                                     RTSeis::ProcessingMode::POST_PROCESSING,
+                                     RTSeis::Precision::DOUBLE));
     // Estimate space in output
     int nest = firmr.estimateSpace(npts);
-    if (nest != 4500)
-    {
-        RTSEIS_WARNMSG("%s", "Anticipating 4500 points in comparison");
-    }
+    EXPECT_EQ(nest, 4500);
+    //if (nest != 4500)
+    //{
+    //    RTSEIS_WARNMSG("%s", "Anticipating 4500 points in comparison");
+    //}
     int ncomp = std::min(nest, npref);
     // Filter 
     double *y = new double[npts];
     int ny;
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = firmr.apply(npts, x, npts, &ny, &y);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(firmr.apply(npts, x, npts, &ny, &y));
     auto timeEnd = std::chrono::high_resolution_clock::now();
     double error = 0;
-    for (int i=0; i<ncomp; i++)
-    {
-        error = std::max(error, std::abs(y[i] - yref[i]));
-    }
-    if (error > 1.e-10)
-    {
-        RTSEIS_ERRMSG("Failed to apply upfirndn post-proc %.10e\n", error); 
-        return EXIT_FAILURE;
-    }
+    ippsNormDiff_Inf_64f(y, yref, ncomp, &error); 
+    EXPECT_LE(error, 1.e-10); 
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Repeat for real-time 
     MultiRateFIRFilter firmrRT;
-    ierr = firmrRT.initialize(upFactor, downFactor, nb, b,
-                              RTSeis::ProcessingMode::REAL_TIME,
-                              RTSeis::Precision::DOUBLE); 
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize real-time filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(firmrRT.initialize(upFactor, downFactor, nb, b,
+                                       RTSeis::ProcessingMode::REAL_TIME,
+                                       RTSeis::Precision::DOUBLE));
     firmr = firmrRT; 
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
-    for (int job=0; job<2; job++)
+    for (auto job=0; job<2; job++)
     {   
-        for (size_t ip=0; ip<packetSize.size(); ip++)
+        for (auto ip=0; ip<packetSize.size(); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0;
@@ -656,32 +569,17 @@ int filters_firMRFilter_test(const int npts, const double x[],
                 int nwork = npts+1-nyloc;
                 int nyDec = 0;
                 double *yptr = &y[nyloc];
-                ierr = firmr.apply(nptsPass, &x[nxloc], nwork, &nyDec, &yptr); //&y[nyloc]);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to apply firmr filter");
-                    return EXIT_FAILURE;
-                }
+                EXPECT_NO_THROW(firmr.apply(nptsPass, &x[nxloc], nwork,
+                                            &nyDec, &yptr)); //&y[nyloc]);
                 nxloc = nxloc + nptsPass;
                 nyloc = nyloc + nyDec;
             }
             firmr.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
-            if (nyloc != ny)
-            {
-                RTSEIS_ERRMSG("Failed resampling %d %d",  nyloc, ny);
-                return EXIT_FAILURE;
-            }
-            for (int i=0; i<nyloc; i++) 
-            {
-                if (std::abs(yref[i] - y[i]) > 1.e-8)
-                {
-                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
-                                  i, y[i], yref[i]);
-                    return EXIT_FAILURE;
-                }
-            }
+            EXPECT_EQ(nyloc, ny);
+            ippsNormDiff_Inf_64f(yref, y, nyloc, &error);
+            EXPECT_LE(error, 1.e-8);
             if (job == 0)
             {    
                 fprintf(stdout,
@@ -697,13 +595,18 @@ int filters_firMRFilter_test(const int npts, const double x[],
     }
     delete[] y;
     free(yref);
-    return EXIT_SUCCESS;
+    free(x);
 }
 //============================================================================//
-int filters_firFilter_test(const int npts, const double x[],
-                           const std::string fileName)
+//int filters_firFilter_test(const int npts, const double x[],
+//                           const std::string fileName)
+TEST(UtilitiesFilterImplementations, fir)
 {
-    fprintf(stdout, "Testing FIR filter...\n");
+    double *x = NULL;
+    int npts;
+    auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
+    EXPECT_EQ(ierr, 0);
+    const std::string fileName = "data/firReference.txt";
     const int nb = 51;
     //const int na = 1;
     const double b[51] = {-0.000000000000000, -0.001056235801065,
@@ -735,56 +638,32 @@ int filters_firFilter_test(const int npts, const double x[],
     // Load a reference solution
     double *yref = nullptr;
     int npref = 0;
-    int ierr = readTextFile(&npref, &yref, fileName);
-    if (ierr != 0 || npts != npref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to load reference data");
-        return EXIT_FAILURE;
-    }
+    ierr = readTextFile(&npref, &yref, fileName);
+    EXPECT_EQ(ierr, 0);
+    EXPECT_EQ(npts, npref);
     // Make a post-processing solution
     FIRFilter fir;
-    ierr = fir.initialize(nb, b,
-                          RTSeis::ProcessingMode::POST_PROCESSING,
-                          RTSeis::Precision::DOUBLE,
-                          FIRImplementation::DIRECT);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize FIR filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(fir.initialize(nb, b,
+                                   RTSeis::ProcessingMode::POST_PROCESSING,
+                                   RTSeis::Precision::DOUBLE,
+                                   FIRImplementation::DIRECT));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    ierr = fir.apply(npts, x, &y);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to apply FIR filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(fir.apply(npts, x, &y));
     auto timeEnd = std::chrono::high_resolution_clock::now();
-    for (int i=0; i<npts; i++)
-    {
-        if (std::abs(y[i] - yref[i]) > 1.e-10)
-        {
-            RTSEIS_ERRMSG("Failed to apply reference FIR filter %lf %lf",
-                          yref[i], y[i]);
-            return EXIT_FAILURE;
-        }
-    }
+    double error = 0;
+    ippsNormDiff_Inf_64f(y, yref, npts, &error);
+    EXPECT_LE(error, 1.e-10);
     std::copy(y, y+static_cast<size_t> (npts), yref);
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Do packetized tests
     FIRFilter firrt;
-    ierr = firrt.initialize(nb, b,
-                          RTSeis::ProcessingMode::REAL_TIME,
-                          RTSeis::Precision::DOUBLE,
-                          FIRImplementation::DIRECT);
-    if (ierr != 0)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to initialize filter");
-        return EXIT_FAILURE;
-    }
+    EXPECT_NO_THROW(firrt.initialize(nb, b,
+                                     RTSeis::ProcessingMode::REAL_TIME,
+                                     RTSeis::Precision::DOUBLE,
+                                     FIRImplementation::DIRECT));
     fir = firrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
@@ -804,26 +683,14 @@ int filters_firFilter_test(const int npts, const double x[],
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *yptr = &y[nxloc];
-                ierr = fir.apply(nptsPass, &x[nxloc], &yptr);
-                if (ierr != 0)
-                {
-                    RTSEIS_ERRMSG("%s", "Failed to apply fir filter");
-                    return EXIT_FAILURE;
-                }
+                EXPECT_NO_THROW(fir.apply(nptsPass, &x[nxloc], &yptr));
                 nxloc = nxloc + nptsPass;
             }
             fir.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
-            for (int i=0; i<npts; i++)
-            {
-                if (std::abs(yref[i] - y[i]) > 1.e-8)
-                {
-                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
-                                  i, y[i], yref[i]);
-                    return EXIT_FAILURE;
-                }
-            }
+            ippsNormDiff_Inf_64f(yref, y, npts, &error);
+            EXPECT_LE(error, 1.e-10);
             if (job == 0)
             {
                 fprintf(stdout,
@@ -839,13 +706,18 @@ int filters_firFilter_test(const int npts, const double x[],
     }
     delete[] y;
     free(yref);
-    return EXIT_SUCCESS;
+    free(x);
 }
 //============================================================================//
-int filters_sosFilter_test(const int npts, const double x[],
-                           const std::string fileName)
+//int filters_sosFilter_test(const int npts, const double x[],
+//                           const std::string fileName)
+TEST(UtilitiesFilterImplementations, sos)
 {
-    fprintf(stdout, "Testing SOS filter...\n");
+    double *x = NULL;
+    int npts;
+    auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
+    EXPECT_EQ(ierr, 0);
+    const std::string fileName = "data/sosReference.txt";
     int ns = 7; // number of sections 
     const double bs7[21] = {6.37835424e-05,  6.37835424e-05,  0.00000000e+00, 
                            1.00000000e+00, -1.78848938e+00,  1.00000000e+00,
@@ -880,35 +752,21 @@ int filters_sosFilter_test(const int npts, const double x[],
     std::fill(impulse, impulse+40, 0);
     impulse[0] = 1;
     SOSFilter sos;
-    //EXPECT_NO_THROW(
-               sos.initialize(ns, bs7, as7,
-                              RTSeis::ProcessingMode::POST_PROCESSING,
-                              RTSeis::Precision::DOUBLE);
-    //)
-    //EXPECT_NO_THROW( 
-    sos.apply(40, impulse, &y40);
+    EXPECT_NO_THROW(sos.initialize(ns, bs7, as7,
+                                   RTSeis::ProcessingMode::POST_PROCESSING,
+                                   RTSeis::Precision::DOUBLE));
+    EXPECT_NO_THROW(sos.apply(40, impulse, &y40));
     double error;
     ippsNormDiff_Inf_64f(y40, yref40, 40, &error);
-    //EXPECT_LE(error, 1.e-8);
-    for (auto i=0; i<40; i++)
-    {
-        if (std::abs(y40[i] - yref40[i]) > 1.e-8)
-        {
-            RTSEIS_ERRMSG("Impulse response failed %lf %lf", yref40[i], y40[i]);
-            return EXIT_FAILURE;
-        }
-    }
+    EXPECT_LE(error, 1.e-8);
     delete[] y40;
     delete[] impulse;
     // Load a reference solution
     double *yref = nullptr;
     int npref = 0;
-    auto ierr = readTextFile(&npref, &yref, fileName);
-    if (ierr != 0 || npts != npref)
-    {
-        RTSEIS_ERRMSG("%s", "Failed to load reference data");
-        return EXIT_FAILURE;
-    }
+    ierr = readTextFile(&npref, &yref, fileName);
+    EXPECT_EQ(ierr, 0);
+    EXPECT_EQ(npts, npref);
     ns = 4;
     const double bs[12] = {0.000401587491686,  0.000803175141692,  0.000401587491549,
                            1.000000000000000, -2.000000394412897,  0.999999999730209,
@@ -918,38 +776,24 @@ int filters_sosFilter_test(const int npts, const double x[],
                            1.000000000000000, -1.704970593447777,  0.792206889942566,
                            1.000000000000000, -1.994269533089365,  0.994278822534674,
                            1.000000000000000, -1.997472946622339,  0.997483252685326};
-    //EXPECT_NO_THROW(
-           sos.initialize(ns, bs, as,
-                          RTSeis::ProcessingMode::POST_PROCESSING,
-                          RTSeis::Precision::DOUBLE);
-    //)
+    EXPECT_NO_THROW(sos.initialize(ns, bs, as,
+                                   RTSeis::ProcessingMode::POST_PROCESSING,
+                                   RTSeis::Precision::DOUBLE));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
-    //EXPECTX_NO_THROW(
-    sos.apply(npts, x, &y);
+    EXPECT_NO_THROW(sos.apply(npts, x, &y));
     auto timeEnd = std::chrono::high_resolution_clock::now();
     ippsNormDiff_Inf_64f(y, yref, npts, &error);
-    //EXPECT_LE(error, 1.e-8);
-    for (auto i=0; i<npts; i++)
-    {
-        if (std::abs(y[i] - yref[i]) > 1.e-8)
-        {
-            RTSEIS_ERRMSG("Failed to compute sample %d %lf %lf",
-                          i, yref[i], y[i]);
-            return EXIT_FAILURE;
-        }
-    } 
+    EXPECT_LE(error, 1.e-8);
     std::copy(y, y+static_cast<size_t> (npts), yref);
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Do packetized tests 
     SOSFilter sosrt;
-    //EXPECT_NO_THROW(
-    sosrt.initialize(ns, bs, as,
-                            RTSeis::ProcessingMode::REAL_TIME,
-                            RTSeis::Precision::DOUBLE);
-    //)
+    EXPECT_NO_THROW(sosrt.initialize(ns, bs, as,
+                                     RTSeis::ProcessingMode::REAL_TIME,
+                                     RTSeis::Precision::DOUBLE));
     sos = sosrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
@@ -969,25 +813,14 @@ int filters_sosFilter_test(const int npts, const double x[],
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *yptr = &y[nxloc];
-                //EXPECT_NO_THROW(
-                sos.apply(nptsPass, &x[nxloc], &yptr); //&y[nxloc]);
-                //)
+                EXPECT_NO_THROW(sos.apply(nptsPass, &x[nxloc], &yptr)); //&y[nxloc]);
                 nxloc = nxloc + nptsPass;
             }
             sos.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             ippsNormDiff_Inf_64f(yref, y, npts, &error);
-            //EXPECT_LE(error, 1.e-8);
-            for (int i=0; i<npts; i++)
-            {
-                if (std::abs(yref[i] - y[i]) > 1.e-8)
-                {
-                    RTSEIS_ERRMSG("Failed to compute reference soln %d %lf %lf",
-                                  i, y[i], yref[i]);
-                    return EXIT_FAILURE;
-                }
-            }
+            EXPECT_LE(error, 1.e-8);
             if (job == 0)
             {
                 fprintf(stdout,
@@ -1003,20 +836,18 @@ int filters_sosFilter_test(const int npts, const double x[],
     }
     delete[] y;
     free(yref);
-    return EXIT_SUCCESS;
-    
+    free(x);
 }
 //============================================================================//
 //int filters_medianFilter_test(const int npts, const double x[],
 //                              const std::string fileName)
-*/
 TEST(UtilitiesFilterImplementations, medianFilter)
 {
     double *x = NULL;
     int npts;
     auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
+    EXPECT_EQ(ierr, 0);
     const std::string fileName = "data/medianFilterReference.txt";
-    fprintf(stdout, "Testing median filter...\n");
     double xin[8] = {1, 2, 127, 4, 5, 0, 7, 8};
     double y8[8];
     double yref3[8] = {1, 2, 4, 5, 4, 5, 7, 7}; // Matlab soln; IPP has edge effect
@@ -1122,7 +953,6 @@ TEST(UtilitiesFilterImplementations, downsample)
                 (calloc(static_cast<size_t> (npts), sizeof(double)));
     double *yref = static_cast<double *>
                    (calloc(static_cast<size_t> (npts), sizeof(double)));
-    fprintf(stdout, "Testing downsampler...\n");
     for (auto iq=1; iq<nq+1; iq++)
     {
         // Do a post-processing test
@@ -1226,6 +1056,11 @@ TEST(UtilitiesFilterImplementations, downsample)
     free(y);
     free(yref);
     free(x);
+}
+//============================================================================//
+TEST(UtilitiesFilterImplementations, decimate)
+{
+
 }
 //============================================================================//
 int readTextFile(int *npts, double *xPtr[], const std::string fileName)
