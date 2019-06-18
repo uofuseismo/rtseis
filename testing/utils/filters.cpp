@@ -8,6 +8,7 @@
 #include <complex>
 #include <vector>
 #include <ipps.h>
+#include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
@@ -1015,7 +1016,25 @@ TEST(UtilitiesFilterImplementations, downsample)
 //============================================================================//
 TEST(UtilitiesFilterImplementations, decimate)
 {
-
+    double *x = NULL;
+    int npts;
+    auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
+    EXPECT_EQ(ierr, 0);
+    int nywork = npts;
+    // Decimate by some default factors
+    Decimate decimate;
+    int downFactor = 7;
+    int filterLength = 95;
+    bool lremovePhaseShift = true;
+    EXPECT_NO_THROW(decimate.initialize(downFactor,
+                                        filterLength,
+                                        lremovePhaseShift,
+                                        RTSeis::ProcessingMode::POST_PROCESSING,
+                                        RTSeis::Precision::DOUBLE));
+    EXPECT_TRUE(decimate.isInitialized());
+    int ndecim = decimate.estimateSpace(npts);
+//getchar();
+    free(x);
 }
 //============================================================================//
 int readTextFile(int *npts, double *xPtr[], const std::string fileName)

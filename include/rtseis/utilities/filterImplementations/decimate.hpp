@@ -92,6 +92,16 @@ public:
     bool isInitialized() const noexcept;
 
     /*!
+     * @brief Estimates the space required to hold the downsampled signal.
+     * @param[in] n   The length of the signal to downsample.  This must
+     *                be non-negative.
+     * @result The number of points required to store the output signal.
+     * @throws std::runtime_error if the module is not initialized.
+     * @throws std::invalid_argument if n is negative.
+     */
+    int estimateSpace(const int n) const;
+
+    /*!
      * @brief Applies the decimator to the data.
      * @param[in] nx       The number data points in x.
      * @param[in] x        The signal to decimate.

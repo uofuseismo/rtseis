@@ -17,6 +17,8 @@ class Decimate::DecimateImpl
 public:
     
     class MultiRateFIRFilter mMRFIRFilter;
+    int mDownFactor = 1;
+    int mPhase = 0;
     RTSeis::ProcessingMode mMode = RTSeis::ProcessingMode::POST_PROCESSING;
     RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
     bool mInitialized = false;
@@ -64,6 +66,8 @@ void Decimate::clear() noexcept
     pImpl->mMRFIRFilter.clear();
     pImpl->mMode = RTSeis::ProcessingMode::POST_PROCESSING;
     pImpl->mPrecision = RTSeis::Precision::DOUBLE;
+    pImpl->mDownFactor = 1;
+    pImpl->mPhase = 0;
     pImpl->mInitialized = false;
 }
 
@@ -84,6 +88,16 @@ void Decimate::initialize(const int downFactor,
         RTSEIS_THROW_IA("Filter length = %d must be greater than 5",
                         filterLength);
     }
+    // Set some properties
+    pImpl->mDownFactor = downFactor;
+    pImpl->mPrecision = precision;
+    pImpl->mMode = mode;
+    // This is a special case
+    if (downFactor == 1)
+    {
+        pImpl->mInitialized = true;
+        return;
+    }
     int nfir = filterLength;
     // Postprocessing is a little trickier - may have to extend filter length
     if (mode == RTSeis::ProcessingMode::POST_PROCESSING && lremovePhaseShift)
@@ -91,7 +105,7 @@ void Decimate::initialize(const int downFactor,
         bool lfail = true;
         for (auto k=0; k<INT_MAX-1; ++k)
         {
-            auto groupDelay = nfir/2;
+            int groupDelay = nfir/2;
             if ((groupDelay + 1)%downFactor == 0)
             {
                 lfail = false;
@@ -102,7 +116,7 @@ void Decimate::initialize(const int downFactor,
 #ifdef DEBUG
         assert(!lfail);
 #endif
-        if (!lfail){RTSEIS_THROW_RTE("%s", "Algorithmic failure");}
+        if (lfail){RTSEIS_THROW_RTE("%s", "Algorithmic failure");}
     } 
     // Create a hamming filter
     int order = nfir - 1; 
@@ -112,9 +126,10 @@ void Decimate::initialize(const int downFactor,
     // Set the multirate FIR filter
     auto b = fir.getFilterTaps();
     int ntaps = b.size();
+    constexpr int upFactor = 1;
     try
     {
-        pImpl->mMRFIRFilter.initialize(1, downFactor,
+        pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
                                        ntaps, b.data(),
                                        mode, precision);
     }
@@ -123,8 +138,6 @@ void Decimate::initialize(const int downFactor,
         RTSEIS_THROW_RTE("%sMultirate FIR filter initialization failed",
                          e.what());
     }
-    pImpl->mPrecision = precision;
-    pImpl->mMode = mode;
     pImpl->mInitialized = true;
 }
 
@@ -133,3 +146,16 @@ bool Decimate::isInitialized() const noexcept
     return pImpl->mInitialized;
 }
 
+int Decimate::estimateSpace(const int n) const
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
+    /// Estimates the space required to hold the downsampled signal
+    int phase = 0;
+    if (pImpl->mMode ==  RTSeis::ProcessingMode::REAL_TIME)
+    {
+        phase = pImpl->mPhase;
+    }
+    int pDstLen = (n + pImpl->mDownFactor - 1 - phase)/pImpl->mDownFactor;
+    return pDstLen;  
+}

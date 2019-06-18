@@ -328,5 +328,6 @@ int Downsample::estimateSpace(const int n) const
  
 int Downsample::getDownsampleFactor() const noexcept
 {
+    //if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class is not initialized");}
     return pDownsample_->getDownsampleFactor();
 }
