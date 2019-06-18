@@ -820,6 +820,15 @@ int MultiRateFIRFilter::estimateSpace(const int n) const
     return len;
 }
 
+int MultiRateFIRFilter::getInitialConditionLength() const
+{
+    if (!pFIR_->isInitialized())
+    {
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
+    }
+    return pFIR_->getInitialConditionLength();
+}
+
 void MultiRateFIRFilter::setInitialConditions(
     const int nz, const double zi[])
 {
@@ -827,7 +836,7 @@ void MultiRateFIRFilter::setInitialConditions(
     {
         RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
-    int nzRef = pFIR_->getInitialConditionLength();
+    int nzRef = getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
         if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}

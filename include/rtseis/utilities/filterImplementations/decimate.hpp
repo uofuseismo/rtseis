@@ -90,7 +90,23 @@ public:
      * @result True indicates that the class is initialized.
      */
     bool isInitialized() const noexcept;
-
+    /*!
+     * @brief Gets the length of the initial condition array.
+     * @result The length of the initial condition array.
+     * @throws std::runtime_error if the class is not initialized.
+     */
+    int getInitialConditionLength() const;
+    /*!
+     * @brief Sets the initial conditions array.
+     * @param[in] nz   The length of the initial condition array.
+     *                 This must equal \c getInitialConditionLength().
+     * @param[in] zi   The initial conditions.  This is an array of 
+     *                 dimension [nz].
+     * @throws std::invalid_argument if nz is invalid or nz is positive
+     *         and zi is NULL.
+     * @throws std::runtime_error if class is not initialized.
+     */
+    void setInitialConditions(const int nz, const double zi[]);
     /*!
      * @brief Estimates the space required to hold the downsampled signal.
      * @param[in] n   The length of the signal to downsample.  This must
@@ -127,6 +143,19 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      */
     void resetInitialConditions(); 
+
+    /*! 
+     * @brief Gets the downsampling factor.
+     * @result The downsampling factor.
+     * @throws std::runtime_error if the class is not initialized.
+     */
+    int getDownsamplingFactor() const;
+    /*! 
+     * @brief Gets the length of the FIR filter.
+     * @result The number of FIR filter coefficients.
+     * @throws std::runtime_error if the class is not initialized.
+     */
+    int getFIRFilterLength() const;
 private:
     class DecimateImpl;
     std::unique_ptr<DecimateImpl> pImpl;

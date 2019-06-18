@@ -1021,9 +1021,10 @@ TEST(UtilitiesFilterImplementations, decimate)
     auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
     EXPECT_EQ(ierr, 0);
     int nywork = npts;
+    std::vector<double> y;
     // Decimate by some default factors
     Decimate decimate;
-    int downFactor = 7;
+    int downFactor = 5;
     int filterLength = 95;
     bool lremovePhaseShift = true;
     EXPECT_NO_THROW(decimate.initialize(downFactor,
@@ -1033,7 +1034,11 @@ TEST(UtilitiesFilterImplementations, decimate)
                                         RTSeis::Precision::DOUBLE));
     EXPECT_TRUE(decimate.isInitialized());
     int ndecim = decimate.estimateSpace(npts);
-//getchar();
+    int nyDecim = 0;
+    y.resize(nywork);
+    auto yptr = y.data();
+    EXPECT_NO_THROW(decimate.apply(3, x, ndecim, &nyDecim, &yptr));
+
     free(x);
 }
 //============================================================================//
