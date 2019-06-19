@@ -219,7 +219,7 @@ TEST(UtilitiesFilterImplementations, iir)
     timeEnd = std::chrono::high_resolution_clock::now();
     error = 0;
     ippsNormDiff_Inf_64f(y2, yref2, npts, &error);
-    EXPECT_LE(error, 1.e-7);
+    EXPECT_LE(error, 5.e-7);
     tdif = timeEnd - timeStart;
     fprintf(stdout, "Fast reference solution 2 computation time %.8lf (s)\n",
             tdif.count());
@@ -508,7 +508,7 @@ TEST(UtiltiesFilterImplementations, multirateFIR)
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (auto job=0; job<2; job++)
     {   
-        for (auto ip=0; ip<packetSize.size(); ip++)
+        for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0;
@@ -755,7 +755,7 @@ TEST(UtilitiesFilterImplementations, sos)
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (auto job=0; job<2; job++)
     {
-        for (auto ip=0; ip<packetSize.size(); ip++)
+        for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0;
@@ -853,7 +853,7 @@ TEST(UtilitiesFilterImplementations, medianFilter)
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (auto job=0; job<2; job++)
     {
-        for (auto ip=0; ip<packetSize.size(); ip++)
+        for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0;
@@ -949,7 +949,7 @@ TEST(UtilitiesFilterImplementations, downsample)
                                   precision));
         std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                      1000, 1024, 1200, 2048, 4000, 4096, 5000});
-        for (auto ip=0; ip<packetSize.size(); ip++)
+        for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0;

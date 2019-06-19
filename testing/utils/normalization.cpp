@@ -48,7 +48,7 @@ TEST(UtilitiesNormalization, signBit)
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (auto job=0; job<2; job++)
     {
-        for (auto ip=0; ip<packetSize.size(); ip++)
+        for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0;

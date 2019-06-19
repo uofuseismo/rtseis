@@ -143,7 +143,7 @@ TEST(UtilitiesPolynomial, polyval)
     EXPECT_NO_THROW(zy = Polynomial::polyval(zp0, zx));
     EXPECT_EQ(zx.size(), zy.size());
     error = 0;
-    for (auto i=0; i<zy.size(); i++)
+    for (auto i=0; i<static_cast<int> (zy.size()); i++)
     {
         error = std::max(error, std::abs(zy[i] - zyref0[i]));
         if (std::abs(zy[i] - zyref0[i]) > 1.e-14)
@@ -156,7 +156,7 @@ TEST(UtilitiesPolynomial, polyval)
     EXPECT_NO_THROW(zy = Polynomial::polyval(zp1, zx));
     EXPECT_EQ(zx.size(), zy.size());
     error = 0;
-    for (auto i=0; i<zy.size(); i++)
+    for (auto i=0; i<static_cast<int> (zy.size()); i++)
     {
         error = std::max(error, std::abs(zy[i] - zyref1[i]));
         if (std::abs(zy[i] - zyref1[i]) > 1.e-14)
@@ -169,7 +169,7 @@ TEST(UtilitiesPolynomial, polyval)
     EXPECT_NO_THROW(zy = Polynomial::polyval(zp2, zx));
     EXPECT_EQ(zx.size(), zy.size());
     error = 0;
-    for (auto i=0; i<zy.size(); i++)
+    for (auto i=0; i<static_cast<int> (zy.size()); i++)
     {
         error = std::max(error, std::abs(zy[i] - zyref2[i]));
         if (std::abs(zy[i] - zyref2[i]) > 1.e-14)
@@ -182,7 +182,7 @@ TEST(UtilitiesPolynomial, polyval)
     EXPECT_NO_THROW(zy = Polynomial::polyval(zp3, zx));
     EXPECT_EQ(zx.size(), zy.size());
     error = 0;
-    for (auto i=0; i<zy.size(); i++)
+    for (auto i=0; i<static_cast<int> (zy.size()); i++)
     {
         error = std::max(error, std::abs(zy[i] - zyref3[i]));
         if (std::abs(zy[i] - zyref3[i]) > 1.e-14)
@@ -195,7 +195,7 @@ TEST(UtilitiesPolynomial, polyval)
     EXPECT_NO_THROW(zy = Polynomial::polyval(zp4, zx));
     EXPECT_EQ(zx.size(), zy.size());
     error = 0;
-    for (auto i=0; i<zy.size(); i++)
+    for (auto i=0; i<static_cast<int> (zy.size()); i++)
     {
         error = std::max(error, std::abs(zy[i] - zyref4[i]));
         if (std::abs(zy[i] - zyref4[i]) > 1.e-14)
@@ -225,9 +225,9 @@ TEST(UtilitiesPolynomial, roots)
     p[0] = 1; p[1] =-6; p[2] =-72; p[3] =-27; 
     std::vector<std::complex<double>> roots;
     EXPECT_NO_THROW(roots = Polynomial::roots(p));
-    EXPECT_EQ(roots.size(), 3);
+    EXPECT_EQ(static_cast<int> (roots.size()), 3);
     double error = 0;
-    for (auto i=0; i<roots.size(); i++)
+    for (auto i=0; i<static_cast<int> (roots.size()); i++)
     {
         error = std::max(error, std::abs(roots[i] - ref1[i]));
         if (std::abs(roots[i] - ref1[i]) > 1.e-14)
@@ -242,9 +242,9 @@ TEST(UtilitiesPolynomial, roots)
     p[2] = 72;
     p[3] = 27;
     EXPECT_NO_THROW(roots = Polynomial::roots(p));
-    EXPECT_EQ(roots.size(), 3);
+    EXPECT_EQ(static_cast<int> (roots.size()), 3);
     error = 0;
-    for (auto i=0; i<roots.size(); i++)
+    for (auto i=0; i<static_cast<int> (roots.size()); i++)
     {
         error = std::max(error, std::abs(roots[i] - ref2[i]));
         if (std::abs(roots[i] - ref2[i]) > 1.e-14)

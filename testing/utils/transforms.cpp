@@ -241,7 +241,7 @@ TEST(UtilitiesTransforms, dft)
     EXPECT_NO_THROW(dft.inverseTransform(5, y5.data(), 5, x5inv.data()));
     // Check forward transform
     double emax = 0;
-    for (auto i=0; i<y5ref.size(); i++)
+    for (auto i=0; i<static_cast<int> (y5ref.size()); i++)
     {
         emax = std::max(emax, std::abs(y5ref[i] - y5[i]));
         if (std::abs(y5ref[i] - y5[i]) > 1.e-12)
@@ -253,7 +253,7 @@ TEST(UtilitiesTransforms, dft)
     ASSERT_LE(emax, 1.e-12);
     // Check that inverse transform is covered
     emax = 0;
-    for (auto i=0; i<x5inv.size(); i++)
+    for (auto i=0; i<static_cast<int> (x5inv.size()); i++)
     {
         emax = std::max(emax, std::abs(x5inv[i] - x5[i]));
         emax = std::max(emax, std::abs(x5invref[i] - x5inv[i]));
@@ -273,7 +273,7 @@ TEST(UtilitiesTransforms, dft)
     ASSERT_EQ(dft.getTransformLength(), 8);
     EXPECT_NO_THROW(dft.forwardTransform(5, x5.data(), 8, y8.data()));
     emax = 0;
-    for (auto i=0; i<y8.size(); i++)
+    for (auto i=0; i<static_cast<int> (y8.size()); i++)
     {
         emax = std::max(emax, std::abs(y8[i] - y8ref[i]));
         if (std::abs(y8[i] - y8ref[i]) > 1.e-12)
@@ -512,7 +512,7 @@ TEST(UtilitiesTransforms, Hilbert)
     h.resize(n);
     hilbert.transform(n, x.data(), h.data());
     double emax = 0;
-    for (auto i=0; i<x.size(); i++)
+    for (auto i=0; i<static_cast<int> (x.size()); i++)
     {
         emax = std::max(emax, std::abs(h[i] - h10[i]));
         if (std::abs(h[i] - h10[i]) > 1.e-8)
@@ -530,10 +530,13 @@ TEST(UtilitiesTransforms, Hilbert)
     EXPECT_EQ(hilbert.getTransformLength(), n);
     x.resize(n);
     h.resize(n);
-    for (auto i=0; i<x.size(); i++){x[i] = static_cast<double> (i);}
+    for (auto i=0; i<static_cast<int> (x.size()); i++)
+    {
+        x[i] = static_cast<double> (i);
+    }
     hilbert.transform(n, x.data(), h.data());
     emax = 0;
-    for (auto i=0; i<x.size(); i++)
+    for (auto i=0; i<static_cast<int>(x.size()); i++)
     {
         emax = std::max(emax, std::abs(h[i] - h11[i]));
         if (std::abs(h[i] - h11[i]) > 1.e-8)
@@ -634,8 +637,8 @@ TEST(UtilitiesTransforms, firEnvelope)
     std::vector<double> x, upRef300, loRef300, upRef301, loRef301;
     readEnvelopeFile(fileName1, &x, &upRef300, &loRef300);
     readEnvelopeFile(fileName2, &x, &upRef301, &loRef301);
-    ASSERT_EQ(upRef300.size(), 4000);
-    ASSERT_EQ(upRef301.size(), 4000);
+    ASSERT_EQ(static_cast<int> (upRef300.size()), 4000);
+    ASSERT_EQ(static_cast<int> (upRef301.size()), 4000);
     // Create with copy constructor
     FIREnvelope env300;
     EXPECT_NO_THROW(env300.initialize(300,
@@ -683,7 +686,7 @@ TEST(UtilitiesTransforms, firEnvelope)
     int npts = x.size();
     for (auto job=0; job<2; job++)
     {    
-        for (auto ip=0; ip<packetSize.size(); ip++)
+        for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
         {
             timeStart = std::chrono::high_resolution_clock::now();
             int nxloc = 0; 
@@ -747,7 +750,7 @@ TEST(UtilitiesTransforms, Spectrogram)
         std::sscanf(line.c_str(), "%lf\n", &sample);
         sig.push_back(sample);
     }
-    EXPECT_EQ(sig.size(), 2048);
+    EXPECT_EQ(static_cast<int> (sig.size()), 2048);
     // Load the spectrogram
     std::ifstream specFile(specFileName);
     std::vector<std::complex<double>> spec;
@@ -768,7 +771,7 @@ TEST(UtilitiesTransforms, Spectrogram)
         spec.push_back(std::complex<double> (re, im));
     } 
     EXPECT_EQ(jc, 129);
-    EXPECT_EQ(spec.size(), 129*199);
+    EXPECT_EQ(static_cast<int> (spec.size()), 129*199);
     // Create a Kaiser window
     int nSamples = 2048;
     int nSamplesPerSegment = 63;

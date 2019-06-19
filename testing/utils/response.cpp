@@ -92,7 +92,7 @@ TEST(UtilitiesResponse, Freqs)
     EXPECT_NO_THROW(h = Response::freqs(ba, w));
     EXPECT_EQ(h.size(), static_cast<size_t> (nw));
     double emax = 0;
-    for (auto i=0; i<h.size(); i++)
+    for (auto i=0; i<static_cast<int> (h.size()); i++)
     {
         auto res = std::abs(h[i] - href1[i]);
         emax = std::max(res, emax);
@@ -167,7 +167,7 @@ TEST(UtilitiesResponse, Freqz)
     EXPECT_NO_THROW(h = Response::freqz(baz, w));
     EXPECT_EQ(h.size(), static_cast<size_t> (nf));
     double emax = 0;
-    for (auto i=0; i<h.size(); i++)
+    for (auto i=0; i<static_cast<int> (h.size()); i++)
     {
         auto res = std::abs(h[i] - href2[i]);
         emax = std::max(res, emax);

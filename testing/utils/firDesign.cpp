@@ -117,8 +117,8 @@ TEST(UtilitiesDesignFIR, hilbert)
     EXPECT_NO_THROW(hilbertFIR = FIR::HilbertTransformer(order, 8));
     auto realTaps = hilbertFIR.first.getFilterTaps();
     auto imagTaps = hilbertFIR.second.getFilterTaps();
-    EXPECT_EQ(realTaps.size(), 1);
-    EXPECT_EQ(imagTaps.size(), 1);
+    EXPECT_EQ(static_cast<int> (realTaps.size()), 1);
+    EXPECT_EQ(static_cast<int> (imagTaps.size()), 1);
     EXPECT_NEAR(realTaps[0], 1, 1.e-14);
     EXPECT_NEAR(imagTaps[0], 0, 1.e-14);
 
@@ -145,8 +145,8 @@ TEST(UtilitiesDesignFIR, hilbert)
     EXPECT_NO_THROW(hilbertFIR = FIR::HilbertTransformer(order, 8));
     realTaps = hilbertFIR.first.getFilterTaps();
     imagTaps = hilbertFIR.second.getFilterTaps();
-    EXPECT_EQ(realTaps.size(), order + 1);
-    EXPECT_EQ(imagTaps.size(), order + 1);
+    EXPECT_EQ(static_cast<int> (realTaps.size()), order + 1);
+    EXPECT_EQ(static_cast<int> (imagTaps.size()), order + 1);
     double error;
     ippsNormDiff_Inf_64f(realTaps.data(), hfiltR16.data(),
                          realTaps.size(), &error);
@@ -173,8 +173,8 @@ TEST(UtilitiesDesignFIR, hilbert)
     EXPECT_NO_THROW(hilbertFIR = FIR::HilbertTransformer(order, 8));
     realTaps = hilbertFIR.first.getFilterTaps();
     imagTaps = hilbertFIR.second.getFilterTaps();
-    EXPECT_EQ(realTaps.size(), order + 1);
-    EXPECT_EQ(imagTaps.size(), order + 1);
+    EXPECT_EQ(static_cast<int> (realTaps.size()), order + 1);
+    EXPECT_EQ(static_cast<int> (imagTaps.size()), order + 1);
     ippsNormDiff_Inf_64f(realTaps.data(), hfiltR19.data(),
                          realTaps.size(), &error);
     ASSERT_LE(error, tol);
