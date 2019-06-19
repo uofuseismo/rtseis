@@ -130,20 +130,20 @@ TEST(UtilitiesDesignIIR, zpk2tf)
     double k = zpk.getGain();
     EXPECT_NEAR(k, kref, 1.e-13); //std::abs(k - kref) > 1.e-13)
     EXPECT_EQ(z.size(), zref.size());
-    for (auto i=0; i<z.size(); i++)
+    for (auto i=0; i<static_cast<int> (z.size()); i++)
     {
         bool lfound = false;
-        for (size_t j=0; j<zref.size(); j++)
+        for (auto j=0; j<static_cast<int> (zref.size()); j++)
         {
             if (std::abs(zref[j] - z[i]) < 1.e-13){lfound = true;}
         }
         EXPECT_TRUE(lfound);
     }
     assert(p.size() == pref.size());
-    for (auto i=0; i<p.size(); i++)
+    for (auto i=0; i<static_cast<int> (p.size()); i++)
     {
         bool lfound = false;
-        for (size_t j=0; j<pref.size(); j++)
+        for (auto j=0; j<static_cast<int> (pref.size()); j++)
         {
             if (std::abs(pref[j] - p[i]) < 1.e-13){lfound = true;}
         }

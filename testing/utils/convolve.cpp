@@ -59,39 +59,39 @@ TEST(UtilitiesConvolve, Convolve)
         EXPECT_NO_THROW(c = Convolve::convolve(a1, b1,
                                                Convolve::Mode::FULL,
                                                implementation));
-        EXPECT_EQ(c.size(), 5);
+        EXPECT_EQ(static_cast<int> (c.size()), 5);
         double emax;
         ippsNormDiff_Inf_64f(c.data(), r1.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 2 - interchange 1
         EXPECT_NO_THROW(c = Convolve::convolve(b1, a1,
                                    Convolve::Mode::FULL, implementation));
-        EXPECT_EQ(c.size(), 5);
+        EXPECT_EQ(static_cast<int> (c.size()), 5);
         ippsNormDiff_Inf_64f(c.data(), r1.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 3
         EXPECT_NO_THROW(c = Convolve::convolve(a1, b1,
                                    Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 1);
+        EXPECT_EQ(static_cast<int> (c.size()), 1);
         EXPECT_NEAR(r1[2], c[0], 1.e-10);
         // Test 4 - interchange 3
         EXPECT_NO_THROW(
             c = Convolve::convolve(b1, a1,
                                    Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 1);
+        EXPECT_EQ(static_cast<int> (c.size()), 1);
         EXPECT_NEAR(r1[2], c[0], 1.e-10);
         // Test 5
         EXPECT_NO_THROW(
             c = Convolve::convolve(a1, b1,
                                    Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 3);
+        EXPECT_EQ(static_cast<int> (c.size()), 3);
         ippsNormDiff_Inf_64f(c.data(), r1.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 6 - interchange 5
         EXPECT_NO_THROW(
             c = Convolve::convolve(b1, a1,
                                    Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 3);
+        EXPECT_EQ(static_cast<int> (c.size()), 3);
         ippsNormDiff_Inf_64f(c.data(), r1.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         //--------------------------------------------------------------------//
@@ -118,28 +118,28 @@ TEST(UtilitiesConvolve, Convolve)
         EXPECT_NO_THROW(
             c = Convolve::convolve(a2, b2,
                                    Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 4);
+        EXPECT_EQ(static_cast<int> (c.size()), 4);
         ippsNormDiff_Inf_64f(c.data(), r2.data()+2, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 10 - interchange 9
         EXPECT_NO_THROW(
             c = Convolve::convolve(b2, a2,
                                    Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 4);
+        EXPECT_EQ(static_cast<int> (c.size()), 4);
         ippsNormDiff_Inf_64f(c.data(), r2.data()+2, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 11 - different sizes
         EXPECT_NO_THROW(
             c = Convolve::convolve(a2, b2,
                                    Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 6);
+        EXPECT_EQ(static_cast<int> (c.size()), 6);
         ippsNormDiff_Inf_64f(c.data(), r2.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 12 - interchange 11
         EXPECT_NO_THROW(
             c = Convolve::convolve(b2, a2,
                                    Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 6);
+        EXPECT_EQ(static_cast<int> (c.size()), 6);
         ippsNormDiff_Inf_64f(c.data(), r2.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
     }
@@ -168,14 +168,14 @@ TEST(UtilitiesConvolve, correlate)
         EXPECT_NO_THROW(
             c = Convolve::correlate(a1, b1,
                                     Convolve::Mode::FULL, implementation));
-        EXPECT_EQ(c.size(), 5);
+        EXPECT_EQ(static_cast<int> (c.size()), 5);
         ippsNormDiff_Inf_64f(c.data(), r1.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 2 - interchange 1
         EXPECT_NO_THROW(
             c = Convolve::correlate(b1, a1,
                                     Convolve::Mode::FULL, implementation));
-        EXPECT_EQ(c.size(), 5);
+        EXPECT_EQ(static_cast<int> (c.size()), 5);
         emax = 0;
         for (size_t i=0; i<c.size(); i++)
         {
@@ -191,26 +191,26 @@ TEST(UtilitiesConvolve, correlate)
         EXPECT_NO_THROW(
             c = Convolve::correlate(a1, b1,
                                     Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 1);
+        EXPECT_EQ(static_cast<int> (c.size()), 1);
         EXPECT_NEAR(r1[2], c[0], 1.e-10);
         // Test 4 - interchange 3
         EXPECT_NO_THROW(
             c = Convolve::correlate(b1, a1,
                                     Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 1);
+        EXPECT_EQ(static_cast<int> (c.size()), 1);
         EXPECT_NEAR(r1[2], c[0], 1.e-10);
         // Test 5
         EXPECT_NO_THROW(
             c = Convolve::correlate(a1, b1,
                                     Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 3);
+        EXPECT_EQ(static_cast<int> (c.size()), 3);
         ippsNormDiff_Inf_64f(c.data(), r1.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 6 - interchange 5
         EXPECT_NO_THROW(
             c = Convolve::correlate(b1, a1,
                                     Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 3);
+        EXPECT_EQ(static_cast<int> (c.size()), 3);
         emax = 0;
         for (size_t i=0; i<c.size(); i++)
         {
@@ -255,14 +255,14 @@ TEST(UtilitiesConvolve, correlate)
         EXPECT_NO_THROW(
             c = Convolve::correlate(a2, b2,
                                     Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 4);
+        EXPECT_EQ(static_cast<int> (c.size()), 4);
         ippsNormDiff_Inf_64f(c.data(), r2.data()+2, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 10 - interchange 9 
         EXPECT_NO_THROW(
             c = Convolve::correlate(b2, a2,
                                     Convolve::Mode::VALID, implementation));
-        EXPECT_EQ(c.size(), 4);
+        EXPECT_EQ(static_cast<int> (c.size()), 4);
         emax = 0;
         for (size_t i=0; i<c.size(); i++)
         {
@@ -278,14 +278,14 @@ TEST(UtilitiesConvolve, correlate)
         EXPECT_NO_THROW(
             c = Convolve::correlate(a2, b2,
                                     Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 6);
+        EXPECT_EQ(static_cast<int> (c.size()), 6);
         ippsNormDiff_Inf_64f(c.data(), r2.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 12 - interchange 11
         EXPECT_NO_THROW(
             c = Convolve::correlate(b2, a2,
                                     Convolve::Mode::SAME, implementation));
-        EXPECT_EQ(c.size(), 6);
+        EXPECT_EQ(static_cast<int> (c.size()), 6);
         emax = 0;
         for (size_t i=0; i<c.size(); i++)
         {

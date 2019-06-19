@@ -97,7 +97,7 @@ inline std::string makeInvalidArgumentError(
        {  \
            snprintf(&errMsg[strlen(errMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
        } while(0); \
-       sprintf(errMsg, "%s%s\n", errMsg, ANSI_COLOR_RESET); \
+       snprintf(&errMsg[strlen(errMsg)], RTSEIS_MAXMSG_LEN, "%s\n", ANSI_COLOR_RESET); \
        fprintf(stderr, "%s", errMsg); \
    } \
 };
@@ -133,7 +133,7 @@ inline std::string makeInvalidArgumentError(
        {  \
           snprintf(&warnMsg[strlen(warnMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
        } while(0); \
-       sprintf(warnMsg, "%s%s\n", warnMsg, ANSI_COLOR_RESET); \
+       snprintf(&warnMsg[strlen(warnMsg)], RTSEIS_MAXMSG_LEN, "%s\n", ANSI_COLOR_RESET); \
        fprintf(stdout, "%s", warnMsg); \
    } \
 };
@@ -150,7 +150,7 @@ inline std::string makeInvalidArgumentError(
        {  \
           snprintf(&infoMsg[strlen(infoMsg)], RTSEIS_MAXMSG_LEN, fmt, __VA_ARGS__); \
        } while(0); \
-       sprintf(infoMsg, "%s%s\n", infoMsg, ANSI_COLOR_RESET); \
+       snprintf(&infoMsg[strlen(infoMsg)], RTSEIS_MAXMSG_LEN, "%s\n", ANSI_COLOR_RESET); \
        fprintf(stdout ,"%s", infoMsg); \
     } \
 };

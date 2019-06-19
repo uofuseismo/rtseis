@@ -33,7 +33,7 @@ inline std::string makeInvalidArgumentError(
     {  \
         snprintf(&msgData[strlen(msgData)], 512, fmt, __VA_ARGS__); \
     } while(0); \
-    sprintf(msgData, "%s%s\n", msgData, ANSI_COLOR_RESET); \
+    snprintf(&msgData[strlen(msgData)], 512,"%s\n", ANSI_COLOR_RESET); \
     std::string throwMsg(msgData); \
     throw std::invalid_argument(throwMsg); \
 }
@@ -49,7 +49,7 @@ inline std::string makeInvalidArgumentError(
     {  \
         snprintf(&msgData[strlen(msgData)], 512, fmt, __VA_ARGS__); \
     } while(0); \
-    sprintf(msgData, "%s%s\n", msgData, ANSI_COLOR_RESET); \
+    snprintf(&msgData[strlen(msgData)], 512, "%s\n", ANSI_COLOR_RESET); \
     std::string throwMsg(msgData); \
     throw std::runtime_error(throwMsg); \
 }
