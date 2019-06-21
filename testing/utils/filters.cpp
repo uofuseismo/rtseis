@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <string>
 #include <cmath>
 #include <chrono>
@@ -25,6 +26,7 @@ namespace
 {
 
 using namespace RTSeis::Utilities::FilterImplementations;
+static void read_decimate(const int nq, std::vector<double> *xdecim);
 static int readTextFile(int *npts, double *xPtr[],
                         const std::string fileName = "utils/data/gse2.txt");
 static void lowpassFilterThenDownsample(const int npts, const int nfir,
@@ -1037,6 +1039,10 @@ TEST(UtilitiesFilterImplementations, decimate)
     bool lremovePhaseShift = true;
     for (auto downFactor=2; downFactor<=10; downFactor++)
     {
+        // Read the reference solution
+        std::vector<double> xdecim_ref;
+        read_decimate(downFactor, &xdecim_ref);
+        // Now do the decimation
         EXPECT_NO_THROW(decimate.initialize(downFactor,
                                             filterLength,
                                             lremovePhaseShift,
@@ -1057,30 +1063,44 @@ TEST(UtilitiesFilterImplementations, decimate)
         EXPECT_EQ(nfir%2, 1);
         lowpassFilterThenDownsample(npts, nfir, downFactor, x,
                                     &ylpds, true);
-        //EXPECT_EQ(static_cast<int> (ylpds.size()), nyDecim); 
+        EXPECT_EQ(static_cast<int> (xdecim_ref.size()), nyDecim);
         double error = 0;
-        ippsNormDiff_Inf_64f(y.data(), ylpds.data(), nyDecim, &error);
-        EXPECT_LE(error, 1.e-12);
+        ippsNormDiff_Inf_64f(y.data(), xdecim_ref.data(), nyDecim, &error);
+        EXPECT_LE(error, 1.e-8);
         std::chrono::duration<double> tdif = timeEnd - timeStart;
         fprintf(stdout, "Reference solution time for nq=%d in %.8e (s)\n",
                 downFactor, tdif.count());
-/*
-//for (int i=nyDecim-5; i<nyDecim; i++)
-for (int i=0; i<20; i++)
-{
-printf("%d %lf %lf\n", i, ylpds[i], y[i]);
-}
-printf("nfir: %d %d %d\n", downFactor, nfir, ylpds.size());
-printf("%d %lf %lf\n", ylpds.size()-1, ylpds[ylpds.size()-2], y[ylpds.size()-2]);
-printf("%d %lf %lf\n", ylpds.size(), ylpds[ylpds.size()-1], y[ylpds.size()-1]);
-getchar();
-        printf("%d %d %d %lf\n", nfir, downFactor, nfir/2, error);
-*/
+
     }
     free(x);
 }
 //============================================================================//
-
+void read_decimate(const int nq, std::vector<double> *xdecim)
+{
+    xdecim->resize(0);
+    std::string fileName = "data/decimate_" + std::to_string(nq) + ".txt";
+    std::ifstream dfile;
+    dfile.open(fileName);
+    if (dfile.is_open())
+    { 
+        std::string line;
+        int n = 0;
+        while (std::getline(dfile, line))
+        {
+            n = n + 1;
+        }
+        dfile.close();
+        dfile.open(fileName);
+        xdecim->reserve(n);
+        while (std::getline(dfile, line))
+        {
+            double xval;
+            sscanf(line.c_str(), "%lf\n", &xval);
+            xdecim->push_back(xval);
+        }
+        dfile.close();
+    } 
+}
 void lowpassFilterThenDownsample(const int npts, const int nfir,
                                  const int downFactor, const double x[], 
                                  std::vector<double> *y,

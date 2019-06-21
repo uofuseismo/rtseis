@@ -19,7 +19,7 @@ using namespace RTSeis::Utilities::FilterImplementations;
 class Decimate::DecimateImpl
 {
 public:
-    class MultiRateFIRFilter mMRFIRFilter;
+    //class MultiRateFIRFilter mMRFIRFilter; // TODO implementaiton is slow!
     class FIRFilter mFIRFilter;
     class Downsample mDownsampler; 
     int mDownFactor = 1;
@@ -71,7 +71,9 @@ Decimate::~Decimate() = default;
 
 void Decimate::clear() noexcept
 {
-    pImpl->mMRFIRFilter.clear();
+    //pImpl->mMRFIRFilter.clear();
+    pImpl->mFIRFilter.clear();
+    pImpl->mDownsampler.clear();
     pImpl->mMode = RTSeis::ProcessingMode::POST_PROCESSING;
     pImpl->mPrecision = RTSeis::Precision::DOUBLE;
     pImpl->mDownFactor = 1;
@@ -157,13 +159,15 @@ void Decimate::initialize(const int downFactor,
                                               FilterDesign::FIRWindow::HAMMING);
     // Set the multirate FIR filter
     auto b = fir.getFilterTaps();
-    constexpr int upFactor = 1;
     int ntaps = b.size();
     try
     {
+/*
+        //constexpr int upFactor = 1;
         pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
                                        ntaps, b.data(),
                                        mode, precision);
+*/
         pImpl->mFIRFilter.initialize(ntaps, b.data(),
                                      RTSeis::ProcessingMode::POST_PROCESSING,
                                      precision);
@@ -186,6 +190,13 @@ int Decimate::estimateSpace(const int n) const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
+    return pImpl->mDownsampler.estimateSpace(n);
+}
+/* TODO - when lashing in a more performant multirate fir filter use this fn
+int Decimate::estimateSpace(const int n) const
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
     if (pImpl->mRemovePhaseShift)
     {
         int npad = n + pImpl->mGroupDelay;
@@ -202,11 +213,13 @@ int Decimate::estimateSpace(const int n) const
         return pImpl->mMRFIRFilter.estimateSpace(n);
     }
 }
+*/
 
 int Decimate::getInitialConditionLength() const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    return pImpl->mMRFIRFilter.getInitialConditionLength(); 
+    return pImpl->mFIRFilter.getInitialConditionLength();
+    //return pImpl->mMRFIRFilter.getInitialConditionLength(); 
 }
 
 void Decimate::setInitialConditions(const int nz,const double zi[])
@@ -221,15 +234,64 @@ void Decimate::setInitialConditions(const int nz,const double zi[])
     {
         RTSEIS_THROW_IA("%s", "zi cannot be NULL");
     }
-    pImpl->mMRFIRFilter.setInitialConditions(nz, zi);
+    //pImpl->mMRFIRFilter.setInitialConditions(nz, zi);
+    pImpl->mFIRFilter.setInitialConditions(nz, zi);
 }
 
 void Decimate::resetInitialConditions()
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    pImpl->mMRFIRFilter.resetInitialConditions();
+    //pImpl->mMRFIRFilter.resetInitialConditions();
+    pImpl->mFIRFilter.resetInitialConditions();
 }
 
+void Decimate::apply(const int nx, const double x[],
+                     const int ny, int *nyDown, double *yIn[])
+{
+    *nyDown = 0;
+    if (nx <= 0){return;}
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    int nyref = estimateSpace(nx);
+    if (ny < nyref){RTSEIS_THROW_IA("ny = %d must be at least %d", ny, nyref);}
+    double *y = *yIn;
+    if (y == nullptr)
+    {   
+        RTSEIS_THROW_IA("%s", "y is NULL");
+    }   
+    // Special case
+    if (pImpl->mRemovePhaseShift)
+    {   
+#ifdef DEBUG
+        assert(pImpl->mGroupDelay%pImpl->mDownFactor == 0); 
+#endif
+        // Postpend zeros so that the filter delay pushes our desired
+        // output to the end of the temporary array
+        int npad = nx + pImpl->mGroupDelay; 
+        double *xpad = ippsMalloc_64f(npad);
+        ippsCopy_64f(x, xpad, nx);
+        ippsZero_64f(&xpad[nx], pImpl->mGroupDelay);
+        // The FIR filter seems to perform better than the multirate FIR
+        // filter.  So don't fight it.
+        double *yfilt = ippsMalloc_64f(npad);
+        pImpl->mFIRFilter.apply(npad, xpad, &yfilt);
+        pImpl->mDownsampler.apply(nx, &yfilt[pImpl->mGroupDelay],  
+                                  ny, nyDown, &y);
+        ippsFree(xpad);
+        ippsFree(yfilt);
+    }
+    else
+    {
+        // Just apply the downsampler
+        //pImpl->mMRFIRFilter.apply(nx, x, ny, nyDown, &y);
+        double *yfilt =ippsMalloc_64f(nx);
+        pImpl->mFIRFilter.apply(nx, x, &yfilt);
+        pImpl->mDownsampler.apply(nx, yfilt, ny, nyDown, &y); 
+        ippsFree(yfilt);
+    }
+}
+
+/*
 void Decimate::apply(const int nx, const double x[],
                      const int ny, int *nyDown, double *yIn[])
 {
@@ -256,13 +318,7 @@ void Decimate::apply(const int nx, const double x[],
         double *xpad = ippsMalloc_64f(npad);
         ippsCopy_64f(x, xpad, nx);
         ippsZero_64f(&xpad[nx], pImpl->mGroupDelay); 
-/* 
-        double *yfilt = ippsMalloc_64f(npad);
-        pImpl->mFIRFilter.apply(npad, xpad, &yfilt);
-        pImpl->mDownsampler.apply(nx, &yfilt[pImpl->mGroupDelay],  
-                                  ny+1, nyDown, &y);
-        *nyDown = *nyDown - 1;
-*/
+
         int nywork = pImpl->mMRFIRFilter.estimateSpace(npad);
         int nyworkDown;
         double *ypad = ippsMalloc_64f(nywork);
@@ -293,6 +349,7 @@ void Decimate::apply(const int nx, const double x[],
         pImpl->mMRFIRFilter.apply(nx, x, ny, nyDown, &y);
     } 
 }
+*/
 
 int Decimate::getDownsamplingFactor() const
 {
