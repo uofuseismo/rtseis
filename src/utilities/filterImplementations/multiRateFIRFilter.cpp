@@ -415,6 +415,7 @@ class MultiRateFIRFilter::MultiRateFIRImpl
             int nexcess = 0;
             if (mode_ == RTSeis::ProcessingMode::POST_PROCESSING)
             {
+                downPhaseNew = 0; // Downsampling phase shouldn't change
                 nUse = n;
                 ippsZero_64f(dlysrc, mbDly_);
                 *len = (upFactor*n + downFactor - 1 - downPhase)/downFactor;

@@ -8,6 +8,8 @@
 #include <complex>
 #include <vector>
 #include <ipps.h>
+#include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
@@ -25,6 +27,10 @@ namespace
 using namespace RTSeis::Utilities::FilterImplementations;
 static int readTextFile(int *npts, double *xPtr[],
                         const std::string fileName = "utils/data/gse2.txt");
+static void lowpassFilterThenDownsample(const int npts, const int nfir,
+                                        const int downFactor, const double x[], 
+                                        std::vector<double> *y,
+                                        const bool lremovePhase);
 /*
 static int filters_downsample_test(); //const int npts, const double x[]);
 static int filters_firFilter_test(const int npts, const double x[],
@@ -1022,26 +1028,107 @@ TEST(UtilitiesFilterImplementations, decimate)
     EXPECT_EQ(ierr, 0);
     int nywork = npts;
     std::vector<double> y;
+    std::vector<double> xpad;
+    std::vector<double> ylpds;
     // Decimate by some default factors
     Decimate decimate;
-    int downFactor = 5;
+    //int downFactor = 5;
     int filterLength = 95;
     bool lremovePhaseShift = true;
-    EXPECT_NO_THROW(decimate.initialize(downFactor,
-                                        filterLength,
-                                        lremovePhaseShift,
-                                        RTSeis::ProcessingMode::POST_PROCESSING,
-                                        RTSeis::Precision::DOUBLE));
-    EXPECT_TRUE(decimate.isInitialized());
-    int ndecim = decimate.estimateSpace(npts);
-    int nyDecim = 0;
-    y.resize(nywork);
-    auto yptr = y.data();
-    EXPECT_NO_THROW(decimate.apply(3, x, ndecim, &nyDecim, &yptr));
-
+    for (auto downFactor=2; downFactor<=10; downFactor++)
+    {
+        EXPECT_NO_THROW(decimate.initialize(downFactor,
+                                            filterLength,
+                                            lremovePhaseShift,
+                                            RTSeis::ProcessingMode::POST_PROCESSING,
+                                            RTSeis::Precision::DOUBLE));
+        EXPECT_TRUE(decimate.isInitialized());
+        int ndecim = decimate.estimateSpace(npts);
+        int nyDecim = 0;
+        y.resize(nywork);
+        std::fill(y.begin(), y.end(), 0);
+        auto timeStart = std::chrono::high_resolution_clock::now();
+        auto yptr = y.data();
+        EXPECT_NO_THROW(decimate.apply(npts, x, ndecim, &nyDecim, &yptr));
+        EXPECT_EQ(nyDecim, ndecim);
+        auto timeEnd = std::chrono::high_resolution_clock::now();
+        // Lowpass filter and downsample a reference signal
+        int nfir = decimate.getFIRFilterLength();
+        EXPECT_EQ(nfir%2, 1);
+        lowpassFilterThenDownsample(npts, nfir, downFactor, x,
+                                    &ylpds, true);
+        //EXPECT_EQ(static_cast<int> (ylpds.size()), nyDecim); 
+        double error = 0;
+        ippsNormDiff_Inf_64f(y.data(), ylpds.data(), nyDecim, &error);
+        EXPECT_LE(error, 1.e-12);
+        std::chrono::duration<double> tdif = timeEnd - timeStart;
+        fprintf(stdout, "Reference solution time for nq=%d in %.8e (s)\n",
+                downFactor, tdif.count());
+/*
+//for (int i=nyDecim-5; i<nyDecim; i++)
+for (int i=0; i<20; i++)
+{
+printf("%d %lf %lf\n", i, ylpds[i], y[i]);
+}
+printf("nfir: %d %d %d\n", downFactor, nfir, ylpds.size());
+printf("%d %lf %lf\n", ylpds.size()-1, ylpds[ylpds.size()-2], y[ylpds.size()-2]);
+printf("%d %lf %lf\n", ylpds.size(), ylpds[ylpds.size()-1], y[ylpds.size()-1]);
+getchar();
+        printf("%d %d %d %lf\n", nfir, downFactor, nfir/2, error);
+*/
+    }
     free(x);
 }
 //============================================================================//
+
+void lowpassFilterThenDownsample(const int npts, const int nfir,
+                                 const int downFactor, const double x[], 
+                                 std::vector<double> *y,
+                                 const bool lremovePhase)
+{
+    // Design an equivalent lowpass filter
+    auto order = nfir - 1; 
+    auto r = 1.0/static_cast<double> (downFactor);
+    auto fir = RTSeis::Utilities::FilterDesign::FIR::FIR1Lowpass(order, r,
+                           RTSeis::Utilities::FilterDesign::FIRWindow::HAMMING);
+    // Initialize the lowpass single rate filter and filter the signal
+    FIRFilter firFilter;
+    auto taps = fir.getFilterTaps();
+    firFilter.initialize(taps.size(), taps.data(),
+                         RTSeis::ProcessingMode::POST_PROCESSING,
+                         RTSeis::Precision::DOUBLE);
+    // Create a downsampler
+    Downsample downsample;
+    downsample.initialize(downFactor,
+                          RTSeis::ProcessingMode::POST_PROCESSING,
+                          RTSeis::Precision::DOUBLE); 
+    if (lremovePhase)
+    {
+        int groupDelay = static_cast<int> (taps.size()/2);
+        int nptsPad = npts + groupDelay;
+        std::vector<double> xpad(nptsPad, 0);
+        std::vector<double> xfilt(nptsPad, 0);
+        std::copy(x, x+npts, xpad.begin());
+        auto xfiltPtr = xfilt.data();
+        firFilter.apply(nptsPad, xpad.data(), &xfiltPtr);
+        // Now downsample starting at the group delay
+        auto nywork = downsample.estimateSpace(npts); // Filter last npts
+        y->resize(nywork);
+        std::fill(y->begin(), y->end(), 0.0);
+        auto yPtr = y->data();
+        int ny;
+        downsample.apply(npts, xfiltPtr+groupDelay,
+                         nywork, &ny, &yPtr); 
+        assert(ny == nywork);
+         
+    }
+    else
+    {
+
+    }
+
+}
+
 int readTextFile(int *npts, double *xPtr[], const std::string fileName)
 {
     *xPtr = nullptr;

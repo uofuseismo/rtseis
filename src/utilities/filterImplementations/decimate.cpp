@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cmath>
 #include <cassert>
 #include <cfloat>
 #include <climits>
@@ -9,6 +10,8 @@
 #include "rtseis/utilities/design/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
+#include "rtseis/utilities/filterImplementations/downsample.hpp"
+#include "rtseis/utilities/filterImplementations/firFilter.hpp"
 
 using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterImplementations;
@@ -16,8 +19,9 @@ using namespace RTSeis::Utilities::FilterImplementations;
 class Decimate::DecimateImpl
 {
 public:
-    
     class MultiRateFIRFilter mMRFIRFilter;
+    class FIRFilter mFIRFilter;
+    class Downsample mDownsampler; 
     int mDownFactor = 1;
     int mGroupDelay = 0;
     int mFIRLength = 0;
@@ -130,7 +134,7 @@ void Decimate::initialize(const int downFactor,
         bool lfail = true;
         for (auto k=0; k<INT_MAX-1; ++k)
         {
-            int groupDelay = nfir/2;
+            int groupDelay = (nfir-1)/2;
             if (groupDelay%downFactor == 0 && nfir%2 == 1)
             {
                 lfail = false;
@@ -148,7 +152,7 @@ void Decimate::initialize(const int downFactor,
     // Create a hamming filter
     pImpl->mFIRLength = nfir;
     int order = nfir - 1; 
-    auto r = 1.0/static_cast<double> (nfir);
+    auto r = 1.0/static_cast<double> (downFactor);
     auto fir = FilterDesign::FIR::FIR1Lowpass(order, r,
                                               FilterDesign::FIRWindow::HAMMING);
     // Set the multirate FIR filter
@@ -160,6 +164,10 @@ void Decimate::initialize(const int downFactor,
         pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
                                        ntaps, b.data(),
                                        mode, precision);
+        pImpl->mFIRFilter.initialize(ntaps, b.data(),
+                                     RTSeis::ProcessingMode::POST_PROCESSING,
+                                     precision);
+        pImpl->mDownsampler.initialize(downFactor, RTSeis::ProcessingMode::POST_PROCESSING, precision);
     }
     catch (std::exception &e)
     {
@@ -180,11 +188,19 @@ int Decimate::estimateSpace(const int n) const
     if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
     if (pImpl->mRemovePhaseShift)
     {
+        int npad = n + pImpl->mGroupDelay;
+        int len = pImpl->mMRFIRFilter.estimateSpace(npad);
+        int i0 = pImpl->mGroupDelay/pImpl->mDownFactor; 
+        double d1 = std::ceil(static_cast<double> (npad)
+                             /static_cast<double> (pImpl->mDownFactor)); 
+        int i1 = static_cast<int> (d1);
+        i1 = std::max(i0, std::min(len - 1 - 1, i1 - 1));
+        return i1 - i0 + 1;
     }
     else
     {
+        return pImpl->mMRFIRFilter.estimateSpace(n);
     }
-    return pImpl->mMRFIRFilter.estimateSpace(n);
 }
 
 int Decimate::getInitialConditionLength() const
@@ -231,34 +247,50 @@ void Decimate::apply(const int nx, const double x[],
     // Special case
     if (pImpl->mRemovePhaseShift)
     {
-        // Pad a copy of x with group delay samples
-        int npad = nx + pImpl->mGroupDelay;
+#ifdef DEBUG
+        assert(pImpl->mGroupDelay%pImpl->mDownFactor == 0);
+#endif
+        // Postpend zeros so that the filter delay pushes our desired
+        // output to the end of the temporary array
+        int npad = nx + pImpl->mGroupDelay; 
         double *xpad = ippsMalloc_64f(npad);
-        ippsCopy_64f(x, xpad, nx); 
-        ippsZero_64f(&xpad[nx], pImpl->mGroupDelay);
-        // Filter
+        ippsCopy_64f(x, xpad, nx);
+        ippsZero_64f(&xpad[nx], pImpl->mGroupDelay); 
+/* 
+        double *yfilt = ippsMalloc_64f(npad);
+        pImpl->mFIRFilter.apply(npad, xpad, &yfilt);
+        pImpl->mDownsampler.apply(nx, &yfilt[pImpl->mGroupDelay],  
+                                  ny+1, nyDown, &y);
+        *nyDown = *nyDown - 1;
+*/
         int nywork = pImpl->mMRFIRFilter.estimateSpace(npad);
-        double *ypad = ippsMalloc_64f(nywork);
         int nyworkDown;
-        pImpl->mMRFIRFilter.apply(npad, xpad, nywork, &nyworkDown, &ypad);
-        // Think of decimating as filtering then downsampling. In this case
-        // we would extract the filtered signal beginning at ypad[groupdelay].
-        // However, because we've downsampled we instead extract at 
-        // ypad[groupDelay/downFactor].  This is why we took care to pad the
-        // number of FIR coefficients during setup.
-        int ibeg = pImpl->mGroupDelay/pImpl->mDownFactor; 
-        int ncopy = std::max(0, nyworkDown - ibeg);
-        *nyDown = ncopy;
-        if (ncopy != nyref)
-        {
-            fprintf(stderr, "ncopy = %d should match %d", ncopy, nyref); 
-        }
-        ippsCopy_64f(ypad, y, ncopy); 
+        double *ypad = ippsMalloc_64f(nywork);
+        pImpl->mMRFIRFilter.apply(npad, xpad, nywork, &nyworkDown, &ypad); 
+        // Recall, that to remove the phase shift I would nominally start at
+        // the groupDelay'th index.  However, I've downsampled the signal so
+        // I instead start at the groupDelay/downFactor'th sample.
+        int i0 = pImpl->mGroupDelay/pImpl->mDownFactor; 
+        // The filter will delay nx + groupDelay samples.  However, I've only
+        // retained every (nx + groupDelay)/downFactor samples so this should
+        // correspond to the last `useful' or `reliable' sample.  I've noticed
+        // that sometimes IPP will compute the i1'th sample however,
+        // sometimes it doesn't, so this is relatively safe for safety 
+        // I use nyworkDown - 1.  The additional -1 is to make this inclusive. 
+        double d1 = std::ceil(static_cast<double> (npad)
+                             /static_cast<double> (pImpl->mDownFactor)); 
+        int i1 = static_cast<int> (d1);
+        i1 = std::max(i0, std::min(nyworkDown - 1 - 1, i1 - 1));
+        // Copy
+        *nyDown = i1 - i0 + 1;
+        ippsCopy_64f(&ypad[i0], y, *nyDown); 
         ippsFree(xpad);
         ippsFree(ypad);
     }
     else
     {
+        // Just apply the downsampler
+        pImpl->mMRFIRFilter.apply(nx, x, ny, nyDown, &y);
     } 
 }
 
