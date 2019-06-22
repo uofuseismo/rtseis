@@ -1057,21 +1057,75 @@ TEST(UtilitiesFilterImplementations, decimate)
         auto yptr = y.data();
         EXPECT_NO_THROW(decimate.apply(npts, x, ndecim, &nyDecim, &yptr));
         EXPECT_EQ(nyDecim, ndecim);
+        EXPECT_EQ(static_cast<int> (xdecim_ref.size()), nyDecim);
         auto timeEnd = std::chrono::high_resolution_clock::now();
         // Lowpass filter and downsample a reference signal
         int nfir = decimate.getFIRFilterLength();
         EXPECT_EQ(nfir%2, 1);
-        lowpassFilterThenDownsample(npts, nfir, downFactor, x,
-                                    &ylpds, true);
-        EXPECT_EQ(static_cast<int> (xdecim_ref.size()), nyDecim);
         double error = 0;
         ippsNormDiff_Inf_64f(y.data(), xdecim_ref.data(), nyDecim, &error);
         EXPECT_LE(error, 1.e-8);
         std::chrono::duration<double> tdif = timeEnd - timeStart;
         fprintf(stdout, "Reference solution time for nq=%d in %.8e (s)\n",
                 downFactor, tdif.count());
-
-    }
+        // Now do a real time solution
+        Decimate rtDecim;
+        EXPECT_NO_THROW(rtDecim.initialize(downFactor,
+                                           nfir, //filterLength,
+                                           false,
+                                           RTSeis::ProcessingMode::REAL_TIME,
+                                           RTSeis::Precision::DOUBLE));
+        decimate = rtDecim; // Test copy assignent
+        std::fill(y.begin(), y.end(), 0.0);
+        std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512, 
+                                     1000, 1024, 1200, 2048, 4000, 4096, 5000});
+        for (auto job=0; job<2; job++)
+        {
+            for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
+            {
+                timeStart = std::chrono::high_resolution_clock::now();
+                int nxloc = 0;
+                int nyloc = 0;
+                while (nxloc < npts)
+                {
+                    int nptsPass = std::min(packetSize[ip], npts - nxloc);
+                    if (job == 1)
+                    {
+                        nptsPass = std::min(packetSize[ip] + rand()%50 - 25,
+                                            npts - nxloc);
+                    }
+                    int nyDec = 0;
+                    double *yptr = &y[nyloc];
+                    EXPECT_NO_THROW(decimate.apply(nptsPass, &x[nxloc],
+                                                   npts+1-nyloc, &nyDec, &yptr));
+                    if (nptsPass <= 0){continue;}
+                    nxloc = nxloc + nptsPass;
+                    nyloc = nyloc + nyDec;
+                }
+                auto timeEnd = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> tdif = timeEnd - timeStart;
+                decimate.resetInitialConditions();
+                EXPECT_EQ(nyloc, nyDecim);
+                int groupDelay = nfir/2;
+                int ncomp = std::min(nyloc, nyDecim) - groupDelay/downFactor;
+                ippsNormDiff_Inf_64f(y.data()+groupDelay/downFactor,
+                                     xdecim_ref.data(), ncomp, &error);
+                EXPECT_LE(error, 1.e-8);
+                if (job == 0 && downFactor == 6)
+                {
+                    fprintf(stdout,
+                            "Passed decimate fixed packet size %4d in %.8e (s)\n",
+                            packetSize[ip], tdif.count());
+                }
+                else if (job == 1 && downFactor == 6)
+                {
+                    fprintf(stdout,
+                            "Passed decimate random in %.8e (s)\n",
+                            tdif.count());
+                }
+            } // Loop on packets 
+        } // Loop on deterministic/random
+    } // Loop on different downsampling factors
     free(x);
 }
 //============================================================================//

@@ -9,7 +9,7 @@
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/design/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
+//#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 
@@ -25,7 +25,6 @@ public:
     int mDownFactor = 1;
     int mGroupDelay = 0;
     int mFIRLength = 0;
-    //int mPhase = 0;
     RTSeis::ProcessingMode mMode = RTSeis::ProcessingMode::POST_PROCESSING;
     RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
     bool mRemovePhaseShift = false;
@@ -104,21 +103,6 @@ void Decimate::initialize(const int downFactor,
     pImpl->mDownFactor = downFactor;
     pImpl->mPrecision = precision;
     pImpl->mMode = mode;
-/*
-    // This is a special case
-    constexpr int upFactor = 1;
-    if (downFactor == 1)
-    {
-        constexpr int downFactor1 = 1;
-        constexpr int ntaps1 = 1;
-        constexpr double b1[1] = {1};
-        pImpl->mMRFIRFilter.initialize(upFactor, downFactor1,
-                                       ntaps1, b1,
-                                       mode, precision);
-        pImpl->mInitialized = true;
-        return;
-    }
-*/
     int nfir = filterLength;
     // Postprocessing is a little trickier - may have to extend filter length
     if (mode == RTSeis::ProcessingMode::POST_PROCESSING && lremovePhaseShift)
@@ -162,20 +146,22 @@ void Decimate::initialize(const int downFactor,
     int ntaps = b.size();
     try
     {
-/*
+        /*
         //constexpr int upFactor = 1;
         pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
                                        ntaps, b.data(),
                                        mode, precision);
-*/
+        */
         pImpl->mFIRFilter.initialize(ntaps, b.data(),
-                                     RTSeis::ProcessingMode::POST_PROCESSING,
+                                     mode,
                                      precision);
-        pImpl->mDownsampler.initialize(downFactor, RTSeis::ProcessingMode::POST_PROCESSING, precision);
+        pImpl->mDownsampler.initialize(downFactor,
+                                       mode,
+                                       precision);
     }
     catch (std::exception &e)
     {
-        RTSEIS_THROW_RTE("%sMultirate FIR filter initialization failed",
+        RTSEIS_THROW_RTE("%sFIR filter initialization failed",
                          e.what());
     }
     pImpl->mInitialized = true;
@@ -236,6 +222,7 @@ void Decimate::setInitialConditions(const int nz,const double zi[])
     }
     //pImpl->mMRFIRFilter.setInitialConditions(nz, zi);
     pImpl->mFIRFilter.setInitialConditions(nz, zi);
+    pImpl->mDownsampler.resetInitialConditions();
 }
 
 void Decimate::resetInitialConditions()
@@ -243,6 +230,7 @@ void Decimate::resetInitialConditions()
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     //pImpl->mMRFIRFilter.resetInitialConditions();
     pImpl->mFIRFilter.resetInitialConditions();
+    pImpl->mDownsampler.resetInitialConditions();
 }
 
 void Decimate::apply(const int nx, const double x[],
@@ -284,7 +272,7 @@ void Decimate::apply(const int nx, const double x[],
     {
         // Just apply the downsampler
         //pImpl->mMRFIRFilter.apply(nx, x, ny, nyDown, &y);
-        double *yfilt =ippsMalloc_64f(nx);
+        double *yfilt = ippsMalloc_64f(nx);
         pImpl->mFIRFilter.apply(nx, x, &yfilt);
         pImpl->mDownsampler.apply(nx, yfilt, ny, nyDown, &y); 
         ippsFree(yfilt);
