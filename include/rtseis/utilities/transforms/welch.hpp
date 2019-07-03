@@ -1,9 +1,11 @@
 #ifndef RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP
 #define RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP 1
 #include <memory>
+#include "rtseis/utilities/transforms/enums.hpp"
 
 namespace RTSeis::Utilities::Transforms
 {
+class WelchParameters;
 /*!
  * @brief Estimates the power spectral density using Welch's method.
  *        This amounts to first dividing the data into overlapping segments.

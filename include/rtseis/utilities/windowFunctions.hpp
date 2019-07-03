@@ -32,7 +32,7 @@ namespace WindowFunctions
  *        \f$
  * @param[in] len      The window length.  This must be positive.
  * @param[out] window  The Hamming window of length len.
- * @throws std::invalid_argument if len is not positive.
+ * @throws std::invalid_argument if len is not positive or window is NULL.
  */
 void hamming(const int len, double *window[]);
 void hamming(const int len, float *window[]);
@@ -44,7 +44,7 @@ void hamming(const int len, float *window[]);
  *        \f$
  * @param[in] len      The window length.  This must be positive.
  * @param[out] window  The Hann window of length len.
- * @throws std::invalid_argment if len is not positive.
+ * @throws std::invalid_argment if len is not positive or window is NULL.
  */
 void hann(const int len, double *window[]);
 void hann(const int len, float *window[]);
@@ -59,7 +59,7 @@ void hann(const int len, float *window[]);
  *        \f$
  * @param[in] len      The window length.  This must be positive.
  * @param[out] window  The Blackman window of length len.
- * @throws std::invalid_argument if len is not positive.
+ * @throws std::invalid_argument if len is not positive or window is NULL.
  */
 void blackman(const int len, double *window[]);
 void blackman(const int len, float *window[]);
@@ -74,7 +74,7 @@ void blackman(const int len, float *window[]);
  *        \f$.
  * @param[in] len      The window length.  This must be positive.
  * @param[out] window  The sine window of length len.
- * @throws std::invalid_argument if len is not postiive.
+ * @throws std::invalid_argument if len is not postiive or window is NULL.
  */
 void sine(const int len, double *window[]);
 void sine(const int len, float *window[]);
@@ -91,7 +91,7 @@ void sine(const int len, float *window[]);
  *        \f$
  * @param[in] len      The window length.  This must be positive.
  * @param[out] window  The Bartlett window of length len.
- * @throw std::invalid_argument if len is not positive.
+ * @throw std::invalid_argument if len is not positive or window is NULL.
  */
 void bartlett(const int len, double *window[]);
 void bartlett(const int len, float *window[]);
@@ -110,7 +110,8 @@ void bartlett(const int len, float *window[]);
  *                     attenuation of the Fourier transform window.  The
  *                     default is \f$ \beta = 0.5 \f$.
  * @param[out] window  The Kaiser window of length len.
- * @throws std::invalid_argument if len is negative or beta is negative. 
+ * @throws std::invalid_argument if len is negative, beta is negative, or
+ *         window is NULL. 
  * @bug For whatever reason IPP does not adequately compute Bessel functions.
  *      If using a C++14 or lesser compiler then the Kaiser window accuracy
  *      will only be valid to 6 digits.  C++17 will compute a high-accuracy

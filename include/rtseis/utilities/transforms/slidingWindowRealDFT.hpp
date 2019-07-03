@@ -7,6 +7,8 @@
 
 namespace RTSeis::Utilities::Transforms
 {
+// Forward declaration
+class SlidingWindowRealDFTParameters;
 /*!
  * @brief This is a utility class that slides a window over a real time series
  *        and computes the DFT in each window.  This is the basis of many 
@@ -77,6 +79,13 @@ public:
     void clear() noexcept;
     /*! @} */
 
+    /*!
+     * @brief Initializes the sliding window real discrete Fourier transform.
+     * @param[in] parameters   The sliding window real DFT parameters.
+     *                         This must be valid.
+     * @throws std::invalid_argument if parameters.isValid() is false.
+     */
+    void initialize(const SlidingWindowRealDFTParameters &parameters);
     /*! 
      * @brief Initializes the sliding-window real discrete Fourier Transform.
      * @param[in] nSamples            The number of samples in the signal.

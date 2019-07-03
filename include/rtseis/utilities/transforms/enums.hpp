@@ -23,5 +23,19 @@ enum class SlidingWindowDetrendType
     REMOVE_MEAN,  /*!< Removes the mean in each segment. */
     REMOVE_TREND  /*!< Removes the linear trend in each segment. */
 };
+/*!
+ * @brief Defines the window functions available to the sliding window
+ *        real DFT.
+ */
+enum class SlidingWindowWindowType
+{
+    HAMMING,   /*!< A Hamming window. */
+    HANN,      /*!< A Hann window. */
+    BLACKMAN,  /*!< A Blackman window. */
+    BARTLETT,  /*!< A Bartlett window. */
+    BOXCAR,    /*!< A boxcar (all ones). */ 
+    CUSTOM     /*!< A custom window was set. */
+};
+ 
 }
 #endif

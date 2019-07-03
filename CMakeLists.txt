@@ -121,7 +121,8 @@ SET(UTILS_SRCS
     src/utilities/transforms/hilbert.cpp
     src/utilities/transforms/envelope.cpp
     src/utilities/transforms/firEnvelope.cpp
-    src/utilities/transforms/slidingWindowRealDFT.cpp)
+    src/utilities/transforms/slidingWindowRealDFT.cpp
+    src/utilities/transforms/slidingWindowRealDFTParameters.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c
 #    src/ipps/downsample.c 
