@@ -7,6 +7,7 @@
 #include <ipps.h>
 #include <rtseis/private/throw.hpp>
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
+#include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 
 
@@ -50,6 +51,7 @@ public:
     /// Releases memory
     void clear()
     {
+        mParameters.clear();
         if (mHaveDoublePlan){fftw_free(mDoublePlan);}
         if (mHaveFloatPlan){fftwf_free(mFloatPlan);}
         if (mWindow64f != nullptr){ippsFree(mWindow64f);}
@@ -80,6 +82,8 @@ public:
     }
 
 //private:
+    /// The parameters that went into initialization
+    class SlidingWindowRealDFTParameters mParameters;
     /// FFTw plan
     fftw_plan  mDoublePlan;
     /// Holds the data to Fourier transform.  This is an array of dimension
@@ -177,24 +181,10 @@ SlidingWindowRealDFT::operator=(const SlidingWindowRealDFT &swdft)
     if (pImpl){pImpl.reset();}
     pImpl = std::make_unique<SlidingWindowRealDFTImpl> ();
     if (!swdft.pImpl->mInitialized){return *this;}
-    int windowLength = 0;
-    double *window = nullptr;
-    if (pImpl->mApplyWindow)
-    {
-         windowLength = swdft.pImpl->mSamplesPerSegment;
-         window = swdft.pImpl->mWindow64f;
-    }
     // Call initialize so that we get a fresh FFTw context
     try
     {
-        initialize(swdft.pImpl->mSamples,
-                   swdft.pImpl->mSamplesPerSegment,
-                   swdft.pImpl->mDFTLength,
-                   swdft.pImpl->mSamplesInOverlap,
-                   windowLength,
-                   window,
-                   swdft.pImpl->mDetrendType,
-                   swdft.pImpl->mPrecision);
+        initialize(swdft.pImpl->mParameters);
     }
     catch (const std::exception &e)
     {
@@ -231,6 +221,116 @@ void SlidingWindowRealDFT::clear() noexcept
     pImpl->clear();
 }
 
+/// Initialize - this will fire up the FFTw engine
+void SlidingWindowRealDFT::initialize(
+    const SlidingWindowRealDFTParameters &parameters)
+{
+    clear();
+    if (!parameters.isValid())
+    {
+        RTSEIS_THROW_IA("%s", "parameters are not valid");
+    }
+    // Extract the parameters 
+    int nSamples = parameters.getNumberOfSamples();
+    int nSamplesPerSegment = parameters.getWindowLength();
+    int nSamplesInOverlap = parameters.getNumberOfSamplesInOverlap();
+    int dftLength = parameters.getDFTLength();
+    int windowLength = parameters.getWindowLength();
+    bool luseWindow = false;
+    if (parameters.getWindowType() != SlidingWindowWindowType::BOXCAR)
+    {
+        luseWindow = true; 
+    }
+    // Compute the sizes
+    auto cols = static_cast<double> (nSamples - nSamplesInOverlap)
+               /static_cast<double> (nSamplesPerSegment - nSamplesInOverlap);
+    auto ncols = static_cast<int> (cols);
+    pImpl->mSamples = nSamples;
+    pImpl->mSamplesInOverlap = nSamplesInOverlap;
+    pImpl->mSamplesPerSegment = nSamplesPerSegment;
+    pImpl->mDFTLength = dftLength;
+    pImpl->mNumberOfFrequencies = dftLength/2 + 1;
+    pImpl->mNumberOfColumns = ncols;
+    pImpl->mPrecision = parameters.getPrecision();
+    pImpl->mDetrendType = parameters.getDetrendType();
+    if (luseWindow)
+    {
+        auto window = parameters.getWindow();
+        // Always copy the window for the copy constructor
+        pImpl->mWindow64f = ippsMalloc_64f(windowLength);
+        ippsCopy_64f(window.data(), pImpl->mWindow64f, windowLength);
+        if (pImpl->mPrecision == RTSeis::Precision::FLOAT)
+        {
+            pImpl->mWindow32f = ippsMalloc_32f(windowLength);
+            ippsConvert_64f32f(window.data(), pImpl->mWindow32f, windowLength);
+        }
+        pImpl->mApplyWindow = true;
+    }
+    // Initialize the Fourier transform
+    constexpr int rank = 1;
+    int nForward[1] = {pImpl->mDFTLength};
+    int howMany = pImpl->mNumberOfColumns;
+    constexpr int istride = 1;
+    constexpr int ostride = 1;
+    constexpr int inembed[1] = {0}; //NULL;
+    constexpr int onembed[1] = {0}; //NULL;
+    // Figure out padding for cache alignment
+    if (pImpl->mPrecision == RTSeis::Precision::DOUBLE)
+    {
+        pImpl->mDataOffset = padLength64f(pImpl->mDFTLength, 64);
+        pImpl->mFTOffset = padLength64f(pImpl->mNumberOfFrequencies, 64);
+    }
+    else
+    {
+        pImpl->mDataOffset = padLength32f(pImpl->mDFTLength, 64);
+        pImpl->mFTOffset = padLength32f(pImpl->mNumberOfFrequencies, 64);
+    }
+    // Make the real-to-complex Fourier transform plans
+    pImpl->mInDataLength  = pImpl->mDataOffset*pImpl->mNumberOfColumns;
+    pImpl->mOutDataLength = pImpl->mFTOffset*pImpl->mNumberOfColumns;
+    if (pImpl->mPrecision == RTSeis::Precision::DOUBLE)
+    {
+        auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
+                     *sizeof(double);
+        pImpl->mInData64f = static_cast<double *> (fftw_malloc(nbytes));
+        memset(pImpl->mInData64f, 0, nbytes);
+        nbytes = static_cast<size_t> (pImpl->mOutDataLength)
+                *sizeof(fftw_complex);
+        pImpl->mOutData64f
+            = reinterpret_cast<fftw_complex *> (fftw_malloc(nbytes));
+        memset(pImpl->mOutData64f, 0, nbytes);
+        pImpl->mDoublePlan = fftw_plan_many_dft_r2c(rank, nForward, howMany,
+                                                    pImpl->mInData64f, inembed,
+                                                    istride, pImpl->mDataOffset,
+                                                    pImpl->mOutData64f, onembed,
+                                                    ostride, pImpl->mFTOffset,
+                                                    FFTW_PATIENT);
+        pImpl->mHaveDoublePlan = true;
+    }
+    else
+    {
+        auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
+                     *sizeof(float);
+        pImpl->mInData32f = static_cast<float *> (fftw_malloc(nbytes));
+        memset(pImpl->mInData32f, 0, nbytes);
+        nbytes = static_cast<size_t> (pImpl->mOutDataLength)
+                *sizeof(fftwf_complex);
+        pImpl->mOutData32f
+            = reinterpret_cast<fftwf_complex *> (fftw_malloc(nbytes));
+        memset(pImpl->mOutData32f, 0, nbytes);
+        pImpl->mFloatPlan = fftwf_plan_many_dft_r2c(rank, nForward, howMany,
+                                                    pImpl->mInData32f, inembed,
+                                                    istride, pImpl->mDataOffset,
+                                                    pImpl->mOutData32f, onembed,
+                                                    ostride, pImpl->mFTOffset,
+                                                    FFTW_PATIENT);
+        pImpl->mHaveFloatPlan = true;
+    }
+    pImpl->mHaveTransform = false;
+    pImpl->mInitialized = true;
+}
+
+/*
 /// Initialize DFT engine
 void SlidingWindowRealDFT::initialize(const int nSamples,
                                       const int nSamplesPerSegment,
@@ -359,6 +459,7 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
     pImpl->mHaveTransform = false;
     pImpl->mInitialized = true;
 }
+*/
 
 /// Gets number of frequencies
 int SlidingWindowRealDFT::getNumberOfFrequencies() const

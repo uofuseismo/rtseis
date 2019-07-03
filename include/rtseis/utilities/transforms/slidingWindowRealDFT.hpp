@@ -86,43 +86,6 @@ public:
      * @throws std::invalid_argument if parameters.isValid() is false.
      */
     void initialize(const SlidingWindowRealDFTParameters &parameters);
-    /*! 
-     * @brief Initializes the sliding-window real discrete Fourier Transform.
-     * @param[in] nSamples            The number of samples in the signal.
-     *                                This must be positive.
-     * @param[in] nSamplesPerSegment  The number of samples in each DFT segment.
-     * @param[in] dftLength           The length of the DFT.  If the number of
-     *                                samples in each segment results in an
-     *                                inefficient transform length then this
-     *                                will zero pad each window to the desired
-     *                                DFT length.  This must be greater than or
-     *                                equal to nSamplesPerSegment.
-     * @param[in] nSamplesInOverlap   As the window slides along this defines
-     *                                the number of samples overlapping between
-     *                                the current and prior window.  This must
-     *                                be in the range [0, nSamplesPerSegment-1].
-     * @param[in] windowLength        The length of the window.  If 0 then no
-     *                                window function will be applied.
-     *                                Otherwise, this must equal 
-     *                                nSamplesPerSegment.
-     * @param[in] window              The window to apply to each segment.
-     *                                If windowLength is 0 then this is ignored.
-     *                                Otherwise, it is an array of dimension
-     *                                [windowLength].
-     * @param[in] detrendType         Defines the detrend strategy to be 
-     *                                applied to each signal prior to windowing.
-     * @param[in] precision           The precision of the underlying DFT.
-     * @throws std::invalid_argument if any parameters are incorrect.
-     */
-    void initialize(const int nSamples,
-                    const int nSamplesPerSegment,
-                    const int dftLength,
-                    const int nSamplesInOverlap,
-                    const int windowLength,
-                    const double window[],
-                    const SlidingWindowDetrendType detrendType,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
-
     /*!
      * @brief Flag indicating whether or not the class is initialized.
      * @result True indicates that the class is inititalized.

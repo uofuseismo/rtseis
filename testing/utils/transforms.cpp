@@ -19,6 +19,7 @@
 #include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
+#include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
@@ -741,6 +742,12 @@ TEST(UtilitiesTransforms, firEnvelope)
     }
 }
 
+TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
+{
+    SlidingWindowRealDFTParameters parameters;
+
+}
+
 TEST(UtilitiesTransforms, Spectrogram)
 {
     SlidingWindowRealDFT sdft;
@@ -790,6 +797,31 @@ TEST(UtilitiesTransforms, Spectrogram)
     double *kdata = window.data();
     EXPECT_NO_THROW(
        RTSeis::Utilities::WindowFunctions::kaiser(windowLength, &kdata, beta));
+    // Set the parameters
+    SlidingWindowRealDFTParameters parameters;
+    EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
+    EXPECT_NO_THROW(parameters.setWindow(windowLength, window.data()));
+    EXPECT_NO_THROW(parameters.setDFTLength(dftLength));
+    EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(nSamplesInOverlap));
+    EXPECT_NO_THROW(
+       parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_NONE));
+    EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::DOUBLE));
+    EXPECT_TRUE(parameters.isValid());
+    // Check the outputs
+    EXPECT_EQ(parameters.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(parameters.getWindowLength(), windowLength);
+    std::vector<double> windowBack = parameters.getWindow();
+    double resmax = 0;
+    ippsNormDiff_Inf_64f(window.data(), windowBack.data(),
+                         windowLength, &resmax);
+    EXPECT_LE(resmax, 1.e-15);
+    EXPECT_EQ(parameters.getDFTLength(), dftLength);
+    EXPECT_EQ(parameters.getNumberOfSamplesInOverlap(), nSamplesInOverlap);
+    EXPECT_EQ(parameters.getDetrendType(), SlidingWindowDetrendType::REMOVE_NONE);
+    EXPECT_EQ(parameters.getPrecision(), RTSeis::Precision::DOUBLE);
+    // Initialize
+    EXPECT_NO_THROW(sdft.initialize(parameters));
+/*
     EXPECT_NO_THROW(sdft.initialize(nSamples,
                     nSamplesPerSegment,
                     dftLength,
@@ -798,12 +830,13 @@ TEST(UtilitiesTransforms, Spectrogram)
                     window.data(),
                     SlidingWindowDetrendType::REMOVE_NONE,
                     RTSeis::Precision::DOUBLE));
+*/
     EXPECT_EQ(sdft.getNumberOfSamples(), nSamples);
     EXPECT_EQ(sdft.getNumberOfFrequencies(), 129); // Number of rows
     EXPECT_EQ(sdft.getNumberOfTransformWindows(), 199); // Number of columns
     EXPECT_NO_THROW(sdft.transform(sig.size(), sig.data()));
     // Loop on the windows
-    double resmax = 0;
+    resmax = 0;
     for (auto i=0; i<sdft.getNumberOfTransformWindows(); ++i)
     {
         const std::complex<double> *cptr = nullptr;
