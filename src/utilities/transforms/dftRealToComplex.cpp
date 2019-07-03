@@ -699,12 +699,13 @@ void DFTRealToComplex::initialize(
 
 void DFTRealToComplex::inverseTransform(const int lenft,
                              const std::complex<double> x[],
-                             const int maxy, double y[])
+                             const int maxy, double *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not initialized");
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -730,12 +731,13 @@ void DFTRealToComplex::inverseTransform(const int lenft,
 
 void DFTRealToComplex::inverseTransform(const int lenft,
                              const std::complex<float> x[],
-                             const int maxy, float y[])
+                             const int maxy, float *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not initialized");
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -760,12 +762,13 @@ void DFTRealToComplex::inverseTransform(const int lenft,
 }
 
 void DFTRealToComplex::forwardTransform(const int n, const double x[],
-                             const int maxy, std::complex<double> y[])
+                             const int maxy, std::complex<double> *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
+    std::complex<double> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
@@ -790,12 +793,13 @@ void DFTRealToComplex::forwardTransform(const int n, const double x[],
 }
 
 void DFTRealToComplex::forwardTransform(const int n, const float x[],
-                             const int maxy, std::complex<float> y[])
+                             const int maxy, std::complex<float> *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
+    std::complex<float> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}

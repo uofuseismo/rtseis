@@ -68,7 +68,7 @@ public:
         std::valarray<std::complex<double>> x(zero, mTransformLength);
         auto xptr = std::begin(x); 
         mDFTR2C.forwardTransform(mTransformLength, xr,
-                                 mTransformLength, xptr);
+                                 mTransformLength, &xptr);
         // Compute the analytic signal see: 
         // https://en.wikipedia.org/wiki/Analytic_signal
         int nw = (mTransformLength + 1)/2;
@@ -88,7 +88,7 @@ public:
 #endif
         // Inverse transform to obtain the time domain signal
         xptr = std::begin(x);
-        mDFT.inverseTransform(mTransformLength, xptr, mTransformLength, h);
+        mDFT.inverseTransform(mTransformLength, xptr, mTransformLength, &h);
     }
     /// Apply the Hilbert transform
     void transform(const float xr[], std::complex<float> h[])
@@ -99,7 +99,7 @@ public:
         std::valarray<std::complex<float>> x(zero, mTransformLength);
         auto xptr = std::begin(x); 
         mDFTR2C.forwardTransform(mTransformLength, xr, 
-                                 mTransformLength, xptr);
+                                 mTransformLength, &xptr);
         // Compute the analytic signal see: 
         // https://en.wikipedia.org/wiki/Analytic_signal
         int nw = (mTransformLength + 1)/2;
@@ -119,7 +119,7 @@ public:
 #endif
         // Inverse transform to obtain the time domain signal
         xptr = std::begin(x);
-        mDFT.inverseTransform(mTransformLength, xptr, mTransformLength, h);
+        mDFT.inverseTransform(mTransformLength, xptr, mTransformLength, &h);
     }
     /// Variables
     DFTRealToComplex mDFTR2C;

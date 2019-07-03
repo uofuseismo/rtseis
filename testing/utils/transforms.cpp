@@ -237,8 +237,10 @@ TEST(UtilitiesTransforms, dft)
     EXPECT_TRUE(dft.isInitialized());
     ASSERT_EQ(dft.getInverseTransformLength(), 5);
     ASSERT_EQ(dft.getTransformLength(), 5);
-    EXPECT_NO_THROW(dft.forwardTransform(5, x5.data(), 5, y5.data()));
-    EXPECT_NO_THROW(dft.inverseTransform(5, y5.data(), 5, x5inv.data()));
+    std::complex<double> *yPtr = y5.data();
+    EXPECT_NO_THROW(dft.forwardTransform(5, x5.data(), 5, &yPtr)); //y5.data()));
+    std::complex<double> *xPtr = x5inv.data();
+    EXPECT_NO_THROW(dft.inverseTransform(5, y5.data(), 5, &xPtr)); //x5inv.data()));
     // Check forward transform
     double emax = 0;
     for (auto i=0; i<static_cast<int> (y5ref.size()); i++)
@@ -271,7 +273,8 @@ TEST(UtilitiesTransforms, dft)
     EXPECT_NO_THROW(dft.initialize(8));
     ASSERT_EQ(dft.getInverseTransformLength(), 8);
     ASSERT_EQ(dft.getTransformLength(), 8);
-    EXPECT_NO_THROW(dft.forwardTransform(5, x5.data(), 8, y8.data()));
+    yPtr = y8.data();
+    EXPECT_NO_THROW(dft.forwardTransform(5, x5.data(), 8, &yPtr)); //y8.data()));
     emax = 0;
     for (auto i=0; i<static_cast<int> (y8.size()); i++)
     {
@@ -301,8 +304,10 @@ TEST(UtilitiesTransforms, dft)
         // Try again with IPP
         dft.clear();
         EXPECT_NO_THROW(dft.initialize(npts));
-        EXPECT_NO_THROW(dft.forwardTransform(npts, x.data(), npts, y.data()));
-        EXPECT_NO_THROW(dft.inverseTransform(npts, y.data(), npts, xinv.data()));
+        yPtr = y.data();
+        EXPECT_NO_THROW(dft.forwardTransform(npts, x.data(), npts, &yPtr)); //y.data()));
+        xPtr = xinv.data();
+        EXPECT_NO_THROW(dft.inverseTransform(npts, y.data(), npts, &xPtr)); //xinv.data()));
         emax  = 0;
         double emaxi = 0;
         for (auto i=0; i<npts; i++)
@@ -320,7 +325,8 @@ TEST(UtilitiesTransforms, dft)
             auto timeStart = std::chrono::high_resolution_clock::now();
             for (auto i=0; i<niter; i++)
             {
-                dftStress.forwardTransform(npts, x.data(), npts, y.data());
+                yPtr = y.data();
+                dftStress.forwardTransform(npts, x.data(), npts, &yPtr); //y.data());
             }
             auto timeEnd = std::chrono::high_resolution_clock::now();
             emax = 0;
@@ -336,7 +342,8 @@ TEST(UtilitiesTransforms, dft)
             timeStart = std::chrono::high_resolution_clock::now();
             for (auto i=0; i<niter; i++)
             {
-                dftStress.inverseTransform(npts, y.data(), npts, xinv.data());
+                xPtr = x.data();
+                dftStress.inverseTransform(npts, y.data(), npts, &xPtr); //xinv.data());
             }
             timeEnd = std::chrono::high_resolution_clock::now();
             emaxi = 0;
@@ -383,7 +390,7 @@ TEST(UtilitiesTransforms, dftr2c)
                         RTSeis::Precision::DOUBLE));
         ASSERT_EQ(dft.getTransformLength(), lendft);
         std::complex<double> *z = new std::complex<double>[lendft];
-        EXPECT_NO_THROW(dft.forwardTransform(npts, x, lendft, z));
+        EXPECT_NO_THROW(dft.forwardTransform(npts, x, lendft, &z));
         double error = 0; 
         for (auto i=0; i<lendft; i++)
         {
@@ -394,7 +401,7 @@ TEST(UtilitiesTransforms, dftr2c)
         auto npout = dft.getInverseTransformLength(); 
         ASSERT_EQ(npout, npts);
         double *xinv = new double[npout];
-        EXPECT_NO_THROW(dft.inverseTransform(lendft, z, npout, xinv));
+        EXPECT_NO_THROW(dft.inverseTransform(lendft, z, npout, &xinv));
         error = 0;
         for (auto i=0; i<npts; i++)
         {
@@ -408,7 +415,7 @@ TEST(UtilitiesTransforms, dftr2c)
             auto timeStart = std::chrono::high_resolution_clock::now();
             for (auto kiter=0; kiter<niter; kiter++)
             {
-                EXPECT_NO_THROW(dft.forwardTransform(npts, x, lendft, z));
+                EXPECT_NO_THROW(dft.forwardTransform(npts, x, lendft, &z));
             }
             auto timeEnd = std::chrono::high_resolution_clock::now();
             error = 0;
@@ -429,7 +436,7 @@ TEST(UtilitiesTransforms, dftr2c)
                         RTSeis::Precision::DOUBLE));
         ASSERT_EQ(dft.getTransformLength(), lenfft);
         z = new std::complex<double>[lenfft];
-        EXPECT_NO_THROW(dft.forwardTransform(npts, x, lenfft, z));
+        EXPECT_NO_THROW(dft.forwardTransform(npts, x, lenfft, &z));
         error = 0;  
         for (auto i=0; i<lenfft; i++)
         {
@@ -439,7 +446,7 @@ TEST(UtilitiesTransforms, dftr2c)
         npout = dft.getInverseTransformLength(); 
         ASSERT_EQ(npout, np2);
         xinv = new double[npout];
-        EXPECT_NO_THROW(dft.inverseTransform(lenfft, z, npout, xinv));
+        EXPECT_NO_THROW(dft.inverseTransform(lenfft, z, npout, &xinv));
         error = 0;
         for (auto i=0; i<npts; i++)
         {
@@ -453,7 +460,7 @@ TEST(UtilitiesTransforms, dftr2c)
             auto timeStart = std::chrono::high_resolution_clock::now();
             for (auto kiter=0; kiter<niter; kiter++)
             {
-                EXPECT_NO_THROW(dft.forwardTransform(npts, x, lenfft, z));
+                EXPECT_NO_THROW(dft.forwardTransform(npts, x, lenfft, &z));
             }
             auto timeEnd = std::chrono::high_resolution_clock::now();
             error = 0;  

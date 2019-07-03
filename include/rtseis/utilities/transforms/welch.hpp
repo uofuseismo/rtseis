@@ -136,25 +136,40 @@ public:
      * @param[out] frequencies  The frequencies (Hz) at which the spectral
      *                          density was estimated.  This is an array of
      *                          dimensino [nFrequencies].
-     * @throws std::invalid_argument if nFrequencies is invalid or 
+     * @throws std::invalid_argument if nFrequencies is invalid or frequencies
+     *         is NULL.
      * @throws std::runtime_error if the class is not initialized.
-     * @sa \c getNumberOfFrequencies().
+     * @sa \c getNumberOfFrequencies()
+     * @sa \c isInitialized()
      */
     void getFrequencies(const int nFrequencies, double *frequencies[]);
     /*!
      * @brief Gets the power spectral density estimate.
-     *        For example, if the input signal has units of Volts then the
-     *        power spectral density has units of \f$ \frac{Volts^2}{Hz} \f$.
      * @param[in] nFrequencies  The number of frequencies. This must match the
      *                          result of \c getNumberOfFrequencies().
      * @param[out] psd          The power spectral density.  This is an array
-     *                          of dimension [nFrequencies].   
+     *                          of dimension [nFrequencies].  If the input 
+     *                          signal has units of \f$ Volts \f$ then this
+     *                          has units of \f$ \frac{Volts^2}{Hz} \f$.
+     * @throws std::invalid_argument if nFrequencies is invalid or psd is NULL.
+     * @throws std::runtime_error if the class is not initialized.
+     * @sa \c getNumberOfFrequencies()
+     * @sa \c isInitialized()
      */
     void getPowerSpectralDensity(const int nFrequencies, double *psd[]);
     /*!
      * @brief Gets the power spectrum.
-     *        For example, if the input signal has units of Volts then the
-     *        power spectrum has units of \f$ Volts^2 \f$.
+     * @param[in] nFrequencies    The number of frequencies. This must match the
+     *                            result of \c getNumberOfFrequencies().
+     * @param[out] powerSpectrum  The power spectrum.  This is an array of
+     *                            of dimension [nFrequencies].  If the input
+     *                            signal has units of \f$ Volts \f$ then this
+     *                            has units of \f$ Volts^2 \f$.
+     * @throws std::invalid_argument if nFrequencies is invalid or 
+     *         powerSpectrum is NULL.
+     * @throws std::runtime_error if the class is not initialized.
+     * @sa \c getNumberOfFrequencies()
+     * @sa \c isInitialized()
      */
 private:
     class WelchImpl;

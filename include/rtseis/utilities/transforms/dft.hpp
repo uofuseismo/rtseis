@@ -90,12 +90,12 @@ public:
      void forwardTransform(const int n,
                            const std::complex<double> x[],
                            const int maxy,
-                           std::complex<double> y[]);
+                           std::complex<double> *y[]);
      /*! @copydoc forwardTransform */
      void forwardTransform(const int n,
                            const std::complex<float> x[],
                            const int maxy,
-                           std::complex<float> y[]);
+                           std::complex<float> *y[]);
      /*!
       * @brief Inverse transforms complex-valued frequency domian signal
       *        to a real-valued time domain signal.  The transform is
@@ -129,11 +129,11 @@ public:
       */
      void inverseTransform(const int lenft,
                            const std::complex<double> x[],
-                           const int maxy, std::complex<double> y[]);
+                           const int maxy, std::complex<double> *y[]);
      /*! @copydoc inverseTransform */
      void inverseTransform(const int lenft,
                            const std::complex<float> x[],
-                           const int maxy, std::complex<float> y[]);
+                           const int maxy, std::complex<float> *y[]);
      /*!
       * @brief Gets the inverse transform length.
       * @result The length of the inverse DFT or FFT.

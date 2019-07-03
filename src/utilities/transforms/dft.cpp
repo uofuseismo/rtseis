@@ -713,12 +713,13 @@ void DFT::initialize(
 
 void DFT::inverseTransform(const int lenft,
                            const std::complex<double> x[],
-                           const int maxy, std::complex<double> y[])
+                           const int maxy, std::complex<double> *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
+    std::complex<double> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -743,12 +744,13 @@ void DFT::inverseTransform(const int lenft,
 } 
 
 void DFT::forwardTransform(const int n, const std::complex<double> x[],
-                           const int maxy, std::complex<double> y[])
+                           const int maxy, std::complex<double> *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
+    std::complex<double> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
