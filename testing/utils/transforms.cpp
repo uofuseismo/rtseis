@@ -745,7 +745,60 @@ TEST(UtilitiesTransforms, firEnvelope)
 TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
 {
     SlidingWindowRealDFTParameters parameters;
+    int nSamples = 1040;
+    int windowLength = 88;
+    int overlapLength = 22;
+    int dftLength = 124;
+    std::vector<double> windowRef(88);
+    std::vector<double> window;
+    EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
+    EXPECT_FALSE(parameters.isValid());
+    EXPECT_NO_THROW(parameters.setWindow(windowLength,
+                                         SlidingWindowWindowType::HANN));
+    EXPECT_TRUE(parameters.isValid());
+    EXPECT_NO_THROW(parameters.setDFTLength(dftLength));
+    EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(overlapLength));
+    EXPECT_NO_THROW(parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_MEAN));
+    EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::FLOAT));
+ 
+    EXPECT_EQ(parameters.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(parameters.getWindowType(), SlidingWindowWindowType::HANN);
+    EXPECT_EQ(parameters.getWindowLength(), windowLength); 
+    EXPECT_EQ(parameters.getNumberOfSamplesInOverlap(), overlapLength);
+    EXPECT_EQ(parameters.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
+    EXPECT_EQ(parameters.getPrecision(), RTSeis::Precision::FLOAT);
+    window = parameters.getWindow();
+    double *windowData = windowRef.data();
+    RTSeis::Utilities::WindowFunctions::hann(windowLength, &windowData);
+    double emax = 0;
+    ippsNormDiff_Inf_64f(window.data(), windowRef.data(),
+                         windowLength, &emax);
+    EXPECT_LE(emax, 1.e-15);
+    // set a custom window
+    EXPECT_NO_THROW(parameters.setWindow(windowLength, window.data()));
+    EXPECT_EQ(parameters.getWindowType(), SlidingWindowWindowType::CUSTOM);
+    window = parameters.getWindow();
+    EXPECT_EQ(parameters.getWindowLength(), windowLength);
+    EXPECT_EQ(parameters.getDFTLength(), windowLength); // Override DFT length
+    EXPECT_EQ(parameters.getNumberOfSamplesInOverlap(), 0); // Override overlap
+    ippsNormDiff_Inf_64f(window.data(), windowRef.data(),
+                         windowLength, &emax);
+    EXPECT_LE(emax, 1.e-15);
 
+    // Test copy operator
+    parameters.setNumberOfSamplesInOverlap(overlapLength);
+    parameters.setDFTLength(dftLength);
+    SlidingWindowRealDFTParameters pcopy(parameters); 
+    EXPECT_EQ(pcopy.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(pcopy.getWindowType(), SlidingWindowWindowType::CUSTOM);
+    EXPECT_EQ(pcopy.getWindowLength(), windowLength);
+    EXPECT_EQ(pcopy.getNumberOfSamplesInOverlap(), overlapLength);
+    EXPECT_EQ(pcopy.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
+    EXPECT_EQ(pcopy.getPrecision(), RTSeis::Precision::FLOAT);
+    window = pcopy.getWindow();
+    ippsNormDiff_Inf_64f(window.data(), windowRef.data(),
+                         windowLength, &emax);
+    EXPECT_LE(emax, 1.e-15);
 }
 
 TEST(UtilitiesTransforms, Spectrogram)
