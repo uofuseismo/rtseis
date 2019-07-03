@@ -5,13 +5,8 @@
 #include "rtseis/enums.h"
 #include "rtseis/utilities/transforms/enums.hpp"
 
-namespace RTSeis
+namespace RTSeis::Utilities::Transforms
 {
-namespace Utilities
-{
-namespace Transforms
-{
-
 /*!
  * @class Hilbert hilbert.hpp "include/rtseis/utilities/transforms/hilbert.hpp"
  * @brief Computes the analytic signal.
@@ -98,9 +93,5 @@ private:
     class HilbertImpl;
     std::unique_ptr<HilbertImpl> pImpl;
 };
-
-} // End Transforms
-} // End Utilities
-} // End RTSeis
-
+}
 #endif

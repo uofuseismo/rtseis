@@ -5,13 +5,8 @@
 #include "rtseis/enums.h"
 #include "rtseis/utilities/transforms/enums.hpp"
 
-namespace RTSeis
+namespace RTSeis::Utilities::Transforms
 {
-namespace Utilities
-{
-namespace Transforms
-{
-
 /*!
  * @brief This is a utility class that slides a window over a real time series
  *        and computes the DFT in each window.  This is the basis of many 
@@ -88,12 +83,11 @@ public:
      *                                This must be positive.
      * @param[in] nSamplesPerSegment  The number of samples in each DFT segment.
      * @param[in] dftLength           The length of the DFT.  If the number of
-     *                                samples in each segment results in an 
+     *                                samples in each segment results in an
      *                                inefficient transform length then this
-     *                                will zero pad zero pad each window to 
-     *                                the desired DFT length.  This must be
-     *                                greater than or equal to
-     *                                nSamplesPerSegment.
+     *                                will zero pad each window to the desired
+     *                                DFT length.  This must be greater than or
+     *                                equal to nSamplesPerSegment.
      * @param[in] nSamplesInOverlap   As the window slides along this defines
      *                                the number of samples overlapping between
      *                                the current and prior window.  This must
@@ -191,9 +185,5 @@ private:
     class SlidingWindowRealDFTImpl;
     std::unique_ptr<SlidingWindowRealDFTImpl> pImpl;
 };
-
 }
-}
-}
-
 #endif

@@ -5,13 +5,8 @@
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/enums.h"
 
-namespace RTSeis
+namespace RTSeis::Utilities::Transforms 
 {
-namespace Utilities
-{
-namespace Transforms 
-{
-
 /*!
  * @class DFTRealToComplex dftRealToComplex.hpp "includertseis/utilities/transforms/dftRealToComplex.hpp" 
  * @brief Handles the discrete Fourier transform of real signals.  This
@@ -176,9 +171,5 @@ private:
     class DFTImpl;
     std::unique_ptr<DFTImpl> pImpl;
 }; // End DFTRealToComplex
-
-}; /* End transforms */
-}; /* End utils */
-}; /* End RTSeis */
-
+}
 #endif

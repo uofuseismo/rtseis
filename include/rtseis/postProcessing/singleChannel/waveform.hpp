@@ -7,33 +7,32 @@
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
 #endif
 
-namespace RTSeis
-{
 // Forward declare filter representations
-namespace Utilities
-{
-namespace FilterRepresentations
+namespace RTSeis::Utilities::FilterRepresentations
 {
 class FIR;
 class SOS;
 class BA;
 class ZPK;
-}; // End filter representations
-}; // End utilties
+} 
+
+
+namespace RTSeis::PostProcessing::SingleChannel
+{
 /*!
  * @defgroup rtseis_postprocessing Post-Processing
  * @brief These are higher level algorithms that expedite post-processing
  *        of seismic data. 
  */
-namespace PostProcessing
-{
+//namespace PostProcessing
+//{
 /*!
  * @defgroup rtseis_postprocessing_sc Single-Channel Processing
  * @brief This section contains single-channel post-processing algorithms.
  * @ingroup rtseis_postprocessing
  */
-namespace SingleChannel
-{
+//namespace SingleChannel
+//{
 
 /*!
  * @brief Defines the IIR filter implementation.
@@ -649,8 +648,9 @@ private:
     class WaveformImpl;
     std::unique_ptr<WaveformImpl> pImpl;
 }; // end waveform
-}; // End SingleChannel
-}; // End PostProcessing
-}; // End RTSeis
+
+//}; // End SingleChannel
+//}; // End PostProcessing
+} // End RTSeis
 
 # endif

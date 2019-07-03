@@ -3,13 +3,8 @@
 #include <memory>
 #include "rtseis/enums.h"
 
-namespace RTSeis
+namespace RTSeis::Utilities::Transforms
 {
-namespace Utilities
-{
-namespace Transforms
-{
-
 /*!
  * @class FIREnvelope firEnvelope.hpp "include/rtseis/utilities/transforms/firEnvelope.hpp"
  * @brief Computes the envelope of a signal using.  This works by designing an
@@ -147,9 +142,5 @@ private:
     class FIREnvelopeImpl;
     std::unique_ptr<FIREnvelopeImpl> pImpl;
 };
-
-} // Transforms
-} // Utilities
 } // RTSeis
-
 #endif

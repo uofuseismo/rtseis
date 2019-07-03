@@ -4,20 +4,13 @@
 #include <complex>
 #include <vector>
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace Transforms 
-{
 /*!
  * @defgroup rtseis_utils_transforms_utils Utility Functions
  * @brief Utility routines accompanying the DFT.
  * @ingroup rtseis_utils_transforms
  */
-namespace DFTUtilities
+namespace RTSeis::Utilities::Transforms::DFTUtilities
 {
-
 /*! @name Unwrap
  * @{
  */
@@ -113,8 +106,5 @@ void phase(const int n, const std::complex<double> z[], double phi[],
  */
 int nextPow2(const int n);
 
-}; // End DFT utilities
-}; // End Transforms
-}; // End Utilities
-}; // End RTSeis
+}
 #endif
