@@ -1,5 +1,5 @@
-#ifndef RTSEIS_UTILITIES_TRANSFORMS_SLIDINGWINDOWREALDFT_HPP
-#define RTSEIS_UTILITIES_TRANSFORMS_SLIDINWINDOWGREALDFT_HPP 1
+#ifndef RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP
+#define RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP 1
 #include <memory>
 
 namespace RTSeis::Utilities::Transforms
@@ -171,6 +171,7 @@ public:
      * @sa \c getNumberOfFrequencies()
      * @sa \c isInitialized()
      */
+    void getPowerSpectrum(const int nFrequencies, double *powerSpectrum[]);
 private:
     class WelchImpl;
     std::unique_ptr<WelchImpl> pImpl;
