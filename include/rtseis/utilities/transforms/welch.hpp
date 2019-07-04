@@ -5,7 +5,7 @@
 
 namespace RTSeis::Utilities::Transforms
 {
-class WelchParameters;
+class SlidingWindowRealDFTParameters;
 /*!
  * @brief Estimates the power spectral density using Welch's method.
  *        This amounts to first dividing the data into overlapping segments.
@@ -64,7 +64,7 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~SlidingWindowRealDFT();
+    ~Welch();
     /*!
      * @brief Releases memory on the class.
      */
@@ -110,15 +110,8 @@ public:
      * @param[in] precision           The precision of the underlying DFT.
      * @throws std::invalid_argument if any parameters are incorrect.
      */
-    void initialize(const int nSamples,
-                    const int nSamplesPerSegment,
-                    const int dftLength,
-                    const int nSamplesInOverlap,
-                    const int windowLength,
-                    const double window[],
-                    const double samplingRate = 1.0,
-                    const SlidingWindowDetrendType detrendType,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    void initialize(const SlidingWindowRealDFTParameters &parameters,
+                    const double samplingRate = 1.0);
     /*!
      * @brief Flag indicating whether or not the class is initialized.
      * @result True indicates that the class is inititalized.
@@ -158,7 +151,7 @@ public:
      * @sa \c getNumberOfFrequencies()
      * @sa \c isInitialized()
      */
-    void getPowerSpectralDensity(const int nFrequencies, double *psd[]);
+    void computePowerSpectralDensity(const int nFrequencies, double *psd[]);
     /*!
      * @brief Gets the power spectrum.
      * @param[in] nFrequencies    The number of frequencies. This must match the
@@ -173,7 +166,7 @@ public:
      * @sa \c getNumberOfFrequencies()
      * @sa \c isInitialized()
      */
-    void getPowerSpectrum(const int nFrequencies, double *powerSpectrum[]);
+    void computePowerSpectrum(const int nFrequencies, double *powerSpectrum[]);
 private:
     class WelchImpl;
     std::unique_ptr<WelchImpl> pImpl;
