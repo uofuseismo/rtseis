@@ -44,7 +44,7 @@ std::vector<double> unwrap(const std::vector<double> &z,
  * @throws std::invalid_argument if the arguments are incorrect.
  * @ingroup rtseis_utils_transforms_utils
  */
-void unwrap(const int n, const double p[], double q[], 
+void unwrap(const int n, const double p[], double *q[], 
             const double tol = M_PI);
 /*! @} */
 
@@ -89,9 +89,47 @@ std::vector<double> phase(const std::vector<std::complex<double>> &z,
  * @throws std::invalid_argument if hte arguments are incorrect.
  * @ingroup rtseis_utils_transforms_utils
  */
-void phase(const int n, const std::complex<double> z[], double phi[],
+void phase(const int n, const std::complex<double> z[], double *phi[],
            const bool lwantDeg = false);
 /*! @} */
+
+/*! @name Real to Complex DFT Frequencies
+ * @{
+ */
+/*!
+ * @brief Computes the DFT sampling frequencies corresponding to the DFT of a 
+ *        real time domain signal.
+ * @param[in] nSamples        The number of time domain samples.  This must be
+ *                            positive.
+ * @param[in] samplingPeriod  The sampling period in seconds.  This must
+ *                            be positive. 
+ * @result The frequencies (Hz) at which the DFT was computed.
+ * @throws std::invalid_argument if nSamples or samplingPeriod is not positive.
+ * @sa DFTRealToComplex
+ */
+std::vector<double>
+realDFTFrequencies(const int nSamples, const double samplingRate);
+/*!
+ * @brief Computes the DFT sampling frequencies corresponding to the DFT of a
+ *        a real time domain signal.
+ * @param[in] nSamples        The number of time domain samples.  This must be
+ *                            positive.
+ * @param[in] samplingPeriod  The sampling period in seconds.  This must be
+ *                            positive.
+ * @param[in] lengthFreqs     The length of the frequencies.  This must be
+ *                            at least nSamples/2 + 1. 
+ * @param[out] freqs          The frequencies (Hz) at which the real to complex
+ *                            DFT was computed.  This is an array of dimension
+ *                            [lengthFrequencies] however only the first
+ *                            nSamples/2 + 1 samples are defined..
+ * @throws std::invalid_argument if nSamples or samplingPeriod is not positive,
+ *         lengthFreqs is too small, or freqs is NULL.
+ * @sa DFTRealToComplex
+ */
+void realDFTFrequencies(const int nSamples, const double samplingPeriod,
+                        const double *freqs[]);
+/*! @} */
+
 
 /*!
  * @brief Finds the next number, n2, such that n2 is a power of 2 and

@@ -137,7 +137,7 @@ public:
      * @sa \c getNumberOfFrequencies()
      * @sa \c isInitialized()
      */
-    void getFrequencies(const int nFrequencies, double *frequencies[]);
+    void getFrequencies(const int nFrequencies, double *frequencies[]) const;
     /*!
      * @brief Gets the power spectral density estimate.
      * @param[in] nFrequencies  The number of frequencies. This must match the

@@ -29,6 +29,24 @@ double computeDensityScaling(const int npts, const double window[])
     return wsum;
 }
 
+void computeFrequencies(const int nf,
+                        const double samplingRate,
+                        double freqs[])
+{
+    auto fnyq = 1.0/(2.0*samplingRate);
+    if (nf == 1)
+    {
+        freqs[0] = 0;
+        return;
+    }
+    double df = fnyq/static_cast<double> (nf - 1);
+    #pragma omp simd
+    for (auto i=0; i<nf; ++i)
+    {
+        freqs[i] = df*i;
+    }  
+}
+
 }
 
 class Welch::WelchImpl
@@ -129,3 +147,27 @@ bool Welch::isInitialized() const noexcept
     return pImpl->mInitialized;
 }
 
+int Welch::getNumberOfFrequencies() const
+{
+    if (!isInitialized())
+    {
+        RTSEIS_THROW_RTE("%s", "Class is not initialized");
+    }
+    return pImpl->mSlidingWindowRealDFT.getNumberOfFrequencies();
+}
+
+void Welch::getFrequencies(const int nFrequencies, double *freqsIn[]) const
+{
+    auto nFreqs = getNumberOfFrequencies(); // Will throw initialization error
+    if (nFrequencies != nFreqs)
+    {
+        RTSEIS_THROW_IA("nFrequencies = %d must equal %d",
+                        nFrequencies, nFreqs); 
+    }
+    double *freqs = *freqsIn;
+    if (freqs == nullptr)
+    {
+        RTSEIS_THROW_IA("%s", "frequencies is NULL");
+    }
+    computeFrequencies(nFreqs, pImpl->mSamplingRate, freqs);
+}

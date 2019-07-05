@@ -23,14 +23,16 @@ std::vector<double> DFTUtilities::unwrap(const std::vector<double> &p,
     std::vector<double> q;
     if (p.empty()){return q;}
     q.resize(p.size());
-    unwrap(static_cast<int> (p.size()), p.data(), q.data(), tol); 
+    double *qPtr = q.data();
+    unwrap(static_cast<int> (p.size()), p.data(), &qPtr, tol); 
     return q;
 }
 
-void DFTUtilities::unwrap(const int n, const double p[], double q[],
+void DFTUtilities::unwrap(const int n, const double p[], double *qIn[],
                           const double tol)
 {
     if (n <= 0){return;}
+    double *q = *qIn;
     if (p == nullptr || q == nullptr)
     {
         if (p == nullptr){RTSEIS_THROW_IA("%s", "p is NULL");}
@@ -77,15 +79,17 @@ DFTUtilities::phase(const std::vector<std::complex<double>> &z,
     std::vector<double> phi;
     if (z.empty()){return phi;} 
     phi.resize(z.size());
-    phase(static_cast<int> (z.size()), z.data(), phi.data(), lwantDeg); 
+    double *phiPtr = phi.data();
+    phase(static_cast<int> (z.size()), z.data(), &phiPtr, lwantDeg); 
     return phi;
 }
 
 void DFTUtilities::phase(const int n, const std::complex<double> z[],
-                         double phi[],
+                         double *phiIn[],
                          const bool lwantDeg)
 {
     if (n <= 0){return;} 
+    double *phi = *phiIn;
     if (z == nullptr || phi == nullptr)
     {
         if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
