@@ -106,6 +106,66 @@ void DFTUtilities::phase(const int n, const std::complex<double> z[],
     return;
 }
 
+std::vector<double>
+DFTUtilities::realToComplexDFTFrequencies(const int nSamples,
+                                          const double samplingPeriod)
+{
+    std::vector<double> freqs;
+    if (nSamples < 1 || samplingPeriod <= 0)
+    {
+        if (nSamples < 1)
+        {
+            RTSEIS_THROW_IA("nSamples = %d must be positive", nSamples);
+        }
+        RTSEIS_THROW_IA("samplingPeriod = %lf must be positive",
+                        samplingPeriod);
+    }
+    int nbins = nSamples/2 + 1;
+    freqs.resize(nbins);
+    double *freqsPtr = freqs.data();
+    realToComplexDFTFrequencies(nSamples, samplingPeriod, nbins, &freqsPtr);
+    return freqs;
+}
+
+void DFTUtilities::realToComplexDFTFrequencies(const int nSamples,
+                                               const double samplingPeriod,
+                                               const int lengthFreqs,
+                                               double *freqsIn[])
+{
+    if (nSamples < 1 || samplingPeriod <= 0)
+    {
+        if (nSamples < 1)
+        {
+            RTSEIS_THROW_IA("nSamples = %d must be positive", nSamples);
+        }
+        RTSEIS_THROW_IA("samplingPeriod = %lf must be positive",
+                        samplingPeriod);
+    }
+    double *freqs = *freqsIn;
+    if (freqs == nullptr)
+    {
+        RTSEIS_THROW_IA("%s", "freqs is NULL");
+    } 
+    int nbins = nSamples/2 + 1;
+    if (lengthFreqs < nbins)
+    {
+        RTSEIS_THROW_IA("lengthFreqs = %d must be at least = %d",
+                        lengthFreqs, nbins);
+    }  
+    // Edge case
+    if (nbins == 1)
+    {
+        freqs[0] = 0;
+        return;
+    }
+    auto df = 1.0/(static_cast<double> (nSamples)*samplingPeriod);
+    #pragma omp simd
+    for (auto i=0; i<nbins; ++i)
+    {
+        freqs[i] = df*i;
+    }
+}
+
 int DFTUtilities::nextPow2(const int n)
 {
     if (n < 0)

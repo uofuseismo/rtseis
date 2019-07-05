@@ -202,6 +202,27 @@ TEST(UtilitiesTransforms, Phase)
     ASSERT_LE(emax, 1.e-10);
 }
 
+TEST(UtilitiesTransforms, rfftFreqs)
+{
+    // Edge case
+    auto rfft1 = DFTUtilities::realToComplexDFTFrequencies(1, 1.0);
+    EXPECT_EQ(rfft1[0], 0.0);
+    // Length 8 which is even
+    auto rfft2 = DFTUtilities::realToComplexDFTFrequencies(8, 5.0);
+    EXPECT_EQ(static_cast<int> (rfft2.size()), 5);
+    for (auto i=0; i<5; ++i)
+    {
+        EXPECT_NEAR(rfft2[i], static_cast<double> (i)*0.025, 1.e-14);
+    }
+    // Length 13 which is odd
+    auto rfft3 = DFTUtilities::realToComplexDFTFrequencies(13, 4.0);
+    EXPECT_EQ(static_cast<int> (rfft3.size()), 7);
+    for (auto i=0; i<7; ++i)
+    {
+        EXPECT_NEAR(rfft3[i], i*0.019230769230769232, 1.e-13);
+    } 
+}
+
 //int transforms_test_dft()
 TEST(UtilitiesTransforms, dft)
 {

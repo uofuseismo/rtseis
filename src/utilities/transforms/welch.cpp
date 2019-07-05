@@ -4,6 +4,7 @@
 #include <ipps.h>
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/transforms/welch.hpp"
+#include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 
@@ -27,24 +28,6 @@ double computeDensityScaling(const int npts, const double window[])
     ippsSum_64f(window, npts, &wsum);
     wsum = 1.0/(wsum*wsum);
     return wsum;
-}
-
-void computeFrequencies(const int nf,
-                        const double samplingRate,
-                        double freqs[])
-{
-    auto fnyq = 1.0/(2.0*samplingRate);
-    if (nf == 1)
-    {
-        freqs[0] = 0;
-        return;
-    }
-    double df = fnyq/static_cast<double> (nf - 1);
-    #pragma omp simd
-    for (auto i=0; i<nf; ++i)
-    {
-        freqs[i] = df*i;
-    }  
 }
 
 }
@@ -169,5 +152,8 @@ void Welch::getFrequencies(const int nFrequencies, double *freqsIn[]) const
     {
         RTSEIS_THROW_IA("%s", "frequencies is NULL");
     }
-    computeFrequencies(nFreqs, pImpl->mSamplingRate, freqs);
+    int nSamples = 2*(nFreqs - 1); 
+    DFTUtilities::realToComplexDFTFrequencies(nSamples, nFreqs,
+                                              1.0/pImpl->mSamplingRate,
+                                              freqsIn); 
 }

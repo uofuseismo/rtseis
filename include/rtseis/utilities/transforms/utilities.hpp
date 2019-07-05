@@ -108,7 +108,7 @@ void phase(const int n, const std::complex<double> z[], double *phi[],
  * @sa DFTRealToComplex
  */
 std::vector<double>
-realDFTFrequencies(const int nSamples, const double samplingRate);
+realToComplexDFTFrequencies(const int nSamples, const double samplingRate);
 /*!
  * @brief Computes the DFT sampling frequencies corresponding to the DFT of a
  *        a real time domain signal.
@@ -126,8 +126,10 @@ realDFTFrequencies(const int nSamples, const double samplingRate);
  *         lengthFreqs is too small, or freqs is NULL.
  * @sa DFTRealToComplex
  */
-void realDFTFrequencies(const int nSamples, const double samplingPeriod,
-                        const double *freqs[]);
+void realToComplexDFTFrequencies(const int nSamples,
+                                 const double samplingPeriod,
+                                 const int lengthFreqs,
+                                 double *freqs[]);
 /*! @} */
 
 
