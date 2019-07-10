@@ -934,53 +934,95 @@ TEST(UtilitiesTransforms, Spectrogram)
 
 TEST(UtilitiesTransforms, Welch)
 {
+    // Dirty trick - I need to read a 3 column text file so I can use envelope
+    const std::string fileName1 = "data/welchTest1.txt";
+    const std::string fileName2 = "data/welchTest2.txt";
+    std::vector<double> fRef1, fRef2, powerRef1, powerRef2, psdRef1, psdRef2;
+    readEnvelopeFile(fileName1, &fRef1, &powerRef1, &psdRef1);
+    readEnvelopeFile(fileName2, &fRef2, &powerRef2, &psdRef2);
+    // Setup the parameters 
     SlidingWindowRealDFTParameters parameters;
     double samplingRate = 10e3;
-    int nSamples = 100000;
+    int nSamples = 10000;
     double freq = 1234.0;
     int nWindowLength = 1024;
-    int nSamplesInOverlap = nWindowLength/2;
+    SlidingWindowWindowType windowType = SlidingWindowWindowType::HANN;
+    int fftLength = nWindowLength; // Default
+    int nSamplesInOverlap = nWindowLength/2; // Good choice for Welch
+    
+    // Create the sine wave whose frequency is 1234 Hz
     std::vector<double> xSineSignal(nSamples);
     for (auto i=0; i<nSamples; ++i)
     {
         auto time = static_cast<double> (i)/samplingRate;
         xSineSignal[i] = std::sin(2.0*M_PI*time*freq);
     }
-    // Create parameters
+    // Put the parameters into the parameters structure 
     EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
-    EXPECT_NO_THROW(parameters.setWindow(nWindowLength,
-                                         SlidingWindowWindowType::HANN));
+    EXPECT_NO_THROW(parameters.setWindow(nWindowLength, windowType));
     EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(nSamplesInOverlap));
     EXPECT_NO_THROW(parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_MEAN));
+    EXPECT_NO_THROW(parameters.setDFTLength(fftLength));
     EXPECT_TRUE(parameters.isValid());
     Welch welch;
     EXPECT_NO_THROW(welch.initialize(parameters, samplingRate));
     EXPECT_EQ(welch.getNumberOfSamples(), nSamples);
     int nFrequencies = welch.getNumberOfFrequencies(); 
-    EXPECT_EQ(nFrequencies, nWindowLength/2 + 1);
+    EXPECT_EQ(nFrequencies, fftLength/2 + 1); //nWindowLength/2 + 1);
     // Check the frequencies
     std::vector<double> frequencies(nFrequencies);
     double *freqPtr = frequencies.data();
     welch.getFrequencies(nFrequencies, &freqPtr);
-    auto refFreq = DFTUtilities::realToComplexDFTFrequencies(nWindowLength,
-                                                             1.0/samplingRate);
-    EXPECT_EQ(refFreq.size(), frequencies.size());
+    EXPECT_EQ(fRef1.size(), frequencies.size());
     double error = 0;
-    ippsNormDiff_L1_64f(refFreq.data(), frequencies.data(), nFrequencies,
-                        &error);
-    EXPECT_LE(error, 1.e-14);
+    ippsNormDiff_Inf_64f(fRef1.data(), frequencies.data(), nFrequencies,
+                         &error);
+    EXPECT_LE(error, 1.e-7);
     // Transform
     EXPECT_NO_THROW(welch.transform(nSamples, xSineSignal.data()));
+    // Get and compare results
     std::vector<double> spectrum(nFrequencies); 
     double *sPtr = spectrum.data();
     EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
-/*
-for (int i=0; i<nFrequencies; ++i)
-{
-printf("%d %e\n", i, spectrum[i]);
-}
-*/
+    ippsNormDiff_Inf_64f(powerRef1.data(), spectrum.data(),
+                         nFrequencies, &error);
+    EXPECT_LE(error, 1.e-5);
     EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    ippsNormDiff_Inf_64f(psdRef1.data(), spectrum.data(),
+                         nFrequencies, &error);
+    EXPECT_LE(error, 1.e-5);
+    // Now feed the program some awkward numbers
+    nWindowLength = 1013;
+    windowType = SlidingWindowWindowType::HAMMING;
+    fftLength = 1091;
+    nSamplesInOverlap = 501;
+    EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
+    EXPECT_NO_THROW(parameters.setWindow(nWindowLength, windowType));
+    EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(nSamplesInOverlap));
+    EXPECT_NO_THROW(parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_NONE));
+    EXPECT_NO_THROW(parameters.setDFTLength(fftLength));
+    EXPECT_TRUE(parameters.isValid());
+    EXPECT_NO_THROW(welch.initialize(parameters, samplingRate));
+    nFrequencies = welch.getNumberOfFrequencies();
+    frequencies.resize(nFrequencies);
+    EXPECT_EQ(fRef2.size(), frequencies.size());
+    freqPtr = frequencies.data();
+    welch.getFrequencies(nFrequencies, &freqPtr);
+    ippsNormDiff_Inf_64f(fRef2.data(), frequencies.data(), nFrequencies,
+                         &error);
+    EXPECT_LE(error, 1.e-7);
+    // Transform
+    EXPECT_NO_THROW(welch.transform(nSamples, xSineSignal.data()));
+    spectrum.resize(nFrequencies);
+    sPtr = spectrum.data();
+    EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    ippsNormDiff_Inf_64f(powerRef2.data(), spectrum.data(),
+                         nFrequencies, &error);
+    EXPECT_LE(error, 1.e-5);
+    EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    ippsNormDiff_Inf_64f(psdRef2.data(), spectrum.data(),
+                         nFrequencies, &error);
+    EXPECT_LE(error, 1.e-5);
 }
 //============================================================================//
 //                              Private functions                             //

@@ -254,7 +254,7 @@ void Welch::getFrequencies(const int nFrequencies, double *freqsIn[]) const
     {
         RTSEIS_THROW_IA("%s", "frequencies is NULL");
     }
-    int nSamples = 2*(nFreqs - 1);
+    int nSamples = pImpl->mParameters.getDFTLength();
     try
     {
         DFTUtilities::realToComplexDFTFrequencies(nSamples,
