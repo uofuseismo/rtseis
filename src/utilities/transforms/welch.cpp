@@ -18,7 +18,7 @@ double computeSpectrumScaling(const int npts, const double samplingRate,
 {
     double wsum2 = 0;
     ippsDotProd_64f(window, window, npts, &wsum2); 
-    wsum2 = 1.0/(samplingRate*wsum2); 
+    wsum2 = samplingRate*wsum2; 
     return wsum2;
 }
 
@@ -26,7 +26,7 @@ double computeDensityScaling(const int npts, const double window[])
 {
     double wsum;
     ippsSum_64f(window, npts, &wsum);
-    wsum = 1.0/(wsum*wsum);
+    wsum = wsum*wsum;
     return wsum;
 }
 
@@ -37,8 +37,12 @@ class Welch::WelchImpl
 public:
     class SlidingWindowRealDFT mSlidingWindowRealDFT;
     class SlidingWindowRealDFTParameters mParameters;
+    std::vector<double> mSumSpectrum;
+    double mSpectrumScaling = 1;
+    double mDensityScaling = 1;
     double mSamplingRate = 1;
     bool mInitialized = false;
+    bool mHaveTransform = false;
 };
 
 /// Constructors
@@ -81,8 +85,12 @@ void Welch::clear() noexcept
 {
     pImpl->mSlidingWindowRealDFT.clear();
     pImpl->mParameters.clear();
+    pImpl->mSumSpectrum.clear();
+    pImpl->mSpectrumScaling = 1;
+    pImpl->mDensityScaling = 1;
     pImpl->mSamplingRate = 1;
     pImpl->mInitialized = false;
+    pImpl->mHaveTransform = false;
 }
 
 /// Initialize
@@ -110,24 +118,27 @@ void Welch::initialize(const SlidingWindowRealDFTParameters &parameters,
         clear();
         RTSEIS_THROW_RTE("%s", "Failed to initialize sliding DFT");
     }
+    // Compute the scaling
+    int nWindow = pImpl->mParameters.getWindowLength();
+    std::vector<double> window  = pImpl->mParameters.getWindow();
+    pImpl->mSpectrumScaling = computeSpectrumScaling(nWindow,
+                                                     pImpl->mSamplingRate,
+                                                     window.data());
+    pImpl->mDensityScaling = computeDensityScaling(nWindow, window.data()); 
+    // Set space for the intermediate output
     int nfreqs = pImpl->mSlidingWindowRealDFT.getNumberOfFrequencies();
-    if (nfreqs > 1)
-    {
-        double fNyq = pImpl->mSamplingRate/2.0;
-        double df = fNyq/static_cast<double> (nfreqs - 1);
-        std::vector<double> frequencies;
-        #pragma omp simd
-        for (auto i=0; i<nfreqs; ++i)
-        {
-            frequencies[i] = static_cast<double> (i)*df;
-        }
-    }
+    pImpl->mSumSpectrum.resize(nfreqs);
     pImpl->mInitialized = true;
 }
 
 bool Welch::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
+}
+
+bool Welch::haveTransform() const noexcept
+{
+    return pImpl->mHaveTransform;
 }
 
 int Welch::getNumberOfFrequencies() const
@@ -137,6 +148,97 @@ int Welch::getNumberOfFrequencies() const
         RTSEIS_THROW_RTE("%s", "Class is not initialized");
     }
     return pImpl->mSlidingWindowRealDFT.getNumberOfFrequencies();
+}
+
+int Welch::getNumberOfSamples() const
+{
+    if (!isInitialized())
+    {
+        RTSEIS_THROW_RTE("%s", "Class is not initialized");
+    }
+    return pImpl->mSlidingWindowRealDFT.getNumberOfSamples();
+
+}
+void Welch::transform(const int nSamples, const double x[])
+{
+    pImpl->mHaveTransform = true;
+    int nSamplesRef = getNumberOfSamples(); // Throws if not inittialized
+    if (nSamples != nSamplesRef)
+    {
+        RTSEIS_THROW_IA("nSamples = %d must equal %d", nSamples, nSamplesRef);
+    }
+    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    pImpl->mSlidingWindowRealDFT.transform(nSamples, x);
+    // Sum over the frequency bins
+    auto nFrequencies = getNumberOfFrequencies();
+    auto nWindows = pImpl->mSlidingWindowRealDFT.getNumberOfTransformWindows();
+    // Initialize the summation
+    double *pSumSpectrum = pImpl->mSumSpectrum.data();
+    auto cPtr = pImpl->mSlidingWindowRealDFT.getTransform64f(0);
+    auto pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
+    #pragma omp simd
+    for (auto k=0; k<nFrequencies; ++k)
+    {
+        pSumSpectrum[k] = pDFT[k].re*pDFT[k].re
+                        + pDFT[k].im*pDFT[k].im;
+    }
+    // And sum the other windows
+    for (auto i=1; i<nWindows; ++i)
+    {
+        cPtr = pImpl->mSlidingWindowRealDFT.getTransform64f(i);
+        pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
+        #pragma omp simd
+        for (auto k=0; k<nFrequencies; ++k)
+        {
+            pSumSpectrum[k] = pSumSpectrum[k]
+                            + pDFT[k].re*pDFT[k].re
+                            + pDFT[k].im*pDFT[k].im;
+        }
+    }
+    pImpl->mHaveTransform = true;
+}
+
+void Welch::getPowerSpectrum(const int nFrequencies,
+                             double *powerSpectrum[]) const
+{
+    auto nFreqs = getNumberOfFrequencies(); // Will throw initializaiton error
+    if (nFrequencies != nFreqs)
+    {
+        RTSEIS_THROW_IA("nFrequencies = %d must equal %d",
+                        nFrequencies, nFreqs);
+    }
+    double *ptr = *powerSpectrum;
+    if (ptr == nullptr){RTSEIS_THROW_IA("%s", "powerSpectrum is NULL");}
+    if (!haveTransform())
+    {
+        RTSEIS_THROW_RTE("%s", "welch transform not yet computed");
+    }
+    // Copy and scale
+    auto nWindows = pImpl->mSlidingWindowRealDFT.getNumberOfTransformWindows();
+    double xscal = 0;
+    if (nFreqs > 0){xscal = 2.0/(nWindows*pImpl->mSpectrumScaling);}
+    ippsMulC_64f(pImpl->mSumSpectrum.data(), xscal, ptr, nFreqs);
+}
+
+void Welch::getPowerSpectralDensity(const int nFrequencies, double *psd[]) const
+{
+    auto nFreqs = getNumberOfFrequencies(); // Will throw initializaiton error
+    if (nFrequencies != nFreqs)
+    {
+        RTSEIS_THROW_IA("nFrequencies = %d must equal %d",
+                        nFrequencies, nFreqs);
+    }
+    double *ptr = *psd;
+    if (ptr == nullptr){RTSEIS_THROW_IA("%s", "psd is NULL");}
+    if (!haveTransform())
+    {
+        RTSEIS_THROW_RTE("%s", "welch transform not yet computed");
+    }
+    auto nWindows = pImpl->mSlidingWindowRealDFT.getNumberOfTransformWindows();
+    // Copy and scale
+    double xscal = 0;
+    if (nFreqs > 0){xscal = 2.0/(nWindows*pImpl->mDensityScaling);}
+    ippsMulC_64f(pImpl->mSumSpectrum.data(), xscal, ptr, nFreqs);
 }
 
 void Welch::getFrequencies(const int nFrequencies, double *freqsIn[]) const
@@ -152,8 +254,20 @@ void Welch::getFrequencies(const int nFrequencies, double *freqsIn[]) const
     {
         RTSEIS_THROW_IA("%s", "frequencies is NULL");
     }
-    int nSamples = 2*(nFreqs - 1); 
-    DFTUtilities::realToComplexDFTFrequencies(nSamples, nFreqs,
-                                              1.0/pImpl->mSamplingRate,
-                                              freqsIn); 
+    int nSamples = 2*(nFreqs - 1);
+    try
+    {
+        DFTUtilities::realToComplexDFTFrequencies(nSamples,
+                                                  1.0/pImpl->mSamplingRate,
+                                                  nFreqs,
+                                                  freqsIn); 
+    }
+    catch (const std::exception &e)
+    {
+#ifdef DEBUG
+        assert(false);
+#else
+        RTSEIS_THROW_RTE("%s", "Failed to call realToComplexDFTFrequencies");
+#endif
+    }
 }

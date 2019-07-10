@@ -19,6 +19,7 @@
 #include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
+#include "rtseis/utilities/transforms/welch.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
@@ -931,6 +932,56 @@ TEST(UtilitiesTransforms, Spectrogram)
     ASSERT_LE(resmax, 1.e-7);
 }
 
+TEST(UtilitiesTransforms, Welch)
+{
+    SlidingWindowRealDFTParameters parameters;
+    double samplingRate = 10e3;
+    int nSamples = 100000;
+    double freq = 1234.0;
+    int nWindowLength = 1024;
+    int nSamplesInOverlap = nWindowLength/2;
+    std::vector<double> xSineSignal(nSamples);
+    for (auto i=0; i<nSamples; ++i)
+    {
+        auto time = static_cast<double> (i)/samplingRate;
+        xSineSignal[i] = std::sin(2.0*M_PI*time*freq);
+    }
+    // Create parameters
+    EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
+    EXPECT_NO_THROW(parameters.setWindow(nWindowLength,
+                                         SlidingWindowWindowType::HANN));
+    EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(nSamplesInOverlap));
+    EXPECT_NO_THROW(parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_MEAN));
+    EXPECT_TRUE(parameters.isValid());
+    Welch welch;
+    EXPECT_NO_THROW(welch.initialize(parameters, samplingRate));
+    EXPECT_EQ(welch.getNumberOfSamples(), nSamples);
+    int nFrequencies = welch.getNumberOfFrequencies(); 
+    EXPECT_EQ(nFrequencies, nWindowLength/2 + 1);
+    // Check the frequencies
+    std::vector<double> frequencies(nFrequencies);
+    double *freqPtr = frequencies.data();
+    welch.getFrequencies(nFrequencies, &freqPtr);
+    auto refFreq = DFTUtilities::realToComplexDFTFrequencies(nWindowLength,
+                                                             1.0/samplingRate);
+    EXPECT_EQ(refFreq.size(), frequencies.size());
+    double error = 0;
+    ippsNormDiff_L1_64f(refFreq.data(), frequencies.data(), nFrequencies,
+                        &error);
+    EXPECT_LE(error, 1.e-14);
+    // Transform
+    EXPECT_NO_THROW(welch.transform(nSamples, xSineSignal.data()));
+    std::vector<double> spectrum(nFrequencies); 
+    double *sPtr = spectrum.data();
+    EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+/*
+for (int i=0; i<nFrequencies; ++i)
+{
+printf("%d %e\n", i, spectrum[i]);
+}
+*/
+    EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+}
 //============================================================================//
 //                              Private functions                             //
 //============================================================================//

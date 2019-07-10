@@ -118,6 +118,29 @@ public:
      */
     bool isInitialized() const noexcept;
     /*!
+     * @brief Returns the expected number of time domain samples in the signal
+     *        to transform.
+     * @result The number of samples the signal to transform to contain should
+     *         contain.
+     * @throws std::runtime_error if the class is not inititalized.
+     */
+    int getNumberOfSamples() const;
+    /*!
+     * @brief Computes the Welch transform of a signal.
+     * @param[in] nSamples   The number of samples in the signal.  This must
+     *                       equal the result of \c getNumberOfSamples().
+     * @param[in] x          The signal to transform.
+     * @throws std::invalid_argument if nSamples or x is invalid.
+     * @throws std::runtime_error if the class is not initialized.
+     * @sa \c isInitialized(), \c getNumberOfSamples()
+     */
+    void transform(const int nSamples, const double x[]);
+    /*!
+     * @brief Returns whether or not the transform has been computed.
+     * @retval True indicates that the transform has been computed.
+     */
+    bool haveTransform() const noexcept;
+    /*!
      * @brief Returns the number of frequencies.
      * @result The number of frequencies.
      * @throws std::runtime_error if the class is not intitialized.
@@ -147,11 +170,13 @@ public:
      *                          signal has units of \f$ Volts \f$ then this
      *                          has units of \f$ \frac{Volts^2}{Hz} \f$.
      * @throws std::invalid_argument if nFrequencies is invalid or psd is NULL.
-     * @throws std::runtime_error if the class is not initialized.
+     * @throws std::runtime_error if the class is not initialized or the 
+     *         transform has not been computed.
      * @sa \c getNumberOfFrequencies()
      * @sa \c isInitialized()
+     * @sa \c haveTransform()
      */
-    void computePowerSpectralDensity(const int nFrequencies, double *psd[]);
+    void getPowerSpectralDensity(const int nFrequencies, double *psd[]) const;
     /*!
      * @brief Gets the power spectrum.
      * @param[in] nFrequencies    The number of frequencies. This must match the
@@ -162,11 +187,13 @@ public:
      *                            has units of \f$ Volts^2 \f$.
      * @throws std::invalid_argument if nFrequencies is invalid or 
      *         powerSpectrum is NULL.
-     * @throws std::runtime_error if the class is not initialized.
+     * @throws std::runtime_error if the class is not initialized or the
+     *         transform has not been computed.
      * @sa \c getNumberOfFrequencies()
      * @sa \c isInitialized()
+     * @sa \c haveTransform()
      */
-    void computePowerSpectrum(const int nFrequencies, double *powerSpectrum[]);
+    void getPowerSpectrum(const int nFrequencies, double *powerSpectrum[]) const;
 private:
     class WelchImpl;
     std::unique_ptr<WelchImpl> pImpl;
