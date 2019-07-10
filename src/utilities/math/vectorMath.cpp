@@ -109,6 +109,19 @@ template int RTSeis::Utilities::Math::VectorMath::copysign<float>(
 //============================================================================//
 
 template<typename T> bool RTSeis::Utilities::Math::VectorMath::isSorted(
+    const int npts, const T x[])
+{
+    bool lsorted;
+#ifdef __INTEL_COMPILER
+    //lsorted = std::is_sorted(pstl::execution::unseq, x, x+npts,
+    //                           std::less_equal<T>());
+    lsorted = std::is_sorted(x, x+npts);
+#else
+    lsorted = std::is_sorted(x, x+npts);
+#endif
+    return lsorted;
+}
+template<typename T> bool RTSeis::Utilities::Math::VectorMath::isSorted(
     const std::vector<T> &x)
 {
     bool lsorted;
@@ -121,6 +134,13 @@ template<typename T> bool RTSeis::Utilities::Math::VectorMath::isSorted(
 #endif
     return lsorted;
 }
+template bool RTSeis::Utilities::Math::VectorMath::isSorted<double>(
+    const int npts, const double x[]);
+template bool RTSeis::Utilities::Math::VectorMath::isSorted<float>(
+    const int npts, const float x[]);
+template bool RTSeis::Utilities::Math::VectorMath::isSorted<int>(
+    const int npts, const int x[]);
+
 template bool RTSeis::Utilities::Math::VectorMath::isSorted<double>(
     const std::vector<double> &x);
 template bool RTSeis::Utilities::Math::VectorMath::isSorted<float>(

@@ -78,6 +78,17 @@ template<typename T> int copysign(const int n, const T x[], T y[]);
 template<typename T> int copysign(const std::vector<T> &x, std::vector<T> &y);
 
 /*!
+ * @ingroup rtseis_utils_math_vm
+ * @brief Determines if the vector is sorted in increasing order.
+ * @param[in] npts  The number of points in the array.
+ * @param[in] x     The array to determine if is sorted or not.
+ *                  This has dimension of [npts].
+ * @retval True indicates that x is sorted in increasing order.
+ * @retval False indicates that x is not sorted in increasing order.
+ * @ingroup rtseis_utils_math_vm
+ */
+template<typename T> bool isSorted(const int npts, const T x[]);
+/*!
  * @defgroup rtseis_utilties_math_vm_isSorted isSorted
  * @ingroup rtseis_utils_math_vm
  * @brief Determines if the vector is sorted in increasing order.

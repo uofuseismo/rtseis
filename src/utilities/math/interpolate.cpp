@@ -13,11 +13,10 @@
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utilities::Math::Interpolate;
 using namespace RTSeis::Utilities::Math;
 
 std::vector<double>
-Interpolate::interpft(const std::vector<double> &x, const int npnew)
+Interpolation::interpft(const std::vector<double> &x, const int npnew)
 {
     if (npnew < 1)
     {
@@ -100,6 +99,8 @@ Interpolate::interpft(const std::vector<double> &x, const int npnew)
     ippsFree(pDFTInverseSpec);
     return yint;
 }
+
+using namespace RTSeis::Utilities::Math::Interpolation;
 
 class Interp1D::Interp1DImpl
 {
@@ -559,7 +560,7 @@ void Interp1D::apply(const std::vector<double> &xq,
         throw std::invalid_argument("xq.size() != vq.size()");
     }
     bool lsorted = false;
-    if (!lxqSorted){lsorted = VectorMath::isSorted(xq);}
+    if (!lxqSorted){lsorted = Math::VectorMath::isSorted(xq);}
     int ierr = pImpl->interpolate(xq, vq, lsorted); 
     if (ierr != 0)
     {

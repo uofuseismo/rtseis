@@ -1,28 +1,16 @@
-#ifndef RTSEIS_UTILITIES_INTERPOLATE_HPP
-#define RTSEIS_UTILITIES_INTERPOLATE_HPP 1
+#ifndef RTSEIS_UTILITIES_MATH_INTERPOLATION_INTERPOLATE_HPP
+#define RTSEIS_UTILITIES_MATH_INTERPOLATION_INTERPOLATE_HPP 1
 #include <vector>
 #include <memory>
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace Math
+namespace RTSeis::Utilities::Math::Interpolation
 {
 /*!
- * @defgroup rtseis_utils_math_interp Interpolation
- * @brief Utilities for interpolation.
  * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_math
+ * @ingroup rtseis_utils_math_interpolation
  */
-namespace Interpolate
-{
-
 class Interp1D
 {
-/*! 
- * @brief Methodologies for 1D interpolation.
- */
 public:
     enum Method
     {   
@@ -125,12 +113,9 @@ private:
  *         dimension [npnew].
  * @throws std::invalid_argument if npnew is invalid or x is empty.
  * @throws std::runtime_error if an internal error has occurred. 
+ * @ingroup rtseis_utils_math_interpolation
  */
 std::vector<double> interpft(const std::vector<double> &x, const int npnew);
 
-
-}; // End Interpoalte
-}; // End Math
-}; // End Utilities
-}; // End RTSeis
+} // End RTSeis
 #endif

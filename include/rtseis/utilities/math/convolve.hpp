@@ -1,21 +1,9 @@
-#ifndef RTSEIS_UTILS_MATH_CONVOLVE_HPP
-#define RTSEIS_UTILS_MATH_CONVOLVE_HPP 1
+#ifndef RTSEIS_UTILITIES_MATH_CONVOLVE_HPP
+#define RTSEIS_UTILITIES_MATH_CONVOLVE_HPP 1
 #include <complex>
 #include <vector>
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace Math 
-{
-/*!
- * @defgroup rtseis_utils_math_convolve Convolve
- * @brief Utility functions for convolution and correlation.
- * @copyright Ben Baker distributed under the MIT license.
- * @ingroup rtseis_utils_math
- */
-namespace Convolve
+namespace RTSeis::Utilities::Math::Convolve
 {
 
 /*!
@@ -196,8 +184,5 @@ int computeConvolutionLength(const int n1, const int n2,
                              const Convolve::Mode mode);
 
 
-}; /* End Convolve. */
-}; /* End Math. */
-}; /* End Utils */
-}; /* End RTSeis */
+} /* End RTSeis */
 #endif

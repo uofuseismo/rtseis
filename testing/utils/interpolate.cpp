@@ -12,6 +12,8 @@
 namespace
 {
 
+using namespace RTSeis::Utilities::Math::Interpolation;
+
 //int test_interpolation_interpft(void)
 TEST(UtilitiesInterpolation, interpft)
 {
@@ -25,9 +27,7 @@ TEST(UtilitiesInterpolation, interpft)
         f[i] = std::pow(std::sin(x), 2)*std::cos(x);
     }
     std::vector<double> fnew;
-    EXPECT_NO_THROW(
-       fnew = RTSeis::Utilities::Math::Interpolate::interpft(f, npnew)
-    );
+    EXPECT_NO_THROW(fnew = interpft(f, npnew));
     int iskip = npnew/npts;
     double emax = 0;
     for (auto i=0; i<npts; i++)

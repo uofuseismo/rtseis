@@ -245,6 +245,11 @@ and classes that can be reorganized into higher-level modules.
     \copyright Ben Baker distributed under the MIT license.
     \ingroup rtseis_utils_math
 
+    \defgroup rtseis_utils_math_interpolation Interpolation
+    \brief Utility functions for interpolation.
+    \copyright Ben BAker distributed under the MIT license.
+    \ingroup rtseis_utils_math
+
   \defgroup rtseis_utils_transforms Transforms
   \brief These are utilities that enable users to transform data
          between domains.  Found here are building blocks for Fourier
