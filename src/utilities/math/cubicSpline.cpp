@@ -1,107 +1,98 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <cfloat>
+#include <vector>
 #include <mkl.h>
+#include "rtseis/private/throw.hpp"
+#include "rtseis/utilities/math/cubicSpline.hpp"
 
-using namespace RTSeis::Utilities::Math::Interpolation::CubicSpline;
-
-/*!
- */
-enum class BoundaryConditionType
-{
-    NOT_A_KNOT, /*!< The first and second segment at a curve end are the
-                     same.  This is useful when there is no information on
-                     the boundary conditions. */
-    NATURAL,    /*!< The second derivative at the curve ends are set to 0, i.e.,
-                     \f$ y''[0] = y''[ny-1] \f$. */
-    CLAMPED,    /*!< The first derivative at the curve ends are set to 0, i.e.,
-                     \f$  y'[0] = y'[ny-1] \f$. */
-    PERIODIC    /*!< The interpolated function is assumed to be periodic.
-                     In this case, the first y value must equal the last
-                     y value.  The resulting boundary condition will be
-                     \f$  y'[0] = y'[ny-1] \f$ and 
-                     \f$ y''[0] = y''[ny-1] \f$. */
-};
+using namespace RTSeis::Utilities::Math::Interpolation;
 
 class CubicSpline::CubicSplineImpl
 {
 public:
+    /// Destructor
+    ~CubicSplineImpl()
+    {
+        clear();
+    }
     /// Creates a new task for when x is uniform
     int createUniformXTask(const int npts,
-                           const std::pair<double, double> xPair,
+                           const std::pair<double, double> xInterval,
                            const double y[],
-                           const int MKL_INT yHint = DF_NO_HINT)
+                           const MKL_INT yHint = DF_NO_HINT)
     {
-         deleteTask();
-         mXMin = x.first;
-         mXMax = x.second;
-         const double x[2] = {mXMin, mXMax};
-         constexpr MKL_INT nx = 2;
-         const MKL_INT ny = npts;
-         constexpr MKL_INT xHint = DF_UNIFORM_PARTITION;
-         mSplineCoeffs.resize(ny*splineOrder*(nx - 1));
-         auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, yhint); 
-         if (status != MKL_STATUS_OK){return -1;}
-         mhaveTask = true;
-         return 0;
+        deleteTask();
+        mXMin = xInterval.first;
+        mXMax = xInterval.second;
+        const double x[2] = {mXMin, mXMax};
+        constexpr MKL_INT nx = 2;
+        const MKL_INT ny = npts;
+        constexpr MKL_INT xHint = DF_UNIFORM_PARTITION;
+        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
+        auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, yHint); 
+        if (status != DF_STATUS_OK){return -1;}
+        mHaveTask = true;
+        return 0;
     }
     /// Creates a new task for when x is not necessarily uniofrm 
     int createTask(const int npts,
                    const double x[],
                    const double y[],
-                   const int MKL_INT yHint = DF_NO_HINT)
+                   const MKL_INT yHint = DF_NO_HINT)
     {
-         deleteTask();
-         mXMin = x[0];
-         mXMax = x[npts-1]; 
-         const MKL_INT nx = npts;
-         const MKL_INT ny = npts;
-         constexpr MKL_INT xHint = DF_UNIFORM_PARTITION;
-         mSplineCoeffs.resize(ny*splineOrder*(nx - 1));
-         auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, yhint);
-         if (status != MKL_STATUS_OK){return -1;}
-         mhaveTask = true;
-         return 0;
+        deleteTask();
+        mXMin = x[0];
+        mXMax = x[npts-1]; 
+        const MKL_INT nx = npts;
+        const MKL_INT ny = npts;
+        constexpr MKL_INT xHint = DF_NON_UNIFORM_PARTITION;
+        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
+        auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, yHint);
+        if (status != DF_STATUS_OK){return -1;}
+        mHaveTask = true;
+        return 0;
     }
     /// Sets the spline type and boundary conditions on the task
-    int editPipeline(const BoundaryConditionType boundaryConditionType)
+    int editPipeline(const CubicSplineBoundaryConditionType boundaryCondition)
     {
         // Figure out the boundary conditions first
         const double bcArray[2] = {0, 0};
         const double *bcs = nullptr;
         const double *ics = nullptr; 
-        if (boundaryConditionType == BoundaryConditionType::NATURAL)
+        if (boundaryCondition == CubicSplineBoundaryConditionType::NATURAL)
         {
-            pImpl->mSplineBC = DF_BC_FREE_END;
-            pImpl->mSplineIC = DF_NO_IC;
+            mSplineBC = DF_BC_FREE_END;
+            mSplineIC = DF_NO_IC;
         }
-        else if (boundaryConditionType == BoundaryConditiontype::CLAMPED)
+        else if (boundaryCondition == CubicSplineBoundaryConditionType::CLAMPED)
         {
             bcs = bcArray;
-            pImpl->mSplineBC = DF_BC_1ST_LEFT_DER | DF_BC_2ND_RIGHT_DER;
-            pImpl->mSplineIC = DF_NO_IC;
+            mSplineBC = DF_BC_1ST_LEFT_DER | DF_BC_2ND_RIGHT_DER;
+            mSplineIC = DF_NO_IC;
         }
-        else if (boundaryConditionType == BoundaryConditionType::NOT_A_KNOT)
+        else if (boundaryCondition == CubicSplineBoundaryConditionType::NOT_A_KNOT)
         {
-            pImpl->mSplineBC = DF_BC_NOT_A_KNOT;
-            pImpl->mSplineIC = DF_NO_IC;
+            mSplineBC = DF_BC_NOT_A_KNOT;
+            mSplineIC = DF_NO_IC;
         }
-        else if (boundaryConditionType == BoundaryConditionType::PERIODIC)
+        else if (boundaryCondition == CubicSplineBoundaryConditionType::PERIODIC)
         {
-            pImpl->mSplineBC = DF_BC_PERIODIC;
-            pImpl->mSplineIC = DF_NO_IC;
+            mSplineBC = DF_BC_PERIODIC;
+            mSplineIC = DF_NO_IC;
         }
-        constexpr MKL_INT scoeffHint = DF_HINT_HINT;
+        constexpr MKL_INT scoeffHint = DF_NO_HINT;
         auto status = dfdEditPPSpline1D(mTask,
-                                        pImpl->mSplineOrder,
-                                        pImpl->mSplineType,
-                                        pImpl->mSplineBC,
+                                        mSplineOrder,
+                                        mSplineType,
+                                        mSplineBC,
                                         bcs,
-                                        pImpl->mSplineIC,
+                                        mSplineIC,
                                         ics,
-                                        pImpl->mSplineCoeffs.data(),
+                                        mSplineCoeffs.data(),
                                         scoeffHint);
-        if (status != MKL_SUCCESS)
+        if (status != DF_STATUS_OK)
         {
             clear();
             return -1;
@@ -111,21 +102,78 @@ public:
     /// Makes the spline
     int constructSpline()
     {
-        auto status = dfdConstruct1D(pImpl->mTask,
-                                     pImpl->mStatusFormat,
-                                     pImpl->mMethod);
-        if (status != MKL_SUCCESS)
+        auto status = dfdConstruct1D(mTask, mSplineFormat, mMethod);
+        if (status != DF_STATUS_OK)
         {
             clear();
             return -1; 
         }
         return 0;
     }
+    /// Interpolates over the uniform interval
+    int interpolate(const int nq,
+                    const std::pair<double, double> xInterval,
+                    double yq[])
+    {
+        double x[2] = {xInterval.first, xInterval.second};
+        constexpr MKL_INT nOrder = 1;  // Length of dorder
+        const MKL_INT dOrder[1] = {0}; // Order of derivatives
+        auto status = dfdInterpolate1D(mTask, DF_INTERP, DF_METHOD_PP,
+                                       nq, x, DF_UNIFORM_PARTITION,
+                                       nOrder, dOrder,
+                                       DF_NO_APRIORI_INFO, yq,
+                                       DF_NO_HINT, NULL);
+        if (status != DF_STATUS_OK){return -1;}
+        return 0; 
+    }
+    /// Interpolates at select abscissa
+    int interpolate(const int nq,
+                    const double x[],
+                    double yq[])
+    {
+        constexpr MKL_INT nOrder = 1;  // Length of dorder
+        const MKL_INT dOrder[1] = {0}; // Order of derivatives
+        auto status = dfdInterpolate1D(mTask, DF_INTERP, DF_METHOD_PP,
+                                       nq, x, DF_NON_UNIFORM_PARTITION,
+                                       nOrder, dOrder,
+                                       DF_NO_APRIORI_INFO, yq,
+                                       DF_NO_HINT, NULL);
+        if (status != DF_STATUS_OK){return -1;}
+        return 0;
+    }
+    /// Integrates over the interval
+    int integrate(const double lLim, const double rLim, double *integral)
+    {
+        constexpr int nlim = 1;
+        double llim[1] = {lLim};
+        double rlim[1] = {rLim};
+        auto status = dfdIntegrate1D(mTask, DF_METHOD_PP, nlim,
+                                     llim, DF_UNIFORM_PARTITION,
+                                     rlim, DF_UNIFORM_PARTITION,
+                                     DF_NO_APRIORI_INFO, DF_NO_APRIORI_INFO,
+                                     integral, DF_NO_HINT);
+        if (status != DF_STATUS_OK){return -1;}
+        return 0;
+    }
+         
     /// Deletes the task
     void deleteTask() noexcept
     {
         if (mHaveTask){dfDeleteTask(&mTask);}
         mHaveTask = false;
+    }
+    /// Clears the module
+    void clear() noexcept
+    {
+        deleteTask();
+        mSplineCoeffs.clear();
+        mXMin =-DBL_MAX;
+        mXMax = DBL_MAX;
+        mSplineBC = DF_BC_FREE_END;
+        mSplineIC = DF_NO_IC;
+        mBCType = CubicSplineBoundaryConditionType::NATURAL;
+        mHaveTask = false;
+        mInitialized = false;
     }
 ///private:
     DFTaskPtr mTask;
@@ -139,6 +187,8 @@ public:
     const MKL_INT mSplineOrder = DF_PP_CUBIC;   // This is for cubic splines
     const MKL_INT mSplineFormat = DF_PP_SPLINE; // Only supported option
     const MKL_INT mMethod = DF_METHOD_STD;      // Only supported option
+    CubicSplineBoundaryConditionType mBCType
+        = CubicSplineBoundaryConditionType::NATURAL;
     bool mHaveTask = false;
     bool mInitialized = false;
 };
@@ -148,28 +198,19 @@ CubicSpline::CubicSpline() :
 {
 }
 
-CubicSpline::~CubicSpline()
-{
-    clear();
-}
+CubicSpline::~CubicSpline() = default;
 
 void CubicSpline::clear() noexcept
 {
-    pImpl->deleteTask();
-    pImpl.mSplineCoeffs.clear();
-    pImpl->mXMin =-DBL_MAX;
-    pImpl->mXMax = DBL_MAX; 
-    pImpl->mSplineBC = DF_BC_FREE_END;
-    pImpl->mSplineIC = DF_NO_IC;
-    pImpl->mHaveTask = false;
-    pImpl->mInitialized = false;
+    pImpl->clear();
 }
 
+/*
 void CubicSpline::initialize(
     const int npts,
-    const std::pair<double, double> x,
+    const std::pair<double, double> xInterval,
     const double y[],
-    const BoundaryConditionType boundaryConditionType)
+    const CubicSplineBoundaryConditionType boundaryCondition)
 {
     clear();
     // Check the inputs
@@ -183,22 +224,18 @@ void CubicSpline::initialize(
         RTSEIS_THROW_IA("x.first = %lf must be less than x.second = %lf",
                         x.first, x.second); 
     }
-    // Create the data fitting task
-    pImpl->creatNewUniformXTask(npts, x, y);
-    // Edit the pipeline to inform MKL which spline to create
-    pImpl->editPipeline(boundaryConditionType);
-    // Construct the task
-    pImpl->constructSpline();
 }
+*/
 
 void CubicSpline::initialize(
     const int npts,
-    const double xIn[],
-    const double yIn[],
-    const BoundaryConditionType boundaryConditionType)
+    const double x[],
+    const double y[],
+    const CubicSplineBoundaryConditionType boundaryConditionType)
 {
     clear();
     // Check the inputs
+    pImpl->mBCType = boundaryConditionType;
     if (npts < 4)
     {
         RTSEIS_THROW_IA("npts = %d must be at least 4", npts);
@@ -208,42 +245,62 @@ void CubicSpline::initialize(
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_RTE("%s", "y is NULL");
     }
-    // Assert that the data is sorted
-    auto lsorted = RTSeis::Utilities::Math::VectorMath::isSorted(npts, x);
-    const double *x = xIn;
-    const double *y = yIn;
-    if (!lsorted)
+    // Assert that the data is increasing order
+    int isInvalid = 0;
+    #pragma omp simd reduction(+:isInvalid)
+    for (auto i=0; i<npts-1; ++i)
     {
-        // Sort
-        std::vector<int> permutation(npts);
-        ippsSortIndexAscend_64f_I(x, permuation.data(), npts);
-        std::vector<double> xSorted(npts);
-        std::vector<double> ySorted(npts);
-        #pragma omp simd
-        for (auto i=0; i<npts; ++i)
-        {
-           xSorted[i] = x[permutation[i]];
-           ySorted[i] = y[permutation[i]];
-        }
-        if (xSorted[0] >= xSorted[npts-1])
-        {
-           RTSEIS_THROW_IA("min(x) = %lf must be less than max(x) = %lf",
-                           xSorted[0], xSorted[npts-1]);
-        }
-        // Create the data fitting task
-        pImpl->creatNewTask(npts, x, y);
+        if (x[i] >= x[i+1]){isInvalid = isInvalid + 1;}
     }
-    else
+    if (isInvalid > 0)
     {
-
+        RTSEIS_THROW_RTE("%s", "At least one x[i+1] <= x[i]\n");
     }
-
+    if (boundaryConditionType == CubicSplineBoundaryConditionType::PERIODIC)
+    {
+        if (y[0] != y[npts-1])
+        {
+            RTSEIS_THROW_RTE("y[0] = %e != y[npts-1] = %e", y[0], y[npts-1]);
+        }
+    }
+#ifdef DEBUG
+    // Create the pipeline
+    auto ierr = pImpl->createTask(npts, x, y, DF_NO_HINT);
+    assert(ierr == 0);
+    // Edit the pipeline to inform MKL which spline to create
+    ierr = pImpl->editPipeline(boundaryConditionType);
+    assert(ierr == 0);
+    // Construct the task
+    ierr = pImpl->constructSpline();
+    assert(ierr == 0);
+#else
+    // Create the pipeline
+    pImpl->createTask(npts, x, y, DF_NO_HINT);
     // Edit the pipeline to inform MKL which spline to create
     pImpl->editPipeline(boundaryConditionType);
     // Construct the task
     pImpl->constructSpline();
+#endif
+    pImpl->mInitialized = true;
 }
 
+bool CubicSpline::isInitialized() const noexcept
+{
+    return pImpl->mInitialized;
+}
+
+double CubicSpline::getMinimumX() const
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    return pImpl->mXMin;
+}
+
+double CubicSpline::getMaximumX() const
+{
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    return pImpl->mXMax;
+}
+/*
 void CubicSpline::integrate(std::vector<std::pair<double,double>> intervals)
 {
 
@@ -253,3 +310,4 @@ double CubicSpline::integrate(const double x1, const double x2)
 {
 
 }
+*/

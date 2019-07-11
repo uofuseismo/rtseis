@@ -111,6 +111,7 @@ SET(UTILS_SRCS
     src/utilities/filterImplementations/medianFilter.cpp
     src/utilities/filterImplementations/sos.cpp
     src/utilities/math/convolve.cpp
+    src/utilities/math/cubicSpline.cpp
     src/utilities/math/interpolate.cpp
     src/utilities/math/polynomial.cpp
     src/utilities/math/vectorMath.cpp

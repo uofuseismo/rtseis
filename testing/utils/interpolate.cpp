@@ -7,6 +7,7 @@
 #include <vector>
 #include <chrono>
 #include "rtseis/utilities/math/interpolate.hpp"
+#include "rtseis/utilities/math/cubicSpline.hpp"
 #include <gtest/gtest.h>
 
 namespace
