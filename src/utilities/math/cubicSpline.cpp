@@ -83,16 +83,15 @@ public:
             mSplineBC = DF_BC_PERIODIC;
             mSplineIC = DF_NO_IC;
         }
-        constexpr MKL_INT scoeffHint = DF_NO_HINT;
         auto status = dfdEditPPSpline1D(mTask,
-                                        mSplineOrder,
-                                        mSplineType,
+                                        mSplineOrder, // DF_PP_CUBIC
+                                        mSplineType,  // DF_PP_NATURAL
                                         mSplineBC,
                                         bcs,
                                         mSplineIC,
                                         ics,
                                         mSplineCoeffs.data(),
-                                        scoeffHint);
+                                        DF_NO_HINT);
         if (status != DF_STATUS_OK)
         {
             clear();
@@ -309,11 +308,14 @@ void CubicSpline::initialize(
     assert(ierr == 0);
 #else
     // Create the pipeline
-    pImpl->createTask(npts, x, y, DF_NO_HINT);
+    auto ierr = pImpl->createTask(npts, x, y, DF_NO_HINT);
+    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to create task");}
     // Edit the pipeline to inform MKL which spline to create
-    pImpl->editPipeline(boundaryConditionType);
+    ierr = pImpl->editPipeline(boundaryConditionType);
+    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to edit spline");}
     // Construct the task
-    pImpl->constructSpline();
+    ierr = pImpl->constructSpline();
+    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to construct spline");}
 #endif
     pImpl->mInitialized = true;
 }
