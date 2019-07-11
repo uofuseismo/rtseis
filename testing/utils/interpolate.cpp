@@ -81,12 +81,7 @@ TEST(UtilitiesInterpolation, cubicSpline)
     EXPECT_NO_THROW(spline.initialize(y.size(), x.data(), y.data(),
                                 CubicSplineBoundaryConditionType::NATURAL));//NOT_A_KNOT));
     double *yPtr = yq.data();
-    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
-for (auto i=0 ;i<yq.size(); ++i)
-{
-printf("%d %lf\n", i, yq[i]);
-}
-getchar();
+    //EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
 }
 
 }
