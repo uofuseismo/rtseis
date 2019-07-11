@@ -43,7 +43,21 @@ public:
      * @brief Default constructor.
      */
     CubicSpline();
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] spline  The cubic spline from which to initialize this
+     *                        class.  On exit, spline's behavior is undefined.
+     */
+    CubicSpline(CubicSpline &&spline) noexcept;
     /*! @} */
+
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] spline  The cubic spline to move. 
+     *                        On exit, spline's behavior is undefined.
+     * @result Spline's memory moved onto this.
+     */
+    CubicSpline& operator=(CubicSpline &&spline) noexcept;
 
     /*! @name Destructor
      * @{
@@ -120,6 +134,22 @@ public:
      */
     double getMaximumX() const;
     /*!
+     * @brief Interpolates function values \f$ y_q = f(x_q) \f$ where \f$ f \f$
+     *        is the cubic spline.
+     * @param[in] nq   The number of points at which to interpolate.
+     * @param[in] xq   The abscissas at which to interpolate yq.  This is
+     *                 an array of dimension [nq].  Additionally, each
+     *                 xq must be in the range 
+     *                 [\c getMinimumX(), \c getMaximumX()].
+     * @param[out] yq  The interpolated values at \f$ x_q \f$.  This is an
+     *                 array of dimension [nq].
+     * @throws std::runtime_error if the class was not initialized.
+     * @throws std::invalid_argument if xq or yq is NULL or any xq is
+     *         out of the interpolation range.
+     * @sa isInitialized(), getMinimumX(), getMaximum().
+     */
+    void interpolate(const int nq, const double xq[], double *yq[]) const;
+    /*!
      * @brief Integrates the cubic spline over the interval.
      * @param[in] interval  Defines the integration interval which goes
      * @throws std::runtime_error if the class was not intitialized.
@@ -127,10 +157,11 @@ public:
      *         on which the spline was constructed.
      * @sa isInitialized(), getMinimumX(), getMaximum().
      */
-    double integrate(const std::pair<double, double> interval);
+    double integrate(const std::pair<double, double> &interval) const;
 private:
     class CubicSplineImpl;
     std::unique_ptr<CubicSplineImpl> pImpl;
+    CubicSpline& operator=(const CubicSpline &spline) = delete;
 }; 
 
 }

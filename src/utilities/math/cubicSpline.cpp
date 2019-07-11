@@ -4,6 +4,7 @@
 #include <cfloat>
 #include <vector>
 #include <mkl.h>
+#include <ipps.h>
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/math/cubicSpline.hpp"
 
@@ -110,34 +111,54 @@ public:
         }
         return 0;
     }
+    /// Searches the cells for the interpolant points
+    std::vector<MKL_INT> searchCells(const int nq, const double xq[],
+                                     const bool lsorted = false)
+    {
+        const MKL_INT nsite = nq;
+        std::vector<MKL_INT> cell(nsite);
+        if (nq < 1){return cell;}
+        MKL_INT sortedHint = DF_SORTED_DATA;
+        if (!lsorted){sortedHint = DF_NO_HINT;}
+        dfdSearchCells1D(mTask, DF_METHOD_STD, nsite, xq,
+                         sortedHint, DF_NO_APRIORI_INFO,
+                         cell.data());
+        return cell;
+    }
     /// Interpolates over the uniform interval
     int interpolate(const int nq,
                     const std::pair<double, double> xInterval,
                     double yq[])
     {
-        double x[2] = {xInterval.first, xInterval.second};
+        double xq[2] = {xInterval.first, xInterval.second};
+        const MKL_INT nsite = nq;
         constexpr MKL_INT nOrder = 1;  // Length of dorder
         const MKL_INT dOrder[1] = {0}; // Order of derivatives
         auto status = dfdInterpolate1D(mTask, DF_INTERP, DF_METHOD_PP,
-                                       nq, x, DF_UNIFORM_PARTITION,
+                                       nsite, xq, DF_UNIFORM_PARTITION,
                                        nOrder, dOrder,
                                        DF_NO_APRIORI_INFO, yq,
-                                       DF_NO_HINT, NULL);
+                                       DF_MATRIX_STORAGE_ROWS, NULL);
         if (status != DF_STATUS_OK){return -1;}
         return 0; 
     }
     /// Interpolates at select abscissa
     int interpolate(const int nq,
-                    const double x[],
+                    const double xq[],
                     double yq[])
     {
+        const MKL_INT nsite = nq;
+        std::vector<MKL_INT> cell = searchCells(nq, xq);
+        dfdSearchCells1D(mTask, DF_METHOD_STD, nsite, xq,
+                         DF_SORTED_DATA, DF_NO_APRIORI_INFO,
+                         cell.data()); 
         constexpr MKL_INT nOrder = 1;  // Length of dorder
-        const MKL_INT dOrder[1] = {0}; // Order of derivatives
+        const MKL_INT dOrder[1] = {0}; // Derivative order
         auto status = dfdInterpolate1D(mTask, DF_INTERP, DF_METHOD_PP,
-                                       nq, x, DF_NON_UNIFORM_PARTITION,
+                                       nsite, xq, DF_NON_UNIFORM_PARTITION,
                                        nOrder, dOrder,
                                        DF_NO_APRIORI_INFO, yq,
-                                       DF_NO_HINT, NULL);
+                                       DF_MATRIX_STORAGE_ROWS, cell.data());
         if (status != DF_STATUS_OK){return -1;}
         return 0;
     }
@@ -196,6 +217,19 @@ public:
 CubicSpline::CubicSpline() :
     pImpl(std::make_unique<CubicSplineImpl> ())
 {
+}
+
+CubicSpline::CubicSpline(CubicSpline &&spline) noexcept
+{
+    *this = std::move(spline);
+}
+
+CubicSpline& CubicSpline::operator=(CubicSpline &&spline) noexcept
+{
+    if (&spline == this){return *this;}
+    if (pImpl){pImpl.reset();}
+    pImpl = std::move(spline.pImpl);
+    return *this;
 }
 
 CubicSpline::~CubicSpline() = default;
@@ -300,14 +334,73 @@ double CubicSpline::getMaximumX() const
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     return pImpl->mXMax;
 }
-/*
-void CubicSpline::integrate(std::vector<std::pair<double,double>> intervals)
-{
 
+void CubicSpline::interpolate(const int nq, const double xq[],
+                              double *yqIn[]) const
+{
+    if (nq <= 0){return;} // Nothing to do
+    // Now start performing checks
+    auto xmin = getMinimumX(); // Throws on unitialized error
+    auto xmax = getMaximumX();
+    double *yq = *yqIn;
+    if (xq == nullptr || yq == nullptr)
+    {
+        if (xq == nullptr){RTSEIS_THROW_IA("%s", "xq is NULL");}
+        RTSEIS_THROW_IA("%s", "yq is NULL");
+    }
+    double xqMin, xqMax;
+    ippsMinMax_64f(xq, nq, &xqMin, &xqMax);
+    if (xqMin < xmin || xqMax > xmax)
+    {
+       RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
+                       xqMin, xqMax, xmin, xmax);
+    }
+    // Interpolate
+    int ierr = pImpl->interpolate(nq, xq, yq); 
+#ifdef DEBUG
+    assert(ierr == 0);
+#endif
+    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Interpolation failed");}
 }
 
-double CubicSpline::integrate(const double x1, const double x2)
+double CubicSpline::integrate(const std::pair<double, double> &interval) const
 {
-
+    // Integral of a polynomial over interval of 0 length is 0.
+    if (interval.first == interval.second){return 0;}
+    // Now start performing checks
+    auto xmin = getMinimumX(); // Throws on unitialized error
+    auto xmax = getMaximumX();
+    if (interval.first < xmin || interval.first > xmax)
+    {
+        RTSEIS_THROW_IA("interval.first = %lf must be in range [%lf,%lf]",
+                        interval.first, xmin, xmax);
+    }
+    if (interval.second < xmin || interval.second > xmax)
+    {
+        RTSEIS_THROW_IA("interval.second = %lf must be in range [%lf,%lf]",
+                        interval.second, xmin, xmax);
+    }
+    // Integrate 
+    int ierr;
+    double integral;
+    if (interval.first > interval.second)
+    {
+        ierr = pImpl->integrate(interval.first, interval.second, &integral);
+#ifdef DEBUG
+        assert(ierr == 0);
+#endif
+    }
+    else
+    {
+        // Reversing integration limits amounts to a sign change
+        ierr = pImpl->integrate(interval.second, interval.first, &integral);
+#ifdef DEBUG
+        assert(ierr == 0);
+#endif
+        integral =-integral;
+    }
+    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Integration failed");}
+    return integral;
 }
-*/
+
+

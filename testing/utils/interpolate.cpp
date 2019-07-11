@@ -56,4 +56,37 @@ TEST(UtilitiesInterpolation, interpft)
     EXPECT_LE(emax, 1.e-1);
 }
 
+TEST(UtilitiesInterpolation, cubicSpline)
+{
+    // Let's interpolate a sine wave
+    int npts = 10;
+    std::vector<double> x(npts), y(npts);
+    for (auto i=0; i<npts; ++i)
+    {
+        x[i] = static_cast<double> (i);
+        y[i] = sin(x[i]);        
+    }
+    // Choose some interpolation points
+    double xMin = 0.1;
+    double xMax = 8.5;
+    double dx = 0.1;
+    int nq = static_cast<int> ((xMax - xMin)/dx + 0.5) + 1;
+    std::vector<double> xq(nq), yq(nq, 0);
+    for (auto i=0; i<nq; ++i)
+    {
+        xq[i] = xMin + i*dx;
+    }
+    // Create the spline
+    CubicSpline spline; 
+    EXPECT_NO_THROW(spline.initialize(y.size(), x.data(), y.data(),
+                                CubicSplineBoundaryConditionType::NOT_A_KNOT));
+    double *yPtr = yq.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+for (auto i=0 ;i<yq.size(); ++i)
+{
+printf("%d %lf\n", i, yq[i]);
+}
+getchar();
+}
+
 }

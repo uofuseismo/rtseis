@@ -350,7 +350,7 @@ class Interp1D::Interp1DImpl
            {
                status = dfdSearchCells1D(task, DF_METHOD_STD, nsite, xqData,
                                          DF_NO_HINT, DF_NO_APRIORI_INFO,
-                                          cell);
+                                         cell);
            }
            if (status != DF_STATUS_OK)
            {
