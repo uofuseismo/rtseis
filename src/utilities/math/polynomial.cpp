@@ -339,7 +339,7 @@ std::vector<std::complex<double>>
     double vr[1] = {0}; 
     const int ldvl = 1;
     const int ldvr = 1;
-    double *work;
+    double *work = nullptr;
     double work8;
     int lwork =-1;
 #ifdef DEBUG
@@ -353,7 +353,7 @@ std::vector<std::complex<double>>
     work = new double[static_cast<size_t> (lwork)];
     info = LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
                               wr, wi, vl, ldvl, vr, ldvr,
-                              &work8, lwork);
+                              work, lwork);
     cassert(info == 0);     
 #else
     //LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
@@ -365,7 +365,7 @@ std::vector<std::complex<double>>
     work = new double[static_cast<size_t> (lwork)];
     LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
                        wr, wi, vl, ldvl, vr, ldvr,
-                       &work8, lwork);
+                       work, lwork);
 #endif
     delete[] work;
     std::vector<std::complex<double>> roots(n);
