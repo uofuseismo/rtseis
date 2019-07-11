@@ -90,11 +90,7 @@ public:
                                         bcs,
                                         mSplineIC,
                                         ics,
-<<<<<<< HEAD
                                         mSplineCoeffs,
-=======
-                                        mSplineCoeffs.data(),
->>>>>>> da59c6507d046dfab85081c6710031aa25feb0f6
                                         DF_NO_HINT);
         if (status != DF_STATUS_OK)
         {
@@ -310,7 +306,7 @@ void CubicSpline::initialize(
     }
 #ifdef DEBUG
     // Create the pipeline
-    auto ierr = pImpl->createTask(npts, x, y, DF_NO_HINT);
+    auto ierr = pImpl->createTask(npts, x, y);
     assert(ierr == 0);
     // Edit the pipeline to inform MKL which spline to create
     ierr = pImpl->editPipeline(boundaryConditionType);
@@ -320,12 +316,8 @@ void CubicSpline::initialize(
     assert(ierr == 0);
 #else
     // Create the pipeline
-<<<<<<< HEAD
-    pImpl->createTask(npts, x, y);
-=======
-    auto ierr = pImpl->createTask(npts, x, y, DF_NO_HINT);
+    auto ierr = pImpl->createTask(npts, x, y);
     if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to create task");}
->>>>>>> da59c6507d046dfab85081c6710031aa25feb0f6
     // Edit the pipeline to inform MKL which spline to create
     ierr = pImpl->editPipeline(boundaryConditionType);
     if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to edit spline");}
