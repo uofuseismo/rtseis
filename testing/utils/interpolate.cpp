@@ -79,7 +79,7 @@ TEST(UtilitiesInterpolation, cubicSpline)
     // Create the spline
     CubicSpline spline; 
     EXPECT_NO_THROW(spline.initialize(y.size(), x.data(), y.data(),
-                                CubicSplineBoundaryConditionType::NOT_A_KNOT));
+                                CubicSplineBoundaryConditionType::NATURAL));//NOT_A_KNOT));
     double *yPtr = yq.data();
     EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
 for (auto i=0 ;i<yq.size(); ++i)

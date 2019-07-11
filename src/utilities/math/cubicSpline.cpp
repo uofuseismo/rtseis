@@ -21,8 +21,7 @@ public:
     /// Creates a new task for when x is uniform
     int createUniformXTask(const int npts,
                            const std::pair<double, double> xInterval,
-                           const double y[],
-                           const MKL_INT yHint = DF_NO_HINT)
+                           const double y[])
     {
         deleteTask();
         mXMin = xInterval.first;
@@ -31,8 +30,9 @@ public:
         constexpr MKL_INT nx = 2;
         const MKL_INT ny = npts;
         constexpr MKL_INT xHint = DF_UNIFORM_PARTITION;
-        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
-        auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, yHint); 
+        mNSplineCoeffs = std::max(8, ny*mSplineOrder*(nx - 1));
+        mSplineCoeffs = ippsMalloc_64f(mNSplineCoeffs);
+        auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
         mHaveTask = true;
         return 0;
@@ -40,17 +40,17 @@ public:
     /// Creates a new task for when x is not necessarily uniofrm 
     int createTask(const int npts,
                    const double x[],
-                   const double y[],
-                   const MKL_INT yHint = DF_NO_HINT)
+                   const double y[])
     {
         deleteTask();
         mXMin = x[0];
         mXMax = x[npts-1]; 
         const MKL_INT nx = npts;
         const MKL_INT ny = npts;
-        constexpr MKL_INT xHint = DF_NON_UNIFORM_PARTITION;
-        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
-        auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, yHint);
+        mNSplineCoeffs = std::max(8, ny*mSplineOrder*(nx - 1));
+        mSplineCoeffs = ippsMalloc_64f(mNSplineCoeffs);
+        ippsZero_64f(mSplineCoeffs, mNSplineCoeffs);
+        auto status = dfdNewTask1D(&mTask, nx, x, DF_NO_HINT, ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
         mHaveTask = true;
         return 0;
@@ -60,8 +60,8 @@ public:
     {
         // Figure out the boundary conditions first
         const double bcArray[2] = {0, 0};
-        const double *bcs = nullptr;
-        const double *ics = nullptr; 
+        const double *bcs = NULL;
+        const double *ics = NULL; 
         if (boundaryCondition == CubicSplineBoundaryConditionType::NATURAL)
         {
             mSplineBC = DF_BC_FREE_END;
@@ -83,16 +83,15 @@ public:
             mSplineBC = DF_BC_PERIODIC;
             mSplineIC = DF_NO_IC;
         }
-        constexpr MKL_INT scoeffHint = DF_NO_HINT;
         auto status = dfdEditPPSpline1D(mTask,
-                                        mSplineOrder,
-                                        mSplineType,
+                                        mSplineOrder, // DF_PP_CUBIC
+                                        mSplineType,  // DF_PP_NATURAL
                                         mSplineBC,
                                         bcs,
                                         mSplineIC,
                                         ics,
-                                        mSplineCoeffs.data(),
-                                        scoeffHint);
+                                        mSplineCoeffs,
+                                        DF_NO_HINT);
         if (status != DF_STATUS_OK)
         {
             clear();
@@ -103,7 +102,7 @@ public:
     /// Makes the spline
     int constructSpline()
     {
-        auto status = dfdConstruct1D(mTask, mSplineFormat, mMethod);
+        auto status = dfdConstruct1D(mTask, DF_PP_SPLINE, DF_METHOD_STD);
         if (status != DF_STATUS_OK)
         {
             clear();
@@ -112,18 +111,19 @@ public:
         return 0;
     }
     /// Searches the cells for the interpolant points
-    std::vector<MKL_INT> searchCells(const int nq, const double xq[],
-                                     const bool lsorted = false)
+    int searchCells(const int nq, const double xq[],
+                    MKL_INT cell[],
+                    const bool lsorted = false)
     {
+        if (nq < 1){return 0;} // Nothing to do
         const MKL_INT nsite = nq;
-        std::vector<MKL_INT> cell(nsite);
-        if (nq < 1){return cell;}
         MKL_INT sortedHint = DF_SORTED_DATA;
         if (!lsorted){sortedHint = DF_NO_HINT;}
-        dfdSearchCells1D(mTask, DF_METHOD_STD, nsite, xq,
-                         sortedHint, DF_NO_APRIORI_INFO,
-                         cell.data());
-        return cell;
+        auto status = dfdSearchCells1D(mTask, DF_METHOD_STD, nsite, xq,
+                                       sortedHint, DF_NO_APRIORI_INFO,
+                                       cell);
+        if (status != DF_STATUS_OK){return -1;}
+        return 0;
     }
     /// Interpolates over the uniform interval
     int interpolate(const int nq,
@@ -147,18 +147,23 @@ public:
                     const double xq[],
                     double yq[])
     {
+        if (nq < 1){return 0;}
         const MKL_INT nsite = nq;
-        std::vector<MKL_INT> cell = searchCells(nq, xq);
-        dfdSearchCells1D(mTask, DF_METHOD_STD, nsite, xq,
-                         DF_SORTED_DATA, DF_NO_APRIORI_INFO,
-                         cell.data()); 
+        auto cell = reinterpret_cast<MKL_INT *> 
+                    (mkl_malloc(static_cast<size_t> (nq)*sizeof(MKL_INT), 64));
+        auto ierr = searchCells(nq, xq, cell);
+        if (ierr != 0)
+        {
+            mkl_free(cell);
+            return -1;
+        }
         constexpr MKL_INT nOrder = 1;  // Length of dorder
         const MKL_INT dOrder[1] = {0}; // Derivative order
         auto status = dfdInterpolate1D(mTask, DF_INTERP, DF_METHOD_PP,
                                        nsite, xq, DF_NON_UNIFORM_PARTITION,
                                        nOrder, dOrder,
                                        DF_NO_APRIORI_INFO, yq,
-                                       DF_MATRIX_STORAGE_ROWS, cell.data());
+                                       DF_MATRIX_STORAGE_ROWS, cell);
         if (status != DF_STATUS_OK){return -1;}
         return 0;
     }
@@ -181,13 +186,14 @@ public:
     void deleteTask() noexcept
     {
         if (mHaveTask){dfDeleteTask(&mTask);}
+        if (mSplineCoeffs){ippsFree(mSplineCoeffs);}
+        mNSplineCoeffs = 0;
         mHaveTask = false;
     }
     /// Clears the module
     void clear() noexcept
     {
         deleteTask();
-        mSplineCoeffs.clear();
         mXMin =-DBL_MAX;
         mXMax = DBL_MAX;
         mSplineBC = DF_BC_FREE_END;
@@ -198,9 +204,10 @@ public:
     }
 ///private:
     DFTaskPtr mTask;
-    std::vector<double> mSplineCoeffs;
+    double *mSplineCoeffs = nullptr;
     double mXMin =-DBL_MAX;
     double mXMax = DBL_MAX;    
+    MKL_INT mNSplineCoeffs = 0;
     /// Default to natural cubic spline
     MKL_INT mSplineBC = DF_BC_FREE_END;
     MKL_INT mSplineIC = DF_NO_IC;
@@ -309,7 +316,7 @@ void CubicSpline::initialize(
     assert(ierr == 0);
 #else
     // Create the pipeline
-    pImpl->createTask(npts, x, y, DF_NO_HINT);
+    pImpl->createTask(npts, x, y);
     // Edit the pipeline to inform MKL which spline to create
     pImpl->editPipeline(boundaryConditionType);
     // Construct the task
