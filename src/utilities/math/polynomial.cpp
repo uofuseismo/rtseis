@@ -339,14 +339,35 @@ std::vector<std::complex<double>>
     double vr[1] = {0}; 
     const int ldvl = 1;
     const int ldvr = 1;
+    double *work;
+    double work8;
+    int lwork =-1;
 #ifdef DEBUG
-    int info = LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
-                             wr, wi, vl, ldvl, vr, ldvr);
+    //int info = LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
+    //                         wr, wi, vl, ldvl, vr, ldvr);
+    auto info = LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
+                                   wr, wi, vl, ldvl, vr, ldvr,
+                                   &work8, lwork);
+    cassert(info == 0);
+    lwork = static_cast<int> (work8);
+    work = new double[static_cast<size_t> (lwork)];
+    info = LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
+                              wr, wi, vl, ldvl, vr, ldvr,
+                              &work8, lwork);
     cassert(info == 0);     
 #else
-    LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
-                  wr, wi, vl, ldvl, vr, ldvr);
+    //LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
+    //              wr, wi, vl, ldvl, vr, ldvr);
+    LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
+                       wr, wi, vl, ldvl, vr, ldvr,
+                       &work8, lwork);
+    lwork = static_cast<int> (work8);
+    work = new double[static_cast<size_t> (lwork)];
+    LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
+                       wr, wi, vl, ldvl, vr, ldvr,
+                       &work8, lwork);
 #endif
+    delete[] work;
     std::vector<std::complex<double>> roots(n);
 #ifdef __INTEL_COMPILER
     #pragma ivdep

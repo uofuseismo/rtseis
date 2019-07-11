@@ -60,7 +60,8 @@ TEST(UtilitiesInterpolation, cubicSpline)
 {
     // Let's interpolate a sine wave
     int npts = 10;
-    std::vector<double> x(npts), y(npts);
+    std::vector<double> x(npts);
+    std::vector<double> y(npts);
     for (auto i=0; i<npts; ++i)
     {
         x[i] = static_cast<double> (i);
@@ -71,17 +72,19 @@ TEST(UtilitiesInterpolation, cubicSpline)
     double xMax = 8.5;
     double dx = 0.1;
     int nq = static_cast<int> ((xMax - xMin)/dx + 0.5) + 1;
-    std::vector<double> xq(nq), yq(nq, 0);
+    std::vector<double> xq(nq);
+    std::vector<double> yq(nq);
     for (auto i=0; i<nq; ++i)
     {
         xq[i] = xMin + i*dx;
+        yq[i] = 0;
     }
     // Create the spline
     CubicSpline spline; 
-    EXPECT_NO_THROW(spline.initialize(y.size(), x.data(), y.data(),
-                                CubicSplineBoundaryConditionType::NATURAL));//NOT_A_KNOT));
+    spline.initialize(npts, x.data(), y.data(),
+                                CubicSplineBoundaryConditionType::NATURAL);//NOT_A_KNOT));
     double *yPtr = yq.data();
-    //EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
 }
 
 }

@@ -182,7 +182,7 @@ TEST(UtilitiesTransforms, Phase)
                           -0.3217505543966, 0.244978663126864,
                            0, 1.570796326794897, 0};
     std::vector<double> tr2 = tr;
-    std::vector<std::complex<double>> z(7);
+    std::vector<std::complex<double>> z(n);
     z[0] = std::complex<double> (1, -1);
     z[1] = std::complex<double> (2, +1);
     z[2] = std::complex<double> (3, -1);
@@ -1078,25 +1078,26 @@ int fft(const int nx, const std::complex<double> *x,
     auto n = ny;
     size_t nbytes = sizeof(fftw_complex)*static_cast<size_t> (n);
     fftw_complex *in  = static_cast<fftw_complex *> (fftw_malloc(nbytes));
+    auto inCopy = reinterpret_cast<std::complex<double> *> (in);
     memset(in, 0, nbytes);
     fftw_complex *out = reinterpret_cast<fftw_complex *> (y);
     fftw_plan p = fftw_plan_dft_1d(n, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
     // Equal size transforms
     if (nx == ny) 
-    {   
-        std::memcpy(in, x, nbytes);
+    {
+        std::copy(x, x+n, inCopy); //std::memcpy(in, x, nbytes);
     }   
     // Truncate x to length of output array y
     else if (nx > ny) 
     {
-        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (ny);
-        std::memcpy(in, x, ncopy);
+        //size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (ny);
+        std::copy(x, x+ny, inCopy); ////std::memcpy(in, x, ncopy);
     }   
     // Pad x to length of output array y
     else //if (nx < ny) 
     {
-        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (nx);
-        std::memcpy(in, x, ncopy);
+        //size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (nx);
+        std::copy(x, x+nx, inCopy); //std::memcpy(in, x, ncopy);
     }
     // Transform
     fftw_execute(p);
@@ -1126,25 +1127,26 @@ int ifft(const int nx, const std::complex<double> *x,
     auto n = ny; 
     size_t nbytes = sizeof(fftw_complex)*static_cast<size_t> (n);
     fftw_complex *in  = static_cast<fftw_complex *> (fftw_malloc(nbytes));
+    auto inCopy = reinterpret_cast<std::complex<double> *> (in);
     memset(in, 0, nbytes);
     fftw_complex *out = reinterpret_cast<fftw_complex *> (y); //(fftw_complex *)fftw_malloc(sizeof(fftw_complex)*(size_t) n);
     fftw_plan p = fftw_plan_dft_1d(n, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
     // Equal size transforms
     if (nx == ny) 
     {
-        std::memcpy(in, x, nbytes);
+        std::copy(x, x+nx, inCopy); //std::memcpy(in, x, nbytes);
     }   
     // Truncate x to length of output array y
     else if (nx > ny) 
     {
-        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (ny);
-        std::memcpy(in, x, ncopy);
+        //size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (ny);
+        std::copy(x, x+ny, inCopy); //std::memcpy(in, x, ncopy);
     }
     // Pad x to length of output array y
     else //if (nx < ny) 
     {
-        size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (nx);
-        std::memcpy(in, x, ncopy);
+        //size_t ncopy = sizeof(fftw_complex)*static_cast<size_t> (nx);
+        std::copy(x, x+nx, inCopy); //std::memcpy(in, x, ncopy);
     }
     // Transform
     fftw_execute(p);

@@ -52,12 +52,16 @@ public:
     void clear()
     {
         mParameters.clear();
-        if (mHaveDoublePlan){fftw_free(mDoublePlan);}
-        if (mHaveFloatPlan){fftwf_free(mFloatPlan);}
+        if (mHaveDoublePlan){fftw_destroy_plan(mDoublePlan);}
+        if (mHaveFloatPlan){fftwf_destroy_plan(mFloatPlan);}
+        if (mOutData64f != nullptr){fftw_free(mOutData64f);}
+        if (mOutData32f != nullptr){fftwf_free(mOutData32f);}
         if (mWindow64f != nullptr){ippsFree(mWindow64f);}
         if (mWindow32f != nullptr){ippsFree(mWindow32f);}
         if (mInData64f != nullptr){fftw_free(mInData64f);}
         if (mInData32f != nullptr){fftwf_free(mInData32f);}
+        mOutData64f = nullptr;
+        mOutData32f = nullptr;
         mWindow64f = nullptr;
         mWindow32f = nullptr;
         mInData64f = nullptr;
@@ -196,19 +200,19 @@ SlidingWindowRealDFT::operator=(const SlidingWindowRealDFT &swdft)
     {
         auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
                      *sizeof(double);
-        memcpy(pImpl->mInData64f, swdft.pImpl->mInData64f, nbytes);
+        std::memcpy(pImpl->mInData64f, swdft.pImpl->mInData64f, nbytes);
         nbytes = static_cast<size_t> (pImpl->mOutDataLength)
                 *sizeof(fftw_complex);
-        memcpy(pImpl->mOutData64f, swdft.pImpl->mOutData64f, nbytes);
+        std::memcpy(pImpl->mOutData64f, swdft.pImpl->mOutData64f, nbytes);
     }
     else
     {
         auto nbytes = static_cast<size_t> (pImpl->mInDataLength)
                      *sizeof(float);
-        memcpy(pImpl->mInData32f, swdft.pImpl->mInData32f, nbytes);
+        std::memcpy(pImpl->mInData32f, swdft.pImpl->mInData32f, nbytes);
         nbytes = static_cast<size_t> (pImpl->mOutDataLength)
                 *sizeof(fftwf_complex);
-        memcpy(pImpl->mOutData32f, swdft.pImpl->mOutData32f, nbytes);
+        std::memcpy(pImpl->mOutData32f, swdft.pImpl->mOutData32f, nbytes);
     }
     return *this;
 }
@@ -536,7 +540,7 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
         auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
         // Zero and copy
         std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(double));
-        std::memcpy(dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
+        std::copy(xptr, xptr + ncopy, dptr); //dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
         // Demean?
         if (detrendType == SlidingWindowDetrendType::REMOVE_MEAN)
         {

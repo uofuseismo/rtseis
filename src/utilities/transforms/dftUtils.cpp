@@ -95,7 +95,7 @@ void DFTUtilities::phase(const int n, const std::complex<double> z[],
         if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
         RTSEIS_THROW_IA("%s", "phi is NULL");
     }
-    const Ipp64fc *pSrc = reinterpret_cast<const Ipp64fc *> (z);
+    auto pSrc = reinterpret_cast<const Ipp64fc *> (z);
 #ifdef DEBUG
     IppStatus status = ippsPhase_64fc(pSrc, phi, n); 
     assert(status == ippStsNoErr);
