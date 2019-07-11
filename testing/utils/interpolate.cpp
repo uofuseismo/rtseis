@@ -1,12 +1,14 @@
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <string>
 #include <cmath>
 #include <exception>
 #include <stdexcept>
 #include <vector>
 #include <chrono>
-#include <mkl.h>
+#include <ipps.h>
+//include<mkl.h>
 #include "rtseis/utilities/math/interpolate.hpp"
 #include "rtseis/utilities/math/cubicSpline.hpp"
 #include <gtest/gtest.h>
@@ -14,9 +16,9 @@
 namespace
 {
 
-void spline(const std::vector<double> &x,
-            const std::vector<double> &y,
-            const std::vector<double> &xq);
+//void spline(const std::vector<double> &x,
+//            const std::vector<double> &y,
+//            const std::vector<double> &xq);
 
 using namespace RTSeis::Utilities::Math::Interpolation;
 
@@ -63,37 +65,127 @@ TEST(UtilitiesInterpolation, interpft)
 
 TEST(UtilitiesInterpolation, cubicSpline)
 {
+    int nq = 101;
+    // Load the right answers
+    const std::string interpFileName = "data/cubicSplineInterpolation.txt";
+    std::vector<double> yqNotAKnotRef(nq);
+    std::vector<double> yqNaturalRef(nq);
+    std::vector<double> yqClampedRef(nq);
+    std::vector<double> yqPeriodicRef(nq);
+    std::ifstream textFile(interpFileName); 
+    std::string line;
+    int i = 0;
+    while (std::getline(textFile, line))
+    {
+        double xval, knot, natural, clamped, periodic;
+        std::sscanf(line.c_str(), "%lf, %lf, %lf, %lf, %lf\n",
+                    &xval, &knot, &clamped, &natural, &periodic);
+        yqNotAKnotRef[i] = knot;
+        yqNaturalRef[i] = natural;
+        yqClampedRef[i] = clamped;
+        yqPeriodicRef[i] = periodic;
+        i = i + 1;
+    }
+    textFile.close();
+    EXPECT_EQ(i, nq);
+
     // Let's interpolate a sine wave
-    int npts = 10;
+    int npts = 21;
     std::vector<double> x(npts);
     std::vector<double> y(npts);
     for (auto i=0; i<npts; ++i)
     {
-        x[i] = static_cast<double> (i);
-        y[i] = sin(x[i]);        
+        x[i] = static_cast<double> (i)*M_PI/5.0;
+        y[i] = sin(x[i]);
     }
+    y[0] = 0.01; // make life a little more exciting
+    y[npts-1] = y[0]; // periodic b.c.'s are pretty stringent
     // Choose some interpolation points
-    double xMin = 0.1;
-    double xMax = 8.5;
-    double dx = 0.1;
-    int nq = static_cast<int> ((xMax - xMin)/dx + 0.5) + 1;
+    double xMin = x[0];
+    double xMax = x[npts-1];
+    //int nq = 101;
+    double dx = (xMax - xMin)/static_cast<double> (nq - 1);
     std::vector<double> xq(nq);
-    std::vector<double> yq(nq);
+    std::vector<double> yqNotAKnot(nq, 0.0);
+    std::vector<double> yqNatural(nq, 0.0);
+    std::vector<double> yqClamped(nq, 0.0);
+    std::vector<double> yqPeriodic(nq, 0.0);
     for (auto i=0; i<nq; ++i)
     {
         xq[i] = xMin + i*dx;
-        yq[i] = 0;
     }
+    xq[0] = 0;
+    xq[nq-1] = xMax;
+    double *yPtr = nullptr;
     // Create the spline
     CubicSpline spline; 
     EXPECT_NO_THROW(spline.initialize(npts, x.data(), y.data(),
-                                CubicSplineBoundaryConditionType::NOT_A_KNOT));//NATURAL));
-    double *yPtr = yq.data();
+                                CubicSplineBoundaryConditionType::NOT_A_KNOT));
+    yPtr = yqNotAKnot.data();
     EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
-    for (auto i=0; i<nq; ++i)
-    {
-        printf("%lf %lf\n", sin(xq[i]), yq[i]);
-    }
+    // natural
+    EXPECT_NO_THROW(spline.initialize(npts, x.data(),  y.data(),
+                               CubicSplineBoundaryConditionType::NATURAL));
+    yPtr = yqNatural.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr)); 
+    // clamped
+    EXPECT_NO_THROW(spline.initialize(npts, x.data(),  y.data(),
+                               CubicSplineBoundaryConditionType::CLAMPED));
+    yPtr = yqClamped.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    // periodic
+    EXPECT_NO_THROW(spline.initialize(npts, x.data(),  y.data(),
+                               CubicSplineBoundaryConditionType::PERIODIC));
+    yPtr = yqPeriodic.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+
+    double error;
+    ippsNormDiff_Inf_64f(yqNotAKnot.data(), yqNotAKnotRef.data(), nq, &error);
+    EXPECT_LE(error, 1.e-7);
+    ippsNormDiff_Inf_64f(yqNatural.data(),  yqNaturalRef.data(),  nq, &error);
+    EXPECT_LE(error, 1.e-7);
+    ippsNormDiff_Inf_64f(yqClamped.data(),  yqClampedRef.data(),  nq, &error);
+    EXPECT_LE(error, 1.e-7);
+    ippsNormDiff_Inf_64f(yqPeriodic.data(), yqPeriodicRef.data(), nq, &error);
+    EXPECT_LE(error, 1.e-7);
+
+    // It checks out - copy the results and
+    yqNotAKnotRef = yqNotAKnot;
+    yqNaturalRef  = yqNatural;
+    yqClampedRef  = yqClamped;
+    yqPeriodicRef = yqPeriodic;
+    // Repeat the exercise for uniform partition
+    std::pair<double, double> xDomain(xMin, xMax);
+    EXPECT_NO_THROW(spline.initialize(npts, xDomain, y.data(),
+                                      CubicSplineBoundaryConditionType::NOT_A_KNOT));
+    yPtr = yqNotAKnot.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    // natural
+    EXPECT_NO_THROW(spline.initialize(npts, xDomain,  y.data(),
+                               CubicSplineBoundaryConditionType::NATURAL));
+    yPtr = yqNatural.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    // clamped
+    EXPECT_NO_THROW(spline.initialize(npts, xDomain,  y.data(),
+                               CubicSplineBoundaryConditionType::CLAMPED));
+    yPtr = yqClamped.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    // periodic
+    EXPECT_NO_THROW(spline.initialize(npts, xDomain,  y.data(),
+                               CubicSplineBoundaryConditionType::PERIODIC));
+    yPtr = yqPeriodic.data();
+    EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+
+    // Compute the differences
+    ippsNormDiff_Inf_64f(yqNotAKnot.data(), yqNotAKnotRef.data(), nq, &error);
+    EXPECT_LE(error, 1.e-14);
+    ippsNormDiff_Inf_64f(yqNatural.data(),  yqNaturalRef.data(),  nq, &error);
+    EXPECT_LE(error, 1.e-14);
+    ippsNormDiff_Inf_64f(yqClamped.data(),  yqClampedRef.data(),  nq, &error);
+    EXPECT_LE(error, 1.e-14);
+    ippsNormDiff_Inf_64f(yqPeriodic.data(), yqPeriodicRef.data(), nq, &error);
+    EXPECT_LE(error, 1.e-14);
+getchar();
 }
 
 /*
