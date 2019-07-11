@@ -13,6 +13,31 @@ using namespace RTSeis::Utilities::Math::Interpolation;
 class CubicSpline::CubicSplineImpl
 {
 public:
+    /*
+    // TODO copy ctor requires me saving x and y
+    /// Copy assignment operator
+    CubicSplineImpl& operator=(const CubicSplineImpl &spline)
+    {
+        if (&spline == this){return *this;}
+        clear();
+        if (!pImpl->mInititalized){return *this;} // Nothing to copy
+        // Copy
+        mSplineCoeffs = pImpl->mSplineCoeffs;
+        mXMin = pImpl->mXMin;
+        mXMax = pImpl->mXMax;
+        mSplineBC = pImpl->mSplineBC;
+        mSplineIC = pImpl->mSplineIC;
+        mBCType = pImpl->mBCType;
+        mHaveTask = pImpl->mHaveTask;
+        mInitialized = pImpl->mInitialized;
+        // Set teh spline
+        if (pImpl->mHaveTask)
+        {
+            
+        }
+        return *this;
+    }
+    */
     /// Destructor
     ~CubicSplineImpl()
     {
@@ -27,12 +52,10 @@ public:
         mXMin = xInterval.first;
         mXMax = xInterval.second;
         const double x[2] = {mXMin, mXMax};
-        constexpr MKL_INT nx = 2;
-        const MKL_INT ny = npts;
+        const MKL_INT nx = npts;
+        const MKL_INT ny = 1; // Dimension of vector valued function
         constexpr MKL_INT xHint = DF_UNIFORM_PARTITION;
-        mNSplineCoeffs = static_cast<size_t> (ny*mSplineOrder*(nx - 1));
-        mSplineCoeffs = reinterpret_cast<double *>
-                        (mkl_calloc(mNSplineCoeffs, sizeof(double), 64));
+        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
         auto status = dfdNewTask1D(&mTask, nx, x, xHint, ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
         mHaveTask = true;
@@ -47,10 +70,8 @@ public:
         mXMin = x[0];
         mXMax = x[npts-1]; 
         const MKL_INT nx = npts;
-        const MKL_INT ny = npts;
-        mNSplineCoeffs = static_cast<size_t> (ny*mSplineOrder*(nx - 1));
-        mSplineCoeffs = reinterpret_cast<double *>
-                        (mkl_calloc(mNSplineCoeffs, sizeof(double), 64));
+        const MKL_INT ny = 1; // Dimension of vector valued function
+        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
         auto status = dfdNewTask1D(&mTask, nx, x, DF_NO_HINT, ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
         mHaveTask = true;
@@ -91,7 +112,7 @@ public:
                                         bcs,
                                         mSplineIC,
                                         ics,
-                                        mSplineCoeffs,
+                                        mSplineCoeffs.data(),
                                         DF_NO_HINT);
         if (status != DF_STATUS_OK)
         {
@@ -107,7 +128,7 @@ public:
         if (status != DF_STATUS_OK)
         {
             clear();
-            return -1; 
+            return -1;
         }
         return 0;
     }
@@ -151,24 +172,15 @@ public:
     {
         if (nq < 1){return 0;}
         const MKL_INT nsite = nq;
-        auto cell = reinterpret_cast<MKL_INT *> 
-                    (mkl_malloc(static_cast<size_t> (nq)*sizeof(MKL_INT), 64));
-        auto ierr = searchCells(nq, xq, cell, lsorted);
-        if (ierr != 0)
-        {
-            mkl_free(cell);
-            return -1;
-        }
         const MKL_INT nOrder = 1;  // Length of dorder
         MKL_INT dOrder[1] = {0}; // Derivative order
         MKL_INT sortedHint = DF_SORTED_DATA;
         if (!lsorted){sortedHint = DF_NO_HINT;}
-        auto status = dfdInterpolate1D(mTask, DF_CELL, DF_METHOD_PP,
+        auto status = dfdInterpolate1D(mTask, DF_INTERP, DF_METHOD_PP,
                                        nsite, xq,
                                        sortedHint, nOrder, dOrder,
                                        DF_NO_APRIORI_INFO, yq,
-                                       DF_MATRIX_STORAGE_ROWS, cell);
-        mkl_free(cell);
+                                       DF_MATRIX_STORAGE_ROWS, NULL);
         if (status != DF_STATUS_OK){return -1;}
         return 0;
     }
@@ -191,15 +203,13 @@ public:
     void deleteTask() noexcept
     {
         if (mHaveTask){dfDeleteTask(&mTask);}
-        if (mSplineCoeffs){mkl_free(mSplineCoeffs);}
-        mSplineCoeffs = nullptr;
-        mNSplineCoeffs = 0;
         mHaveTask = false;
     }
     /// Clears the module
     void clear() noexcept
     {
         deleteTask();
+        mSplineCoeffs.clear();
         mXMin =-DBL_MAX;
         mXMax = DBL_MAX;
         mSplineBC = DF_BC_FREE_END;
@@ -210,10 +220,9 @@ public:
     }
 ///private:
     DFTaskPtr mTask;
-    double *mSplineCoeffs = nullptr;
+    std::vector<double> mSplineCoeffs;
     double mXMin =-DBL_MAX;
     double mXMax = DBL_MAX;    
-    size_t mNSplineCoeffs = 0;
     /// Default to natural cubic spline
     MKL_INT mSplineBC = DF_BC_FREE_END;
     MKL_INT mSplineIC = DF_NO_IC;

@@ -179,7 +179,7 @@ void Convolve::correlate(const int src1Len, const double a[],
     IppEnum funCfg = getImplementation(implementation) | ippsNormNone;
     int bufSize = 0;
     const int lowLag =-src2Len + 1; //(std::max(src1Len, src2Len) - 1);
-    IppStatus status = ippsCrossCorrNormGetBufferSize(src1Len, src2Len, len,
+    IppStatus status = ippsCrossCorrNormGetBufferSize(src2Len, src1Len, len,
                                                       lowLag, ipp64f, funCfg,
                                                       &bufSize);
     if (status != ippStsNoErr)

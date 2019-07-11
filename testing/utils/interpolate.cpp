@@ -6,12 +6,17 @@
 #include <stdexcept>
 #include <vector>
 #include <chrono>
+#include <mkl.h>
 #include "rtseis/utilities/math/interpolate.hpp"
 #include "rtseis/utilities/math/cubicSpline.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
+
+void spline(const std::vector<double> &x,
+            const std::vector<double> &y,
+            const std::vector<double> &xq);
 
 using namespace RTSeis::Utilities::Math::Interpolation;
 
@@ -80,13 +85,62 @@ TEST(UtilitiesInterpolation, cubicSpline)
         yq[i] = 0;
     }
     // Create the spline
-/*
     CubicSpline spline; 
-    spline.initialize(npts, x.data(), y.data(),
-                                CubicSplineBoundaryConditionType::NATURAL);//NOT_A_KNOT));
+    EXPECT_NO_THROW(spline.initialize(npts, x.data(), y.data(),
+                                CubicSplineBoundaryConditionType::NOT_A_KNOT));//NATURAL));
     double *yPtr = yq.data();
     EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
-*/
+    for (auto i=0; i<nq; ++i)
+    {
+        printf("%lf %lf\n", sin(xq[i]), yq[i]);
+    }
 }
+
+/*
+void spline(const std::vector<double> &xIn,
+            const std::vector<double> &yIn,
+            const std::vector<double> &xq)
+{
+    double *x = (double *) calloc(xIn.size(), sizeof(double));
+    double *y = (double *) calloc(yIn.size(), sizeof(double));
+    std::copy(xIn.begin(), xIn.end(), x);
+    std::copy(yIn.begin(), yIn.end(), y);
+    MKL_INT nx = xIn.size();
+    MKL_INT ny = 1;//yIn.size();
+    DFTaskPtr task;
+    auto status = dfdNewTask1D(&task, nx, x, DF_NO_HINT,
+                               ny, y, DF_NO_HINT);
+    if (status != DF_STATUS_OK){throw std::runtime_error("failed new task");}
+    auto splineOrder = DF_PP_CUBIC;
+    auto splineType  = DF_PP_NATURAL;
+    auto splineBC    = DF_BC_FREE_END;
+    auto splineIC    = DF_NO_IC;
+    auto nwork = ny*(nx - 1)*splineOrder;
+    double *bc = NULL;
+    double *ic = NULL;
+    double *scoeff = (double *) calloc(nwork, sizeof(double)); //, 0.0);
+    status = dfdEditPPSpline1D(task, splineOrder, splineType, splineBC, bc,
+                               splineIC, ic, scoeff, DF_NO_HINT);
+    if (status != DF_STATUS_OK){throw std::runtime_error("failed edit spline");}
+    status = dfdConstruct1D(task, DF_PP_SPLINE, DF_METHOD_STD);
+    if (status != DF_STATUS_OK){throw std::runtime_error("construct failed");}
+    MKL_INT nsite = xq.size();
+    MKL_INT *cell = (MKL_INT *) calloc(nsite, sizeof(MKL_INT));
+    status = dfdSearchCells1D(task, DF_METHOD_STD, nsite, xq.data(),
+                              DF_NO_HINT, DF_NO_APRIORI_INFO, cell);
+    if (status != DF_STATUS_OK){throw std::runtime_error("failed search");}
+    MKL_INT norder = 1;
+    MKL_INT dorder[1] = {0};
+    double *vq = (double *) calloc(nsite, sizeof(double));
+    status = dfdInterpolate1D(task, DF_INTERP, DF_METHOD_PP,
+                              nsite, xq.data(),
+                              DF_SORTED_DATA, norder, dorder,
+                              DF_NO_APRIORI_INFO, vq,
+                              DF_MATRIX_STORAGE_ROWS, cell);
+
+    status = dfDeleteTask(&task);
+    if (status != DF_STATUS_OK){throw std::runtime_error("failed delete task");}
+}
+*/
 
 }
