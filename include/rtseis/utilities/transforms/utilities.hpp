@@ -144,7 +144,7 @@ void realToComplexDFTFrequencies(const int nSamples,
  * @throws std::runtime_error if n is too large and there is an overflow.
  * @ingroup rtseis_utils_transforms_utils
  */
-int nextPow2(const int n);
+int nextPowerOfTwo(const int n);
 
 }
 #endif

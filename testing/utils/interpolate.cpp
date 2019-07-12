@@ -16,6 +16,13 @@
 namespace
 {
 
+double uniformRandom(const double xMin, const double xMax)
+{
+    auto r = static_cast<double> (rand())/RAND_MAX; // [0,1]
+    r = xMin + (xMax - xMin)*r;
+    r = std::min(xMax, std::max(xMin, r));
+    return r;
+}
 //void spline(const std::vector<double> &x,
 //            const std::vector<double> &y,
 //            const std::vector<double> &xq);
@@ -194,6 +201,26 @@ TEST(UtilitiesInterpolation, cubicSpline)
     ippsNormDiff_Inf_64f(yqPeriodic.data(), yqPeriodicRef.data(), nq, &error);
     EXPECT_LE(error, 1.e-14);
 
+    // Now let's test the quadrature of many points
+    auto nIntervals = 100;
+    srand(89023);
+    std::vector<std::pair<double,double>> intervals(nIntervals);
+    std::vector<double> integrals(nIntervals);
+    std::vector<double> integralsRef(nIntervals);
+    for (auto i=0; i<nIntervals; ++i)
+    {
+        auto r1 = uniformRandom(xMin, xMax);
+        auto r2 = uniformRandom(xMin, xMax);
+        if (i%20 == 0){r2 = r1;}
+        std::pair<double, double> r(r1, r2);
+        integralsRef[i] = spline.integrate(r);
+        intervals[i] = r;
+    }
+    double *intPtr = integrals.data();
+    spline.integrate(nIntervals, intervals.data(), &intPtr);
+    ippsNormDiff_Inf_64f(integrals.data(), integralsRef.data(),
+                         nIntervals, &error);
+    EXPECT_LE(error, 1.e-14);
 }
 
 /*

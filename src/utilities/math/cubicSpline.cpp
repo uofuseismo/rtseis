@@ -25,6 +25,7 @@ public:
         if (!pImpl->mInititalized){return *this;} // Nothing to copy
         // Copy
         mSplineCoeffs = pImpl->mSplineCoeffs;
+        mX = pImpl->mX;
         mXMin = pImpl->mXMin;
         mXMax = pImpl->mXMax;
         mSplineBC = pImpl->mSplineBC;
@@ -53,18 +54,19 @@ public:
         deleteTask();
         mXMin = xInterval.first;
         mXMax = xInterval.second;
-        std::vector<double> x(npts);
+        mX.resize(npts);
         double dx = (mXMax - mXMin)/static_cast<double> (npts - 1);
         #pragma omp simd
         for (auto i=0; i<npts; ++i)
         {
-            x[i] = mXMin + i*dx;
+            mX[i] = mXMin + i*dx;
         }
         const MKL_INT nx = npts; // Length of x
         const MKL_INT ny = 1;    // Dimension of vector valued function
         mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
         std::fill(mSplineCoeffs.begin(), mSplineCoeffs.end(), 0);
-        auto status = dfdNewTask1D(&mTask, nx, x.data(), DF_QUASI_UNIFORM_PARTITION,
+        auto status = dfdNewTask1D(&mTask, nx, mX.data(),
+                                   DF_QUASI_UNIFORM_PARTITION,
                                    ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
         mHaveTask = true;
@@ -76,12 +78,14 @@ public:
                    const double y[])
     {
         deleteTask();
+        mX.resize(npts);
+        std::copy(x, x+npts, mX.data());
         mXMin = x[0];
         mXMax = x[npts-1]; 
         const MKL_INT nx = npts;
         const MKL_INT ny = 1; // Dimension of vector valued function
         mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
-        auto status = dfdNewTask1D(&mTask, nx, x, DF_NO_HINT,
+        auto status = dfdNewTask1D(&mTask, nx, mX.data(), DF_NO_HINT,
                                    ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
         mHaveTask = true;
@@ -195,6 +199,18 @@ public:
         return 0;
     }
     /// Integrates over the interval
+    int integrate(const int nlim,
+                  const double llim[], const double rlim[],
+                  double integral[])
+    {
+        auto status = dfdIntegrate1D(mTask, DF_METHOD_PP, nlim,
+                                     llim, DF_NO_HINT,
+                                     rlim, DF_NO_HINT,
+                                     DF_NO_APRIORI_INFO, DF_NO_APRIORI_INFO,
+                                     integral, DF_NO_HINT);
+        if (status != DF_STATUS_OK){return -1;}
+        return 0;
+    }
     int integrate(const double lLim, const double rLim, double *integral)
     {
         constexpr int nlim = 1;
@@ -220,6 +236,7 @@ public:
     {
         deleteTask();
         mSplineCoeffs.clear();
+        mX.clear();
         mXMin =-DBL_MAX;
         mXMax = DBL_MAX;
         mSplineBC = DF_BC_FREE_END;
@@ -229,20 +246,32 @@ public:
         mInitialized = false;
     }
 ///private:
+    /// The data fitting task
     DFTaskPtr mTask;
+    /// The spline coefficients
     std::vector<double> mSplineCoeffs;
+    /// Copy of x data points.  Unclear if MKL copies x.  If not, then x
+    /// can go out of scope or be deleted prior to usage.
+    std::vector<double> mX;
+    /// The minimum value of mX
     double mXMin =-DBL_MAX;
+    /// The maximum value of mX
     double mXMax = DBL_MAX;    
     /// Default to natural cubic spline
     MKL_INT mSplineBC = DF_BC_FREE_END;
+    /// Default to no initial conditions
     MKL_INT mSplineIC = DF_NO_IC;
+    /// Some spline specific data fitting parameters
     const MKL_INT mSplineType = DF_PP_NATURAL;  // Deal with type in b.c.'s
     const MKL_INT mSplineOrder = DF_PP_CUBIC;   // This is for cubic splines
     const MKL_INT mSplineFormat = DF_PP_SPLINE; // Only supported option
     const MKL_INT mMethod = DF_METHOD_STD;      // Only supported option
+    /// Defines my boundary conditions
     CubicSplineBoundaryConditionType mBCType
         = CubicSplineBoundaryConditionType::NATURAL;
+    /// Lets me know if I can safely delete the task
     bool mHaveTask = false;
+    /// Indicates that the class is initialized
     bool mInitialized = false;
 };
 
@@ -469,4 +498,54 @@ double CubicSpline::integrate(const std::pair<double, double> &interval) const
     return integral;
 }
 
-
+void CubicSpline::integrate(const int nIntervals,
+                            const std::pair<double, double> intervals[],
+                            double *integralsIn[]) const
+{
+    if (nIntervals < 1){return;}
+    auto xmin = getMinimumX(); // Throws on unitialized error
+    auto xmax = getMaximumX();
+    // Check the inputs
+    double *integrals = *integralsIn;
+    if (intervals == nullptr || integrals == nullptr)
+    {
+        if (intervals == nullptr){RTSEIS_THROW_IA("%s", "intervals is NULL");}
+        RTSEIS_THROW_IA("%s", "integrals is NULL");
+    }
+    std::vector<double> llim(nIntervals);
+    std::vector<double> rlim(nIntervals);
+    std::vector<double> swapSign(nIntervals);
+    double intervalMin = DBL_MAX;
+    double intervalMax =-DBL_MAX;
+    #pragma omp simd reduction(max:intervalMax) reduction(min:intervalMin)
+    for (auto i=0; i<nIntervals; ++i)
+    {
+        llim[i] = intervals[i].first;
+        rlim[i] = intervals[i].second;
+        swapSign[i] = false;
+        // Enforce left integrand as lower limit 
+        if (intervals[i].first > intervals[i].second)
+        {
+            llim[i] = intervals[i].second;
+            rlim[i] = intervals[i].first;
+            swapSign[i] = true;
+        }
+        intervalMin = std::min(intervalMin, llim[i]);
+        intervalMax = std::max(intervalMax, rlim[i]);
+    }
+    // Check the intervals
+    if (intervalMin < xmin || intervalMax > xmax)
+    {
+        RTSEIS_THROW_IA("At least one interval is out of bounds [%lf,%lf]",
+                        xmin, xmax);
+    }
+    // Integrate
+    pImpl->integrate(nIntervals, llim.data(), rlim.data(), integrals); 
+    // When the integrand limits this manifests as the integral being off by
+    // a sign factor.  This loop fixes that.
+    #pragma omp simd
+    for (auto i=0; i<nIntervals; ++i)
+    {
+        if (swapSign[i]){integrals[i] =-integrals[i];}
+    }
+}

@@ -166,7 +166,7 @@ void DFTUtilities::realToComplexDFTFrequencies(const int nSamples,
     }
 }
 
-int DFTUtilities::nextPow2(const int n)
+int DFTUtilities::nextPowerOfTwo(const int n)
 {
     if (n < 0)
     {

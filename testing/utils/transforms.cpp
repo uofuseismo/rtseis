@@ -48,13 +48,13 @@ int rfft(const int nx, double x[], const int n,
 int rtseis_test_utils_transforms(void)
 {
     const std::string dataDir = "data/"; 
-    int ierr = transforms_nextPow2_test();
+    int ierr = transforms_nextPowerOfTwo_test();
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed nextpow2 test");
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed nextPow2 test");
+    RTSEIS_INFOMSG("%s", "Passed nextPowerOfTwo test");
 
     ierr = transforms_phase_test();
     if (ierr != EXIT_SUCCESS)
@@ -116,18 +116,18 @@ int rtseis_test_utils_transforms(void)
 }
 */
 
-//int transforms_nextPow2_test(void)
+//int transforms_nextPowerOfTwo_test(void)
 TEST(UtilitiesTransforms, NextPow2)
 {
-    EXPECT_EQ(DFTUtilities::nextPow2(0), 1);
-    EXPECT_EQ(DFTUtilities::nextPow2(1), 1);
-    EXPECT_EQ(DFTUtilities::nextPow2(2), 2);
-    EXPECT_EQ(DFTUtilities::nextPow2(3), 4);
-    EXPECT_EQ(DFTUtilities::nextPow2(4), 4);
-    EXPECT_EQ(DFTUtilities::nextPow2(5), 8);
-    EXPECT_EQ(DFTUtilities::nextPow2(1200), 2048);
-    EXPECT_EQ(DFTUtilities::nextPow2(120000), 131072);
-    EXPECT_EQ(DFTUtilities::nextPow2(131072), 131072);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(0), 1);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(1), 1);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(2), 2);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(3), 4);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(4), 4);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(5), 8);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(1200), 2048);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(120000), 131072);
+    EXPECT_EQ(DFTUtilities::nextPowerOfTwo(131072), 131072);
 }
 
 //int transforms_unwrap_test(void)
@@ -402,7 +402,7 @@ TEST(UtilitiesTransforms, dftr2c)
         std::complex<double> *zrefDFT = new std::complex<double>[lendft];
         ASSERT_EQ(rfft(npts, x, npts, lendft, zrefDFT), 0);
         // Compute an FFT w/ FFTw
-        auto np2 = DFTUtilities::nextPow2(npts);
+        auto np2 = DFTUtilities::nextPowerOfTwo(npts);
         auto lenfft = np2/2 + 1;
         std::complex<double> *zrefFFT = new std::complex<double>[lenfft];
         ASSERT_EQ(rfft(npts, x, np2, lenfft, zrefFFT), 0);
