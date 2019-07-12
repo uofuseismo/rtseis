@@ -202,10 +202,9 @@ TEST(UtilitiesInterpolation, cubicSpline)
     EXPECT_LE(error, 1.e-14);
 
     // Now let's test the quadrature of many points
-    auto nIntervals = 100;
+    auto nIntervals = 1000;
     srand(89023);
     std::vector<std::pair<double,double>> intervals(nIntervals);
-    std::vector<double> integrals(nIntervals);
     std::vector<double> integralsRef(nIntervals);
     for (auto i=0; i<nIntervals; ++i)
     {
@@ -216,6 +215,7 @@ TEST(UtilitiesInterpolation, cubicSpline)
         integralsRef[i] = spline.integrate(r);
         intervals[i] = r;
     }
+    std::vector<double> integrals(nIntervals, 0);
     double *intPtr = integrals.data();
     spline.integrate(nIntervals, intervals.data(), &intPtr);
     ippsNormDiff_Inf_64f(integrals.data(), integralsRef.data(),

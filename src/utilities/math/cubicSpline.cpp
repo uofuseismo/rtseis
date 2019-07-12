@@ -199,24 +199,31 @@ public:
         return 0;
     }
     /// Integrates over the interval
-    int integrate(const int nlim,
+    int integrate(const int nLimIn,
                   const double llim[], const double rlim[],
                   double integral[])
     {
-        auto status = dfdIntegrate1D(mTask, DF_METHOD_PP, nlim,
-                                     llim, DF_NO_HINT,
-                                     rlim, DF_NO_HINT,
-                                     DF_NO_APRIORI_INFO, DF_NO_APRIORI_INFO,
-                                     integral, DF_NO_HINT);
-        if (status != DF_STATUS_OK){return -1;}
+        constexpr MKL_INT blockSize = 24; // > 48 seems to trigger bug
+        const MKL_INT nLim = nLimIn;
+        for (auto block=0; block<nLim; block=block+blockSize)
+        {
+            MKL_INT nInt = std::min(blockSize, nLim - block);
+            auto status = dfdIntegrate1D(mTask, DF_METHOD_PP, nInt,
+                                         &llim[block], DF_NO_HINT,
+                                         &rlim[block], DF_NO_HINT,
+                                         DF_NO_APRIORI_INFO,
+                                         DF_NO_APRIORI_INFO,
+                                         &integral[block], DF_NO_HINT);
+            if (status != DF_STATUS_OK){return -1;}
+        }
         return 0;
     }
     int integrate(const double lLim, const double rLim, double *integral)
     {
-        constexpr int nlim = 1;
-        double llim[1] = {lLim};
-        double rlim[1] = {rLim};
-        auto status = dfdIntegrate1D(mTask, DF_METHOD_PP, nlim,
+        constexpr MKL_INT nLim = 1;
+        const double llim[1] = {lLim};
+        const double rlim[1] = {rLim};
+        auto status = dfdIntegrate1D(mTask, DF_METHOD_PP, nLim,
                                      llim, DF_UNIFORM_PARTITION,
                                      rlim, DF_UNIFORM_PARTITION,
                                      DF_NO_APRIORI_INFO, DF_NO_APRIORI_INFO,
@@ -512,9 +519,9 @@ void CubicSpline::integrate(const int nIntervals,
         if (intervals == nullptr){RTSEIS_THROW_IA("%s", "intervals is NULL");}
         RTSEIS_THROW_IA("%s", "integrals is NULL");
     }
-    std::vector<double> llim(nIntervals);
-    std::vector<double> rlim(nIntervals);
-    std::vector<double> swapSign(nIntervals);
+    std::vector<double> llim(nIntervals, 0);
+    std::vector<double> rlim(nIntervals, 0);
+    std::vector<double> swapSign(nIntervals, 0);
     double intervalMin = DBL_MAX;
     double intervalMax =-DBL_MAX;
     #pragma omp simd reduction(max:intervalMax) reduction(min:intervalMin)
@@ -540,10 +547,16 @@ void CubicSpline::integrate(const int nIntervals,
                         xmin, xmax);
     }
     // Integrate
-    pImpl->integrate(nIntervals, llim.data(), rlim.data(), integrals); 
+    auto ierr = pImpl->integrate(nIntervals, llim.data(), rlim.data(),
+                                 integrals); 
+#ifdef DEBUG
+    assert(ierr == 0):
+#else
+    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Integration failed");}
+#endif
     // When the integrand limits this manifests as the integral being off by
     // a sign factor.  This loop fixes that.
-    #pragma omp simd
+    //#pragma omp simd
     for (auto i=0; i<nIntervals; ++i)
     {
         if (swapSign[i]){integrals[i] =-integrals[i];}
