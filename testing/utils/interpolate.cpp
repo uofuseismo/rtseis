@@ -160,21 +160,29 @@ TEST(UtilitiesInterpolation, cubicSpline)
                                       CubicSplineBoundaryConditionType::NOT_A_KNOT));
     yPtr = yqNotAKnot.data();
     EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    EXPECT_NEAR(spline.integrate(std::pair<double, double> (xMin, 1)),
+                0.4625836825854708, 1.e-12);
     // natural
     EXPECT_NO_THROW(spline.initialize(npts, xDomain,  y.data(),
                                CubicSplineBoundaryConditionType::NATURAL));
     yPtr = yqNatural.data();
     EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    EXPECT_NEAR(spline.integrate(std::pair<double, double> (xMax, 0)),
+                -0.004955392017811033, 1.e-12);
     // clamped
     EXPECT_NO_THROW(spline.initialize(npts, xDomain,  y.data(),
                                CubicSplineBoundaryConditionType::CLAMPED));
     yPtr = yqClamped.data();
     EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    EXPECT_NEAR(spline.integrate(std::pair<double, double> (4.08, 6)),
+                -1.5508914757864318, 1.e-12);
     // periodic
     EXPECT_NO_THROW(spline.initialize(npts, xDomain,  y.data(),
                                CubicSplineBoundaryConditionType::PERIODIC));
     yPtr = yqPeriodic.data();
     EXPECT_NO_THROW(spline.interpolate(nq, xq.data(), &yPtr));
+    EXPECT_NEAR(spline.integrate(std::pair<double, double> (3.99, xMax)),
+                -1.657622164641667, 1.e-12);
 
     // Compute the differences
     ippsNormDiff_Inf_64f(yqNotAKnot.data(), yqNotAKnotRef.data(), nq, &error);
@@ -185,7 +193,7 @@ TEST(UtilitiesInterpolation, cubicSpline)
     EXPECT_LE(error, 1.e-14);
     ippsNormDiff_Inf_64f(yqPeriodic.data(), yqPeriodicRef.data(), nq, &error);
     EXPECT_LE(error, 1.e-14);
-getchar();
+
 }
 
 /*

@@ -20,3 +20,7 @@ for i in range(len(xq)):
     ofl.write("%e, %e, %e, %e, %e\n"%(xq[i], yq_knot[i], yq_clamped[i],
                                       yq_natural[i], yq_period[i]))
 ofl.close()
+print(cs_not_a_knot.integrate(0, 1))
+print(cs_natural.integrate(max(x), 0))
+print(cs_clamped.integrate(4.08, 6))
+print(cs_periodic.integrate(3.99, max(x)))
