@@ -1,8 +1,8 @@
-#ifndef RTSEIS_UTILITIES_MATH_CUBICSPLINE_HPP__
-#define RTSEIS_UTILITIES_MATH_CUBICSPLINE_HPP__ 1
+#ifndef RTSEIS_UTILITIES_INTERPOLATION_CUBICSPLINE_HPP
+#define RTSEIS_UTILITIES_INTERPOLATION_CUBICSPLINE_HPP 1
 #include <memory>
 
-namespace RTSeis::Utilities::Math::Interpolation
+namespace RTSeis::Utilities::Interpolation
 {
 /*!
  * @brief Defines the types of boundary conditions available for use in the

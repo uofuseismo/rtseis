@@ -6,10 +6,10 @@
 #include <mkl.h>
 #include <ipps.h>
 #include "rtseis/private/throw.hpp"
-#include "rtseis/utilities/math/cubicSpline.hpp"
+#include "rtseis/utilities/interpolation/cubicSpline.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 
-using namespace RTSeis::Utilities::Math::Interpolation;
+using namespace RTSeis::Utilities::Interpolation;
 
 class CubicSpline::CubicSplineImpl
 {

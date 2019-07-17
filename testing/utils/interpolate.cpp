@@ -9,8 +9,8 @@
 #include <chrono>
 #include <ipps.h>
 //include<mkl.h>
-#include "rtseis/utilities/math/interpolate.hpp"
-#include "rtseis/utilities/math/cubicSpline.hpp"
+#include "rtseis/utilities/interpolation/interpolate.hpp"
+#include "rtseis/utilities/interpolation/cubicSpline.hpp"
 #include <gtest/gtest.h>
 
 namespace
@@ -27,7 +27,7 @@ double uniformRandom(const double xMin, const double xMax)
 //            const std::vector<double> &y,
 //            const std::vector<double> &xq);
 
-using namespace RTSeis::Utilities::Math::Interpolation;
+using namespace RTSeis::Utilities::Interpolation;
 
 //int test_interpolation_interpft(void)
 TEST(UtilitiesInterpolation, interpft)
