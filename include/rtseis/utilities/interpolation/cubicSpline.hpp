@@ -1,8 +1,8 @@
-#ifndef RTSEIS_UTILITIES_MATH_CUBICSPLINE_HPP__
-#define RTSEIS_UTILITIES_MATH_CUBICSPLINE_HPP__ 1
+#ifndef RTSEIS_UTILITIES_INTERPOLATION_CUBICSPLINE_HPP
+#define RTSEIS_UTILITIES_INTERPOLATION_CUBICSPLINE_HPP 1
 #include <memory>
 
-namespace RTSeis::Utilities::Math::Interpolation
+namespace RTSeis::Utilities::Interpolation
 {
 /*!
  * @brief Defines the types of boundary conditions available for use in the
@@ -149,6 +149,25 @@ public:
      * @sa isInitialized(), getMinimumX(), getMaximum().
      */
     void interpolate(const int nq, const double xq[], double *yq[]) const;
+    /*!
+     * @brief Integrates the cubic spline over the intervals.
+     * @param[in] nIntervals  The number of intervals.
+     * @param[in] intervals   An array of intervals where 
+     *                        intervals[i].first is the lower limit on the 
+     *                        integrate while intervals[i].second is the upper
+     *                        limit on the i'th integral.  Additionally, each
+     *                        integral limit must be in the range
+     *                        [\c getMinimumX(), \c getMaximumX()].
+     *                        This is an array of dimension [nIntervals].
+     * @param[out] integrals  The integral.  This is an array of 
+     *                        dimension [nIntervals].
+     * @throws std::runtime_error if the class was not initialized.
+     * @throws std::invalid_argument if intervals or integrals is NULL or
+     *         at least one interval integrand range is out of bounds.
+     */
+    void integrate(const int nIntervals,
+                   const std::pair<double, double> intervals[],
+                   double *integrals[]) const;
     /*!
      * @brief Integrates the cubic spline over the interval.
      * @param[in] interval  Defines the integration interval which goes

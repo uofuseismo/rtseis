@@ -1,9 +1,9 @@
-#ifndef RTSEIS_UTILITIES_MATH_INTERPOLATION_INTERPOLATE_HPP
-#define RTSEIS_UTILITIES_MATH_INTERPOLATION_INTERPOLATE_HPP 1
+#ifndef RTSEIS_UTILITIES_INTERPOLATION_INTERPOLATE_HPP
+#define RTSEIS_UTILITIES_INTERPOLATION_INTERPOLATE_HPP 1
 #include <vector>
 #include <memory>
 
-namespace RTSeis::Utilities::Math::Interpolation
+namespace RTSeis::Utilities::Interpolation
 {
 /*!
  * @copyright Ben Baker distributed under the MIT license.

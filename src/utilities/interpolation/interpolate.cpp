@@ -9,11 +9,12 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/private/throw.hpp"
-#include "rtseis/utilities/math/interpolate.hpp"
+#include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/log.h"
 
-using namespace RTSeis::Utilities::Math;
+namespace VM = RTSeis::Utilities::Math::VectorMath;
+using namespace RTSeis::Utilities;
 
 std::vector<double>
 Interpolation::interpft(const std::vector<double> &x, const int npnew)
@@ -100,7 +101,7 @@ Interpolation::interpft(const std::vector<double> &x, const int npnew)
     return yint;
 }
 
-using namespace RTSeis::Utilities::Math::Interpolation;
+using namespace RTSeis::Utilities::Interpolation;
 
 class Interp1D::Interp1DImpl
 {
@@ -560,7 +561,7 @@ void Interp1D::apply(const std::vector<double> &xq,
         throw std::invalid_argument("xq.size() != vq.size()");
     }
     bool lsorted = false;
-    if (!lxqSorted){lsorted = Math::VectorMath::isSorted(xq);}
+    if (!lxqSorted){lsorted = VM::isSorted(xq);}
     int ierr = pImpl->interpolate(xq, vq, lsorted); 
     if (ierr != 0)
     {
@@ -629,7 +630,7 @@ void RTSeis::Utilities::Math::Interpolate::interp1d(
     }
     // Check the interpolation points are sorted
     bool lintSorted = true;
-    if (!lxqSorted){lintSorted = VectorMath::isSorted(xq);}
+    if (!lxqSorted){lintSorted = VM::isSorted(xq);}
     // Initialize space
     constexpr int ny = 1; // Function to interpolate is scalar
     int nwork = std::max(8, ny*splineOrder*(nx - 1));
@@ -682,7 +683,7 @@ void RTSeis::Utilities::Math::Interpolate::interp1d(
     }
     // Check if outputs are sorted
     bool lsorted = true; // If I am to assume its sorted then default to true
-    if (!assumeSorted){lsorted = VectorMath::isSorted(xq);}
+    if (!assumeSorted){lsorted = VM::isSorted(xq);}
     // Compute the cell indices
     MKL_INT *cell = static_cast<MKL_INT *>
                     (mkl_malloc((size_t) nq*sizeof(MKL_INT), 64));
