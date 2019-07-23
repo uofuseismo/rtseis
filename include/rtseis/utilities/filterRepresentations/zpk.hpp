@@ -1,14 +1,10 @@
-#ifndef RTSEIS_UTILS_FR_ZPK_HPP
-#define RTSEIS_UTILS_FR_ZPK_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERREPRESENTATIONS_ZPK_HPP
+#define RTSEIS_UTILITIES_FILTERREPRESENTATIONS_ZPK_HPP 1
 #include <complex>
 #include <vector>
 #include <memory>
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterRepresentations
+namespace RTSeis::Utilities::FilterRepresentations
 {
 /*!
  * @class ZPK zpk.hpp "include/rtseis/utilities/filterRepresentations/zpk.hpp"
@@ -181,8 +177,5 @@ public:
     class ZPKImpl;
     std::unique_ptr<ZPKImpl> pImpl;
 }; // End ZPK
-} // End Representations
-} // End Utilities
-} // End RTSeis
-
+}
 #endif

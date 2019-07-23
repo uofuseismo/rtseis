@@ -1,16 +1,11 @@
-#ifndef RTSEIS_UTILS_FR_BA_HPP
-#define RTSEIS_UTILS_FR_BA_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERREPRESENTATIONS_BA_HPP
+#define RTSEIS_UTILITIES_FILTERREPRESENTATIONS_BA_HPP 1
 #include <cstdio>
 #include <vector>
 #include <memory>
 
-namespace RTSeis
+namespace RTSeis::Utilities::FilterRepresentations
 {
-namespace Utilities
-{
-namespace FilterRepresentations
-{
-
 /*!
  * @class BA ba.hpp "include/rtseis/utilities/filterRepresentations/ba.hpp"
  * @brief Represents an infinite impulse resonse filter in terms of
@@ -167,8 +162,5 @@ private:
     class BAImpl;
     std::unique_ptr<BAImpl> pImpl;
 }; // End BA
-} // End FilterRepresentations
-} // End Utilities
-} // End RTSeis
-
+}
 #endif

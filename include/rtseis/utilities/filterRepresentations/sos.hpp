@@ -1,13 +1,9 @@
-#ifndef RTSEIS_UTILS_FR_SOS_HPP
-#define RTSEIS_UTILS_FR_SOS_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERREPRESENTATIONS_SOS_HPP
+#define RTSEIS_UTILITIES_FILTERREPRESENTATIONS_SOS_HPP 1
 #include <vector>
 #include <memory>
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterRepresentations
+namespace RTSeis::Utilities::FilterRepresentations
 {
 /*!
  * @class SOS sos.hpp "include/rtseis/utilities/filterRepresentations/sos.hpp"
@@ -153,8 +149,5 @@ private:
     class SOSImpl;
     std::unique_ptr<SOSImpl> pImpl;
 }; // End SOS
-} // End FilterRepresentations
-} // End Utilities
-} // End RTSeis
-
+}
 #endif

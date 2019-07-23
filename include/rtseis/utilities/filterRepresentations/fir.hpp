@@ -1,13 +1,9 @@
-#ifndef RTSEIS_UTILS_FR_FIR_HPP
-#define RTSEIS_UTILS_FR_FIR_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERREPRESENTATIONS_FIR_HPP
+#define RTSEIS_UTILITIES_FILTERREPRESENTATIONS_FIR_HPP 1
 #include <vector>
 #include <memory>
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterRepresentations
+namespace RTSeis::Utilities::FilterRepresentations
 {
 /*!
  * @class FIR fir.hpp "include/rtseis/utilities/filterRepresentations/fir.hpp"
@@ -142,7 +138,5 @@ private:
     class FIRImpl;
     std::unique_ptr<FIRImpl> pImpl;
 };
-}
-}
 }
 #endif
