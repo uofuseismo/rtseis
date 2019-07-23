@@ -1,23 +1,17 @@
-#ifndef RTSEIS_UTILS_DESIGN_IIR_HPP
-#define RTSEIS_UTILS_DESIGN_IIR_HPP 1
+#ifndef RTSEIS_UTILITIES_DESIGN_IIR_HPP
+#define RTSEIS_UTILITIES_DESIGN_IIR_HPP 1
 #include "rtseis/utilities/design/enums.hpp"
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterRepresentations
+/// Forward declarations
+namespace RTSeis::Utilities::FilterRepresentations
 {
 class BA;
 class SOS;
 class ZPK;
-};
-namespace FilterDesign
-{
+}
 
-namespace IIR
+namespace RTSeis::Utilities::FilterDesign::IIR
 {
-
 /*!
  * @brief Convenience function to design a digital or analog filter from
  *        an analog prototype.
@@ -221,11 +215,5 @@ zpklp2bs(const FilterRepresentations::ZPK &zpkIn,
 FilterRepresentations::ZPK
 zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs);
 
-}; /* End IIR */
-
-}; /* End FilterDesign */
-}; /* End Utils */
-
-}; /* End RTseis */
-
+}
 #endif

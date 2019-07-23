@@ -1,22 +1,19 @@
-#ifndef RTSEIS_UTILS_DESIGN_FILTERDESIGNER_HPP
-#define RTSEIS_UTILS_DESIGN_FILTERDESIGNER_HPP
+#ifndef RTSEIS_UTILITIES_DESIGN_FILTERDESIGNER_HPP
+#define RTSEIS_UTILITIES_DESIGN_FILTERDESIGNER_HPP
 #include <memory>
 #include "rtseis/utilities/design/enums.hpp"
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterRepresentations
+// Forward declarations
+namespace RTSeis::Utilities::FilterRepresentations
 {
 class BA; 
 class SOS;
 class ZPK;
 class FIR;
-};
-namespace FilterDesign
-{
+}
 
+namespace RTSeis::Utilities::FilterDesign
+{
 /*!
  * @class FilterDesigner filterDesigner.hpp "include/rtseis/utilities/design/filterDesigner.hpp"
  * @brief A class for filter design.  If designing many filters then using
@@ -407,8 +404,5 @@ private:
     class FilterDesignerImpl;
     mutable std::unique_ptr<FilterDesignerImpl> pImpl;
 }; // end filter design cache
-}; // end filter designer
-}; // end utilities
-}; // end rtseis
-
+} // end rtseis
 #endif
