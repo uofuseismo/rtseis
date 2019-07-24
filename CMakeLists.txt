@@ -91,6 +91,7 @@ set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 #SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
     src/utilities/verbosity.c
+    src/utilities/deconvolution/instrumentResponse.cpp
     src/utilities/design/filterDesigner.cpp
     src/utilities/design/response.cpp
     src/utilities/design/iir.cpp

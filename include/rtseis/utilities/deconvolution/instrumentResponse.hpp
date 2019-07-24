@@ -2,13 +2,17 @@
 #define RTSEIS_UTILITIES_DECONVOLUTION_INSTRUMENTRESPONSE_HPP 1
 #include <memory>
 
-class RTSeis::Utilities::FilterRepresentations::BA;
-class RTSeis::Utilities::FilterRepresentations::ZPK;
+// Forward declarations
+namespace RTSeis::Utilities::FilterRepresentations
+{
+class BA;
+class ZPK;
+}
 
 namespace RTSeis::Utilities::Deconvolution
 {
 /*!
- * @class InstrumentResponse instrumentResponse.hpp
+ * @class InstrumentResponse instrumentResponse.hpp "rtseis/utilities/deconvolution/instrumentResponse.hpp"
  * @brief A container for storing the instrument transfer function, usually
  *        expressed as poles, zeros, and gain, and for computing the
  *        corresponding instrument response.
@@ -83,7 +87,7 @@ public:
      * @brief Sets the analog digital response.
      * @param[in] zpk  The analog poles, zeros, and gain defining the response.
      */
-    void setAnalogResponse(const RTSeis::Utilities::FilterRepresentations::ZPK &zpk);
+    void setAnalogResponse(const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept;
     /*!
      * @brief Sets the analog digital response.
      * @param[in] ba   The numerator and denominator coefficients defining the
@@ -101,7 +105,7 @@ public:
      * @brief Sets a digital instrument response.
      * @param[in] zpk  The digital poles, zeros, and gain defining the response.
      */
-    void setDigitalResponse(const RTSeis::Utilities::FilterRepresentations::ZPK &zpk);
+    void setDigitalResponse(const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept;
     /*!
      * @brief Sets the digital instrument response.
      * @param[in] ba   The numerator and denominator coefficients defining the
@@ -135,11 +139,18 @@ public:
      * @result True indicates that the response was set.
      * @sa \c setAnalogResponse(), \c setDigitalResponse()
      */
-    void haveResponse() const noexcept;
+    bool haveResponse() const noexcept;
+    /*!
+     * @brief Determines if the instrument response is analog or digital.
+     * @result True indicates that this is an analog response.
+     * @throws std::runtime_error if the response is not yet set.
+     * @sa \c haveResponse()
+     */
+    bool isAnalogResponse() const;
      
 private:
     class InstrumentResponseImpl;
-    std::unique_ptr<InstrumentReponseImpl> pImpl;
+    std::unique_ptr<InstrumentResponseImpl> pImpl;
 };
 }
 #endif

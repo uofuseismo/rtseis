@@ -1,22 +1,60 @@
 #include <cstdio>
 #include <cstdlib>
+#include <complex>
+#include <cmath>
+#include "rtseis/private/throw.hpp"
+#include "rtseis/utilities/deconvolution/instrumentResponse.hpp"
+#include "rtseis/utilities/design/iir.hpp"
+#include "rtseis/utilities/filterRepresentations/zpk.hpp"
+#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/utilities/filterRepresentations/sos.hpp"
 
-//namespace FR = RTSeis::Utilities::FilterRepresentations;
+using namespace RTSeis::Utilities::Deconvolution;
 
 class InstrumentResponse::InstrumentResponseImpl
 {
 public:
-    class RTSeis::Utilities::FilterRepresentations mZPK;
-    class RTSeis::Utilities::FilterRepresentations mBA;
-    class RTSeis::Utilities::FilterRepresentations mSOS;
+    //class RTSeis::Utilities::FilterRepresentations::ZPK mZPK;
+    class RTSeis::Utilities::FilterRepresentations::BA mBA;
+    //class RTSeis::Utilities::FilterRepresentations mSOS;
     double mSamplingRate = 0;
     bool mHaveResponse = false;
     bool mIsAnalog = true;
+};
+
+InstrumentResponse::InstrumentResponse() :
+    pImpl(std::make_unique<InstrumentResponseImpl> ())
+{
 }
 
-InstrumentResponse::InstrumentResponse :
-    pImpl(std::make_unique<InstrumentResponse> ())
+/// Operators
+InstrumentResponse&
+InstrumentResponse::operator=(const InstrumentResponse &response)
 {
+    if (&response == this){return *this;}
+    if (pImpl){pImpl.reset();}
+    pImpl = std::make_unique<InstrumentResponseImpl> (*response.pImpl);
+    return *this;
+}
+
+InstrumentResponse&
+InstrumentResponse::operator=(InstrumentResponse &&response) noexcept
+{
+    if (&response == this){return *this;}
+    if (pImpl){pImpl.reset();}
+    pImpl = std::move(response.pImpl);
+    return *this;
+}
+
+/// Destructors
+InstrumentResponse::~InstrumentResponse() = default;
+
+void InstrumentResponse::clear() noexcept
+{
+    pImpl->mBA.clear();
+    pImpl->mSamplingRate = 0;
+    pImpl->mHaveResponse = false;
+    pImpl->mIsAnalog = true;
 }
 
 void InstrumentResponse::setSamplingRate(const double df)
@@ -29,25 +67,31 @@ void InstrumentResponse::setSamplingRate(const double df)
 }
 
 void InstrumentResponse::setAnalogResponse(
-    const RTSeis::Utilities::FilterRepresentations &zpk)
+    const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept
 {
-    constexpr bool lanalog = true;
-    setResponse(zpk, lanalog);
+    pImpl->mIsAnalog = true;
+    pImpl->mBA.clear();
+    pImpl->mBA = RTSeis::Utilities::FilterDesign::IIR::zpk2tf(zpk);
+    pImpl->mHaveResponse = true;
 }
 
 void InstrumentResponse::setDigitalResponse(
-    const RTSeis::Utilities::FilterRepresentations &zpk)
+    const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept
 {
-    constexpr bool lanalog = false;
-    setResponse(zpk, lanalog);
+    pImpl->mIsAnalog = false;
+    pImpl->mBA.clear();
+    pImpl->mBA = RTSeis::Utilities::FilterDesign::IIR::zpk2tf(zpk);
+    pImpl->mHaveResponse = true;
 }
 
+/*
 void InstrumentResponse::setResponse(
     const RTSeis::Utilities::FilterRepresentations::ZPK &zpk,
     const bool lanalog)
 {
-    pImpl->mIsAnalalog = lanalog;
+    pImpl->mIsAnalog = lanalog;
 }
+*/
 
 bool InstrumentResponse::isAnalogResponse() const
 {
@@ -63,6 +107,7 @@ bool InstrumentResponse::haveResponse() const noexcept
     return pImpl->mHaveResponse;
 }
 
+/*
 double InstrumentResponse::getSamplingRate() const
 {
     if (pImpl->mSamplingRate <= 0)
@@ -77,3 +122,4 @@ double InstrumentResponse::getNyquistFrequency() const
     double fnyq = getSamplingRate()/2.0;
     return fnyq;
 }
+*/
