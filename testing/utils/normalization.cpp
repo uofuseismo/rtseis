@@ -6,6 +6,7 @@
 #include <chrono>
 #include <ipps.h>
 #include "rtseis/utilities/normalization/signBit.hpp"
+#include "rtseis/utilities/normalization/zscore.hpp"
 #include <gtest/gtest.h>
 
 namespace
@@ -83,5 +84,51 @@ TEST(UtilitiesNormalization, signBit)
         }
     }
 }
+
+TEST(UtilitiesNormalization, zscore)
+{
+    ZScore zscore;
+    // Matlab will do z=(x-mean(x))/std(x) where std is standard deviation
+    int npts = 500;
+    std::vector<double> x(npts);
+    double mean = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        x[i] = static_cast<double>(rand())/RAND_MAX;
+        mean = mean + x[i];
+    }
+    mean = mean/static_cast<double> (npts);
+    double var = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        var = var + (x[i] - mean)*(x[i] - mean);
+    }
+    var = var/static_cast<double> (npts - 1);
+    auto std = std::sqrt(var);
+    // Initialize
+    EXPECT_NO_THROW(zscore.initialize(mean, std));
+    EXPECT_TRUE(zscore.isInitialized());
+    std::vector<double> y(npts);
+    double *yPtr = y.data();
+    EXPECT_NO_THROW(zscore.apply(npts, x.data(), &yPtr));
+    // Verify
+    double error = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        double z = (x[i] - mean)/std;
+        error = std::max(error, std::abs(z - y[i]));
+    }
+    EXPECT_LE(error, 1.e-14);
+    // Let's do this the other way
+    auto zref = y;
+    ZScore zscoreAlternate;
+    EXPECT_NO_THROW(zscoreAlternate.initialize(npts, x.data()));
+    zscore = zscoreAlternate;
+    std::fill(y.begin(), y.end(), 0.0);
+    yPtr = y.data();
+    EXPECT_NO_THROW(zscore.apply(npts, x.data(), &yPtr));
+    ippsNormDiff_Inf_64f(y.data(), zref.data(), npts, &error);
+    EXPECT_LE(error, 1.e-14);
+} 
 
 }
