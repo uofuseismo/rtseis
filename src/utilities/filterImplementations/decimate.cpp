@@ -7,7 +7,7 @@
 #include <ipps.h>
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
-#include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 //#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"

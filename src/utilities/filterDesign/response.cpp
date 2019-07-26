@@ -6,7 +6,7 @@
 #include <algorithm>
 #define RTSEIS_LOGGING 1
 #include "rtseis/private/throw.hpp"
-#include "rtseis/utilities/design/response.hpp"
+#include "rtseis/utilities/filterDesign/response.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/utilities/math/convolve.hpp"

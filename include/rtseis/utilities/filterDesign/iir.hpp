@@ -1,6 +1,6 @@
-#ifndef RTSEIS_UTILITIES_DESIGN_IIR_HPP
-#define RTSEIS_UTILITIES_DESIGN_IIR_HPP 1
-#include "rtseis/utilities/design/enums.hpp"
+#ifndef RTSEIS_UTILITIES_FILTERDESIGN_IIR_HPP
+#define RTSEIS_UTILITIES_FILTERDESIGN_IIR_HPP 1
+#include "rtseis/utilities/filterDesign/enums.hpp"
 
 /// Forward declarations
 namespace RTSeis::Utilities::FilterRepresentations

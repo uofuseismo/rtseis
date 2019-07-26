@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <ipps.h>
-#include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include <gtest/gtest.h>
 

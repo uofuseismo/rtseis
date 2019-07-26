@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <string>
 #include <ipps.h>
-#include "rtseis/utilities/design/response.hpp"
+#include "rtseis/utilities/filterDesign/response.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include <gtest/gtest.h>
 

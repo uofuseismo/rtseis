@@ -3,7 +3,7 @@
 #include <array>
 #include <ipps.h>
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
-#include "rtseis/utilities/design/fir.hpp"
+#include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "rtseis/private/throw.hpp"

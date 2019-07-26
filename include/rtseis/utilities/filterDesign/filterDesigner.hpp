@@ -1,7 +1,7 @@
-#ifndef RTSEIS_UTILITIES_DESIGN_FILTERDESIGNER_HPP
-#define RTSEIS_UTILITIES_DESIGN_FILTERDESIGNER_HPP
+#ifndef RTSEIS_UTILITIES_FILTERDESIGN_FILTERDESIGNER_HPP
+#define RTSEIS_UTILITIES_FILTERDESIGN_FILTERDESIGNER_HPP
 #include <memory>
-#include "rtseis/utilities/design/enums.hpp"
+#include "rtseis/utilities/filterDesign/enums.hpp"
 
 // Forward declarations
 namespace RTSeis::Utilities::FilterRepresentations

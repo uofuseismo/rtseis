@@ -11,8 +11,8 @@
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
-#include "rtseis/utilities/design/fir.hpp"
-#include "rtseis/utilities/design/iir.hpp"
+#include "rtseis/utilities/filterDesign/fir.hpp"
+#include "rtseis/utilities/filterDesign/iir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"

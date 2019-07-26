@@ -7,9 +7,9 @@
 #include <numeric>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/design/iir.hpp"
-#include "rtseis/utilities/design/enums.hpp"
-#include "rtseis/utilities/design/analogPrototype.hpp"
+#include "rtseis/utilities/filterDesign/iir.hpp"
+#include "rtseis/utilities/filterDesign/enums.hpp"
+#include "rtseis/utilities/filterDesign/analogPrototype.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"

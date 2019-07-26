@@ -5,8 +5,8 @@
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
-#include "rtseis/utilities/design/iir.hpp"
-#include "rtseis/utilities/design/analogPrototype.hpp"
+#include "rtseis/utilities/filterDesign/iir.hpp"
+#include "rtseis/utilities/filterDesign/analogPrototype.hpp"
 #include <gtest/gtest.h>
 
 namespace

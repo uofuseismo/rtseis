@@ -92,12 +92,12 @@ set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 SET(UTILS_SRCS
     src/utilities/verbosity.c
     src/utilities/deconvolution/instrumentResponse.cpp
-    src/utilities/design/filterDesigner.cpp
-    src/utilities/design/response.cpp
-    src/utilities/design/iir.cpp
-    src/utilities/design/fir.cpp
-    src/utilities/design/analogProtype.cpp
-    src/utilities/design/windowFunctions.cpp
+    src/utilities/filterDesign/filterDesigner.cpp
+    src/utilities/filterDesign/response.cpp
+    src/utilities/filterDesign/iir.cpp
+    src/utilities/filterDesign/fir.cpp
+    src/utilities/filterDesign/analogProtype.cpp
+    src/utilities/filterDesign/windowFunctions.cpp
     src/utilities/filterRepresentations/ba.cpp
     src/utilities/filterRepresentations/fir.cpp
     src/utilities/filterRepresentations/sos.cpp

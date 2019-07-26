@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include <vector>
 #include <algorithm>
-#include "rtseis/utilities/design/enums.hpp"
-#include "rtseis/utilities/design/filterDesigner.hpp"
-#include "rtseis/utilities/design/fir.hpp"
-#include "rtseis/utilities/design/iir.hpp"
+#include "rtseis/utilities/filterDesign/enums.hpp"
+#include "rtseis/utilities/filterDesign/filterDesigner.hpp"
+#include "rtseis/utilities/filterDesign/fir.hpp"
+#include "rtseis/utilities/filterDesign/iir.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
