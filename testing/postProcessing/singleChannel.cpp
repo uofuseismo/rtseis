@@ -939,8 +939,11 @@ int testNormalization()
     }
     mean = mean/static_cast<double> (npts);
     double var = 0;
-    for (auto i=0; i<npts; ++i){var = var + (x[i] - mean)*(x[i] - mean);}
-    auto std = var/static_cast<double> (npts - 1);
+    for (auto i=0; i<npts; ++i)
+    {
+        var = var + std::pow(x[i] - mean, 2);
+    }
+    auto std = std::sqrt(var/static_cast<double> (npts - 1));
     // sign-bit normalization
     PostProcessing::SingleChannel::Waveform waveform;
     try
@@ -978,16 +981,40 @@ int testNormalization()
         RTSEIS_ERRMSG("%s", e.what());
         return EXIT_FAILURE;
     }
-
+    error = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        error = std::max(error, std::abs(y[i] - (x[i] - mean)/std));
+    }
+    if (error >= 1.e-14)
+    {
+        RTSEIS_ERRMSG("zscore normalization failed: %e\n", error);
+        return EXIT_FAILURE;
+    }
     // transform to [-1,1]
     std::pair<double, double> targetRange(-1, 1);
-/*
     try
     {
         waveform.setData(x);
-        waveform.normalizeMinMax();
+        waveform.normalizeMinMax(targetRange);
+        y = waveform.getData();
     }
-*/
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s", e.what());
+        return EXIT_FAILURE;
+    }
+    error = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        auto yp = -1.0 + (1.0 - -1.0)*(x[i] - -1.0)/(2.0 - -1.0);
+        error = std::max(error, std::abs(y[i] - yp));
+    }
+    if (error >= 1.e-14)
+    {
+        RTSEIS_ERRMSG("minMax normalization failed: %e\n", error);
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 //============================================================================//
