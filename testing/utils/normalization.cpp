@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 #include <ipps.h>
+#include "rtseis/utilities/normalization/minMax.hpp"
 #include "rtseis/utilities/normalization/signBit.hpp"
 #include "rtseis/utilities/normalization/zscore.hpp"
 #include <gtest/gtest.h>
@@ -129,6 +130,54 @@ TEST(UtilitiesNormalization, zscore)
     EXPECT_NO_THROW(zscore.apply(npts, x.data(), &yPtr));
     ippsNormDiff_Inf_64f(y.data(), zref.data(), npts, &error);
     EXPECT_LE(error, 1.e-14);
-} 
+}
+
+TEST(UtilitiesNormalization, minMax)
+{
+    MinMax minMax;
+    int npts = 500;
+    std::vector<double> x(npts), y(npts);
+    // Generate uniform random numbers in range [0,1]
+    for (auto i=0; i<npts; ++i)
+    {
+        x[i] = static_cast<double>(rand())/RAND_MAX;
+    }
+    // Fix ends points of data interval to be in range [0,1]
+    x[0] = 0;
+    x[1] = 1;
+    // Transform from [0,1] to [-2,4] 
+    std::pair<double, double> dataRange(0.0, 1.0);
+    std::pair<double, double> targetRange(-2.0, 4.0);
+    EXPECT_NO_THROW(minMax.initialize(dataRange, targetRange));
+    double *yPtr = y.data();
+    EXPECT_NO_THROW(minMax.apply(npts, x.data(), &yPtr));
+    double error = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        auto yr = -2.0 + 6.0*x[i];
+        error = std::max(error, std::abs(y[i] - yr));
+    }
+    EXPECT_LE(error, 1.e-14);
+    // Change x in [0,1] to [-5,5]
+    std::vector<double> x5(npts);
+    for (auto i=0; i<npts; ++i)
+    {
+        x5[i] = -5.0 + 10.0*x[i];
+    }
+    // Rescale back to [0,1]
+    MinMax minMax5;
+    EXPECT_NO_THROW(minMax5.initialize(npts, x5.data(),
+                                       std::make_pair<double, double> (0,1)));
+    minMax = minMax5;
+    yPtr = y.data();
+    EXPECT_NO_THROW(minMax5.apply(npts, x5.data(), &yPtr));
+    error = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+         auto yr = x[i];
+         error = std::max(error, std::abs(y[i] - yr));
+    }
+    EXPECT_LE(error, 1.e-14);
+}
 
 }

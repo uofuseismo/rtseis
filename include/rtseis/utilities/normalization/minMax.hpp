@@ -79,6 +79,21 @@ public:
     void initialize(std::pair<double, double> dataRange,
                     std::pair<double, double> targetRange = std::make_pair<double, double> (0.0, 1.0));
     /*!
+     * @brief Initializes the min-max rescaling.  This will compute the data
+     *        range from the given array.  
+     * @param[in] npts         The number of data points in x.
+     * @param[in] x            The data from which to extract the min and max.
+     *                         This is an array of dimension [npts].
+     * @param[in] targetRange  Defines the target data range where
+     *                         targetRange.first is the minimum and
+     *                         targetRange.second is the maximum.
+     *                         By default this will rescale to [0,1].
+     * @throws std::invalid_argument if npts is not positive, x is NULL, or all 
+     *         of the samples in x have the value.
+     */
+    void initialize(const int npts, const double x[],
+                    std::pair<double, double> targetRange = std::make_pair<double, double> (0.0, 1.0));
+    /*!
      * @brief Determines if the class is initialized.
      * @retval True indicates that the class is initialized.
      */
@@ -86,7 +101,7 @@ public:
 
     /*!
      * @brief Applies the min-max normalization.
-     * @param[in] npts   The number of samples in x and y.
+     * @param[in] npts   The number of data points in x and y.
      * @param[in] x      The data to normalize.  This is an array of 
      *                   dimension [npts].
      * @param[out] y     The min-max normalized data.  This is an array of

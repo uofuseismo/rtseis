@@ -116,6 +116,7 @@ SET(UTILS_SRCS
     src/utilities/math/convolve.cpp
     src/utilities/math/polynomial.cpp
     src/utilities/math/vectorMath.cpp
+    src/utilities/normalization/minMax.cpp
     src/utilities/normalization/signBit.cpp
     src/utilities/normalization/zscore.cpp
     src/utilities/transforms/dft.cpp
