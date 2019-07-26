@@ -34,6 +34,7 @@ using namespace RTSeis::PostProcessing::SingleChannel;
 int testDemean(void);
 int testDetrend(void);
 int testDownsample(const std::vector<double> &x);
+int testNormalization();
 int testFilter(const std::vector<double> &x);
 int testBandSpecificSOSFilters(const std::vector<double> &x);
 int testBandSpecificIIRFilters(const std::vector<double> &x);
@@ -107,6 +108,14 @@ int main(void)
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed FIR band-specific filter tests");
+
+    ierr = testNormalization();
+    if (ierr != EXIT_SUCCESS)
+    {
+        RTSEIS_ERRMSG("%s", "Failed normalization tests");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed normalization tests");
 
     ierr = testTaper();
     if (ierr != EXIT_SUCCESS)
@@ -911,6 +920,74 @@ int testDetrend()
         return EXIT_FAILURE;
     }
     }; // Loop on npts
+    return EXIT_SUCCESS;
+}
+//============================================================================//
+int testNormalization()
+{
+    /// Normalization
+    int npts = 1001;
+    std::vector<double> x(npts), y;
+    // Put in range [-1,2] then compute mean and stanard deviation
+    double mean = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        x[i] = -1.0 + 3*static_cast<double> (rand())/RAND_MAX;
+        if (i == 0){x[i] =-1;}
+        if (i == 1){x[i] = 2;}
+        mean = mean + x[i];
+    }
+    mean = mean/static_cast<double> (npts);
+    double var = 0;
+    for (auto i=0; i<npts; ++i){var = var + (x[i] - mean)*(x[i] - mean);}
+    auto std = var/static_cast<double> (npts - 1);
+    // sign-bit normalization
+    PostProcessing::SingleChannel::Waveform waveform;
+    try
+    {
+        waveform.setData(x);
+        waveform.normalizeSignBit();
+        y = waveform.getData();
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s", e.what());
+        return EXIT_FAILURE;
+    }
+    double error = 0;
+    for (auto i=0; i<npts; ++i)
+    {
+        double yest =-1;
+        if (x[i] >= 0){yest = 1;}
+        error = std::max(error, std::abs(yest - y[i]));
+    }
+    if (error > 1.e-14)
+    {
+        RTSEIS_ERRMSG("signBit normalization failed %e", error);
+        return EXIT_FAILURE;
+    }
+    // z-score normalization
+    try
+    {
+        waveform.setData(x);
+        waveform.normalizeZScore();
+        y = waveform.getData();
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("%s", e.what());
+        return EXIT_FAILURE;
+    }
+
+    // transform to [-1,1]
+    std::pair<double, double> targetRange(-1, 1);
+/*
+    try
+    {
+        waveform.setData(x);
+        waveform.normalizeMinMax();
+    }
+*/
     return EXIT_SUCCESS;
 }
 //============================================================================//

@@ -30,7 +30,8 @@ TEST(UtilitiesNormalization, signBit)
     std::vector<double> y(npts);
     std::vector<double> yref(npts);
     auto timeStart = std::chrono::high_resolution_clock::now();
-    EXPECT_NO_THROW(signBit.apply(npts, x.data(), y.data()));
+    double *yPtr = y.data();
+    EXPECT_NO_THROW(signBit.apply(npts, x.data(), &yPtr));
     auto timeEnd = std::chrono::high_resolution_clock::now();
     double emax;
     for (auto i=0; i<npts; i++)
@@ -63,7 +64,8 @@ TEST(UtilitiesNormalization, signBit)
                      nptsPass = std::max(1, nptsPass + rand()%50 - 25);
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
-                EXPECT_NO_THROW(signBitRT.apply(nptsPass, &x[nxloc], &y[nxloc]));
+                double *yPtr = static_cast<double *> (y.data()) + nxloc;
+                EXPECT_NO_THROW(signBitRT.apply(nptsPass, &x[nxloc], &yPtr));//&y[nxloc]));
                 nxloc = nxloc + nptsPass;
             }
             signBitRT.resetInitialConditions();

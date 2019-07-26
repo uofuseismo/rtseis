@@ -86,9 +86,9 @@ public:
      * @throws std::invalid_argument if x or y is NULL and nx is positive.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int nx, const double x[], double y[]);
+    void apply(const int nx, const double x[], double *y[]);
     /*! @copydoc apply */
-    void apply(const int nx, const float  x[], float  y[]);
+    void apply(const int nx, const float  x[], float  *y[]);
     /*!
      * @brief Resets the filter to the initial conditions specified
      *        in setInitialConditions().  Note, the sign operation

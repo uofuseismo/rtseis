@@ -34,6 +34,9 @@
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
+#include "rtseis/utilities/normalization/minMax.hpp"
+#include "rtseis/utilities/normalization/signBit.hpp"
+#include "rtseis/utilities/normalization/zscore.hpp"
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 
@@ -1061,6 +1064,74 @@ void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
 }
 
 //----------------------------------------------------------------------------//
+//                                Normalization                               //
+//----------------------------------------------------------------------------//
+
+void Waveform::normalizeMinMax(const std::pair<double, double> targetRange)
+{
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    // Normalize the data
+    RTSeis::Utilities::Normalization::MinMax minMax;
+    const double *x = pImpl->getInputDataPointer();
+    minMax.initialize(len, x, targetRange); // Throws
+    pImpl->resizeOutputData(len);
+    double *y = pImpl->getOutputDataPointer();
+    minMax.apply(len, x, &y);
+    pImpl->lfirstFilter_ = false;
+}
+
+void Waveform::normalizeSignBit()
+{
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    // Normalize the data
+    RTSeis::Utilities::Normalization::SignBit signBit;
+    signBit.initialize();
+    const double *x = pImpl->getInputDataPointer();
+    pImpl->resizeOutputData(len);
+    double *y = pImpl->getOutputDataPointer();
+    signBit.apply(len, x, &y);
+    pImpl->lfirstFilter_ = false;
+}
+
+void Waveform::normalizeZScore()
+{
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    // Normalize the data
+    RTSeis::Utilities::Normalization::ZScore zscore;
+    const double *x = pImpl->getInputDataPointer();
+    pImpl->resizeOutputData(len);
+    double *y = pImpl->getOutputDataPointer();
+    if (len > 1)
+    {
+        zscore.initialize(len, x); // Throws if all points are identical 
+        zscore.apply(len, x, &y);
+    }
+    else
+    {
+        y[0] = 0;
+    }
+    pImpl->lfirstFilter_ = false;
+}
+
+//----------------------------------------------------------------------------//
 //                                   Tapering                                 //
 //----------------------------------------------------------------------------//
 
@@ -1158,7 +1229,7 @@ classifyConvolveMode(const ConvolutionMode mode)
 Utilities::Math::Convolve::Implementation 
 classifyConvolveImplementation(const ConvolutionImplementation implementation)
 {
-    // Classify the convolution implementaiton
+    // Classify the convolution implementation
     Utilities::Math::Convolve::Implementation convcorImpl;
     if (implementation == ConvolutionImplementation::AUTO)
     {   

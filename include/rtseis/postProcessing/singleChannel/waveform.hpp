@@ -559,6 +559,37 @@ public:
                            const bool lzeroPhase=false);
     /*! @} */
 
+    /*! @name Normalization
+     * @{
+     */
+    /*!
+     * @brief Rescales the data from current data range to the target range.
+     * @param[in] targetRange  The target range where targetRange.first is the
+     *                         minimum of the desired range and 
+     *                         targetRange.second is the maximum of the desired
+     *                         range.
+     * @throws std::runtime_error if there is less than 2 data points or 
+     *         all samples in the signal are identical.
+     */
+    void normalizeMinMax(const std::pair<double, double> targetRange = std::make_pair<double, double> (0, 1));
+    /*!
+     * @brief Sets the data to the +1 or -1 depending on the sign of its
+     *        floating point representation.
+     * @note +0 and -0 are mapped to +1 and -1 respectively.
+     */
+    void normalizeSignBit();
+    /*!
+     * @brief Applies z-score normalization, i.e., standardizes with the 
+     *        transform
+     *        \f[
+     *            y = \frac{x - \mu}{\sigma}
+     *        \f]
+     * @note If there is only one data point in the signal then that data
+     *       point will be set to 0.
+     */
+    void normalizeZScore();
+    /*! @} */
+
     /*! @name Tapering and Cutting
      * @{
      */

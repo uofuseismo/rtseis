@@ -77,13 +77,14 @@ void SignBit::resetInitialConditions()
     }
 }
 
-void SignBit::apply(const int nx, const double x[], double y[])
+void SignBit::apply(const int nx, const double x[], double *yIn[])
 {
     if (nx <= 0){return;}
     if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "signBit not initialized");
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -95,13 +96,14 @@ void SignBit::apply(const int nx, const double x[], double y[])
     RTSeis::Utilities::Math::VectorMath::copysign(nx, x, y);
 }
 
-void SignBit::apply(const int nx, const float x[], float y[])
+void SignBit::apply(const int nx, const float x[], float *yIn[])
 {
     if (nx <= 0){return;} 
     if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "signBit not initialized");
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}

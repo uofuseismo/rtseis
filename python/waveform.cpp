@@ -228,10 +228,47 @@ void Waveform::sosBandstopFilter(const std::pair<double,double> fc,
         fprintf(stderr, "%s", ia.what());
         throw std::invalid_argument("SOS filtering failed");
     }
-    return;
 }
 
+/// Normalization
+void Waveform::normalizeMinMax(const std::pair<double, double> targetRange)
+{
+    try
+    {
+        waveform_->normalizeMinMax(targetRange);
+    }
+    catch (const std::exception &e)
+    {
+        fprintf(stderr, "%s", e.what());
+        throw std::runtime_error("minMax normalization failed");
+    } 
+}
 
+void Waveform::normalizeSignBit()
+{
+    try
+    {
+        waveform_->normalizeSignBit();
+    }
+    catch (const std::exception &e)
+    {
+        fprintf(stderr, "%s", e.what());
+        throw std::runtime_error("signBit normalization failed");
+    }
+}
+
+void Waveform::normalizeZScore()
+{
+    try
+    {
+        waveform_->normalizeZScore();
+    }
+    catch (const std::exception &e)
+    {
+        fprintf(stderr, "%s", e.what());
+        throw std::runtime_error("zScore normalization failed");
+    }
+}
 
 /// Taper
 void Waveform::taper(const double pct, const std::string &taperName)
@@ -420,6 +457,13 @@ void init_pp_waveform(py::module &m)
                               py::arg("prototype") = "butterworth",
                               py::arg("ripple") = 5,
                               py::arg("zero_phase") = false);
+    singleChannelWaveform.def("normalize_min_max", &PBPostProcessing::Waveform::normalizeMinMax,
+                              "Min-max normalization of a signal",
+                              py::arg("target_range") = std::make_pair<double, double> (0.0, 1.0));
+    singleChannelWaveform.def("normalize_sign_bit", &PBPostProcessing::Waveform::normalizeSignBit,
+                              "Sign-bit normalization of a signal");
+    singleChannelWaveform.def("normalize_z_score", &PBPostProcessing::Waveform::normalizeZScore,
+                              "z score normalization of a signal");
     singleChannelWaveform.def("taper",   &PBPostProcessing::Waveform::taper,
                               "Tapers the ends of a signal",
                               py::arg("pct") = 5,

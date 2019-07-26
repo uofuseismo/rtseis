@@ -54,6 +54,10 @@ public:
                            const std::string &prototype,
                            const double ripple,
                            const bool zeroPhase);
+    /// Normalization
+    void normalizeMinMax(const std::pair<double, double> targetRange);
+    void normalizeSignBit();
+    void normalizeZScore();
     /// Taper
     void taper(const double pct, const std::string &taperName); 
     /// Set data
