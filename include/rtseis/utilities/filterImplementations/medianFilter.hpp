@@ -1,13 +1,8 @@
-#ifndef RTSEIS_UTILITIES_FILTER_MEDIAN_HPP
-#define RTSEIS_UTILITIES_FILTER_MEDIAN_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_MEDIAN_HPP
+#define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_MEDIAN_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterImplementations
+namespace RTSeis::Utilities::FilterImplementations
 {
 /*!
  * @class MedianFilter medianFilter.hpp "include/rtseis/utilities/filterImplementations/medianFilter.hpp"
@@ -15,6 +10,7 @@ namespace FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
+template<class T = double>
 class MedianFilter
 {
 public:
@@ -59,13 +55,10 @@ public:
      *                then it's length will be increased by 1.
      * @param[in] mode  The processing mode.  By default this
      *                  is for post-processing.
-     * @param[in] precision   The precision of the filter.  By default
-     *                        this is double precision.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
     void initialize(const int n,
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -105,9 +98,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const double x[], double *y[]);
-    /*! @copydoc apply */
-    void apply(const int n, const float x[], float *y[]);
+    void apply(const int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions
@@ -123,7 +114,5 @@ public:
     class MedianFilterImpl;
     std::unique_ptr<MedianFilterImpl> pMedian_;
 }; // End medianFilter 
-} // End filter implementations
-} // End utilties
 } // End RTSeis
 #endif

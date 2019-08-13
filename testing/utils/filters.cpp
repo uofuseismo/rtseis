@@ -813,11 +813,10 @@ TEST(UtilitiesFilterImplementations, medianFilter)
     double y8[8];
     double yref3[8] = {1, 2, 4, 5, 4, 5, 7, 7}; // Matlab soln; IPP has edge effect
     double yref5[8] = {1, 2, 4, 4, 5, 5, 5, 0};
-    MedianFilter median;
+    MedianFilter<double> median;
     EXPECT_NO_THROW(
         median.initialize(3,
-                          RTSeis::ProcessingMode::POST_PROCESSING,
-                          RTSeis::Precision::DOUBLE));
+                          RTSeis::ProcessingMode::POST_PROCESSING));
     double *yptr = &y8[0];
     EXPECT_NO_THROW(median.apply(8, xin, &yptr));
     double error;
@@ -825,8 +824,7 @@ TEST(UtilitiesFilterImplementations, medianFilter)
     EXPECT_LE(error, 1.e-14);
 
     EXPECT_NO_THROW(median.initialize(5,
-                    RTSeis::ProcessingMode::POST_PROCESSING,
-                    RTSeis::Precision::DOUBLE));
+                    RTSeis::ProcessingMode::POST_PROCESSING));
     yptr = &y8[0];
     median.apply(8, xin, &yptr);
     ippsNormDiff_Inf_64f(&y8[4], &yref5[2], 4, &error);
@@ -838,8 +836,7 @@ TEST(UtilitiesFilterImplementations, medianFilter)
     EXPECT_EQ(ierr, 0);
     EXPECT_EQ(npref - 11/2, npts);
     EXPECT_NO_THROW(median.initialize(11,
-                    RTSeis::ProcessingMode::POST_PROCESSING,
-                    RTSeis::Precision::DOUBLE));
+                    RTSeis::ProcessingMode::POST_PROCESSING));
     auto timeStart = std::chrono::high_resolution_clock::now();
     double *y = new double[npts];
     EXPECT_NO_THROW(median.apply(npts, x, &y));
@@ -852,8 +849,7 @@ TEST(UtilitiesFilterImplementations, medianFilter)
     // Now do the packetized tests
     MedianFilter medianrt = median;
     EXPECT_NO_THROW(medianrt.initialize(11,
-                                        RTSeis::ProcessingMode::REAL_TIME,
-                                        RTSeis::Precision::DOUBLE));
+                                        RTSeis::ProcessingMode::REAL_TIME));
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (auto job=0; job<2; job++)

@@ -3,13 +3,15 @@
 #include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/enums.h"
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/medianFilter.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-class MedianFilter::MedianFilterImpl
+template<class T>
+class MedianFilter<T>::MedianFilterImpl
 {
 public:
     /// Default constructor.
@@ -305,17 +307,20 @@ private:
     bool linit_ = false;
 };
 
-MedianFilter::MedianFilter() :
+template<class T>
+MedianFilter<T>::MedianFilter() :
     pMedian_(std::make_unique<MedianFilterImpl> ())
 {
 }
 
-MedianFilter::MedianFilter(const MedianFilter &median)
+template<class T>
+MedianFilter<T>::MedianFilter(const MedianFilter &median)
 {
     *this = median;
 }
 
-MedianFilter& MedianFilter::operator=(const MedianFilter &median)
+template<class T>
+MedianFilter<T>& MedianFilter<T>::operator=(const MedianFilter &median)
 {
     if (&median == this){return *this;}
     if (pMedian_){pMedian_->clear();}
@@ -323,17 +328,20 @@ MedianFilter& MedianFilter::operator=(const MedianFilter &median)
     return *this;
 }
 
-MedianFilter::~MedianFilter() = default;
+template<class T>
+MedianFilter<T>::~MedianFilter() = default;
 
-
-void MedianFilter::clear() noexcept
+template<class T>
+void MedianFilter<T>::clear() noexcept
 {
     pMedian_->clear();
 }
 
-void MedianFilter::initialize(const int n,
-                              const RTSeis::ProcessingMode mode,
-                              const RTSeis::Precision precision)
+/// Initialization
+template<>
+void MedianFilter<double>::initialize(
+    const int n,
+    const RTSeis::ProcessingMode mode)
 {
     clear();
     // Set the mask size
@@ -349,14 +357,41 @@ void MedianFilter::initialize(const int n,
                        n, maskSize);
     }
 #ifdef DEBUG
-    int ierr = pMedian_->initialize(maskSize, mode, precision);
+    int ierr = pMedian_->initialize(maskSize, mode, RTSeis::Precision::DOUBLE);
     assert(ierr == 0);
 #else
-    pMedian_->initialize(maskSize, mode, precision);
+    pMedian_->initialize(maskSize, mode, RTSeis::Precision::DOUBLE);
 #endif
 }
 
-void MedianFilter::setInitialConditions(const int nz, const double zi[])
+template<>
+void MedianFilter<float>::initialize(
+    const int n,
+    const RTSeis::ProcessingMode mode)
+{
+    clear();
+    // Set the mask size
+    if (n < 1)
+    {
+        RTSEIS_THROW_IA("Mask size=%d must be postive", n);
+    }
+    int maskSize = n;
+    if (maskSize%2 == 0)
+    {
+        maskSize = maskSize + 1;
+        RTSEIS_WARNMSG("n=%d should be odd; setting to maskSize=%d",
+                       n, maskSize);
+    }
+#ifdef DEBUG
+    int ierr = pMedian_->initialize(maskSize, mode, RTSeis::Precision::FLOAT);
+    assert(ierr == 0);
+#else
+    pMedian_->initialize(maskSize, mode, RTSeis::Precision::FLOAT);
+#endif
+}
+
+template<class T>
+void MedianFilter<T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!pMedian_->isInitialized())
     {
@@ -371,7 +406,8 @@ void MedianFilter::setInitialConditions(const int nz, const double zi[])
     pMedian_->setInitialConditions(nz, zi);
 }
 
-void MedianFilter::resetInitialConditions()
+template<class T>
+void MedianFilter<T>::resetInitialConditions()
 {
     if (!pMedian_->isInitialized())
     {
@@ -380,13 +416,15 @@ void MedianFilter::resetInitialConditions()
     pMedian_->resetInitialConditions();
 }
 
-bool MedianFilter::isInitialized() const noexcept
+template<class T>
+bool MedianFilter<T>::isInitialized() const noexcept
 {
     bool linit = pMedian_->isInitialized();
     return linit;
 }
 
-int MedianFilter::getInitialConditionLength() const
+template<class T>
+int MedianFilter<T>::getInitialConditionLength() const
 {
     if (!pMedian_->isInitialized())
     {
@@ -396,14 +434,15 @@ int MedianFilter::getInitialConditionLength() const
     return len;
 }
 
-void MedianFilter::apply(const int n, const double x[], double *yIn[])
+template<class T>
+void MedianFilter<T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;} // Nothing to do
     if (!pMedian_->isInitialized())
     {   
         RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
-    double *y = *yIn;
+    T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
@@ -417,28 +456,8 @@ void MedianFilter::apply(const int n, const double x[], double *yIn[])
 #endif
 }
 
-void MedianFilter::apply(const int n, const float x[], float *yIn[])
-{
-    if (n <= 0){return;} // Nothing to do
-    if (!pMedian_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
-    float *y = *yIn;
-    if (x == nullptr || y == nullptr)
-    {
-        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
-        RTSEIS_THROW_RTE("%s", "y is NULL");
-    }
-#ifdef DEBUG
-    int ierr = pMedian_->apply(n, x, y);
-    assert(ierr == 0);
-#else
-    pMedian_->apply(n, x, y);
-#endif
-}
-
-int MedianFilter::getGroupDelay() const
+template<class T>
+int MedianFilter<T>::getGroupDelay() const
 {
     if (!isInitialized())
     {
@@ -447,3 +466,7 @@ int MedianFilter::getGroupDelay() const
     int grpDelay = pMedian_->getGroupDelay();
     return grpDelay;
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<double>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<float>;
