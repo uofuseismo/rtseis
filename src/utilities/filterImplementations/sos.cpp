@@ -407,7 +407,6 @@ SOSFilter<T>& SOSFilter<T>::operator=(const SOSFilter &sos)
     if (&sos == this){return *this;}
     if (pSOS_){pSOS_->clear();}
     pSOS_ = std::make_unique<SOSFilterImpl> (*sos.pSOS_);
-    //pSOS_ = std::unique_ptr<SOSFilterImpl> (new SOSFilterImpl(*sos.pSOS_));
     return *this;
 }
 

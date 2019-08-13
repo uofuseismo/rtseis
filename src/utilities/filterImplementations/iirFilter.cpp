@@ -583,7 +583,7 @@ class IIRFilter::IIRFilterImpl
 //============================================================================//
 
 IIRFilter::IIRFilter(void) :
-    pIIR_(new IIRFilterImpl())
+    pIIR_(std::make_unique<IIRFilterImpl> ())
 {
     return;
 }
@@ -598,7 +598,7 @@ IIRFilter& IIRFilter::operator=(const IIRFilter &iir)
 {
     if (&iir == this){return *this;}
     if (pIIR_){pIIR_->clear();}
-    pIIR_ = std::unique_ptr<IIRFilterImpl> (new IIRFilterImpl(*iir.pIIR_));
+    pIIR_ = std::make_unique<IIRFilterImpl> (*iir.pIIR_);
     return *this;
 }
 

@@ -732,7 +732,7 @@ class MultiRateFIRFilter::MultiRateFIRImpl
 };
 
 MultiRateFIRFilter::MultiRateFIRFilter() :
-    pFIR_(new MultiRateFIRImpl())
+    pFIR_(std::make_unique<MultiRateFIRImpl> ())
 {
     return;
 }
@@ -747,7 +747,7 @@ MultiRateFIRFilter::operator=(const MultiRateFIRFilter &firmr)
 {
     if (&firmr == this){return *this;}
     if (pFIR_){pFIR_->clear();}
-    pFIR_ = std::unique_ptr<MultiRateFIRImpl> (new MultiRateFIRImpl(*firmr.pFIR_));
+    pFIR_ = std::make_unique<MultiRateFIRImpl> (*firmr.pFIR_);
     return *this;
 }
 

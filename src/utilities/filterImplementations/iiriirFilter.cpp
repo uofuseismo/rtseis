@@ -348,7 +348,7 @@ private:
 };
 
 IIRIIRFilter::IIRIIRFilter(void) :
-    pIIRIIR_(new IIRIIRImpl())
+    pIIRIIR_(std::make_unique<IIRIIRImpl> ())
 {
     return;
 }
@@ -363,7 +363,7 @@ IIRIIRFilter& IIRIIRFilter::operator=(const IIRIIRFilter &iiriir)
 {
     if (&iiriir == this){return *this;}
     if (pIIRIIR_){pIIRIIR_->clear();}
-    pIIRIIR_ = std::unique_ptr<IIRIIRImpl> (new IIRIIRImpl(*iiriir.pIIRIIR_));
+    pIIRIIR_ = std::make_unique<IIRIIRImpl>(*iiriir.pIIRIIR_);
     return *this;
 }
 
