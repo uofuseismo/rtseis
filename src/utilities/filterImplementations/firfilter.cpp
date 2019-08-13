@@ -3,13 +3,15 @@
 #include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/enums.h"
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-class FIRFilter::FIRImpl
+template<class T>
+class FIRFilter<T>::FIRImpl
 {
 public:
     /// Default constructor
@@ -351,36 +353,37 @@ private:
 
 //============================================================================//
 
-FIRFilter::FIRFilter() :
-    pFIR_(new FIRImpl())
+template<class T>
+FIRFilter<T>::FIRFilter() :
+    pFIR_(std::make_unique<FIRImpl> ())
 {
     return;
 }
 
-FIRFilter::~FIRFilter()
-{
-    clear();
-    return;
-}
+template<class T>
+FIRFilter<T>::~FIRFilter() = default;
 
-FIRFilter::FIRFilter(const FIRFilter &fir)
+template<class T>
+FIRFilter<T>::FIRFilter(const FIRFilter &fir)
 {
     *this = fir;
     return;
 }
 
-FIRFilter& FIRFilter::operator=(const FIRFilter &fir)
+template<class T>
+FIRFilter<T>& FIRFilter<T>::operator=(const FIRFilter &fir)
 {
     if (&fir == this){return *this;}
     if (pFIR_){pFIR_->clear();}
-    pFIR_ = std::unique_ptr<FIRImpl> (new FIRImpl(*fir.pFIR_));
+    pFIR_ = std::make_unique<FIRImpl> (*fir.pFIR_);
     return *this;
 }
 
-void FIRFilter::initialize(const int nb, const double b[],
-                           const RTSeis::ProcessingMode mode,
-                           const RTSeis::Precision precision,
-                           FIRImplementation implementation)
+/// Initialization
+template<>
+void FIRFilter<double>::initialize(const int nb, const double b[],
+                                   const RTSeis::ProcessingMode mode,
+                                   FIRImplementation implementation)
 {
     clear();
     // Checks
@@ -389,6 +392,7 @@ void FIRFilter::initialize(const int nb, const double b[],
         if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
         RTSEIS_THROW_IA("%s", "b is NULL");
     }
+    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
 #ifdef DEBUG
     int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
     assert(ierr == 0);
@@ -397,12 +401,36 @@ void FIRFilter::initialize(const int nb, const double b[],
 #endif
 }
 
-void FIRFilter::clear() noexcept
+template<>
+void FIRFilter<float>::initialize(const int nb, const double b[],
+                                  const RTSeis::ProcessingMode mode,
+                                  FIRImplementation implementation)
+{
+    clear();
+    // Checks
+    if (nb < 1 || b == nullptr)
+    {
+        if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
+        RTSEIS_THROW_IA("%s", "b is NULL");
+    }
+    constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
+#ifdef DEBUG
+    int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
+    assert(ierr == 0);
+#else
+    pFIR_->initialize(nb, b, mode, precision, implementation);
+#endif
+}
+
+template<class T>
+void FIRFilter<T>::clear() noexcept
 {
     pFIR_->clear();
 }
  
-void FIRFilter::setInitialConditions(const int nz, const double zi[])
+/// Initial conditions
+template<class T>
+void FIRFilter<T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
     {
@@ -417,7 +445,8 @@ void FIRFilter::setInitialConditions(const int nz, const double zi[])
     pFIR_->setInitialConditions(nz, zi);
 }
 
-void FIRFilter::resetInitialConditions()
+template<class T>
+void FIRFilter<T>::resetInitialConditions()
 {
     if (!isInitialized())
     {
@@ -426,14 +455,16 @@ void FIRFilter::resetInitialConditions()
     pFIR_->resetInitialConditions();
 }
 
-void FIRFilter::apply(const int n, const double x[], double *yIn[])
+/// Filter application
+template<class T>
+void FIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;} // Nothing to do
     if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
-    double *y = *yIn;
+    T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
@@ -448,28 +479,9 @@ void FIRFilter::apply(const int n, const double x[], double *yIn[])
     return;
 }
 
-void FIRFilter::apply(const int n, const float x[], float *yIn[])
-{
-    if (n <= 0){return;} // Nothing to do
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
-    float *y = *yIn;
-    if (x == nullptr || y == nullptr)
-    {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
-        RTSEIS_THROW_IA("%s", "Error y is NULL");
-    }
-#ifdef DEBUG
-    int ierr = pFIR_->apply(n, x, y); 
-    assert(ierr == 0);
-#else
-    pFIR_->apply(n, x, y);
-#endif
-}
-
-int FIRFilter::getInitialConditionLength() const
+/// Utility routine for initial conditon length
+template<class T>
+int FIRFilter<T>::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -480,13 +492,17 @@ int FIRFilter::getInitialConditionLength() const
     return len;
 }
 
-bool FIRFilter::isInitialized() const noexcept
+/// Initialized?
+template<class T>
+bool FIRFilter<T>::isInitialized() const noexcept
 {
     bool linit = pFIR_->isInitialized();
     return linit;
 }
 
-void FIRFilter::getInitialConditions(const int nz, double zi[]) const
+/// Get initial conditions
+template<class T>
+void FIRFilter<T>::getInitialConditions(const int nz, double zi[]) const
 {
     if (!isInitialized())
     {
@@ -499,3 +515,7 @@ void FIRFilter::getInitialConditions(const int nz, double zi[]) const
     }
     pFIR_->getInitialConditions(nz, zi);
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::FilterImplementations::FIRFilter<double>;
+template class RTSeis::Utilities::FilterImplementations::FIRFilter<float>;

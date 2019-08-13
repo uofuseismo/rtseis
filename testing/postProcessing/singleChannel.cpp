@@ -603,11 +603,10 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
                                   Utilities::FilterDesign::FIRWindow::HAMMING);
     int ntaps = fir.getNumberOfFilterTaps();
     std::vector<double> b = fir.getFilterTaps();
-    Utilities::FilterImplementations::FIRFilter firFilt;
+    Utilities::FilterImplementations::FIRFilter<double> firFilt;
     std::vector<double> yfirRef(npts);
     firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     double *yptr = yfirRef.data();
     firFilt.apply(npts, x.data(), &yptr); //yfirRef.data());
     firFilt.clear();
@@ -654,8 +653,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     xpad.resize(x.size()+nextra, 0);
     std::vector<double> ytemp(xpad.size());
     firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     yptr = ytemp.data();
     firFilt.apply(npts+nextra, xpad.data(), &yptr);
     firFilt.clear();
@@ -700,8 +698,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     ntaps = fir.getNumberOfFilterTaps();
     b = fir.getFilterTaps();
     firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     xpad = x; 
     xpad.resize(x.size()+nextra, 0);
     ytemp.resize(xpad.size());
@@ -749,8 +746,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     ntaps = fir.getNumberOfFilterTaps();
     b = fir.getFilterTaps();
     firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     yptr = ytemp.data();
     firFilt.apply(npts, x.data(), &yptr);
     firFilt.clear();

@@ -78,10 +78,9 @@ classifyFIRWindow(const FIRWindow windowIn);
     const double *x = pImpl->getInputDataPointer(); \
     ippsCopy_64f(x, xtemp, len); \
     ippsZero_64f(&xtemp[len], npad - len); \
-    RTSeis::Utilities::FilterImplementations::FIRFilter firFilter; \
+    RTSeis::Utilities::FilterImplementations::FIRFilter<double> firFilter; \
     firFilter.initialize(nt, taps.data(), \
                    ProcessingMode::POST_PROCESSING, \
-                   Precision::DOUBLE, \
                    Utilities::FilterImplementations::FIRImplementation::DIRECT); \
     firFilter.apply(npad, xtemp, &ytemp); \
     ippsFree(xtemp); \
@@ -958,9 +957,10 @@ void Waveform<T>::firBandstopFilter(const int ntapsIn,
 //                               General Filtering                            //
 //----------------------------------------------------------------------------//
 
-template<class T>
-void Waveform<T>::firFilter(const Utilities::FilterRepresentations::FIR &fir,
-                            const bool lremovePhase)
+template<>
+void Waveform<double>::firFilter(
+    const Utilities::FilterRepresentations::FIR &fir,
+    const bool lremovePhase)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -977,15 +977,14 @@ void Waveform<T>::firFilter(const Utilities::FilterRepresentations::FIR &fir,
         RTSEIS_THROW_IA("%s", "No filter taps");
     }
     // Initialize filter
-    RTSeis::Utilities::FilterImplementations::FIRFilter firFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<double> firFilter;
     firFilter.initialize(nb, taps.data(),
                    ProcessingMode::POST_PROCESSING,
-                   Precision::DOUBLE,
                    Utilities::FilterImplementations::FIRImplementation::DIRECT);
     pImpl->resizeOutputData(len);
     // Standard FIR filtering 
-    const T *x = pImpl->getInputDataPointer();
-    T *yout = pImpl->getOutputDataPointer();
+    const double *x = pImpl->getInputDataPointer();
+    double *yout = pImpl->getOutputDataPointer();
     if (!lremovePhase)
     {
         firFilter.apply(len, x, &yout);

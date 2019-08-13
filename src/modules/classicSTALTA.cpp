@@ -111,7 +111,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             Ipp64f *xsta = ippsMalloc_64f(nsta_);
             double xdiv = 1.0/static_cast<double> (nsta_);
             ippsSet_64f(xdiv, xsta, nsta_);
-            firNum_.initialize(nsta_, xsta, modeRT, precision,
+            firNum_.initialize(nsta_, xsta, modeRT,
               RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
             // Set the initial conditions to 0
             ippsSet_64f(0, xsta, nsta_);
@@ -121,7 +121,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             Ipp64f *xlta = ippsMalloc_64f(nlta_);
             xdiv = 1.0/static_cast<double> (nlta_);
             ippsSet_64f(xdiv, xlta, nlta_);
-            firDen_.initialize(nlta_, xlta, modeRT, precision,
+            firDen_.initialize(nlta_, xlta, modeRT,
                  RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
             // Set the initial conditions to something large
             double xset = DBL_MAX/static_cast<double> (nlta_)/4.0; 
@@ -230,6 +230,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             }
             return 0;
         }
+/*
         /// Applies the STA/LTA
         int apply(const int nx, const float x[], float y[])
         {
@@ -238,11 +239,14 @@ class ClassicSTALTA::ClassicSTALTAImpl
             {
                 int nloc = std::min(chunkSize_, nx - i);
                 // Compute the squared signal
-                ippsSqr_32f(&x[i], x232f_, nloc);
+                auto xPtr = reinterpret_cast<float *> (x232f_);
+                ippsSqr_32f(&x[i], xPtr, nloc);
                 // Compute the numerator average 
-                firNum_.apply(nloc, x232f_, &ynum32f_);
+                auto yPtr = reinterpret_cast<float *> (ynum32f_);
+                firNum_.apply(nloc, xPtr, &yPtr); //ynum32f_);
                 // Compute the denominator average
-                firDen_.apply(nloc, x232f_, &yden32f_);
+                auto yPtr = reinterpret_cast<float *> (yden32f_);
+                firDen_.apply(nloc, xPtr, &yPtr); //yden32f_);
                 // Pointwise division
                 IppStatus status = ippsDiv_32f(yden32f_, ynum32f_, &y[i], nloc);
                 if (status != ippStsNoErr)
@@ -273,11 +277,12 @@ class ClassicSTALTA::ClassicSTALTAImpl
             }
             return 0;
         }
+*/
     private:
         /// Tabulates the numerator short-term average
-        RTSeis::Utilities::FilterImplementations::FIRFilter firNum_;
+        RTSeis::Utilities::FilterImplementations::FIRFilter<double> firNum_;
         /// Tabulates the denominator long-term average
-        RTSeis::Utilities::FilterImplementations::FIRFilter firDen_;
+        RTSeis::Utilities::FilterImplementations::FIRFilter<double> firDen_;
         /// The characteristic function.  This has dimension [chunkSize_].
         Ipp64f *x264f_ = nullptr;
         /// Workspace array for holding numerator.  This has
@@ -720,6 +725,7 @@ int ClassicSTALTA::apply(const int nx, const double x[], double y[])
     return 0;
 }
 
+/*
 int ClassicSTALTA::apply(const int nx, const float x[], float y[])
 {
     if (nx <= 0){return 0;} // Nothing to do
@@ -742,3 +748,4 @@ int ClassicSTALTA::apply(const int nx, const float x[], float y[])
     }
     return 0;
 }
+*/

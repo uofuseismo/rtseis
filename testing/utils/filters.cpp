@@ -606,10 +606,9 @@ TEST(UtilitiesFilterImplementations, fir)
     EXPECT_EQ(ierr, 0);
     EXPECT_EQ(npts, npref);
     // Make a post-processing solution
-    FIRFilter fir;
+    FIRFilter<double> fir;
     EXPECT_NO_THROW(fir.initialize(nb, b,
                                    RTSeis::ProcessingMode::POST_PROCESSING,
-                                   RTSeis::Precision::DOUBLE,
                                    FIRImplementation::DIRECT));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
@@ -626,7 +625,6 @@ TEST(UtilitiesFilterImplementations, fir)
     FIRFilter firrt;
     EXPECT_NO_THROW(firrt.initialize(nb, b,
                                      RTSeis::ProcessingMode::REAL_TIME,
-                                     RTSeis::Precision::DOUBLE,
                                      FIRImplementation::DIRECT));
     fir = firrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
@@ -1158,8 +1156,7 @@ void lowpassFilterThenDownsample(const int npts, const int nfir,
     FIRFilter firFilter;
     auto taps = fir.getFilterTaps();
     firFilter.initialize(taps.size(), taps.data(),
-                         RTSeis::ProcessingMode::POST_PROCESSING,
-                         RTSeis::Precision::DOUBLE);
+                         RTSeis::ProcessingMode::POST_PROCESSING);
     // Create a downsampler
     Downsample downsample;
     downsample.initialize(downFactor,

@@ -35,8 +35,8 @@ public:
         return *this; 
     }
 
-    FilterImplementations::FIRFilter mRealFIRFilter;
-    FilterImplementations::FIRFilter mImagFIRFilter;
+    FilterImplementations::FIRFilter<double> mRealFIRFilter;
+    FilterImplementations::FIRFilter<double> mImagFIRFilter;
     double mMean = 0;
     int mNumberOfTaps = 0;
     bool mZeroPhase = true;
@@ -126,12 +126,10 @@ void FIREnvelope::initialize(const int ntaps,
         auto zfir = FilterDesign::FIR::HilbertTransformer(ntaps - 1, beta);
         auto rfir = zfir.first.getFilterTaps();
         pImpl->mRealFIRFilter.initialize(rfir.size(), rfir.data(),
-                                         mode, precision,
-                                         direct);
+                                         mode, direct);
         auto cfir = zfir.second.getFilterTaps();
         pImpl->mImagFIRFilter.initialize(cfir.size(), cfir.data(),
-                                         mode, precision,
-                                         direct);
+                                         mode, direct);
     }
     catch (const std::exception &e) 
     {

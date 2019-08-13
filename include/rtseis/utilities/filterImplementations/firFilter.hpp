@@ -1,22 +1,17 @@
-#ifndef RTSEIS_UTILITIES_FILTER_FIR_HPP
-#define RTSEIS_UTILITIES_FILTER_FIR_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_FIR_HPP
+#define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_FIR_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
 #include "rtseis/utilities/filterImplementations/enums.hpp"
 
-namespace RTSeis
+namespace RTSeis::Utilities::FilterImplementations
 {
-namespace Utilities
-{
-namespace FilterImplementations
-{
-
 /*!
  * @class FIRFilter firFilter.hpp "include/rtseis/utilities/filterImplementations/firFilter.hpp"
  * @brief This is the core implementation for FIR filtering.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
+template<class T = double>
 class FIRFilter
 {
 public:
@@ -62,15 +57,12 @@ public:
      *                  dimension [nb].
      * @param[in] mode  The processing mode.  By default this
      *                  is for post-processing.
-     * @param[in] precision   The precision of the filter.  By default
-     *                        this is double precision.
      * @param[in] implementation  Defines the implementation.
      *                            The default is to use the direct form.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
     void initialize(const int nb, const double b[],
                     const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE,
                     FIRImplementation implementation = FIRImplementation::DIRECT);
     /*!
      * @brief Determines if the module is initialized.
@@ -116,9 +108,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const double x[], double *y[]);
-    /*! @copydoc apply */
-    void apply(const int n, const float x[], float *y[]);
+    void apply(const int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions
@@ -134,7 +124,5 @@ private:
     class FIRImpl;
     std::unique_ptr<FIRImpl> pFIR_;
 }; // FIR
-} // filterimplementations
-} // utilties
 } // rtseis
 #endif
