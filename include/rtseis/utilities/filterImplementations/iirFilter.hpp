@@ -1,22 +1,17 @@
-#ifndef RTSEIS_UTILS_FILTER_IIR_HPP
-#define RTSEIS_UTILS_FILTER_IIR_HPP 1
+#ifndef RTSEIS_UTILS_FILTERFILTERIMPLEMENTATION_IIR_HPP
+#define RTSEIS_UTILS_FILTERFILTERIMPLEMENTATION_IIR_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
 #include "rtseis/utilities/filterImplementations/enums.hpp"
 
-namespace RTSeis
+namespace RTSeis::Utilities::FilterImplementations
 {
-namespace Utilities
-{
-namespace FilterImplementations
-{
-
 /*!
  * @class IIRFilter iirFilter.hpp "include/rtseis/utilities/filterImplementations/iirFilter.hpp"
  * @brief This is the core implementation for IIR filtering.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
+template<class T = double>
 class IIRFilter
 {
 public:
@@ -64,8 +59,6 @@ public:
      *                   dimension [na].
      * @param[in] mode   Defines whether the filter is for real-time
      *                   or post-processing.
-     * @param[in] precision  Defines the precision of the filter
-     *                        implementation.
      * @param[in] implementation  Defines the algorithmic filter
      *                            implementation.
      * @throws std::invalid_argument if any arguments are invalid.
@@ -73,7 +66,6 @@ public:
     void initialize(const int nb, const double b[],
                     const int na, const double a[],
                     const RTSeis::ProcessingMode mode =  RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE,
                     const IIRDFImplementation implementation = IIRDFImplementation::DF2_FAST);
     /*!
      * @brief Determines if the module is initialized.
@@ -109,9 +101,7 @@ public:
      * @throws std;:invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const double x[], double *y[]);
-    /*! @copydoc apply() */
-    void apply(const int n, const float x[], float *y[]);
+    void apply(const int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions to those set in
      *        \c setInitialConditions().
@@ -128,7 +118,5 @@ private:
     class IIRFilterImpl;
     std::unique_ptr<IIRFilterImpl> pIIR_;
 }; // IIR
-}; // filterimplementations
-}; // utilties
-}; // rtseis
+} // rtseis
 #endif

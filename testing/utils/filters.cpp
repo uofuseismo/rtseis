@@ -179,15 +179,13 @@ TEST(UtilitiesFilterImplementations, iir)
     EXPECT_EQ(ierr, 0);
     EXPECT_EQ(npts, npref);
     // Compute the zero-phase IIR filter alternative
-    IIRFilter iir;
-    IIRFilter iir_slow;
+    IIRFilter<double> iir;
+    IIRFilter<double> iir_slow;
     EXPECT_NO_THROW(iir.initialize(nb, b, na, a,
                                    RTSeis::ProcessingMode::POST_PROCESSING,
-                                   RTSeis::Precision::DOUBLE,
                                    IIRDFImplementation::DF2_FAST));
     EXPECT_NO_THROW(iir_slow.initialize(nb, b, na, a,
                                         RTSeis::ProcessingMode::POST_PROCESSING,
-                                        RTSeis::Precision::DOUBLE,
                                         IIRDFImplementation::DF2_SLOW));
     double *yref = new double[npts];
     double *yref_slow = new double[npts];
@@ -220,7 +218,6 @@ TEST(UtilitiesFilterImplementations, iir)
     IIRFilter iir2;
     EXPECT_NO_THROW(iir2.initialize(nb2, b2, na2, a2,
                                     RTSeis::ProcessingMode::POST_PROCESSING,
-                                    RTSeis::Precision::DOUBLE,
                                     IIRDFImplementation::DF2_FAST));
     timeStart = std::chrono::high_resolution_clock::now();
     EXPECT_NO_THROW(iir2.apply(npts, x, &y2));
@@ -235,7 +232,6 @@ TEST(UtilitiesFilterImplementations, iir)
     IIRFilter iirrt;
     EXPECT_NO_THROW(iirrt.initialize(nb, b, na, a,
                                      RTSeis::ProcessingMode::REAL_TIME,
-                                     RTSeis::Precision::DOUBLE,
                                      IIRDFImplementation::DF2_FAST));
     iir = iirrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
@@ -280,7 +276,6 @@ TEST(UtilitiesFilterImplementations, iir)
     // Retry this for the slow filter implementation
     EXPECT_NO_THROW(iir_slow.initialize(nb, b, na, a,
                                         RTSeis::ProcessingMode::REAL_TIME,
-                                        RTSeis::Precision::DOUBLE,
                                         IIRDFImplementation::DF2_SLOW));
     iir = iir_slow;
     for (int job=0; job<2; job++)
@@ -367,9 +362,8 @@ TEST(UtilitiesFilterImplementations, iiriir)
     EXPECT_EQ(ierr, 0);
     EXPECT_EQ(npts, npref);
     // Compute the zero-phase IIR filter alternative
-    IIRIIRFilter iiriir;
-    EXPECT_NO_THROW(iiriir.initialize(nb, b, na, a,
-                                      RTSeis::Precision::DOUBLE));
+    IIRIIRFilter<double> iiriir;
+    EXPECT_NO_THROW(iiriir.initialize(nb, b, na, a));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
     EXPECT_NO_THROW(iiriir.apply(npts, x, &y));

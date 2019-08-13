@@ -400,12 +400,11 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     std::vector<double> a = ba.getDenominatorCoefficients();
     int nb = static_cast<int> (b.size());
     int na = static_cast<int> (a.size());
-    Utilities::FilterImplementations::IIRFilter iirFilt; 
-    Utilities::FilterImplementations::IIRIIRFilter iiriirFilt;
+    Utilities::FilterImplementations::IIRFilter<double> iirFilt; 
+    Utilities::FilterImplementations::IIRIIRFilter<double> iiriirFilt;
     std::vector<double> yiirRef(npts);
     iirFilt.initialize(nb, b.data(), na, a.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     double *yptr = yiirRef.data();
     iirFilt.apply(npts, x.data(), &yptr); //yiirRef.data());
     iirFilt.clear();
@@ -452,8 +451,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     nb = static_cast<int> (b.size());
     na = static_cast<int> (a.size());
     std::vector<double> ytemp(npts);
-    iiriirFilt.initialize(nb, b.data(), na, a.data(),
-                          RTSeis::Precision::DOUBLE);
+    iiriirFilt.initialize(nb, b.data(), na, a.data());
     yptr = ytemp.data();
     iiriirFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     iiriirFilt.clear();
@@ -499,8 +497,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     a = ba.getDenominatorCoefficients();
     nb = static_cast<int> (b.size());
     na = static_cast<int> (a.size());
-    iiriirFilt.initialize(nb, b.data(), na, a.data(),
-                          RTSeis::Precision::DOUBLE);
+    iiriirFilt.initialize(nb, b.data(), na, a.data());
     yptr = ytemp.data();
     iiriirFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     iiriirFilt.clear();
@@ -546,8 +543,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     nb = static_cast<int> (b.size());
     na = static_cast<int> (a.size());
     iirFilt.initialize(nb, b.data(), na, a.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     yptr = ytemp.data();
     iirFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     iirFilt.clear();

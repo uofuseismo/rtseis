@@ -3,13 +3,15 @@
 #include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/enums.h"
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-class IIRIIRFilter::IIRIIRImpl
+template<class T>
+class IIRIIRFilter<T>::IIRIIRImpl
 {
 public:
     /// Default constructor
@@ -347,19 +349,21 @@ private:
     bool linit_ = false;
 };
 
-IIRIIRFilter::IIRIIRFilter(void) :
+/// Constructors
+template<class T>
+IIRIIRFilter<T>::IIRIIRFilter() :
     pIIRIIR_(std::make_unique<IIRIIRImpl> ())
 {
-    return;
 }
 
-IIRIIRFilter::IIRIIRFilter(const IIRIIRFilter &iiriir)
+template<class T>
+IIRIIRFilter<T>::IIRIIRFilter(const IIRIIRFilter &iiriir)
 {
     *this = iiriir;
-    return;
 }
 
-IIRIIRFilter& IIRIIRFilter::operator=(const IIRIIRFilter &iiriir)
+template<class T>
+IIRIIRFilter<T>& IIRIIRFilter<T>::operator=(const IIRIIRFilter &iiriir)
 {
     if (&iiriir == this){return *this;}
     if (pIIRIIR_){pIIRIIR_->clear();}
@@ -367,21 +371,21 @@ IIRIIRFilter& IIRIIRFilter::operator=(const IIRIIRFilter &iiriir)
     return *this;
 }
 
-IIRIIRFilter::~IIRIIRFilter(void)
+template<class T>
+IIRIIRFilter<T>::~IIRIIRFilter()
 {
     pIIRIIR_->clear();
-    return;
 }
 
-void IIRIIRFilter::clear() noexcept
+template<class T>
+void IIRIIRFilter<T>::clear() noexcept
 {
     pIIRIIR_->clear();
-    return;
 }
 
-void IIRIIRFilter::initialize(const int nb, const double b[],
-                              const int na, const double a[],
-                              const RTSeis::Precision precision)
+template<>
+void IIRIIRFilter<double>::initialize(const int nb, const double b[],
+                                      const int na, const double a[])
 {
     clear();
     // Check inputs
@@ -396,6 +400,7 @@ void IIRIIRFilter::initialize(const int nb, const double b[],
     {
         RTSEIS_THROW_IA("%s", "a[0] cannot equal 0");
     }
+    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
 #ifdef DEBUG
     int ierr = pIIRIIR_->initialize(nb, b, na, a, precision);
     assert(ierr == 0);
@@ -404,7 +409,35 @@ void IIRIIRFilter::initialize(const int nb, const double b[],
 #endif
 }
 
-void IIRIIRFilter::setInitialConditions(const int nz, const double zi[])
+template<>
+void IIRIIRFilter<float>::initialize(const int nb, const double b[],
+                                     const int na, const double a[])
+{
+    clear();
+    // Check inputs
+    if (nb < 1 || na < 1 || b == nullptr || a == nullptr)
+    {
+        if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
+        if (na < 1){RTSEIS_THROW_IA("%s", "No a coefficients");}
+        if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
+        RTSEIS_THROW_IA("%s", "a is NULL");
+    }
+    if (a[0] == 0)
+    {
+        RTSEIS_THROW_IA("%s", "a[0] cannot equal 0");
+    }
+    constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
+#ifdef DEBUG
+    int ierr = pIIRIIR_->initialize(nb, b, na, a, precision);
+    assert(ierr == 0);
+#else
+    pIIRIIR_->initialize(nb, b, na, a, precision);
+#endif
+}
+
+/// Initial conditions
+template<class T>
+void IIRIIRFilter<T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
     {
@@ -419,20 +452,23 @@ void IIRIIRFilter::setInitialConditions(const int nz, const double zi[])
     pIIRIIR_->setInitialConditions(nz, zi);
 }
 
-bool IIRIIRFilter::isInitialized() const noexcept
+template<class T>
+bool IIRIIRFilter<T>::isInitialized() const noexcept
 {
     bool linit = pIIRIIR_->isInitialized();
     return linit;
 }
 
-void IIRIIRFilter::apply(const int n, const double x[], double *yIn[])
+/// Apply
+template<class T>
+void IIRIIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;}
     if (!pIIRIIR_->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
-    double *y = *yIn;
+    T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -446,28 +482,8 @@ void IIRIIRFilter::apply(const int n, const double x[], double *yIn[])
 #endif
 }
 
-void IIRIIRFilter::apply(const int n, const float x[], float *yIn[])
-{
-    if (n <= 0){return;} 
-    if (!pIIRIIR_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
-    float *y = *yIn;
-    if (x == nullptr || y == nullptr)
-    {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
-    }
-#ifdef DEBUG
-    int ierr = pIIRIIR_->apply(n, x, y);
-    assert(ierr == 0);
-#else
-    pIIRIIR_->apply(n, x, y);
-#endif
-}
-
-void IIRIIRFilter::resetInitialConditions()
+template<class T>
+void IIRIIRFilter<T>::resetInitialConditions()
 {
     if (!pIIRIIR_->isInitialized())
     {
@@ -476,7 +492,8 @@ void IIRIIRFilter::resetInitialConditions()
     pIIRIIR_->resetInitialConditions();
 }
 
-int IIRIIRFilter::getInitialConditionLength() const
+template<class T>
+int IIRIIRFilter<T>::getInitialConditionLength() const
 {
     if (!pIIRIIR_->isInitialized())
     {
@@ -486,7 +503,8 @@ int IIRIIRFilter::getInitialConditionLength() const
     return len;
 }
 
-int IIRIIRFilter::getFilterOrder() const
+template<class T>
+int IIRIIRFilter<T>::getFilterOrder() const
 {
     if (!pIIRIIR_->isInitialized())
     {
@@ -495,3 +513,7 @@ int IIRIIRFilter::getFilterOrder() const
     int len = pIIRIIR_->getFilterOrder();
     return len;
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::FilterImplementations::IIRIIRFilter<double>;
+template class RTSeis::Utilities::FilterImplementations::IIRIIRFilter<float>;

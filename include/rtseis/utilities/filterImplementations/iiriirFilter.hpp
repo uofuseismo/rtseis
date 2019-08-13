@@ -1,13 +1,8 @@
-#ifndef RTSEIS_UTILS_FILTER_IIRIIR_HPP
-#define RTSEIS_UTILS_FILTER_IIRIIR_HPP 1
+#ifndef RTSEIS_UTILS_FILTERIMPLEMENTATIONS_IIRIIR_HPP
+#define RTSEIS_UTILS_FILTERIMPLEMENTATIONS_IIRIIR_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterImplementations
+namespace RTSeis::Utilities::FilterImplementations
 {
 /*!
  * @class IIRIIRFilter iiriirFilter.hpp "include/rtseis/utilities/filterImplementations/iiriirFilter.hpp"
@@ -16,6 +11,7 @@ namespace FilterImplementations
  * @ingroup rtseis_utils_filters
  * @copyright Ben Baker distributed under the MIT license.
  */
+template<class T = double>
 class IIRIIRFilter
 {
 public:
@@ -59,8 +55,7 @@ public:
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
     void initialize(const int nb, const double b[],
-                    const int na, const double a[],
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+                    const int na, const double a[]);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -94,11 +89,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const double x[], double *y[]);
-    /*!
-     * @copydoc apply
-     */
-    void apply(const int n, const float x[], float *y[]); 
+    void apply(const int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().  Note, this will not do anything
@@ -123,7 +114,5 @@ private:
     class IIRIIRImpl;
     std::unique_ptr<IIRIIRImpl> pIIRIIR_;
 }; // iiriirfilter
-}; // filterimplementations
-}; // utilities
-}; // rtseis
+} // rtseis
 #endif
