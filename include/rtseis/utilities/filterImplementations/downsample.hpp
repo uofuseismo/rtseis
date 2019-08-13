@@ -1,13 +1,9 @@
-#ifndef RTSEIS_UTILITIES_FILTER_DOWNSAMPLE_HPP
-#define RTSEIS_UTILITIES_FILTER_DOWNSAMPLE_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_DOWNSAMPLE_HPP
+#define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_DOWNSAMPLE_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
 
-namespace RTSeis
+namespace RTSeis::Utilities::FilterImplementations
 {
-namespace Utilities
-{
-
 /*!
  * @defgroup rtseis_utils_filters Filter Implementations
  * @brief These are the core real-time and post-processing 
@@ -15,8 +11,6 @@ namespace Utilities
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils
  */    
-namespace FilterImplementations
-{
 
 /*!
  * @class Downsample downsample.hpp "include/rtseis/utilities/filterImplementations/downsample.hpp"
@@ -24,6 +18,7 @@ namespace FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
+template<class T = double>
 class Downsample
 {
 public:
@@ -74,15 +69,12 @@ public:
      * @param[in] downFactor  The downsampling factor.  This will retain
      *                        every (downFactor-1)'th sample.  This must be
      *                        positive.
-     * @param[in] mode  The processing mode.  By default this
-     *                  is for post-processing.
-     * @param[in] precision   The precision of the filter.  By default
-     *                        this is double precision.
+     * @param[in] mode        The processing mode.  By default this
+     *                        is for post-processing.
      * @throws std::invalid_argument if downFactor is invalid.
      */
     void initialize(const int downFactor,
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -125,11 +117,8 @@ public:
      * @throws std::invalid_argument if x or y is NULL.
      * @throws std::runtime_error if the module is not initialized.
      */
-    void apply(const int nx, const double x[],
-               const int ny, int *nyDown, double *y[]);
-    /*! @copydoc apply */
-    void apply(const int nx, const float x[],
-               const int ny, int *nyDown, float *y[]);
+    void apply(const int nx, const T x[],
+               const int ny, int *nyDown, T *y[]);
     /*!
      * @brief Resets the initial conditions to the phase set in 
      *        setInitialConditions.  If setInitialConditions was not
@@ -145,7 +134,5 @@ private:
     class DownsampleImpl;
     std::unique_ptr<DownsampleImpl> pDownsample_; 
 }; // End downsample
-} // End filters
-} // End utilities
 } // End RTSeis
 #endif

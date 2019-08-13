@@ -10,26 +10,28 @@
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-class Detrend::DetrendImpl
+template<class T>
+class Detrend<T>::DetrendImpl
 {
 public:
 //private:
     double mMean = 0;
     double mSlope = 0;
     double mIntercept = 0;
-    RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
     DetrendType mType=  DetrendType::LINEAR;
     bool mInitialized = false;
 };
 
 /// Constructor
-Detrend::Detrend() :
+template<class T>
+Detrend<T>::Detrend() :
     pImpl(std::make_unique<DetrendImpl> ())
 {
 }
 
 /// Copy constructor
-Detrend::Detrend(const Detrend &detrend)
+template<class T>
+Detrend<T>::Detrend(const Detrend &detrend)
 {
     *this = detrend;
 }
@@ -42,7 +44,8 @@ Detrend::Detrend(const Detrend &&detrend)
 */
 
 /// Copy constructor
-Detrend& Detrend::operator=(const Detrend &detrend)
+template<class T>
+Detrend<T>& Detrend<T>::operator=(const Detrend &detrend)
 {
     if (&detrend == this){return *this;}
     pImpl = std::make_unique<DetrendImpl> (*detrend.pImpl);
@@ -50,7 +53,7 @@ Detrend& Detrend::operator=(const Detrend &detrend)
 }
 
 /*
-Detrend& Detrend::operator=(const Detrend &&detrend)
+Detrend<T>& Detrend::operator=(const Detrend &&detrend)
 {
     if (&detrend == this){return *this;}
     pImpl = std::move(detrend.pImpl);
@@ -58,37 +61,47 @@ Detrend& Detrend::operator=(const Detrend &&detrend)
 */
 
 /// Destructor
-Detrend::~Detrend() = default;
+template<class T>
+Detrend<T>::~Detrend() = default;
 
 /// Clear/reset module
-void Detrend::clear() noexcept
+template<class T>
+void Detrend<T>::clear() noexcept
 {
     pImpl->mMean = 0;
     pImpl->mSlope = 0;
     pImpl->mIntercept = 0;
-    pImpl->mPrecision = RTSeis::Precision::DOUBLE;
     pImpl->mType = DetrendType::LINEAR;
     pImpl->mInitialized = false;
 }
 
 /// Initialize
-void Detrend::initialize(const DetrendType type,
-                         const RTSeis::Precision precision)
+template<>
+void Detrend<double>::initialize(const DetrendType type)
 {
     clear();
     pImpl->mType = type;
-    pImpl->mPrecision = precision;
+    pImpl->mInitialized = true;
+}
+
+template<>
+void Detrend<float>::initialize(const DetrendType type)
+{
+    clear();
+    pImpl->mType = type;
     pImpl->mInitialized = true;
 }
 
 /// Cehck if inititalized
-bool Detrend::isInitialized() const noexcept
+template<class T>
+bool Detrend<T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Apply
-void Detrend::apply(const int nx, const double x[], double *yin[])
+template<>
+void Detrend<double>::apply(const int nx, const double x[], double *yin[])
 {
     double *y = *yin;
     pImpl->mMean = 0;
@@ -104,16 +117,6 @@ void Detrend::apply(const int nx, const double x[], double *yin[])
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "y is NULL");
     }
-    if (pImpl->mPrecision == RTSeis::Precision::FLOAT)
-    {
-        float *x32 = ippsMalloc_32f(nx);
-        ippsConvert_64f32f(x, x32, nx);
-        float *y32 = ippsMalloc_32f(nx);
-        apply(nx, x32, &y32);
-        ippsConvert_32f64f(y32, *yin, nx); 
-        ippsFree(x32);
-        ippsFree(y32);
-    }
     if (pImpl->mType == DetrendType::LINEAR)
     {
         removeTrend(nx, x, &y, &pImpl->mIntercept, &pImpl->mSlope);
@@ -125,7 +128,8 @@ void Detrend::apply(const int nx, const double x[], double *yin[])
 }
 
 /// Apply
-void Detrend::apply(const int nx, const float x[], float *yin[])
+template<>
+void Detrend<float>::apply(const int nx, const float x[], float *yin[])
 {
     float *y = *yin;
     pImpl->mMean = 0;
@@ -140,16 +144,6 @@ void Detrend::apply(const int nx, const float x[], float *yin[])
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "y is NULL");
-    }
-    if (pImpl->mPrecision == RTSeis::Precision::DOUBLE)
-    {
-        double *x64 = ippsMalloc_64f(nx);
-        ippsConvert_32f64f(x, x64, nx);
-        double *y64 = ippsMalloc_64f(nx);
-        apply(nx, x64, &y64);
-        ippsConvert_64f32f(y64, *yin, nx); 
-        ippsFree(x64);
-        ippsFree(y64);
     }
     if (pImpl->mType == DetrendType::LINEAR)
     {
@@ -284,6 +278,7 @@ void RTSeis::Utilities::FilterImplementations::removeMean(
     ippsSubC_64f(x, pMean, *y, nx); // y - mean(x)
     if (mean){*mean = pMean;}
 }
+
 void RTSeis::Utilities::FilterImplementations::removeMean(
     const int nx, const float x[], float *y[], float *mean)
 {
@@ -298,3 +293,7 @@ void RTSeis::Utilities::FilterImplementations::removeMean(
     ippsSubC_32f(x, pMean, *y, nx); // y - mean(x)
     if (mean){*mean = pMean;}
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::FilterImplementations::Detrend<double>;
+template class RTSeis::Utilities::FilterImplementations::Detrend<float>;

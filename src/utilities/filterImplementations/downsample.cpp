@@ -3,13 +3,15 @@
 #include <cassert>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/enums.h"
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-class Downsample::DownsampleImpl
+template<class T>
+class Downsample<T>::DownsampleImpl
 {
 public:
     /// Default constructor
@@ -176,25 +178,32 @@ private:
 };
 
 //============================================================================//
+//                               End Implementations                          //
+//============================================================================//
 
-Downsample::Downsample() :
+template<class T>
+Downsample<T>::Downsample() :
     pDownsample_(std::make_unique<DownsampleImpl>())
 {
 }
 
-Downsample::~Downsample() = default;
+template<class T>
+Downsample<T>::~Downsample() = default;
 
-Downsample::Downsample(const Downsample &downsample)
+template<class T>
+Downsample<T>::Downsample(const Downsample &downsample)
 {
     *this = downsample;
 }
 
-Downsample::Downsample(Downsample &&downsample) noexcept
+template<class T>
+Downsample<T>::Downsample(Downsample &&downsample) noexcept
 {
     *this = std::move(downsample); 
 }
 
-Downsample& Downsample::operator=(const Downsample &downsample)
+template<class T>
+Downsample<T>& Downsample<T>::operator=(const Downsample &downsample)
 {
     if (&downsample == this){return *this;}
     pDownsample_ = std::make_unique<DownsampleImpl> (*downsample.pDownsample_);
@@ -203,31 +212,47 @@ Downsample& Downsample::operator=(const Downsample &downsample)
     return *this;
 }
 
-Downsample& Downsample::operator=(Downsample &&downsample) noexcept
+template<class T>
+Downsample<T>& Downsample<T>::operator=(Downsample &&downsample) noexcept
 {
     if (&downsample == this){return *this;}
     pDownsample_ = std::move(downsample.pDownsample_);
     return *this; 
 }
 
-void Downsample::initialize(const int downFactor,
-                            const RTSeis::ProcessingMode mode,
-                            const RTSeis::Precision precision)
+/// Initializers
+template<>
+void Downsample<double>::initialize(const int downFactor,
+                                    const RTSeis::ProcessingMode mode)
 {
     clear();
     if (downFactor < 1)
     {
         RTSEIS_THROW_IA("Downsampling factor=%d must be positive", downFactor);
     }
-    pDownsample_->initialize(downFactor, mode, precision);
+    pDownsample_->initialize(downFactor, mode, RTSeis::Precision::DOUBLE);
 }
 
-void Downsample::clear() noexcept
+template<>
+void Downsample<float>::initialize(const int downFactor,
+                                   const RTSeis::ProcessingMode mode)
+{
+    clear();
+    if (downFactor < 1)
+    {
+        RTSEIS_THROW_IA("Downsampling factor=%d must be positive", downFactor);
+    }
+    pDownsample_->initialize(downFactor, mode, RTSeis::Precision::FLOAT);
+}
+
+template<class T>
+void Downsample<T>::clear() noexcept
 {
     if (pDownsample_){pDownsample_->clear();}
 }
 
-void Downsample::setInitialConditions(const int phase)
+template<class T>
+void Downsample<T>::setInitialConditions(const int phase)
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Downsampler not initialized");}
     int downFactor = pDownsample_->getDownsampleFactor();
@@ -238,7 +263,8 @@ void Downsample::setInitialConditions(const int phase)
     pDownsample_->setInitialConditions(phase);
 }
 
-void Downsample::resetInitialConditions()
+template<class T>
+void Downsample<T>::resetInitialConditions()
 {
     if (!isInitialized())
     {
@@ -247,8 +273,9 @@ void Downsample::resetInitialConditions()
     pDownsample_->resetInitialConditions();
 }
 
-void Downsample::apply(const int nx, const double x[], const int ny,
-                       int *nyDown, double *yIn[])
+template<class T>
+void Downsample<T>::apply(const int nx, const T x[], const int ny,
+                          int *nyDown, T *yIn[])
 {
     *nyDown = 0;
     if (nx <= 0){return;} // Nothing to do
@@ -256,7 +283,7 @@ void Downsample::apply(const int nx, const double x[], const int ny,
     {
         RTSEIS_THROW_RTE("%s", "Downsampler not intitialized");
     }
-    double *y = *yIn;
+    T *y = *yIn;
     int pDstLen = pDownsample_->estimateSpace(nx); 
 #ifdef DEBUG
     assert(pDstLen >= 0);
@@ -280,54 +307,27 @@ void Downsample::apply(const int nx, const double x[], const int ny,
     }
 }
 
-void Downsample::apply(const int nx, const float x[], const int ny, 
-                       int *nyDown, float *yIn[])
-{
-    *nyDown = 0;
-    if (nx <= 0){return;} // Nothing to do
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Downsampler not intitialized");
-    }
-    float *y = *yIn;
-    int pDstLen = estimateSpace(nx); 
-#ifdef DEBUG
-    assert(pDstLen >= 0);
-#endif
-    if (ny < pDstLen)
-    {
-        RTSEIS_THROW_IA("ny=%d must be at least length=%d", ny, pDstLen);
-    }
-    if (x == nullptr || y == nullptr)
-    {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
-        RTSEIS_THROW_IA("%s", "Error y is NULL");
-    }
-    int ierr = pDownsample_->apply(nx, x, nyDown, y);
-#ifdef DEBUG
-    assert(ierr == 0);
-#endif
-    if (ierr != 0)
-    {
-        RTSEIS_THROW_IA("%s", "Failed to apply downsampler");
-        return;
-    }
-}
-
-bool Downsample::isInitialized() const noexcept
+template<class T>
+bool Downsample<T>::isInitialized() const noexcept
 {
     return pDownsample_->isInitialized();
 }
 
-int Downsample::estimateSpace(const int n) const
+template<class T>
+int Downsample<T>::estimateSpace(const int n) const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
     return pDownsample_->estimateSpace(n);
 }
  
-int Downsample::getDownsampleFactor() const noexcept
+template<class T>
+int Downsample<T>::getDownsampleFactor() const noexcept
 {
     //if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class is not initialized");}
     return pDownsample_->getDownsampleFactor();
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::FilterImplementations::Downsample<double>;
+template class RTSeis::Utilities::FilterImplementations::Downsample<float>;

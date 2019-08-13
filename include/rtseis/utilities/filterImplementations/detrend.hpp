@@ -2,21 +2,16 @@
 #define RTSEIS_UTILITIES_FILTER_DETREND_HPP 1
 #include <memory>
 #include "rtseis/utilities/filterImplementations/enums.hpp"
-#include "rtseis/enums.h"
 
-namespace RTSeis
+namespace RTSeis::Utilities::FilterImplementations
 {
-namespace Utilities
-{
-namespace FilterImplementations
-{
-
 /*!
  * @class Detrend detrend.hpp "include/rtseis/utilities/filterImplementations/detrend.hpp"
  * @brief Removes the mean or trend from a signal.
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
+template<class T>
 class Detrend
 {
 public:
@@ -61,12 +56,9 @@ public:
 
     /*!
      * @brief Initializes the class.
-     * @param[in] type       Defines the trend removal strategy.
-     * @param[in] precision  Defines the precision of the underlying
-     *                       calculation.
+     * @param[in] type   Defines the trend removal strategy.
      */
-    void initialize(const DetrendType type,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    void initialize(const DetrendType type);
     /*!
      * @brief Determines whether or not the class is inititalized.
      * @result True indicates that the class is inititalized.
@@ -85,9 +77,7 @@ public:
      * @note If the detrend type is linear and nx is 1 then only the mean will
      *       be removed.
      */
-    void apply(const int nx, const double x[], double *y[]);
-    /*! @copydoc apply */
-    void apply(const int nx, const float x[], float *y[]);
+    void apply(const int nx, const T x[], T *y[]);
 private:
     class DetrendImpl;
     std::unique_ptr<DetrendImpl> pImpl;
@@ -126,8 +116,6 @@ void removeTrend(const int nx, const double x[], double *y[],
 void removeTrend(const int nx, const float x[], float *y[],
                  float *intercept, float *slope);
 
-} // End filter implementations
-} // End utilities
 } // End rtseis
 #endif
 

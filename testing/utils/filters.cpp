@@ -909,7 +909,6 @@ TEST(UtilitiesFilterImplementations, downsample)
     auto ierr = readTextFile(&npts, &x, "data/gse2.txt");
     EXPECT_EQ(ierr, 0);
     const int nq = 7;
-    RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     // Call this in post-processing for a couple different decimation rates
     srand(10245);
     Downsample downsample;
@@ -924,9 +923,7 @@ TEST(UtilitiesFilterImplementations, downsample)
         memset(yref, 0, static_cast<size_t> (npts)*sizeof(double));
         EXPECT_NO_THROW(
             downsample.initialize(iq,
-                                  RTSeis::ProcessingMode::POST_PROCESSING,
-                                  precision)
-        );
+                                  RTSeis::ProcessingMode::POST_PROCESSING));
         auto timeStart = std::chrono::high_resolution_clock::now();
         int ny;
         EXPECT_NO_THROW(downsample.apply(npts, x, npts, &ny, &y));
@@ -953,8 +950,7 @@ TEST(UtilitiesFilterImplementations, downsample)
         // Do a real-time test
         EXPECT_NO_THROW(
             downsample.initialize(iq,
-                                  RTSeis::ProcessingMode::REAL_TIME,
-                                  precision));
+                                  RTSeis::ProcessingMode::REAL_TIME));
         std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                      1000, 1024, 1200, 2048, 4000, 4096, 5000});
         for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
@@ -1174,8 +1170,7 @@ void lowpassFilterThenDownsample(const int npts, const int nfir,
     // Create a downsampler
     Downsample downsample;
     downsample.initialize(downFactor,
-                          RTSeis::ProcessingMode::POST_PROCESSING,
-                          RTSeis::Precision::DOUBLE); 
+                          RTSeis::ProcessingMode::POST_PROCESSING);
     if (lremovePhase)
     {
         int groupDelay = static_cast<int> (taps.size()/2);

@@ -534,8 +534,8 @@ void Waveform<T>::demean()
         = Utilities::FilterImplementations::DetrendType::CONSTANT;
     try
     {
-        Utilities::FilterImplementations::Detrend demean;
-        demean.initialize(type, RTSeis::Precision::DOUBLE);
+        Utilities::FilterImplementations::Detrend<T> demean;
+        demean.initialize(type);
         const T *x = pImpl->getInputDataPointer();
         pImpl->resizeOutputData(len);
         T *y = pImpl->getOutputDataPointer();
@@ -572,8 +572,8 @@ void Waveform<T>::detrend()
         = Utilities::FilterImplementations::DetrendType::LINEAR;
     try  
     {    
-        Utilities::FilterImplementations::Detrend detrend;
-        detrend.initialize(type, RTSeis::Precision::DOUBLE);
+        Utilities::FilterImplementations::Detrend<T> detrend;
+        detrend.initialize(type);
         const T *x = pImpl->getInputDataPointer();
         pImpl->resizeOutputData(len);
         T *y = pImpl->getOutputDataPointer();
@@ -615,12 +615,11 @@ void Waveform<T>::downsample(const int nq)
         RTSEIS_THROW_IA("Downsampling factor = %d must be at least 1", nq); 
     }
     // Initialize the downsampler
-    Utilities::FilterImplementations::Downsample downsample;
+    Utilities::FilterImplementations::Downsample<T> downsample;
     try
     {
         downsample.initialize(nq, 
-                              RTSeis::ProcessingMode::POST_PROCESSING,
-                              RTSeis::Precision::DOUBLE);
+                              RTSeis::ProcessingMode::POST_PROCESSING);
         // Space estimate
         int leny = downsample.estimateSpace(len);
         pImpl->resizeOutputData(leny);

@@ -21,7 +21,7 @@ class Decimate::DecimateImpl
 public:
     //class MultiRateFIRFilter mMRFIRFilter; // TODO implementaiton is slow!
     class FIRFilter mFIRFilter;
-    class Downsample mDownsampler; 
+    class Downsample<double> mDownsampler; 
     int mDownFactor = 1;
     int mGroupDelay = 0;
     int mFIRLength = 0;
@@ -156,8 +156,7 @@ void Decimate::initialize(const int downFactor,
                                      mode,
                                      precision);
         pImpl->mDownsampler.initialize(downFactor,
-                                       mode,
-                                       precision);
+                                       mode);
     }
     catch (std::exception &e)
     {
