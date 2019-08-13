@@ -191,11 +191,10 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     int ns = sos.getNumberOfSections();
     std::vector<double> bs = sos.getNumeratorCoefficients();
     std::vector<double> as = sos.getDenominatorCoefficients();
-    Utilities::FilterImplementations::SOSFilter sosFilt; 
+    Utilities::FilterImplementations::SOSFilter<double> sosFilt; 
     std::vector<double> ysosRef(npts);
     sosFilt.initialize(ns, bs.data(), as.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     double *yptr = ysosRef.data();
     sosFilt.apply(npts, x.data(), &yptr);
     sosFilt.clear();
@@ -242,8 +241,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     as = sos.getDenominatorCoefficients();
     std::vector<double> ytemp(npts);
     sosFilt.initialize(ns, bs.data(), as.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     yptr = ytemp.data();
     sosFilt.apply(npts, x.data(), &yptr);
     std::reverse(ytemp.begin(), ytemp.end());
@@ -293,8 +291,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     bs = sos.getNumeratorCoefficients();
     as = sos.getDenominatorCoefficients();
     sosFilt.initialize(ns, bs.data(), as.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     yptr = ytemp.data();
     sosFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     std::reverse(ytemp.begin(), ytemp.end());
@@ -343,8 +340,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     bs = sos.getNumeratorCoefficients();
     as = sos.getDenominatorCoefficients();
     sosFilt.initialize(ns, bs.data(), as.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING,
-                       RTSeis::Precision::DOUBLE);
+                       RTSeis::ProcessingMode::POST_PROCESSING);
     yptr = ysosRef.data();
     sosFilt.apply(npts, x.data(), &yptr); //ysosRef.data());
     sosFilt.clear();

@@ -1,15 +1,9 @@
 #ifndef RTSEIS_UTILITIES_FILTER_SOS_HPP
 #define RTSEIS_UTILITIES_FILTER_SOS_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
 
-namespace RTSeis
+namespace RTSeis::Utilities::FilterImplementations
 {
-namespace Utilities
-{
-namespace FilterImplementations
-{
-
 /*!
  * @class SOSFilter sosFilter.hpp "include/rtseis/utilities/filterImplementations/sosFilter.hpp"
  * @brief This is the core implementation for second order section (biquad)
@@ -17,6 +11,7 @@ namespace FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
 */
+template<class T = double>
 class SOSFilter
 {
 public:
@@ -67,8 +62,7 @@ public:
     void initialize(const int ns,
                     const double bs[],
                     const double as[],
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -106,9 +100,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const double x[], double *y[]);
-    /*! @copydoc apply */
-    void apply(const int n, const float x[], float *y[]);
+    void apply(const int n, const T x[], T *y[]);
     /*! @} */
 
     /*!
@@ -135,8 +127,5 @@ private:
     class SOSFilterImpl;
     std::unique_ptr<SOSFilterImpl> pSOS_;
 }; // sos
-} // filterimplementations
-} // utilties
 } // rtseis
-
 #endif

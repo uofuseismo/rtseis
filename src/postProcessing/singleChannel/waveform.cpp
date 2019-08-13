@@ -1073,10 +1073,9 @@ void Waveform<double>::sosFilter(
     const std::vector<double> bs = sos.getNumeratorCoefficients();
     const std::vector<double> as = sos.getDenominatorCoefficients();
     // Initialize filter
-    RTSeis::Utilities::FilterImplementations::SOSFilter sosFilter;
+    RTSeis::Utilities::FilterImplementations::SOSFilter<double> sosFilter;
     sosFilter.initialize(ns, bs.data(), as.data(),
-                         ProcessingMode::POST_PROCESSING,
-                         Precision::DOUBLE);
+                         ProcessingMode::POST_PROCESSING);
     pImpl->resizeOutputData(len);
     // Get handles on pointers
     const double *x = pImpl->getInputDataPointer();

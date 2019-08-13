@@ -715,10 +715,9 @@ TEST(UtilitiesFilterImplementations, sos)
     double *y40 = new double[40]; 
     std::fill(impulse, impulse+40, 0);
     impulse[0] = 1;
-    SOSFilter sos;
+    SOSFilter<double> sos;
     EXPECT_NO_THROW(sos.initialize(ns, bs7, as7,
-                                   RTSeis::ProcessingMode::POST_PROCESSING,
-                                   RTSeis::Precision::DOUBLE));
+                                   RTSeis::ProcessingMode::POST_PROCESSING));
     EXPECT_NO_THROW(sos.apply(40, impulse, &y40));
     double error;
     ippsNormDiff_Inf_64f(y40, yref40, 40, &error);
@@ -741,8 +740,7 @@ TEST(UtilitiesFilterImplementations, sos)
                            1.000000000000000, -1.994269533089365,  0.994278822534674,
                            1.000000000000000, -1.997472946622339,  0.997483252685326};
     EXPECT_NO_THROW(sos.initialize(ns, bs, as,
-                                   RTSeis::ProcessingMode::POST_PROCESSING,
-                                   RTSeis::Precision::DOUBLE));
+                                   RTSeis::ProcessingMode::POST_PROCESSING));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
     EXPECT_NO_THROW(sos.apply(npts, x, &y));
@@ -754,10 +752,9 @@ TEST(UtilitiesFilterImplementations, sos)
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Do packetized tests 
-    SOSFilter sosrt;
+    SOSFilter<double> sosrt;
     EXPECT_NO_THROW(sosrt.initialize(ns, bs, as,
-                                     RTSeis::ProcessingMode::REAL_TIME,
-                                     RTSeis::Precision::DOUBLE));
+                                     RTSeis::ProcessingMode::REAL_TIME));
     sos = sosrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});

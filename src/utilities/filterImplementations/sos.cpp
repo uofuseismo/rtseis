@@ -4,13 +4,15 @@
 #include <cassert>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
+#include "rtseis/enums.h"
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-class SOSFilter::SOSFilterImpl
+template<class T>
+class SOSFilter<T>::SOSFilterImpl
 {
 public:
     /// Default constructor
@@ -369,32 +371,38 @@ private:
 
 //============================================================================//
 
-SOSFilter::SOSFilter() :
+template<class T>
+SOSFilter<T>::SOSFilter() :
     pSOS_(std::make_unique<SOSFilterImpl>())
 {
 }
 
-SOSFilter::~SOSFilter() = default;
+template<class T>
+SOSFilter<T>::~SOSFilter() = default;
 
-void SOSFilter::clear() noexcept
+template<class T>
+void SOSFilter<T>::clear() noexcept
 {
     pSOS_->clear();
 }
 
-SOSFilter::SOSFilter(const SOSFilter &sos)
+template<class T>
+SOSFilter<T>::SOSFilter(const SOSFilter &sos)
 {
     *this = sos;
 }
 
 /*
-SOSFilter::SOSFilter(SOSFilter &&sos)
+template<class T>
+SOSFilter<T>::SOSFilter(SOSFilter &&sos)
 {
     *this = std::move(sos);
     return;
 }
 */
 
-SOSFilter& SOSFilter::operator=(const SOSFilter &sos)
+template<class T>
+SOSFilter<T>& SOSFilter<T>::operator=(const SOSFilter &sos)
 {
     if (&sos == this){return *this;}
     if (pSOS_){pSOS_->clear();}
@@ -404,18 +412,20 @@ SOSFilter& SOSFilter::operator=(const SOSFilter &sos)
 }
 
 /*
-SOSFilter& SOSFilter::operator=(SOSFilter &&sos)
+template<class T>
+SOSFilter<T>& SOSFilter<T>::operator=(SOSFilter &&sos)
 {
     if (&sos == this){return *this;}
     pSOS_ = std::move(sos.pSOS_);
 }
 */
 
-void SOSFilter::initialize(const int ns,
-                           const double bs[],
-                           const double as[],
-                           const RTSeis::ProcessingMode mode,
-                           const RTSeis::Precision precision)
+/// Initialization
+template<>
+void SOSFilter<double>::initialize(const int ns,
+                                   const double bs[],
+                                   const double as[],
+                                   const RTSeis::ProcessingMode mode)
 {
     clear();
     // Checks
@@ -437,7 +447,7 @@ void SOSFilter::initialize(const int ns,
             RTSEIS_THROW_IA("Leading as coefficient of section %d is zero", i);
         }
     }
-    auto ierr = pSOS_->initialize(ns, bs, as, mode, precision);
+    auto ierr = pSOS_->initialize(ns, bs, as, mode, RTSeis::Precision::DOUBLE);
 #ifdef DEBUG
     assert(ierr == 0);
 #endif
@@ -448,7 +458,46 @@ void SOSFilter::initialize(const int ns,
     }
 }
 
-void SOSFilter::setInitialConditions(const int nz, const double zi[])
+template<>
+void SOSFilter<float>::initialize(const int ns,
+                                  const double bs[],
+                                  const double as[],
+                                  const RTSeis::ProcessingMode mode)
+{
+    clear();
+    // Checks
+    if (ns < 1 || bs == nullptr || as == nullptr)
+    {
+        if (ns < 1){RTSEIS_THROW_IA("%s", "No sections");}
+        if (bs == nullptr){RTSEIS_THROW_IA("%s", "bs is NULL");}
+        RTSEIS_THROW_IA("%s", "as is NULL");
+    }
+    // Verify the highest order coefficients make sense
+    for (auto i=0; i<ns; i++)
+    {
+        if (bs[3*i] == 0.0)
+        {
+            RTSEIS_THROW_IA("Leading bs coefficient of section %d is zero", i);
+        }
+        if (as[3*i] == 0.0)
+        {
+            RTSEIS_THROW_IA("Leading as coefficient of section %d is zero", i);
+        }
+    }
+    auto ierr = pSOS_->initialize(ns, bs, as, mode, RTSeis::Precision::FLOAT);
+#ifdef DEBUG
+    assert(ierr == 0);
+#endif
+    if (ierr != 0)
+    {
+        clear();
+        RTSEIS_THROW_RTE("%s", "Failed to initialize sos filter");
+    }
+}
+
+
+template<class T>
+void SOSFilter<T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
     {
@@ -464,7 +513,8 @@ void SOSFilter::setInitialConditions(const int nz, const double zi[])
     pSOS_->setInitialConditions(nz, zi);
 }
 
-void SOSFilter::resetInitialConditions()
+template<class T>
+void SOSFilter<T>::resetInitialConditions()
 {
     if (!isInitialized())
     {
@@ -473,7 +523,8 @@ void SOSFilter::resetInitialConditions()
     pSOS_->resetInitialConditions();
 }
 
-void SOSFilter::apply(const int n, const double x[], double *yIn[]) 
+template<>
+void SOSFilter<double>::apply(const int n, const double x[], double *yIn[]) 
 {
     if (n <= 0){return;}
     if (!isInitialized())
@@ -494,7 +545,8 @@ void SOSFilter::apply(const int n, const double x[], double *yIn[])
 #endif
 }
 
-void SOSFilter::apply(const int n, const float x[], float *yIn[])
+template<>
+void SOSFilter<float>::apply(const int n, const float x[], float *yIn[])
 {
     if (n <= 0){return;}
     if (!isInitialized())
@@ -515,7 +567,8 @@ void SOSFilter::apply(const int n, const float x[], float *yIn[])
 #endif
 }
 
-int SOSFilter::getInitialConditionLength() const
+template<class T>
+int SOSFilter<T>::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -524,7 +577,8 @@ int SOSFilter::getInitialConditionLength() const
     return pSOS_->getInitialConditionLength();
 }
 
-int SOSFilter::getNumberOfSections() const
+template<class T>
+int SOSFilter<T>::getNumberOfSections() const
 {
     if (!isInitialized())
     {
@@ -533,7 +587,12 @@ int SOSFilter::getNumberOfSections() const
     return pSOS_->getNumberOfSections();
 }
 
-bool SOSFilter::isInitialized() const noexcept
+template<class T>
+bool SOSFilter<T>::isInitialized() const noexcept
 {
     return pSOS_->isInitialized();
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::FilterImplementations::SOSFilter<double>;
+template class RTSeis::Utilities::FilterImplementations::SOSFilter<float>;
