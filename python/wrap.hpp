@@ -67,7 +67,7 @@ public:
     /// Checks if class is initialized
     bool isInitialized() const;
 private:
-    std::unique_ptr<RTSeis::PostProcessing::SingleChannel::Waveform> waveform_;
+    std::unique_ptr<RTSeis::PostProcessing::SingleChannel::Waveform<double>> waveform_;
 };
 };
 

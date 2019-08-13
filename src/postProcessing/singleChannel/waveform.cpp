@@ -106,7 +106,8 @@ static inline void reverse(std::vector<double> &x)
 */
 
 
-class Waveform::WaveformImpl
+template<>
+class Waveform<double>::WaveformImpl
 {
 public:
     /// Default constructor
@@ -263,14 +264,17 @@ public:
     bool lfirstFilter_ = true; 
 };
 
-Waveform::Waveform() :
+template<class T>
+Waveform<T>::Waveform() :
     pImpl(std::make_unique<WaveformImpl>())
 {
 }
 
-Waveform::~Waveform() = default;
+template<class T>
+Waveform<T>::~Waveform() = default;
 
-void Waveform::setData(const std::vector<double> &x)
+template<class T>
+void Waveform<T>::setData(const std::vector<T> &x)
 {
     size_t n = x.size();
     if (n < 1)
@@ -281,8 +285,9 @@ void Waveform::setData(const std::vector<double> &x)
     setData(n, x.data());
 }
 
-void Waveform::setDataPointer(const size_t n,
-                              const double *x)
+template<class T>
+void Waveform<T>::setDataPointer(const size_t n,
+                                 const T *x)
 {
     if (n < 1 || x == nullptr)
     {
@@ -294,12 +299,14 @@ void Waveform::setDataPointer(const size_t n,
     pImpl->setInputDataPointer(static_cast<int> (n), x, true);
 }
 
-void Waveform::releaseDataPointer() noexcept
+template<class T>
+void Waveform<T>::releaseDataPointer() noexcept
 {
     pImpl->releaseInputDataPointer();
 }
 
-void Waveform::setData(const size_t n, const double x[])
+template<class T>
+void Waveform<T>::setData(const size_t n, const T x[])
 {
     if (n < 1 || x == nullptr)
     {
@@ -311,7 +318,8 @@ void Waveform::setData(const size_t n, const double x[])
     pImpl->setData(n, x, true);
 }
 
-std::vector<double> Waveform::getData() const
+template<>
+std::vector<double> Waveform<double>::getData() const
 {
     std::vector<double> y;
     int ny = pImpl->getNumberOfOutputSamples();
@@ -324,7 +332,8 @@ std::vector<double> Waveform::getData() const
     return y;
 }
 
-void Waveform::getData(const size_t nwork, double *yIn[]) const
+template<class T>
+void Waveform<T>::getData(const size_t nwork, T *yIn[]) const
 {
     int leny = pImpl->getNumberOfOutputSamples();
     if (nwork < static_cast<size_t> (leny))
@@ -334,12 +343,12 @@ void Waveform::getData(const size_t nwork, double *yIn[]) const
                                    + std::to_string(leny));
     }
     if (leny == 0){return;}
-    double *y = *yIn;
+    T *y = *yIn;
     if (y == nullptr)
     {
         throw std::invalid_argument("y is NULL");
     }
-    const double *yout = pImpl->getOutputDataPointer();
+    const T *yout = pImpl->getOutputDataPointer();
     ippsCopy_64f(yout, y, leny);
 }
 
@@ -348,12 +357,14 @@ void Waveform::getData(const size_t nwork, double *yIn[]) const
 //----------------------------------------------------------------------------//
 
 /// TODO delete this function
-size_t Waveform::getOutputLength(void) const
+template<class T>
+size_t Waveform<T>::getOutputLength() const
 {
     return pImpl->getNumberOfOutputSamples(); //pImpl->ny_;
 }
 
-void Waveform::setSamplingPeriod(const double dt)
+template<class T>
+void Waveform<T>::setSamplingPeriod(const double dt)
 {
     if (dt <= 0)
     {
@@ -363,12 +374,14 @@ void Waveform::setSamplingPeriod(const double dt)
     pImpl->dt_ = dt;
 }
 
-double Waveform::getSamplingPeriod() const noexcept
+template<class T>
+double Waveform<T>::getSamplingPeriod() const noexcept
 {
     return pImpl->dt_;
 }
 
-double Waveform::getNyquistFrequency() const noexcept
+template<class T>
+double Waveform<T>::getNyquistFrequency() const noexcept
 {
     double fnyq = 1.0/(2.0*pImpl->dt_);
     return fnyq;
@@ -378,8 +391,9 @@ double Waveform::getNyquistFrequency() const noexcept
 //                     Convolution/Correlation/AutoCorrelation                //
 //----------------------------------------------------------------------------//
 
-void Waveform::convolve(
-    const std::vector<double> &s,
+template<class T>
+void Waveform<T>::convolve(
+    const std::vector<T> &s,
     const ConvolutionMode mode,
     const ConvolutionImplementation implementation)
 {
@@ -402,8 +416,8 @@ void Waveform::convolve(
                                                                    convcorMode);
         pImpl->resizeOutputData(lenc); 
         int nyout;
-        const double *x = pImpl->getInputDataPointer();
-        double *yout = pImpl->getOutputDataPointer();
+        const T *x = pImpl->getInputDataPointer();
+        T *yout = pImpl->getOutputDataPointer();
         Utilities::Math::Convolve::convolve(nx, x,
                                             ny, s.data(),
                                             lenc, &nyout, &yout,
@@ -420,8 +434,9 @@ void Waveform::convolve(
     }
 }
 
-void Waveform::correlate(
-    const std::vector<double> &s, 
+template<class T>
+void Waveform<T>::correlate(
+    const std::vector<T> &s, 
     const ConvolutionMode mode,
     const ConvolutionImplementation implementation)
 {
@@ -444,8 +459,8 @@ void Waveform::correlate(
                                                                    convcorMode);
         pImpl->resizeOutputData(lenc); 
         int nyout;
-        const double *x = pImpl->getInputDataPointer();
-        double *yout = pImpl->getOutputDataPointer();
+        const T *x = pImpl->getInputDataPointer();
+        T *yout = pImpl->getOutputDataPointer();
         Utilities::Math::Convolve::correlate(nx, x,
                                              ny, s.data(),
                                              lenc, &nyout, &yout,
@@ -462,7 +477,8 @@ void Waveform::correlate(
     }
 }
 
-void Waveform::autocorrelate(
+template<class T>
+void Waveform<T>::autocorrelate(
     const ConvolutionMode mode,
     const ConvolutionImplementation implementation)
 {
@@ -483,8 +499,8 @@ void Waveform::autocorrelate(
                                                                    convcorMode);
         pImpl->resizeOutputData(lenc);
         int nyout;
-        const double *x = pImpl->getInputDataPointer();
-        double *yout = pImpl->getOutputDataPointer();
+        const T *x = pImpl->getInputDataPointer();
+        T *yout = pImpl->getOutputDataPointer();
         Utilities::Math::Convolve::autocorrelate(nx, x,
                                                  lenc, &nyout, &yout,
                                                  convcorMode, convcorImpl);
@@ -504,7 +520,8 @@ void Waveform::autocorrelate(
 //                            Demeaning/detrending                            //
 //----------------------------------------------------------------------------//
 
-void Waveform::demean()
+template<class T>
+void Waveform<T>::demean()
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -519,9 +536,9 @@ void Waveform::demean()
     {
         Utilities::FilterImplementations::Detrend demean;
         demean.initialize(type, RTSeis::Precision::DOUBLE);
-        const double *x = pImpl->getInputDataPointer();
+        const T *x = pImpl->getInputDataPointer();
         pImpl->resizeOutputData(len);
-        double *y = pImpl->getOutputDataPointer();
+        T *y = pImpl->getOutputDataPointer();
         demean.apply(len, x, &y);
         pImpl->lfirstFilter_ = false;
 /* 
@@ -541,7 +558,8 @@ void Waveform::demean()
     }
 }
 
-void Waveform::detrend()
+template<class T>
+void Waveform<T>::detrend()
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -556,9 +574,9 @@ void Waveform::detrend()
     {    
         Utilities::FilterImplementations::Detrend detrend;
         detrend.initialize(type, RTSeis::Precision::DOUBLE);
-        const double *x = pImpl->getInputDataPointer();
+        const T *x = pImpl->getInputDataPointer();
         pImpl->resizeOutputData(len);
-        double *y = pImpl->getOutputDataPointer();
+        T *y = pImpl->getOutputDataPointer();
         detrend.apply(len, x, &y); 
         pImpl->lfirstFilter_ = false;
     }
@@ -582,7 +600,8 @@ void Waveform::detrend()
 //                        Downsampling and Decimation                         //
 //----------------------------------------------------------------------------//
 
-void Waveform::downsample(const int nq)
+template<class T>
+void Waveform<T>::downsample(const int nq)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -605,14 +624,14 @@ void Waveform::downsample(const int nq)
         // Space estimate
         int leny = downsample.estimateSpace(len);
         pImpl->resizeOutputData(leny);
-        double  *y = pImpl->getOutputDataPointer(); // Handle on output
-        const double *x = pImpl->getInputDataPointer(); // Handle on input
+        T *y = pImpl->getOutputDataPointer(); // Handle on output
+        const T *x = pImpl->getInputDataPointer(); // Handle on input
         int nyout;
         downsample.apply(len, x, leny, &nyout, &y);  // Finally downsample
 #ifdef DEBUG
         assert(nyout == leny);
 #endif
-        pImpl->dt_ = pImpl->dt_*static_cast<double> (nq);
+        pImpl->dt_ = pImpl->dt_*static_cast<T> (nq);
         pImpl->lfirstFilter_ = false;
     }
     catch (const std::runtime_error &ra)
@@ -626,7 +645,8 @@ void Waveform::downsample(const int nq)
 //----------------------------------------------------------------------------//
 
 /// FIR-based
-void Waveform::firEnvelope(const int nfir)
+template<class T>
+void Waveform<T>::firEnvelope(const int nfir)
 {
     if (nfir < 1)
     {
@@ -637,8 +657,8 @@ void Waveform::firEnvelope(const int nfir)
     int nx = pImpl->getLengthOfInputSignal();
     if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
     pImpl->resizeOutputData(nx);
-    double  *y = pImpl->getOutputDataPointer(); // Handle on output
-    const double *x = pImpl->getInputDataPointer(); // Handle on input
+    T *y = pImpl->getOutputDataPointer(); // Handle on output
+    const T *x = pImpl->getInputDataPointer(); // Handle on input
     Utilities::Transforms::FIREnvelope envelope;
     envelope.initialize(nfir,
                         RTSeis::ProcessingMode::POST_PROCESSING,
@@ -648,7 +668,8 @@ void Waveform::firEnvelope(const int nfir)
 }
 
 /// FFT-based
-void Waveform::envelope()
+template<class T>
+void Waveform<T>::envelope()
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int nx = pImpl->getLengthOfInputSignal();
@@ -656,8 +677,8 @@ void Waveform::envelope()
     Utilities::Transforms::Envelope envelope;
     envelope.initialize(nx, RTSeis::Precision::DOUBLE);
     pImpl->resizeOutputData(nx);
-    double  *y = pImpl->getOutputDataPointer(); // Handle on output
-    const double *x = pImpl->getInputDataPointer(); // Handle on input
+    T *y = pImpl->getOutputDataPointer(); // Handle on output
+    const T *x = pImpl->getInputDataPointer(); // Handle on input
     envelope.transform(nx, x, y);
     pImpl->lfirstFilter_ = false;
 }
@@ -665,10 +686,11 @@ void Waveform::envelope()
 //                           Band-specific Filters                            //
 //----------------------------------------------------------------------------//
 
-void Waveform::iirLowpassFilter(const int order, const double fc,
-                                const IIRPrototype prototype,
-                                const double ripple,
-                                const bool lzeroPhase)
+template<class T>
+void Waveform<T>::iirLowpassFilter(const int order, const double fc,
+                                   const IIRPrototype prototype,
+                                   const double ripple,
+                                   const bool lzeroPhase)
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
@@ -681,10 +703,11 @@ void Waveform::iirLowpassFilter(const int order, const double fc,
     iirFilter(ba, lzeroPhase);
 }
 
-void Waveform::sosLowpassFilter(const int order, const double fc, 
-                                const IIRPrototype prototype,
-                                const double ripple,
-                                const bool lzeroPhase)
+template<class T>
+void Waveform<T>::sosLowpassFilter(const int order, const double fc, 
+                                   const IIRPrototype prototype,
+                                   const double ripple,
+                                   const bool lzeroPhase)
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
@@ -698,9 +721,10 @@ void Waveform::sosLowpassFilter(const int order, const double fc,
     sosFilter(sos, lzeroPhase);
 }
 
-void Waveform::firLowpassFilter(const int ntapsIn, const double fc,
-                                const FIRWindow windowIn,
-                                const bool lremovePhase)
+template<class T>
+void Waveform<T>::firLowpassFilter(const int ntapsIn, const double fc,
+                                   const FIRWindow windowIn,
+                                   const bool lremovePhase)
 {
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
@@ -726,10 +750,11 @@ void Waveform::firLowpassFilter(const int ntapsIn, const double fc,
     }
 }
 
-void Waveform::iirHighpassFilter(const int order, const double fc, 
-                                 const IIRPrototype prototype,
-                                 const double ripple,
-                                 const bool lzeroPhase)
+template<class T>
+void Waveform<T>::iirHighpassFilter(const int order, const double fc, 
+                                    const IIRPrototype prototype,
+                                    const double ripple,
+                                    const bool lzeroPhase)
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
@@ -742,10 +767,11 @@ void Waveform::iirHighpassFilter(const int order, const double fc,
     iirFilter(ba, lzeroPhase);
 }
 
-void Waveform::sosHighpassFilter(const int order, const double fc, 
-                                 const IIRPrototype prototype,
-                                 const double ripple,
-                                 const bool lzeroPhase)
+template<class T>
+void Waveform<T>::sosHighpassFilter(const int order, const double fc, 
+                                    const IIRPrototype prototype,
+                                    const double ripple,
+                                    const bool lzeroPhase)
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
@@ -759,9 +785,10 @@ void Waveform::sosHighpassFilter(const int order, const double fc,
     sosFilter(sos, lzeroPhase);
 }
 
-void Waveform::firHighpassFilter(const int ntapsIn, const double fc, 
-                                 const FIRWindow windowIn,
-                                 const bool lremovePhase)
+template<class T>
+void Waveform<T>::firHighpassFilter(const int ntapsIn, const double fc, 
+                                    const FIRWindow windowIn,
+                                    const bool lremovePhase)
 {
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
@@ -788,12 +815,12 @@ void Waveform::firHighpassFilter(const int ntapsIn, const double fc,
     }
 }
 
-
-void Waveform::iirBandpassFilter(const int order,
-                                 const std::pair<double,double> fc, 
-                                 const IIRPrototype prototype,
-                                 const double ripple,
-                                 const bool lzeroPhase)
+template<class T>
+void Waveform<T>::iirBandpassFilter(const int order,
+                                    const std::pair<double,double> fc, 
+                                    const IIRPrototype prototype,
+                                    const double ripple,
+                                    const bool lzeroPhase)
 {
     // Compute normalized frequencies
     std::pair<double,double> r
@@ -807,11 +834,12 @@ void Waveform::iirBandpassFilter(const int order,
     iirFilter(ba, lzeroPhase);
 }
 
-void Waveform::sosBandpassFilter(const int order,
-                                 const std::pair<double,double> fc, 
-                                 const IIRPrototype prototype,
-                                 const double ripple,
-                                 const bool lzeroPhase)
+template<class T>
+void Waveform<T>::sosBandpassFilter(const int order,
+                                    const std::pair<double,double> fc, 
+                                    const IIRPrototype prototype,
+                                    const double ripple,
+                                    const bool lzeroPhase)
 {
     // Compute normalized frequencies
     std::pair<double,double> r
@@ -826,10 +854,11 @@ void Waveform::sosBandpassFilter(const int order,
     sosFilter(sos, lzeroPhase);
 }
 
-void Waveform::firBandpassFilter(const int ntapsIn,
-                                 const std::pair<double,double> fc, 
-                                 const FIRWindow windowIn,
-                                 const bool lremovePhase)
+template<class T>
+void Waveform<T>::firBandpassFilter(const int ntapsIn,
+                                    const std::pair<double,double> fc, 
+                                    const FIRWindow windowIn,
+                                    const bool lremovePhase)
 {
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
@@ -856,11 +885,12 @@ void Waveform::firBandpassFilter(const int ntapsIn,
     }
 }
 
-void Waveform::iirBandstopFilter(const int order,
-                                 const std::pair<double,double> fc, 
-                                 const IIRPrototype prototype,
-                                 const double ripple,
-                                 const bool lzeroPhase)
+template<class T>
+void Waveform<T>::iirBandstopFilter(const int order,
+                                    const std::pair<double,double> fc, 
+                                    const IIRPrototype prototype,
+                                    const double ripple,
+                                    const bool lzeroPhase)
 {
     // Compute normalized frequencies
     std::pair<double,double> r
@@ -874,11 +904,12 @@ void Waveform::iirBandstopFilter(const int order,
     iirFilter(ba, lzeroPhase);
 }
 
-void Waveform::sosBandstopFilter(const int order,
-                                 const std::pair<double,double> fc,
-                                 const IIRPrototype prototype,
-                                 const double ripple,
-                                 const bool lzeroPhase)
+template<class T>
+void Waveform<T>::sosBandstopFilter(const int order,
+                                    const std::pair<double,double> fc,
+                                    const IIRPrototype prototype,
+                                    const double ripple,
+                                    const bool lzeroPhase)
 {
     // Compute normalized frequencies
     std::pair<double,double> r
@@ -893,10 +924,11 @@ void Waveform::sosBandstopFilter(const int order,
     sosFilter(sos, lzeroPhase);
 }
 
-void Waveform::firBandstopFilter(const int ntapsIn,
-                                 const std::pair<double,double> fc,
-                                 const FIRWindow windowIn,
-                                 const bool lremovePhase)
+template<class T>
+void Waveform<T>::firBandstopFilter(const int ntapsIn,
+                                    const std::pair<double,double> fc,
+                                    const FIRWindow windowIn,
+                                    const bool lremovePhase)
 {
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
@@ -927,8 +959,9 @@ void Waveform::firBandstopFilter(const int ntapsIn,
 //                               General Filtering                            //
 //----------------------------------------------------------------------------//
 
-void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
-                         const bool lremovePhase)
+template<class T>
+void Waveform<T>::firFilter(const Utilities::FilterRepresentations::FIR &fir,
+                            const bool lremovePhase)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -952,8 +985,8 @@ void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
                    Utilities::FilterImplementations::FIRImplementation::DIRECT);
     pImpl->resizeOutputData(len);
     // Standard FIR filtering 
-    const double *x = pImpl->getInputDataPointer();
-    double *yout = pImpl->getOutputDataPointer();
+    const T *x = pImpl->getInputDataPointer();
+    T *yout = pImpl->getOutputDataPointer();
     if (!lremovePhase)
     {
         firFilter.apply(len, x, &yout);
@@ -970,8 +1003,9 @@ void Waveform::firFilter(const Utilities::FilterRepresentations::FIR &fir,
     pImpl->lfirstFilter_ = false;
 }
 
-void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
-                         const bool lremovePhase)
+template<class T>
+void Waveform<T>::iirFilter(const Utilities::FilterRepresentations::BA &ba,
+                            const bool lremovePhase)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -1001,8 +1035,8 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
                Precision::DOUBLE,
                Utilities::FilterImplementations::IIRDFImplementation::DF2_FAST);
         pImpl->resizeOutputData(len);
-        const double *x = pImpl->getInputDataPointer();
-        double *yout = pImpl->getOutputDataPointer();
+        const T *x = pImpl->getInputDataPointer();
+        T *yout = pImpl->getOutputDataPointer();
         iirFilter.apply(len, x, &yout);
     }
     else
@@ -1012,15 +1046,17 @@ void Waveform::iirFilter(const Utilities::FilterRepresentations::BA &ba,
                                 na, a.data(),
                                 Precision::DOUBLE);
         pImpl->resizeOutputData(len);
-        const double *x = pImpl->getInputDataPointer();
-        double *yout = pImpl->getOutputDataPointer();
+        const T *x = pImpl->getInputDataPointer();
+        T *yout = pImpl->getOutputDataPointer();
         iiriirFilter.apply(len, x, &yout);
     }
     pImpl->lfirstFilter_ = false;
 }
 
-void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
-                         const bool lremovePhase)
+template<>
+void Waveform<double>::sosFilter(
+    const Utilities::FilterRepresentations::SOS &sos,
+    const bool lremovePhase)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -1067,7 +1103,8 @@ void Waveform::sosFilter(const Utilities::FilterRepresentations::SOS &sos,
 //                                Normalization                               //
 //----------------------------------------------------------------------------//
 
-void Waveform::normalizeMinMax(const std::pair<double, double> targetRange)
+template<class T>
+void Waveform<T>::normalizeMinMax(const std::pair<double, double> targetRange)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -1078,15 +1115,16 @@ void Waveform::normalizeMinMax(const std::pair<double, double> targetRange)
     }
     // Normalize the data
     RTSeis::Utilities::Normalization::MinMax minMax;
-    const double *x = pImpl->getInputDataPointer();
+    const T *x = pImpl->getInputDataPointer();
     minMax.initialize(len, x, targetRange); // Throws
     pImpl->resizeOutputData(len);
-    double *y = pImpl->getOutputDataPointer();
+    T *y = pImpl->getOutputDataPointer();
     minMax.apply(len, x, &y);
     pImpl->lfirstFilter_ = false;
 }
 
-void Waveform::normalizeSignBit()
+template<class T>
+void Waveform<T>::normalizeSignBit()
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -1098,14 +1136,15 @@ void Waveform::normalizeSignBit()
     // Normalize the data
     RTSeis::Utilities::Normalization::SignBit signBit;
     signBit.initialize();
-    const double *x = pImpl->getInputDataPointer();
+    const T *x = pImpl->getInputDataPointer();
     pImpl->resizeOutputData(len);
-    double *y = pImpl->getOutputDataPointer();
+    T *y = pImpl->getOutputDataPointer();
     signBit.apply(len, x, &y);
     pImpl->lfirstFilter_ = false;
 }
 
-void Waveform::normalizeZScore()
+template<class T>
+void Waveform<T>::normalizeZScore()
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -1116,9 +1155,9 @@ void Waveform::normalizeZScore()
     }
     // Normalize the data
     RTSeis::Utilities::Normalization::ZScore zscore;
-    const double *x = pImpl->getInputDataPointer();
+    const T *x = pImpl->getInputDataPointer();
     pImpl->resizeOutputData(len);
-    double *y = pImpl->getOutputDataPointer();
+    T *y = pImpl->getOutputDataPointer();
     if (len > 1)
     {
         zscore.initialize(len, x); // Throws if all points are identical 
@@ -1135,8 +1174,9 @@ void Waveform::normalizeZScore()
 //                                   Tapering                                 //
 //----------------------------------------------------------------------------//
 
-void Waveform::taper(const double pct,
-                     const TaperParameters::Type window)
+template<class T>
+void Waveform<T>::taper(const double pct,
+                        const TaperParameters::Type window)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -1148,9 +1188,9 @@ void Waveform::taper(const double pct,
     // Taper the data
     TaperParameters parms(pct, window, RTSeis::Precision::DOUBLE);
     Taper taper(parms);
-    const double *x = pImpl->getInputDataPointer();
+    const T *x = pImpl->getInputDataPointer();
     pImpl->resizeOutputData(len);
-    double  *y = pImpl->getOutputDataPointer();
+    T *y = pImpl->getOutputDataPointer();
     taper.apply(len, x, y);
     pImpl->lfirstFilter_ = false;
 }
@@ -1307,3 +1347,5 @@ classifyFIRWindow(const FIRWindow windowIn)
     return window;
 }
 
+// Template instantiation
+template class PostProcessing::SingleChannel::Waveform<double>;

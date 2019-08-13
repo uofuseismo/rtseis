@@ -120,6 +120,7 @@ enum class ConvolutionImplementation
  *        applications.
  * @ingroup rtseis_postprocessing_sc
  */
+template <class T = double>
 class Waveform
 {
 public:
@@ -163,14 +164,14 @@ public:
      * @brief Sets a signal on waveform class.
      * @throws std::invalid_argument If x is empty.
      */
-    void setData(const std::vector<double> &x);
+    void setData(const std::vector<T> &x);
     /*!
      * @brief Sets a waveform on the module.
      * @param[in] n   The number of points in the signal.
      * @param[in] x   The signal to set.  This is an array of dimension [n].
      * @throws std::invalid_argument if x is null or n is less than 1.
      */
-    void setData(const size_t n, const double x[]);
+    void setData(const size_t n, const T x[]);
     /*!
      * @brief Sets a pointer to the input data on the module.
      * @param[in] n   The number of points in the signal.
@@ -182,7 +183,7 @@ public:
      *       with \c releaseDataPointer().
      * @sa \c releaseDataPointer()
      */
-    void setDataPointer(const size_t n, const double *x);
+    void setDataPointer(const size_t n, const T *x);
     /*!
      * @brief Releases the data pointer back to the owner.
      * @note This will reset the number of data points to 0. 
@@ -193,7 +194,7 @@ public:
      * @brief Gets the processed waveform data.
      * @result The processed waveform data.
      */
-    std::vector<double> getData() const;
+    std::vector<T> getData() const;
     /*!
      * @brief Gets the prcoessed waveform data.
      * @param[in] nwork  Max number of points allocated to y.
@@ -202,7 +203,7 @@ public:
      *                   are accessed.
      * @throws std::invalid_argument if y is NULL or nwork is too small.
      */
-    void getData(const size_t nwork, double *y[]) const;
+    void getData(const size_t nwork, T *y[]) const;
     /*!
      * @brief Gets the length of the output signal.
      * @result The length of the output signal, y.
@@ -221,7 +222,7 @@ public:
      * @param[in] implementation  Defines the implementation type.
      * @throws std::invalid_argument if s is empty or there is no data.
      */
-    void convolve(const std::vector<double> &s,
+    void convolve(const std::vector<T> &s,
          const ConvolutionMode mode = ConvolutionMode::FULL,
          const ConvolutionImplementation implementation = ConvolutionImplementation::AUTO);
     /*! 
@@ -233,7 +234,7 @@ public:
      * @param[in] implementation  Defines the implementation type.
      * @throws std::invalid_argument if s is empty or there is no data.
      */
-    void correlate(const std::vector<double> &s,
+    void correlate(const std::vector<T> &s,
          const ConvolutionMode mode = ConvolutionMode::FULL,
          const ConvolutionImplementation implementation = ConvolutionImplementation::AUTO);
     /*! 
