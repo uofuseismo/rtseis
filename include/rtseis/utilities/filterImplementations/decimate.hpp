@@ -16,6 +16,7 @@ namespace FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
+template<class T = double>
 class Decimate
 {
 public:
@@ -70,8 +71,6 @@ public:
      *                               This is relevant when the operation mode
      *                               is for post-processing.
      * @param[in] mode               The processing mode.
-     * @param[in] precision          Defines the precision of the underlying
-     *                               calculations.
      * @throws std::invalid_argument if the downFactor is not positive, the
      *         filter length is too small.
      * @note This will design an Hamming window-based filter whose cutoff
@@ -83,8 +82,7 @@ public:
     void initialize(const int downFactor,
                     const int filterLength = 30,
                     const bool lremovePhaseShift = true,
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Determines if the class is initialized.
      * @result True indicates that the class is initialized.
@@ -131,11 +129,8 @@ public:
      * @throws std::invalid_argument if x or y is NULL.
      * @throws std::runtime_error if the module is not initialized.
      */
-    void apply(const int nx, const double x[],
-               const int ny, int *nyDown, double *y[]);
-    /*! @copydoc apply */
-    void apply(const int nx, const float x[],
-               const int ny, int *nyDown, float *y[]);
+    void apply(const int nx, const T x[],
+               const int ny, int *nyDown, T *y[]);
     /*!
      * @brief Resets the filter to its default initial conditions or the
      *        initial conditions set by \c setInitialConditions().

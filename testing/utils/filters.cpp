@@ -1014,7 +1014,7 @@ TEST(UtilitiesFilterImplementations, decimate)
     std::vector<double> xpad;
     std::vector<double> ylpds;
     // Decimate by some default factors
-    Decimate decimate;
+    Decimate<double> decimate;
     //int downFactor = 5;
     int filterLength = 95;
     bool lremovePhaseShift = true;
@@ -1027,8 +1027,7 @@ TEST(UtilitiesFilterImplementations, decimate)
         EXPECT_NO_THROW(decimate.initialize(downFactor,
                                             filterLength,
                                             lremovePhaseShift,
-                                            RTSeis::ProcessingMode::POST_PROCESSING,
-                                            RTSeis::Precision::DOUBLE));
+                                            RTSeis::ProcessingMode::POST_PROCESSING));
         EXPECT_TRUE(decimate.isInitialized());
         int ndecim = decimate.estimateSpace(npts);
         int nyDecim = 0;
@@ -1054,8 +1053,7 @@ TEST(UtilitiesFilterImplementations, decimate)
         EXPECT_NO_THROW(rtDecim.initialize(downFactor,
                                            nfir, //filterLength,
                                            false,
-                                           RTSeis::ProcessingMode::REAL_TIME,
-                                           RTSeis::Precision::DOUBLE));
+                                           RTSeis::ProcessingMode::REAL_TIME));
         decimate = rtDecim; // Test copy assignent
         std::fill(y.begin(), y.end(), 0.0);
         std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512, 
