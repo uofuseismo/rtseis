@@ -1,15 +1,10 @@
-#ifndef RTSEIS_UTILITIES_FILTER_DECIMATE_HPP
-#define RTSEIS_UTILITIES_FILTER_DECIMATE_HPP
+#ifndef RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_DECIMATE_HPP
+#define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_DECIMATE_HPP
 #include <memory>
 #include "rtseis/enums.h"
 
-namespace RTSeis
+namespace RTSeis::Utilities::FilterImplementations
 {
-namespace Utilities
-{
-namespace FilterImplementations
-{
-
 /*!
  * @class Decimate decimate.hpp "include/rtseis/utilities/filterImplementations/decimate.hpp"
  * @brief Lowpass filters then downsamples a signal.
@@ -155,9 +150,5 @@ private:
     class DecimateImpl;
     std::unique_ptr<DecimateImpl> pImpl;
 };
-
 }
-}
-}
-
 #endif

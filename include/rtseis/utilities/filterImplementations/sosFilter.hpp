@@ -1,6 +1,7 @@
-#ifndef RTSEIS_UTILITIES_FILTER_SOS_HPP
-#define RTSEIS_UTILITIES_FILTER_SOS_HPP 1
+#ifndef RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_SOS_HPP
+#define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_SOS_HPP 1
 #include <memory>
+#include "rtseis/enums.h"
 
 namespace RTSeis::Utilities::FilterImplementations
 {

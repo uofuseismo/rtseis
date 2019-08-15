@@ -1,6 +1,7 @@
 #ifndef RTSEIS_UTILS_FILTERFILTERIMPLEMENTATION_IIR_HPP
 #define RTSEIS_UTILS_FILTERFILTERIMPLEMENTATION_IIR_HPP 1
 #include <memory>
+#include "rtseis/enums.h"
 #include "rtseis/utilities/filterImplementations/enums.hpp"
 
 namespace RTSeis::Utilities::FilterImplementations
