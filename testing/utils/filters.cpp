@@ -476,10 +476,9 @@ TEST(UtiltiesFilterImplementations, multirateFIR)
     // Initialize filter
     //double gain = static_cast<double> (upFactor);
     //ippsMulC_64f(b, gain, bgain, nb); // Fix gain
-    MultiRateFIRFilter firmr;
+    MultiRateFIRFilter<double> firmr;
     EXPECT_NO_THROW(firmr.initialize(upFactor, downFactor, nb, b,
-                                     RTSeis::ProcessingMode::POST_PROCESSING,
-                                     RTSeis::Precision::DOUBLE));
+                                     RTSeis::ProcessingMode::POST_PROCESSING));
     // Estimate space in output
     int nest = firmr.estimateSpace(npts);
     EXPECT_EQ(nest, 4500);
@@ -501,10 +500,9 @@ TEST(UtiltiesFilterImplementations, multirateFIR)
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Repeat for real-time 
-    MultiRateFIRFilter firmrRT;
+    MultiRateFIRFilter<double> firmrRT;
     EXPECT_NO_THROW(firmrRT.initialize(upFactor, downFactor, nb, b,
-                                       RTSeis::ProcessingMode::REAL_TIME,
-                                       RTSeis::Precision::DOUBLE));
+                                       RTSeis::ProcessingMode::REAL_TIME));
     firmr = firmrRT; 
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});

@@ -1,13 +1,9 @@
-#ifndef RTSEIS_UTILS_FILTER_MRFIR_HPP
-#define RTSEIS_UTILS_FILTER_MRFIR_HPP 1
+#ifndef RTSEIS_UTILS_FILTERIMPLEMENTATIONS_MRFIR_HPP
+#define RTSEIS_UTILS_FILTERIMPLEMENTATIONS_MRFIR_HPP 1
 #include <memory>
 #include "rtseis/enums.h"
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterImplementations
+namespace RTSeis::Utilities::FilterImplementations
 {
 /*!
  * @class MultiRateFIRFilter multiRateFIRFilter.hpp "include/rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
@@ -20,6 +16,7 @@ namespace FilterImplementations
  *        the user must gain the FIR filter prior to calling upfirdn.
  * @ingroup rtseis_utils_filters
  */
+template<class T = double>
 class MultiRateFIRFilter
 {
 public:
@@ -77,16 +74,12 @@ public:
      *                        an array of dimension [nb].
      * @param[in] mode        The processing mode.  By default this
      *                        is for post-processing.
-     * @param[in] precision   The precision of the filter.  By default
-     *                        this is double precision.
      * @throws std::invalid_argument if any arguments are incorrect.
      */
     void initialize(const int upFactor, const int downFactor,
                     const int nb, const double b[],
                     const RTSeis::ProcessingMode mode
-                        = RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision
-                        = RTSeis::Precision::DOUBLE);
+                        = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @copydoc initialize()
      * @param[in] chunkSize   This is an optional tuning parameter.
@@ -95,9 +88,7 @@ public:
                     const int nb, const double b[],
                     const int chunkSize,
                     const RTSeis::ProcessingMode mode 
-                        = RTSeis::ProcessingMode::POST_PROCESSING,
-                    const RTSeis::Precision precision 
-                        = RTSeis::Precision::DOUBLE);
+                        = RTSeis::ProcessingMode::POST_PROCESSING);
     /* @} */
 
     /*!
@@ -163,12 +154,8 @@ public:
      *         or nywork is too small, or nywork is positive and y is NULL.
      * @throws std::runtime_error if the class is not initialized
      */
-    void apply(const int n, const double x[],
-               const int nywork, int *ny, double *y[]);
-    /*! @copydoc apply */
-    void apply(const int n, const float x[],
-               const int nywork, int *ny, float *y[]);
-
+    void apply(const int n, const T x[],
+               const int nywork, int *ny, T *y[]);
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().
@@ -185,7 +172,5 @@ private:
     class MultiRateFIRImpl;
     std::unique_ptr<MultiRateFIRImpl> pFIR_;
 }; // End multiratefir
-}; // End filterimplementations
-}; // End utilities
-}; // End rtseis
+} // End rtseis
 #endif
