@@ -63,7 +63,7 @@ public:
     }
  
 //private::
-    Transforms::Hilbert mHilbert;
+    Transforms::Hilbert<double> mHilbert;
     Ipp64fc *mHilb64fc = nullptr;
     Ipp32fc *mHilb32fc = nullptr;
     double mMean = 0;
@@ -145,7 +145,7 @@ void Envelope::initialize(const int n,
     }
     if (n > 1)
     {
-        pImpl->mHilbert.initialize(n, precision); 
+        pImpl->mHilbert.initialize(n);
     }
     if (precision == RTSeis::Precision::DOUBLE)
     {

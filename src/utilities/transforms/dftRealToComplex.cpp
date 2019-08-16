@@ -11,7 +11,8 @@
 
 using namespace RTSeis::Utilities::Transforms;
 
-class DFTRealToComplex::DFTImpl
+template<class T>
+class DFTRealToComplex<T>::DFTImpl
 {
 public:
     /// Default constructor
@@ -95,7 +96,7 @@ public:
         return *this;
     }
     /// Releases memory on the module
-    void clear(void)
+    void clear()
     {
         if (pFFTSpec64_ != nullptr){ippsFree(pFFTSpec64_);}
         if (pDFTSpec64_ != nullptr){ippsFree(pDFTSpec64_);}
@@ -644,20 +645,24 @@ private:
     bool linit_ = false;
 };
 
-DFTRealToComplex::DFTRealToComplex() :
+template<class T>
+DFTRealToComplex<T>::DFTRealToComplex() :
     pImpl(std::make_unique<DFTImpl> ())
 {
 }
 
-DFTRealToComplex::~DFTRealToComplex() = default;
+template<class T>
+DFTRealToComplex<T>::~DFTRealToComplex() = default;
 
-DFTRealToComplex::DFTRealToComplex(const DFTRealToComplex &dftr2c)
+template<class T>
+DFTRealToComplex<T>::DFTRealToComplex(const DFTRealToComplex &dftr2c)
 {
     *this = dftr2c;
-    return;
 }
 
-DFTRealToComplex& DFTRealToComplex::operator=(const DFTRealToComplex &dftr2c)
+template<class T>
+DFTRealToComplex<T>& 
+DFTRealToComplex<T>::operator=(const DFTRealToComplex &dftr2c)
 {
     if (&dftr2c == this){return *this;}
     if (pImpl){pImpl->clear();}
@@ -666,18 +671,19 @@ DFTRealToComplex& DFTRealToComplex::operator=(const DFTRealToComplex &dftr2c)
     return *this;
 }
 
-void DFTRealToComplex::clear() noexcept
+template<class T>
+void DFTRealToComplex<T>::clear() noexcept
 {
     pImpl->clear();
-    return;
 }
 
-
-void DFTRealToComplex::initialize(
+/// Initialization
+template<>
+void DFTRealToComplex<double>::initialize(
     const int length,
-    const FourierTransformImplementation implementation,
-    const RTSeis::Precision precision)
+    const FourierTransformImplementation implementation)
 {
+    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     clear();
     // Check the inputs
     if (length < 2)
@@ -694,18 +700,42 @@ void DFTRealToComplex::initialize(
     {
         RTSEIS_THROW_RTE("%s", "Failed ot initialize DFT");
     }
-    return;
 }
 
-void DFTRealToComplex::inverseTransform(const int lenft,
-                             const std::complex<double> x[],
-                             const int maxy, double *yIn[])
+template<>
+void DFTRealToComplex<float>::initialize(
+    const int length,
+    const FourierTransformImplementation implementation)
+{
+    constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
+    clear();
+    // Check the inputs
+    if (length < 2)
+    {
+        RTSEIS_THROW_IA("Length=%d must be at least 2", length);
+    }
+    bool ldoFFT = false;
+    if (implementation == FourierTransformImplementation::FFT)
+    {
+        ldoFFT = true;
+    }
+    int ierr = pImpl->initialize(length, ldoFFT, precision);
+    if (ierr != 0)
+    {
+        RTSEIS_THROW_RTE("%s", "Failed ot initialize DFT");
+    }
+}
+
+template<class T>
+void DFTRealToComplex<T>::inverseTransform(const int lenft,
+                                           const std::complex<T> x[],
+                                           const int maxy, T *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not initialized");
     }
-    double *y = *yIn;
+    T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -729,6 +759,7 @@ void DFTRealToComplex::inverseTransform(const int lenft,
     return;
 } 
 
+/*
 void DFTRealToComplex::inverseTransform(const int lenft,
                              const std::complex<float> x[],
                              const int maxy, float *yIn[])
@@ -760,15 +791,17 @@ void DFTRealToComplex::inverseTransform(const int lenft,
     }
     return;
 }
+*/
 
-void DFTRealToComplex::forwardTransform(const int n, const double x[],
-                             const int maxy, std::complex<double> *yIn[])
+template<class T>
+void DFTRealToComplex<T>::forwardTransform(const int n, const T x[],
+                             const int maxy, std::complex<T> *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
-    std::complex<double> *y = *yIn;
+    std::complex<T> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
@@ -792,6 +825,7 @@ void DFTRealToComplex::forwardTransform(const int n, const double x[],
     return;
 }
 
+/*
 void DFTRealToComplex::forwardTransform(const int n, const float x[],
                              const int maxy, std::complex<float> *yIn[])
 {
@@ -822,8 +856,10 @@ void DFTRealToComplex::forwardTransform(const int n, const float x[],
     }
     return;
 }
+*/
 
-int DFTRealToComplex::getTransformLength() const
+template<class T>
+int DFTRealToComplex<T>::getTransformLength() const
 {
     if (!pImpl->isInitialized())
     {
@@ -832,7 +868,8 @@ int DFTRealToComplex::getTransformLength() const
     return pImpl->getTransformLength();
 }
 
-int DFTRealToComplex::getInverseTransformLength() const
+template<class T>
+int DFTRealToComplex<T>::getInverseTransformLength() const
 {
     if (!pImpl->isInitialized())
     {
@@ -840,8 +877,9 @@ int DFTRealToComplex::getInverseTransformLength() const
     }
     return pImpl->getInverseTransformLength();
 }
- 
-int DFTRealToComplex::getMaximumInputSignalLength() const
+
+template<class T> 
+int DFTRealToComplex<T>::getMaximumInputSignalLength() const
 {
     if (!pImpl->isInitialized())
     {
@@ -850,7 +888,12 @@ int DFTRealToComplex::getMaximumInputSignalLength() const
     return pImpl->getMaximumInputSignalLength();
 }
 
-bool DFTRealToComplex::isInitialized() const noexcept
+template<class T>
+bool DFTRealToComplex<T>::isInitialized() const noexcept
 {
     return pImpl->isInitialized();
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::Transforms::DFTRealToComplex<double>;
+template class RTSeis::Utilities::Transforms::DFTRealToComplex<float>;

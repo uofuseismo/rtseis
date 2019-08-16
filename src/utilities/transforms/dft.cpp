@@ -12,7 +12,8 @@
 
 using namespace RTSeis::Utilities::Transforms;
 
-class DFT::DFTImpl
+template<class T>
+class DFT<T>::DFTImpl
 {
 public:
     /// Default constructor
@@ -644,14 +645,17 @@ private:
     bool linit_ = false;
 };
 
-DFT::DFT() :
+template<class T>
+DFT<T>::DFT() :
     pImpl(std::make_unique<DFTImpl>())
 {
 }
 
-DFT::~DFT() = default;
+template<class T>
+DFT<T>::~DFT() = default;
 
-DFT::DFT(const DFT &dft)
+template<class T>
+DFT<T>::DFT(const DFT &dft)
 {
     *this = dft;
 }
@@ -663,7 +667,8 @@ DFT::DFT(DFT &&dft) noexcept
 }
 */
 
-DFT& DFT::operator=(const DFT &dft)
+template<class T>
+DFT<T>& DFT<T>::operator=(const DFT &dft)
 {
     if (&dft == this){return *this;}
     if (pImpl){pImpl->clear();}
@@ -681,17 +686,19 @@ DFT& DFT::operator=(DFT &&dft) noexcept
 }
 */
 
-void DFT::clear() noexcept
+template<class T>
+void DFT<T>::clear() noexcept
 {
     pImpl->clear();
 }
 
-
-void DFT::initialize(
+/// Initialization
+template<>
+void DFT<double>::initialize(
     const int length,
-    const FourierTransformImplementation implementation,
-    const RTSeis::Precision precision)
+    const FourierTransformImplementation implementation)
 {
+    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     clear();
     // Check the inputs
     if (length < 2)
@@ -708,18 +715,42 @@ void DFT::initialize(
     {
         RTSEIS_ERRMSG("%s", "Failed ot initialize DFT");
     }
-    return;
 }
 
-void DFT::inverseTransform(const int lenft,
-                           const std::complex<double> x[],
-                           const int maxy, std::complex<double> *yIn[])
+template<>
+void DFT<float>::initialize(
+    const int length,
+    const FourierTransformImplementation implementation)
+{
+    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
+    clear();
+    // Check the inputs
+    if (length < 2)
+    {
+        RTSEIS_THROW_IA("Length=%d must be at least 2", length);
+    }
+    bool ldoFFT = false;
+    if (implementation == FourierTransformImplementation::FFT)
+    {
+        ldoFFT = true;
+    }
+    int ierr = pImpl->initialize(length, ldoFFT, precision);
+    if (ierr != 0)
+    {
+        RTSEIS_ERRMSG("%s", "Failed ot initialize DFT");
+    }
+}
+
+template<class T>
+void DFT<T>::inverseTransform(const int lenft,
+                              const std::complex<T> x[],
+                              const int maxy, std::complex<T> *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
-    std::complex<double> *y = *yIn;
+    std::complex<T> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -740,17 +771,17 @@ void DFT::inverseTransform(const int lenft,
     {
         RTSEIS_ERRMSG("%s", "Failed to compute inverse transform");
     }
-    return;
 } 
 
-void DFT::forwardTransform(const int n, const std::complex<double> x[],
-                           const int maxy, std::complex<double> *yIn[])
+template<class T>
+void DFT<T>::forwardTransform(const int n, const std::complex<T> x[],
+                              const int maxy, std::complex<T> *yIn[])
 {
     if (!pImpl->isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not intiialized");
     }
-    std::complex<double> *y = *yIn;
+    std::complex<T> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -770,12 +801,11 @@ void DFT::forwardTransform(const int n, const std::complex<double> x[],
     if (ierr != 0)
     {
         RTSEIS_ERRMSG("%s", "Failed to apply forward transform");
-        return;
     }
-    return;
 }
 
-int DFT::getTransformLength() const
+template<class T>
+int DFT<T>::getTransformLength() const
 {
     if (!pImpl->isInitialized())
     {
@@ -784,7 +814,8 @@ int DFT::getTransformLength() const
     return pImpl->getTransformLength();
 }
 
-int DFT::getInverseTransformLength() const
+template<class T>
+int DFT<T>::getInverseTransformLength() const
 {
     if (!pImpl->isInitialized())
     {
@@ -793,7 +824,8 @@ int DFT::getInverseTransformLength() const
     return pImpl->getInverseTransformLength();
 }
  
-int DFT::getMaximumInputSignalLength() const
+template<class T>
+int DFT<T>::getMaximumInputSignalLength() const
 {
     if (!pImpl->isInitialized())
     {
@@ -802,7 +834,12 @@ int DFT::getMaximumInputSignalLength() const
     return pImpl->getMaximumInputSignalLength();
 }
 
-bool DFT::isInitialized() const noexcept
+template<class T>
+bool DFT<T>::isInitialized() const noexcept
 {
     return pImpl->isInitialized();
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::Transforms::DFT<double>;
+template class RTSeis::Utilities::Transforms::DFT<float>;

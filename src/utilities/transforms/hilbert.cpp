@@ -18,7 +18,8 @@
 
 using namespace RTSeis::Utilities::Transforms;
 
-class Hilbert::HilbertImpl
+template<class T>
+class Hilbert<T>::HilbertImpl
 {
 public:
     /// Constructor
@@ -56,8 +57,8 @@ public:
     {
         mTransformLength = n;
         mPrecision = precision; 
-        mDFTR2C.initialize(n, FourierTransformImplementation::DFT, mPrecision);
-        mDFT.initialize(n, FourierTransformImplementation::DFT, mPrecision);
+        mDFTR2C.initialize(n, FourierTransformImplementation::DFT);
+        mDFT.initialize(n, FourierTransformImplementation::DFT);
         mInitializedFlag = true;
     }
     /// Apply the Hilbert transform
@@ -91,6 +92,7 @@ public:
         mDFT.inverseTransform(mTransformLength, xptr, mTransformLength, &h);
     }
     /// Apply the Hilbert transform
+/*
     void transform(const float xr[], std::complex<float> h[])
     {
 /// TODO https://software.intel.com/en-us/ipp-dev-reference-hilbert
@@ -121,32 +123,37 @@ public:
         xptr = std::begin(x);
         mDFT.inverseTransform(mTransformLength, xptr, mTransformLength, &h);
     }
+*/
     /// Variables
-    DFTRealToComplex mDFTR2C;
-    DFT mDFT;
+    DFTRealToComplex<T> mDFTR2C;
+    DFT<T> mDFT;
     int mTransformLength = 0;
     RTSeis::Precision mPrecision = Precision::DOUBLE;
     bool mInitializedFlag = false;
 };
 
-Hilbert::Hilbert() :
+template<class T>
+Hilbert<T>::Hilbert() :
     pImpl(std::make_unique<HilbertImpl> ())
 {
 }
 
-Hilbert::Hilbert(const Hilbert &hilbert)
+template<class T>
+Hilbert<T>::Hilbert(const Hilbert &hilbert)
 {
     *this = hilbert;
 }
 
 /*
-Hilbert::Hilbert(Hilbert &&hilbert) noexcept
+template<class T>
+Hilbert<T>::Hilbert(Hilbert &&hilbert) noexcept
 {
     *this = std::move(hilbert);
 }
 */
 
-Hilbert& Hilbert::operator=(const Hilbert &hilbert)
+template<class T>
+Hilbert<T>& Hilbert<T>::operator=(const Hilbert &hilbert)
 {
     if (&hilbert == this){return *this;}
     if (pImpl){pImpl.reset();}
@@ -155,7 +162,8 @@ Hilbert& Hilbert::operator=(const Hilbert &hilbert)
 }
 
 /*
-Hilbert& Hilbert::operator=(Hilbert &&hilbert) noexcept
+template<class T>
+Hilbert<T>& Hilbert<T>::operator=(Hilbert &&hilbert) noexcept
 {
     if (&hilbert == this){return *this;}
     pImpl = std::move(hilbert.pImpl);
@@ -163,19 +171,23 @@ Hilbert& Hilbert::operator=(Hilbert &&hilbert) noexcept
 }
 */
 
-Hilbert::~Hilbert() = default;
+template<class T>
+Hilbert<T>::~Hilbert() = default;
 
-void Hilbert::clear(void) noexcept
+template<class T>
+void Hilbert<T>::clear(void) noexcept
 {
     pImpl->clear();
 }
 
-bool Hilbert::isInitialized() noexcept
+template<class T>
+bool Hilbert<T>::isInitialized() noexcept
 {
     return pImpl->mInitializedFlag;
 }
 
-int Hilbert::getTransformLength()
+template<class T>
+int Hilbert<T>::getTransformLength()
 {
     if (!isInitialized())
     {
@@ -184,9 +196,10 @@ int Hilbert::getTransformLength()
     return pImpl->mTransformLength;
 }
 
-void Hilbert::initialize(const int n,
-                         const RTSeis::Precision precision)
+template<>
+void Hilbert<double>::initialize(const int n)
 {
+    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     clear();
     if (n < 1)
     {
@@ -195,20 +208,16 @@ void Hilbert::initialize(const int n,
     pImpl->initialize(n, precision);
 }
 
-void Hilbert::transform(const int n, const double x[], 
-                        std::complex<double> h[])
+template<class T>
+void Hilbert<T>::transform(const int n, const T x[], 
+                           std::complex<T> h[])
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     if (n != pImpl->mTransformLength)
     {
         RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mTransformLength);
     }
-    if (pImpl->mPrecision != RTSeis::Precision::DOUBLE)
-    {
-        RTSEIS_THROW_RTE("%s", "Precision switch not yet implemented");
-    }
     pImpl->transform(x, h);
-    return;
 }
 
 /*
@@ -228,3 +237,7 @@ void Hilbert::transform(const int n, const float x[],
     return;
 }
 */
+
+/// Template instantiation
+template class RTSeis::Utilities::Transforms::Hilbert<double>;
+//template class RTSeis::Utilities::Transforms::Hilbert<float>;

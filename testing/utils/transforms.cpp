@@ -255,7 +255,7 @@ TEST(UtilitiesTransforms, dft)
     fft(x5.size(), x5.data(), y5fftw.size(), y5fftw.data());
     ifft(y5ref.size(), y5ref.data(), x5invref.size(), x5invref.data());
 
-    DFT dft;
+    DFT<double> dft;
     EXPECT_NO_THROW(dft.initialize(x5.size()));
     EXPECT_TRUE(dft.isInitialized());
     ASSERT_EQ(dft.getInverseTransformLength(), 5);
@@ -343,7 +343,7 @@ TEST(UtilitiesTransforms, dft)
         // Stress test
         if (j == 1)
         {
-            DFT dftStress;
+            DFT<double> dftStress;
             dftStress.initialize(npts);
             auto timeStart = std::chrono::high_resolution_clock::now();
             for (auto i=0; i<niter; i++)
@@ -407,10 +407,9 @@ TEST(UtilitiesTransforms, dftr2c)
         std::complex<double> *zrefFFT = new std::complex<double>[lenfft];
         ASSERT_EQ(rfft(npts, x, np2, lenfft, zrefFFT), 0);
         // Initialize the DFT
-        DFTRealToComplex dft; 
+        DFTRealToComplex<double> dft; 
         EXPECT_NO_THROW(dft.initialize(npts,
-                        FourierTransformImplementation::DFT,
-                        RTSeis::Precision::DOUBLE));
+                        FourierTransformImplementation::DFT));
         ASSERT_EQ(dft.getTransformLength(), lendft);
         std::complex<double> *z = new std::complex<double>[lendft];
         EXPECT_NO_THROW(dft.forwardTransform(npts, x, lendft, &z));
@@ -455,8 +454,7 @@ TEST(UtilitiesTransforms, dftr2c)
         delete[] z;
         // Redo this for an FFT
         EXPECT_NO_THROW(dft.initialize(npts,
-                        FourierTransformImplementation::FFT,
-                        RTSeis::Precision::DOUBLE));
+                        FourierTransformImplementation::FFT));
         ASSERT_EQ(dft.getTransformLength(), lenfft);
         z = new std::complex<double>[lenfft];
         EXPECT_NO_THROW(dft.forwardTransform(npts, x, lenfft, &z));
@@ -530,7 +528,7 @@ TEST(UtilitiesTransforms, Hilbert)
     h11[8]  = std::complex<double> ( 8,-0.23284074);
     h11[9]  = std::complex<double> ( 9,-0.52646724);
     h11[10] = std::complex<double> (10, 6.42868554);
-    Hilbert hilbert;    
+    Hilbert<double> hilbert;    
     std::vector<std::complex<double>> h;
     std::vector<double> x;
     int n = 10;
@@ -554,7 +552,7 @@ TEST(UtilitiesTransforms, Hilbert)
     ASSERT_LE(emax, 1.e-8);
     // Test copy constructor with n = 11
     n = 11;
-    Hilbert hilbert11;
+    Hilbert<double> hilbert11;
     EXPECT_NO_THROW(hilbert11.initialize(n));
     hilbert = hilbert11;
     EXPECT_EQ(hilbert.getTransformLength(), n);

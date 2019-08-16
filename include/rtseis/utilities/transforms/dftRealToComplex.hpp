@@ -15,6 +15,7 @@ namespace RTSeis::Utilities::Transforms
  *        frequency.
  * @ingroup rtseis_utils_transforms
  */
+template<class T = double>
 class DFTRealToComplex
 {
 public:
@@ -66,8 +67,7 @@ public:
       * @result 0 indicates success.
       */
      void initialize(const int length,
-                     const FourierTransformImplementation implementation = FourierTransformImplementation::DFT,
-                     const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+                     const FourierTransformImplementation implementation = FourierTransformImplementation::DFT);
      /*!
       * @brief Fourier transforms a real-valued time domain signal to the
       *        frequency domain.   The transform is defined as 
@@ -90,14 +90,9 @@ public:
       * @throws std::runtime_error if the class is not initialized.
       */
      void forwardTransform(const int n,
-                           const double x[],
+                           const T x[],
                            const int maxy,
-                           std::complex<double> *y[]);
-     /*! @copydoc forwardTransform */
-     void forwardTransform(const int n,
-                           const float x[],
-                           const int maxy,
-                           std::complex<float> *y[]);
+                           std::complex<T> *y[]);
      /*!
       * @brief Inverse transforms complex-valued frequency domian signal
       *        to a real-valued time domain signal.  The transform is
@@ -130,12 +125,8 @@ public:
       * @throws std::runtime_error if the class is not initialized.
       */
      void inverseTransform(const int lenft,
-                           const std::complex<double> x[],
-                           const int maxy, double *y[]);
-     /*! @copydoc inverseTransform */
-     void inverseTransform(const int lenft,
-                           const std::complex<float> x[],
-                           const int maxy, float *y[]);
+                           const std::complex<T> x[],
+                           const int maxy, T *y[]);
      /*!
       * @brief Gets the inverse transform length.
       * @result The length of the inverse DFT or FFT.

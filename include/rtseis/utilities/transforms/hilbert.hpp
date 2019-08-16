@@ -15,6 +15,7 @@ namespace RTSeis::Utilities::Transforms
  *       \f$ x_h \f$ is the Hilbert transform of the signal.
  * @ingroup rtseis_utils_transforms
  */
+template<class T = double>
 class Hilbert
 {
 public:
@@ -73,8 +74,7 @@ public:
      *                       transform calculation.
      * @throws std::invalid_argument if n is not positive.
      */
-    void initialize(const int n,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    void initialize(const int n);
     /*!
      * @brief Computes the analytic signal of the signal.
      * @param[in] n   The number of samples in the signal to transform.
@@ -87,8 +87,7 @@ public:
      * @note The real part of \f$ h \f$ is the input signal and the imaginary
      *       part of \f$ h \f$ is the Hilbert transform.
      */
-    void transform(const int n, const double x[], std::complex<double> h[]);
-    //void transform(const int n, const float x[], std::complex<float> h[]); 
+    void transform(const int n, const T x[], std::complex<T> h[]);
 private:
     class HilbertImpl;
     std::unique_ptr<HilbertImpl> pImpl;
