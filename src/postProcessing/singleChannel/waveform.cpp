@@ -657,11 +657,10 @@ void Waveform<T>::firEnvelope(const int nfir)
     pImpl->resizeOutputData(nx);
     T *y = pImpl->getOutputDataPointer(); // Handle on output
     const T *x = pImpl->getInputDataPointer(); // Handle on input
-    Utilities::Transforms::FIREnvelope envelope;
+    Utilities::Transforms::FIREnvelope<T> envelope;
     envelope.initialize(nfir,
-                        RTSeis::ProcessingMode::POST_PROCESSING,
-                        RTSeis::Precision::DOUBLE);
-    envelope.transform(nx, x, y);
+                        RTSeis::ProcessingMode::POST_PROCESSING);
+    envelope.transform(nx, x, &y);
     pImpl->lfirstFilter_ = false;
 }
 
@@ -672,12 +671,12 @@ void Waveform<T>::envelope()
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int nx = pImpl->getLengthOfInputSignal();
     if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
-    Utilities::Transforms::Envelope envelope;
-    envelope.initialize(nx, RTSeis::Precision::DOUBLE);
+    Utilities::Transforms::Envelope<T> envelope;
+    envelope.initialize(nx);
     pImpl->resizeOutputData(nx);
     T *y = pImpl->getOutputDataPointer(); // Handle on output
     const T *x = pImpl->getInputDataPointer(); // Handle on input
-    envelope.transform(nx, x, y);
+    envelope.transform(nx, x, &y);
     pImpl->lfirstFilter_ = false;
 }
 //----------------------------------------------------------------------------//

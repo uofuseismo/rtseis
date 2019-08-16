@@ -87,7 +87,7 @@ public:
      * @note The real part of \f$ h \f$ is the input signal and the imaginary
      *       part of \f$ h \f$ is the Hilbert transform.
      */
-    void transform(const int n, const T x[], std::complex<T> h[]);
+    void transform(const int n, const T x[], std::complex<T> *h[]);
 private:
     class HilbertImpl;
     std::unique_ptr<HilbertImpl> pImpl;

@@ -62,11 +62,11 @@ public:
         mInitializedFlag = true;
     }
     /// Apply the Hilbert transform
-    void transform(const double xr[], std::complex<double> h[])
+    void transform(const T xr[], std::complex<T> h[])
     {
         // Transform the input signal
-        constexpr std::complex<double> zero = std::complex<double> (0, 0);
-        std::valarray<std::complex<double>> x(zero, mTransformLength);
+        constexpr std::complex<T> zero = std::complex<T> (0, 0);
+        std::valarray<std::complex<T>> x(zero, mTransformLength);
         auto xptr = std::begin(x); 
         mDFTR2C.forwardTransform(mTransformLength, xr,
                                  mTransformLength, &xptr);
@@ -208,36 +208,32 @@ void Hilbert<double>::initialize(const int n)
     pImpl->initialize(n, precision);
 }
 
+template<>
+void Hilbert<float>::initialize(const int n)
+{
+    constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
+    clear();
+    if (n < 1)
+    {
+        RTSEIS_THROW_IA("n = %d must be positive", n);
+    }
+    pImpl->initialize(n, precision);
+}
+
 template<class T>
 void Hilbert<T>::transform(const int n, const T x[], 
-                           std::complex<T> h[])
+                           std::complex<T> *hIn[])
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     if (n != pImpl->mTransformLength)
     {
         RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mTransformLength);
     }
+    std::complex<T> *h = *hIn;
+    if (h == nullptr){RTSEIS_THROW_IA("%s", "h is NULL");}
     pImpl->transform(x, h);
 }
 
-/*
-void Hilbert::transform(const int n, const float x[], 
-                        std::complex<float> h[])
-{
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    if (n != pImpl->mTransformLength)
-    {
-        RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mTransformLength);
-    }
-    if (pImpl->mPrecision != RTSeis::Precision::FLOAT)
-    {
-        RTSEIS_THROW_RTE("%s", "Precision switch not yet implemented");
-    }
-    pImpl->transform(x, h); 
-    return;
-}
-*/
-
 /// Template instantiation
 template class RTSeis::Utilities::Transforms::Hilbert<double>;
-//template class RTSeis::Utilities::Transforms::Hilbert<float>;
+template class RTSeis::Utilities::Transforms::Hilbert<float>;

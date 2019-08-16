@@ -16,6 +16,7 @@ namespace RTSeis::Utilities::Transforms
  *       applying a high-pass filter.
  * @sa Envelope
  */
+template<class T = double>
 class FIREnvelope
 {
 public:
@@ -80,26 +81,23 @@ public:
 
     /*!
      * @brief Initializes the FIR-based envelope.
-     * @param[in] ntaps      The number of filter taps.  This must be positive.
-     *                       If ntaps is odd then a Type III FIR filter will be 
-     *                       used.  This can be computationally advantageous
-     *                       as the real-part of the FIR filter is simply a 
-     *                       unit delay of ntaps/2 samples.  However, the filter
-     *                       response at the Nyquist frequency will be 0.
-     *                       If ntaps is even then a Type IV FIR filter will be
-     *                       used.  This is less computationally efficient as
-     *                       both the real and imaginary parts of the Hilbert
-     *                       transform filter are to be applied.  However,
-     *                       this will better characterize the transformer
-     *                       response at the Nyquist frequency. 
-     * @param[in] mode       The processing mode.
-     * @param[in] precision  Controls the underlying precision of the envelope
-     *                       calculation.
+     * @param[in] ntaps    The number of filter taps.  This must be positive.
+     *                     If ntaps is odd then a Type III FIR filter will be 
+     *                     used.  This can be computationally advantageous
+     *                     as the real-part of the FIR filter is simply a 
+     *                     unit delay of ntaps/2 samples.  However, the filter
+     *                     response at the Nyquist frequency will be 0.
+     *                     If ntaps is even then a Type IV FIR filter will be
+     *                     used.  This is less computationally efficient as
+     *                     both the real and imaginary parts of the Hilbert
+     *                     transform filter are to be applied.  However,
+     *                     this will better characterize the transformer
+     *                     response at the Nyquist frequency. 
+     * @param[in] mode     The processing mode.
      * @throws std::invalid_argument if ntaps is not positive.
      */
     void initialize(const int ntaps,
-                    const RTSeis::ProcessingMode mode=RTSeis::POST_PROCESSING,
-                    const RTSeis::Precision precision=RTSeis::DOUBLE);
+                    const RTSeis::ProcessingMode mode=RTSeis::POST_PROCESSING);
 
     /*!
      * @brief Gets the length of the initital condition array.
@@ -128,9 +126,7 @@ public:
      * @throws std::invalid_argument if x or y are NULL.
      * @throws std::runtime_error if the class is not inititalized.
      */
-    void transform(const int n, const double x[], double y[]);
-    /*! @copydoc transform */
-    void transform(const int n, const float x[], float y[]);
+    void transform(const int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions of the underlying FIR filters.
      *        This may be useful after a gap is encountered.

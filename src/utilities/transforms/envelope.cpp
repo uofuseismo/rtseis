@@ -8,7 +8,8 @@
 
 using namespace RTSeis::Utilities::Transforms;
 
-class Envelope::EnvelopeImpl
+template<>
+class Envelope<double>::EnvelopeImpl
 {
 public: 
     /// Constructor
@@ -28,70 +29,172 @@ public:
     {
        mHilbert.clear();
        if (mHilb64fc){ippsFree(mHilb64fc);}
-       if (mHilb32fc){ippsFree(mHilb32fc);}
        mHilb64fc = nullptr;
-       mHilb32fc = nullptr;
        mEnvelopeLength = 0;
        mMean = 0;
        mInitialized = false;
-       mPrecision = RTSeis::Precision::DOUBLE;
+    }
+    /// Initializes the class
+    void initialize(const int n)
+    {
+        if (n > 1){mHilbert.initialize(n);}
+        mHilb64fc = ippsMalloc_64fc(n);
+        mEnvelopeLength = n;
+        mInitialized = true; 
     }
     /// Copy assignment operator
     EnvelopeImpl& operator=(const EnvelopeImpl &envelope)
     {
-       if (&envelope == this){return *this;}
-       clear();
-       mHilbert = envelope.mHilbert;
-       mEnvelopeLength = envelope.mEnvelopeLength;
-       mMean = envelope.mMean;
-       mInitialized = envelope.mInitialized;
-       mPrecision = envelope.mPrecision;
-       if (mEnvelopeLength > 0)
-       {
-           if (mPrecision == RTSeis::Precision::DOUBLE)
-           {
-               mHilb64fc = ippsMalloc_64fc(mEnvelopeLength);
-               ippsCopy_64fc(envelope.mHilb64fc, mHilb64fc, mEnvelopeLength);
-           }
-           else
-           {
-               mHilb32fc = ippsMalloc_32fc(mEnvelopeLength);
-               ippsCopy_32fc(envelope.mHilb32fc, mHilb32fc, mEnvelopeLength);
-           }
-       }
-       return *this;
+        if (&envelope == this){return *this;}
+        clear();
+        mHilbert = envelope.mHilbert;
+        mEnvelopeLength = envelope.mEnvelopeLength;
+        mMean = envelope.mMean;
+        mInitialized = envelope.mInitialized;
+        if (mEnvelopeLength > 0)
+        {
+            mHilb64fc = ippsMalloc_64fc(mEnvelopeLength);
+            ippsCopy_64fc(envelope.mHilb64fc, mHilb64fc, mEnvelopeLength);
+        }
+        return *this;
     }
- 
+    void transform(const int n, const double x[], double y[])
+    {
+        // Special case
+        if (n == 1)
+        {
+            mMean = x[0];
+            y[0] = x[0];
+            return;
+        }
+        // Remove the mean
+        ippsMean_64f(x, n, &mMean);
+        ippsSubC_64f(x, mMean, y, n);
+        // Compute the analytic signal of the data.
+        auto yhilb = reinterpret_cast<std::complex<double> *> (mHilb64fc);
+        mHilbert.transform(n, y, &yhilb);
+        // Take the absolute value to obtain the envelope.
+        // |x_r + i x_h| = x_r^2 + x_h^2 where x_r is the input signal
+        // and x_h is the Hilbert transform of the data.
+        ippsMagnitude_64fc(mHilb64fc, y, n);
+        // Restore the mean
+        ippsAddC_64f_I(mMean, y, n);
+    }
 //private::
     Transforms::Hilbert<double> mHilbert;
     Ipp64fc *mHilb64fc = nullptr;
+    double mMean = 0;
+    int mEnvelopeLength = 0;
+    bool mInitialized = false;
+};
+
+template<>
+class Envelope<float>::EnvelopeImpl
+{
+public:
+    /// Constructor
+    EnvelopeImpl() = default;
+    /// Destructor
+    ~EnvelopeImpl()
+    {
+        clear();
+    }
+    /// Copy constructor
+    EnvelopeImpl(const EnvelopeImpl &envelope)
+    {
+        *this = envelope;
+    }
+    /// Clears the memory
+    void clear() noexcept
+    {
+        mHilbert.clear();
+        if (mHilb32fc){ippsFree(mHilb32fc);}
+        mHilb32fc = nullptr;
+        mEnvelopeLength = 0;
+        mMean = 0;
+        mInitialized = false;
+    }
+    /// Initializes the class
+    void initialize(const int n)
+    {
+        if (n > 1){mHilbert.initialize(n);}
+        mHilb32fc = ippsMalloc_32fc(n);
+        mEnvelopeLength = n;
+        mInitialized = true;
+    }
+    /// Copy assignment operator
+    EnvelopeImpl& operator=(const EnvelopeImpl &envelope)
+    {
+        if (&envelope == this){return *this;}
+        clear();
+        mHilbert = envelope.mHilbert;
+        mEnvelopeLength = envelope.mEnvelopeLength;
+        mMean = envelope.mMean;
+        mInitialized = envelope.mInitialized;
+        if (mEnvelopeLength > 0)
+        {
+            mHilb32fc = ippsMalloc_32fc(mEnvelopeLength);
+            ippsCopy_32fc(envelope.mHilb32fc, mHilb32fc, mEnvelopeLength);
+        }
+        return *this;
+    }
+    void transform(const int n, const float x[], float y[])
+    {
+        // Special case
+        if (n == 1)
+        {
+            mMean = x[0];
+            y[0] = x[0];
+            return;
+        }
+        // Remove the mean
+        float pMean32f;
+        ippsMean_32f(x, n, &pMean32f, ippAlgHintAccurate);
+        ippsSubC_32f(x, pMean32f, y, n);
+        mMean = static_cast<double> (pMean32f);
+        // Compute the analytic signal of the data.
+        auto yhilb = reinterpret_cast<std::complex<float> *> (mHilb32fc);
+        mHilbert.transform(n, y, &yhilb);
+        // Take the absolute value to obtain the envelope.
+        // |x_r + i x_h| = x_r^2 + x_h^2 where x_r is the input signal
+        // and x_h is the Hilbert transform of the data.
+        ippsMagnitude_32fc(mHilb32fc, y, n);
+        // Restore the mean
+        ippsAddC_32f_I(pMean32f, y, n);
+    }
+//private
+    Transforms::Hilbert<float> mHilbert;
     Ipp32fc *mHilb32fc = nullptr;
     double mMean = 0;
     int mEnvelopeLength = 0;
     bool mInitialized = false;
-    RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
 };
 
+//============================================================================//
 /// Constructor
-Envelope::Envelope() :
+template<class T>
+Envelope<T>::Envelope() :
     pImpl(std::make_unique<EnvelopeImpl> ())
 {
 }
 
 /// Copy constructor
-Envelope::Envelope(const Envelope &envelope)
+template<class T>
+Envelope<T>::Envelope(const Envelope &envelope)
 {
     *this = envelope;
 } 
 
 /// Move constructor
-Envelope::Envelope(Envelope &&envelope) noexcept
+template<class T>
+Envelope<T>::Envelope(Envelope &&envelope) noexcept
 {
     *this = std::move(envelope);
 }
 
 /// Copy assignment operator
-Envelope& Envelope::operator=(const Envelope &envelope)
+template<class T>
+Envelope<T>& Envelope<T>::operator=(const Envelope &envelope)
 {
     if (&envelope == this){return *this;}
     if (pImpl){pImpl.reset();}
@@ -100,8 +203,8 @@ Envelope& Envelope::operator=(const Envelope &envelope)
 }
 
 /// Move assignment oeprator
-Envelope&
-Envelope::operator=(Envelope &&envelope) noexcept
+template<class T>
+Envelope<T>& Envelope<T>::operator=(Envelope &&envelope) noexcept
 {
     if (&envelope == this){return *this;}
     if (pImpl){pImpl.reset();}
@@ -109,22 +212,26 @@ Envelope::operator=(Envelope &&envelope) noexcept
     return *this;
 }
 /// Destructor
-Envelope::~Envelope() = default;
+template<class T>
+Envelope<T>::~Envelope() = default;
 
 /// Clears the module
-void Envelope::clear() noexcept
+template<class T>
+void Envelope<T>::clear() noexcept
 {
     pImpl->clear();
 }
 
 /// Checks if the module is initialized
-bool Envelope::isInitialized() const noexcept
+template<class T>
+bool Envelope<T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Gets the envelope length
-int Envelope::getTransformLength() const
+template<class T>
+int Envelope<T>::getTransformLength() const
 {
     if (!isInitialized())
     {
@@ -134,43 +241,28 @@ int Envelope::getTransformLength() const
 }
 
 /// Initializes the class
-void Envelope::initialize(const int n,
-                          const RTSeis::Precision precision)
+template<class T>
+void Envelope<T>::initialize(const int n)
 {
     clear();
     if (n < 1){RTSEIS_THROW_IA("n = %d must be positive", n);}
-    if (precision != RTSeis::Precision::DOUBLE)
-    {
-        RTSEIS_THROW_IA("%s", "Only double precision implemented at moment");
-    }
-    if (n > 1)
-    {
-        pImpl->mHilbert.initialize(n);
-    }
-    if (precision == RTSeis::Precision::DOUBLE)
-    {
-        pImpl->mHilb64fc = ippsMalloc_64fc(n);
-    }
-    else
-    {
-        pImpl->mHilb32fc = ippsMalloc_32fc(n);
-    }
-    pImpl->mEnvelopeLength = n;
-    pImpl->mPrecision = precision;
-    pImpl->mInitialized = true;
+    pImpl->initialize(n);
 }
 
 /// Compute the upper and lower envelope
-void Envelope::transform(const int n, const double x[],
-                         double yupper[], double ylower[])
+template<>
+void Envelope<double>::transform(const int n, const double x[],
+                                 double *yupperIn[], double *ylowerIn[])
 {
     if (pImpl){pImpl->mMean = 0;}
+    double *ylower = *ylowerIn;
+    double *yupper = *yupperIn;
     if (ylower == nullptr)
     {
         RTSEIS_THROW_IA("%s", "ylower is NULL");
     }
     // Compute the upper envelope
-    transform(n, x, yupper); // will throw
+    transform(n, x, &yupper); // will throw
     // Special case
     if (n == 1)
     {
@@ -188,8 +280,40 @@ void Envelope::transform(const int n, const double x[],
     ippsSubCRev_64f(yupper, 2*pImpl->mMean, ylower, n);
 }
 
+template<>
+void Envelope<float>::transform(const int n, const float x[],
+                                float *yupperIn[], float *ylowerIn[])
+{
+    if (pImpl){pImpl->mMean = 0;}
+    float *ylower = *ylowerIn;
+    float *yupper = *yupperIn;
+    if (ylower == nullptr)
+    {
+        RTSEIS_THROW_IA("%s", "ylower is NULL");
+    }
+    // Compute the upper envelope
+    transform(n, x, &yupper); // will throw
+    // Special case
+    if (n == 1)
+    {
+        ylower[0] = yupper[0];
+        return;
+    }
+    // Compute the lower envelope from the upper envelope.
+    //  (1) yupper = |Hilbert| + mean
+    //  (2) ylower = |Hilbert| - mean
+    // Expressing |Hilbert| as a function of yupper in Eqn 2
+    //   |Hilbert| = yupper - mean
+    // And substituting into the second equation
+    //   ylower = yupper - mean - mean
+    //          = yupper - 2*mean
+    auto twoMean = static_cast<float> (2*pImpl->mMean);
+    ippsSubCRev_32f(yupper, twoMean, ylower, n);
+}
+
 /// Compute the envelope
-void Envelope::transform(const int n, const double x[], double y[])
+template<class T>
+void Envelope<T>::transform(const int n, const T x[], T *yIn[])
 {
     pImpl->mMean = 0;
     if (!isInitialized())
@@ -200,11 +324,14 @@ void Envelope::transform(const int n, const double x[], double y[])
     {
         RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mEnvelopeLength);
     }
+    T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "y is NULL");
     }
+    pImpl->transform(n, x, y);
+/*
     // Special case
     if (n == 1)
     {
@@ -219,18 +346,20 @@ void Envelope::transform(const int n, const double x[], double y[])
     pImpl->mMean = pMean;
     // Compute the analytic signal of the data.
     auto yhilb = reinterpret_cast<std::complex<double> *> (pImpl->mHilb64fc);
-    pImpl->mHilbert.transform(n, y, yhilb);
+    pImpl->mHilbert.transform(n, y, &yhilb);
     // Take the absolute value to obtain the envelope.
     // |x_r + i x_h| = x_r^2 + x_h^2 where x_r is the input signal 
     // and x_h is the Hilbert transform of the data.
     ippsMagnitude_64fc(pImpl->mHilb64fc, y, n); 
     // Restore the mean
     ippsAddC_64f_I(pMean, y, n);
+*/
 }
 
 /// Compute the envelope
 /*
-void Envelope::transform(const int n, const float x[], float y[])
+template<>
+void Envelope<float>::transform(const int n, const float x[], float *yIn[])
 {
     pImpl->mMean = 0;
     if (!isInitialized())
@@ -241,10 +370,18 @@ void Envelope::transform(const int n, const float x[], float y[])
     {
         RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mEnvelopeLength);
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
         RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    // Special case
+    if (n == 1)
+    {
+        pImpl->mMean = static_cast<double> (x[0]);
+        y[0] = x[0];
+        return;
     }
     // Remove the mean
     float pMean;
@@ -253,10 +390,14 @@ void Envelope::transform(const int n, const float x[], float y[])
     pImpl->mMean = static_cast<double> (pMean);
     // Hilbert transform the signal (yields the analytic signal)
     auto yhilb = reinterpret_cast<std::complex<float> *> (pImpl->mHilb32fc);
-    pImpl->mHilbert.transform(n, y, yhilb);
+    pImpl->mHilbert.transform(n, y, &yhilb);
     // Take the absolute value to obtain the envelope
     ippsMagnitude_32fc(pImpl->mHilb32fc, y, n); 
     // Restore the mean
     ippsAddC_32f_I(pMean, y, n);
 }
 */
+
+/// Template instantiation
+template class RTSeis::Utilities::Transforms::Envelope<double>;
+template class RTSeis::Utilities::Transforms::Envelope<float>;

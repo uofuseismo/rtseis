@@ -538,7 +538,8 @@ TEST(UtilitiesTransforms, Hilbert)
     EXPECT_NO_THROW(hilbert.initialize(n));
     EXPECT_EQ(hilbert.getTransformLength(), n);
     h.resize(n);
-    hilbert.transform(n, x.data(), h.data());
+    std::complex<double> *hPtr = h.data();
+    EXPECT_NO_THROW(hilbert.transform(n, x.data(), &hPtr));
     double emax = 0;
     for (auto i=0; i<static_cast<int> (x.size()); i++)
     {
@@ -562,7 +563,8 @@ TEST(UtilitiesTransforms, Hilbert)
     {
         x[i] = static_cast<double> (i);
     }
-    hilbert.transform(n, x.data(), h.data());
+    hPtr = h.data();
+    EXPECT_NO_THROW(hilbert.transform(n, x.data(), &hPtr));
     emax = 0;
     for (auto i=0; i<static_cast<int>(x.size()); i++)
     {
@@ -579,15 +581,17 @@ TEST(UtilitiesTransforms, Hilbert)
 TEST(UtilitiesTransforms, Envelope)
 {
     const std::string fileName = "data/envelopeChirpReference.txt";
-    Envelope envelope;
+    Envelope<double> envelope;
     // Do an edge case analytically
     int n = 1;
     double x1[1] = {9};
     double upRef1[1] = {9};
     double loRef1[1] = {9};
     double up1[1], lo1[1];
-    EXPECT_NO_THROW(envelope.initialize(n, RTSeis::Precision::DOUBLE));
-    EXPECT_NO_THROW(envelope.transform(1, x1, up1, lo1));
+    EXPECT_NO_THROW(envelope.initialize(n));
+    double *upPtr = up1; 
+    double *loPtr = lo1;
+    EXPECT_NO_THROW(envelope.transform(1, x1, &upPtr, &loPtr));
     ASSERT_LE(std::abs(upRef1[0] - up1[0]), 1.e-15);
     ASSERT_LE(std::abs(loRef1[0] - lo1[0]), 1.e-15);
     // Load the data
@@ -597,12 +601,13 @@ TEST(UtilitiesTransforms, Envelope)
     EXPECT_EQ(npts, 4000);
     // Do a real test
     std::vector<double> yupper(npts), ylower(npts);
-    Envelope envelopeChirp;
-    EXPECT_NO_THROW(envelopeChirp.initialize(npts, RTSeis::Precision::DOUBLE));
+    Envelope<double> envelopeChirp;
+    EXPECT_NO_THROW(envelopeChirp.initialize(npts));
     envelope = envelopeChirp; // Test copy assignment operator
     EXPECT_TRUE(envelope.isInitialized()); // Verify it's initialized
-    EXPECT_NO_THROW(envelope.transform(npts, x.data(),
-                    yupper.data(), ylower.data())); 
+    double *yPtrUp = yupper.data();
+    double *yPtrLo = ylower.data();
+    EXPECT_NO_THROW(envelope.transform(npts, x.data(), &yPtrUp, &yPtrLo));
     double errorLower;
     double errorUpper;
     ippsNormDiff_L1_64f(upRef.data(), yupper.data(), npts, &errorUpper);
@@ -639,11 +644,11 @@ TEST(UtilitiesTransforms, firEnvelope)
                                     3.594503058524673, 2.652854154751004,
                                     1.787936920537643};
     std::vector<double> ySimple(xSimple.size(), 0);
-    FIREnvelope env;
-    EXPECT_NO_THROW(env.initialize(5, RTSeis::ProcessingMode::POST_PROCESSING,
-                    RTSeis::Precision::DOUBLE));
+    FIREnvelope<double> env;
+    EXPECT_NO_THROW(env.initialize(5, RTSeis::ProcessingMode::POST_PROCESSING));
+    double *yPtr = ySimple.data();
     EXPECT_NO_THROW(env.transform(xSimple.size(),
-                    xSimple.data(), ySimple.data()));
+                    xSimple.data(), &yPtr));
 #ifdef __STDCPP_MATH_SPEC_FUNCS__ // __cplusplus > 201402L
     double tol = 1.e-13;
 #else
@@ -654,10 +659,9 @@ TEST(UtilitiesTransforms, firEnvelope)
                         ySimple.size(), &error);
     ASSERT_LE(error, tol);
 
-    EXPECT_NO_THROW(env.initialize(6, RTSeis::ProcessingMode::POST_PROCESSING,
-                    RTSeis::Precision::DOUBLE));
-    EXPECT_NO_THROW(env.transform(xSimple.size(), xSimple.data(),
-                    ySimple.data()));
+    EXPECT_NO_THROW(env.initialize(6, RTSeis::ProcessingMode::POST_PROCESSING));
+    yPtr = ySimple.data();
+    EXPECT_NO_THROW(env.transform(xSimple.size(), xSimple.data(), &yPtr));
     ippsNormDiff_L1_64f(ySimpleRef2.data(), ySimple.data(), 
                         ySimple.size(), &error);
     ASSERT_LE(error, tol);
@@ -668,22 +672,22 @@ TEST(UtilitiesTransforms, firEnvelope)
     ASSERT_EQ(static_cast<int> (upRef300.size()), 4000);
     ASSERT_EQ(static_cast<int> (upRef301.size()), 4000);
     // Create with copy constructor
-    FIREnvelope env300;
+    FIREnvelope<double> env300;
     EXPECT_NO_THROW(env300.initialize(300,
-                    RTSeis::ProcessingMode::POST_PROCESSING,
-                    RTSeis::Precision::DOUBLE));
+                    RTSeis::ProcessingMode::POST_PROCESSING));
     env = env300;
     std::vector<double> up(x.size());
-    env.transform(x.size(), x.data(), up.data());
+    yPtr = up.data();
+    env.transform(x.size(), x.data(), &yPtr);
     ippsNormDiff_L1_64f(upRef300.data(), up.data(),  upRef300.size(), &error);
     ASSERT_LE(error/upRef300.size(), 1.e-8);
     // Test move constructor
-    FIREnvelope env301;
+    FIREnvelope<double> env301;
     EXPECT_NO_THROW(env301.initialize(301,
-                    RTSeis::ProcessingMode::POST_PROCESSING,
-                    RTSeis::Precision::DOUBLE));
+                    RTSeis::ProcessingMode::POST_PROCESSING));
     env = std::move(env301);
-    env.transform(x.size(), x.data(), up.data());
+    yPtr = up.data();
+    env.transform(x.size(), x.data(), &yPtr);
     ippsNormDiff_L1_64f(upRef301.data(), up.data(),  upRef301.size(), &error);
     ASSERT_LE(error/upRef301.size(), 1.e-8);
     // Remove the mean to make comparison easier
@@ -691,21 +695,19 @@ TEST(UtilitiesTransforms, firEnvelope)
     ippsMean_64f(x.data(), x.size(), &mean);
     ippsSubC_64f_I(mean, x.data(), x.size());
     auto timeStart = std::chrono::high_resolution_clock::now();
-    env.initialize(300, RTSeis::ProcessingMode::POST_PROCESSING,
-                   RTSeis::Precision::DOUBLE);
+    env.initialize(300, RTSeis::ProcessingMode::POST_PROCESSING);
     ippsZero_64f(upRef300.data(), upRef300.size()); 
-    env.transform(x.size(), x.data(), upRef300.data());
-    env.initialize(301, RTSeis::ProcessingMode::POST_PROCESSING,
-                   RTSeis::Precision::DOUBLE);
+    yPtr = upRef300.data();
+    env.transform(x.size(), x.data(), &yPtr);
+    env.initialize(301, RTSeis::ProcessingMode::POST_PROCESSING);
     ippsZero_64f(upRef301.data(), upRef301.size());
-    env.transform(x.size(), x.data(), upRef301.data());
+    yPtr = upRef301.data();
+    env.transform(x.size(), x.data(), &yPtr);
     // Test the real-time component
-    FIREnvelope envrt300, envrt301;
+    FIREnvelope<double> envrt300, envrt301;
     std::vector<double> up300(x.size()), up301(x.size());
-    envrt300.initialize(300, RTSeis::ProcessingMode::REAL_TIME,
-                        RTSeis::Precision::DOUBLE);
-    envrt301.initialize(301, RTSeis::ProcessingMode::REAL_TIME,
-                        RTSeis::Precision::DOUBLE); 
+    envrt300.initialize(300, RTSeis::ProcessingMode::REAL_TIME);
+    envrt301.initialize(301, RTSeis::ProcessingMode::REAL_TIME);
     auto timeEnd = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference time: %.8e (s)\n", tdif.count());
@@ -730,8 +732,8 @@ TEST(UtilitiesTransforms, firEnvelope)
                 const double *xptr = x.data() + nxloc;
                 double *yptr300 = up300.data() + nxloc;
                 double *yptr301 = up301.data() + nxloc;
-                EXPECT_NO_THROW(envrt300.transform(nptsPass, xptr, yptr300));
-                EXPECT_NO_THROW(envrt301.transform(nptsPass, xptr, yptr301));
+                EXPECT_NO_THROW(envrt300.transform(nptsPass, xptr, &yptr300));
+                EXPECT_NO_THROW(envrt301.transform(nptsPass, xptr, &yptr301));
                 nxloc = nxloc + nptsPass;
             } // Loop on acquisition loop
             envrt300.resetInitialConditions();

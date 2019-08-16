@@ -19,6 +19,7 @@ namespace Transforms
  * @ingroup rtseis_utils_transforms
  * @sa Hilbert
  */
+template<class T = double>
 class Envelope
 {
 public:
@@ -88,12 +89,9 @@ public:
      * @brief Initializes the envelope.
      * @param[in] n   The number of samples in the signal whose envelope is
      *                to be computed.
-     * @param[in] precision  Defines the underlying precision of the envelope
-     *                       computation. 
      * @throws std::invalid_argument if n is not positive.
      */
-    void initialize(const int n,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    void initialize(const int n);
     /*!
      * @brief Computes the envelope of the signal.
      * @param[in] n   The number of samples in the signal to transform.
@@ -105,8 +103,7 @@ public:
      * @throws std::invalid_argument if n is incorrect or x or yupper are NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void transform(const int n, const double x[], double yupper[]);
-    //void transform(const int n, const float x[], float yupper[]);
+    void transform(const int n, const T x[], T *yupper[]);
     /*! 
      * @brief Computes the envelope of the signal.
      * @param[in] n   The number of samples in the signal to transform.
@@ -120,8 +117,7 @@ public:
      * @throws std::invalid_argument if n is incorrect or x or yupper are NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void transform(const int n, const double x[],
-                   double yupper[], double ylower[]);
+    void transform(const int n, const T x[], T *yupper[], T *ylower[]);
 private:
     class EnvelopeImpl;
     std::unique_ptr<EnvelopeImpl> pImpl;
