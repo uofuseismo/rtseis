@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <array>
+#include <algorithm>
 #include <vector>
 #include <mkl_lapacke.h>
 #include <ipps.h>
