@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <stdexcept>
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/rotate/utilities.hpp"
 
