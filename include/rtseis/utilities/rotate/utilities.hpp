@@ -54,6 +54,12 @@ void radialTransverseToNorthEast(const int nSamples,
 /*!
  * @brief Rotates a (vertical,north,east) channel triplet to 
  *        (longitudinal,radial,transverse).
+ * @note My convention corresponds to (Up, North, East) whereas Obspy's
+ *       convention corresponds to (Up, South, East).  Therefore Obspy
+ *       is not self-consistent since it (R,T) rotation uses a left-handed
+ *       frame while its (L,Q,T) frame uses a right-handed frame.  If you'd
+ *       like to make your result consistent with Obspy then negate the Q'th
+ *       component.
  * @param[in] nSamples        The number of samples in the seismograms.
  * @param[in] backAzimuth     The receiver to source azimuth in radians.
  * @param[in] incidenceAngle  The angle of incidence to the station in radians.
@@ -107,6 +113,7 @@ void verticalNorthEastToLongitudinalRadialTransverse(
  *                            dimension is [nSamples].
  * @throws std::invalid_argument if nSamples is positive and vertical, north,
  *         east, longitudinal, radial, or transverse is NULL.
+ * @sa verticalNorthEastToLongitudinalRadialTransverse()
  */
 template<typename T>
 void longitudinalRadialTransverseToVerticalNorthEast(

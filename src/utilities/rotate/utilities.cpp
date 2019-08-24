@@ -27,15 +27,35 @@ void RTSeis::Utilities::Rotate::northEastToRadialTransverse(
         if (radial == nullptr){RTSEIS_THROW_IA("%s", "radial is NULL");}
         RTSEIS_THROW_IA("%s", "transverse is NULL"); 
     }
-    // Stein and Wysession Eqn 44.
-    T theta = 3*M_PI_2 - backAzimuth;
-    T ca = std::cos(theta);
-    T sa = std::sin(theta);
+    // Use a counterclockwise rotation matrix.  Flip back-azimuth to
+    // theta and make it increase negatively.  Comparing with
+    //  {T} = [ cos(az) sin(az)]{E}
+    //  {R} = [-sin(az) cos(az)]{N}
+    // with 
+    //  {T} = [ cos(180-az) sin(180-az)]{E}
+    //  {R} = [-sin(180-az) cos(180-az)]{N}
+    // becomes 
+    //  {T} = [-cos(baz)  sin(baz)]{E}
+    //  {R} = [-sin(baz) -cos(baz)]{N}
+    // Reordering:
+    //  R = -N cos(baz) - E sin(baz) 
+    //  T =  N sin(baz) - E cos(baz)
+    // where the -az means az increases clockwise.  This is exactly the equation
+    // proposed by (4.19-4.20) of Haskov - Routine Data Processing in Earthquake
+    // Seismology.  Stein and Wysession Eqn 44 on pg 58 results in a
+    // polarity flip on the transvserse which corresponds to a right-handed 
+    // system which I don't want because stations usually use a left-handed
+    // system.
+    T cb = std::cos(backAzimuth);
+    T sb = std::sin(backAzimuth);
+    T ncb =-cb;
+    T nsb =-sb;
     #pragma omp simd
     for (int i=0; i<nSamples; ++i)
     {
-        radial[i]     = ca*east[i] + sa*north[i];
-        transverse[i] =-sa*east[i] + ca*north[i];
+        radial[i]     = ncb*north[i] + nsb*east[i];
+        transverse[i] =  sb*north[i] + ncb*east[i]; 
+         
     }
 }
 
@@ -61,15 +81,16 @@ void RTSeis::Utilities::Rotate::radialTransverseToNorthEast(
         if (radial == nullptr){RTSEIS_THROW_IA("%s", "radial is NULL");}
         RTSEIS_THROW_IA("%s", "transverse is NULL");
     }
-    // Stein and Wysession Eqn 44.
-    T theta = 3*M_PI_2 - backAzimuth;
-    T ca = std::cos(theta);
-    T sa = std::sin(theta);
+    // Compute Inverse of pg 95 Haskov 4.19 - 4.20
+    T cb = std::cos(backAzimuth);
+    T sb = std::sin(backAzimuth);
+    T ncb =-cb;
+    T nsb =-sb;
     #pragma omp simd
     for (int i=0; i<nSamples; ++i)
     {
-        north[i] = ca*radial[i] - sa*transverse[i];
-        east[i]  = sa*radial[i] + ca*transverse[i];
+        north[i] = ncb*radial[i] +  sb*transverse[i];
+        east[i]  = nsb*radial[i] + ncb*transverse[i];
     }
 }
 
@@ -117,7 +138,7 @@ void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse(
     for (int i=0; i<nSamples; ++i)
     {
         longitudinal[i] = ci*vertical[i] - sisb*east[i] - sicb*north[i];
-        radial[i]       = si*vertical[i] - cisb*east[i] - cicb*north[i];
+        radial[i]       =-si*vertical[i] - cisb*east[i] - cicb*north[i];
         transverse[i]   =                -   cb*east[i] +   sb*north[i];
     }
 }
@@ -165,9 +186,9 @@ void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast(
     #pragma omp simd
     for (int i=0; i<nSamples; ++i)
     {
-        vertical[i] =   ci*longitudinal[i] - sisb*radial[i] - sicb*transverse[i];
-        east[i]     =   si*longitudinal[i] - cisb*radial[i] - cicb*transverse[i];
-        north[i]    =-sicb*longitudinal[i] - sb*radial[i] - cb*transverse[i];
+        vertical[i] =   ci*longitudinal[i] - si*radial[i];
+        east[i]     =-sisb*longitudinal[i] - cisb*radial[i] - cb*transverse[i];
+        north[i]    =-sicb*longitudinal[i] - cicb*radial[i] + sb*transverse[i];
     }
 }
 
@@ -188,6 +209,23 @@ void RTSeis::Utilities::Rotate::northEastToRadialTransverse<float>(
     const float east[],
     float *radial[],
     float *transverse[]);
+
+template
+void RTSeis::Utilities::Rotate::radialTransverseToNorthEast<double>(
+    const int nSamples,
+    const double backAzimuth,
+    const double radial[],
+    const double transverse[],
+    double *north[],
+    double *east[]);
+template
+void RTSeis::Utilities::Rotate::radialTransverseToNorthEast<float>(
+    const int nSamples,
+    const float backAzimuth,
+    const float radial[],
+    const float transverse[],
+    float *north[],
+    float *east[]);
 
 template
 void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse<double>(
@@ -212,4 +250,29 @@ void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse<
     float *longitudinalIn[],
     float *radialIn[],
     float *transverseIn[]
+    );
+
+template
+void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast<double>(
+    const int nSamples,
+    const double backAzimuth,
+    const double incidenceAngle,
+    const double longitudinal[],
+    const double radial[],
+    const double transverse[],
+    double *verticalIn[],
+    double *northIn[],
+    double *eastIn[]
+    );
+template
+void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast<float>(
+    const int nSamples,
+    const float backAzimuth,
+    const float incidenceAngle,
+    const float longitudinal[],
+    const float radial[],
+    const float transverse[],
+    float *verticalIn[],
+    float *northIn[],
+    float *eastIn[]
     );
