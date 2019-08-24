@@ -31,19 +31,34 @@ inline void scal3(const T alpha, const T x[3], T y[3])
     y[2] = alpha*x[2];
 }
 
+/// Computes the left singular vector and singular values of Q
 inline void svd(lapack_int m, lapack_int n, const double q[],
                 double s[], double U[])
 {
     std::array<double, 9> qwork;
     std::memcpy(qwork.data(), q, 9*sizeof(double));
-    double superb = 0;
-    lapack_int lwork = -1;
-    double work8;
+    lapack_int lwork = 32;
+    std::array<double, 32> work;
     auto info = LAPACKE_dgesvd_work(LAPACK_ROW_MAJOR,
                                     'A', 'N', m, n, qwork.data(), 3, 
-                                    s, U, 3, NULL, 1, &work8, lwork); 
-    lwork = static_cast<int> (work8);
-printf("%d\n", lwork);
+                                    s, U, 3, NULL, 1, work.data(), lwork); 
+#ifdef DEBUG
+    assert(info == 0);
+#endif
+    if (info != 0){RTSEIS_ERRMSG("%s", "dgesvd failed");}
+}
+
+/// Computes the left singular vector and singular values of Q
+inline void svd(lapack_int m, lapack_int n, const float q[],
+                float s[], float U[])
+{
+    std::array<float, 9> qwork;
+    std::memcpy(qwork.data(), q, 9*sizeof(double));
+    lapack_int lwork = 32;
+    std::array<float, 32> work;
+    auto info = LAPACKE_sgesvd_work(LAPACK_ROW_MAJOR,
+                                    'A', 'N', m, n, qwork.data(), 3,
+                                    s, U, 3, NULL, 1, work.data(), lwork);
 #ifdef DEBUG
     assert(info == 0);
 #endif
@@ -87,6 +102,7 @@ SVDPolarizer<T>::~SVDPolarizer() = default;
 ///===========================================================================//
 //                                 Utility Functions                          //
 //============================================================================//
+
 /// Polarizes a signal using p_n = I_n R_n r_n 
 template<typename T>
 void RTSeis::Utilities::Polarization::pPolarize(

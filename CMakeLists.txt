@@ -119,7 +119,9 @@ SET(UTILS_SRCS
     src/utilities/normalization/minMax.cpp
     src/utilities/normalization/signBit.cpp
     src/utilities/normalization/zscore.cpp
+    src/utilities/polarization/eigenPolarizer.cpp
     src/utilities/polarization/svdPolarizer.cpp
+    src/utilities/rotate/utilities.cpp
     src/utilities/transforms/dft.cpp
     src/utilities/transforms/dftRealToComplex.cpp
     src/utilities/transforms/dftUtils.cpp
@@ -185,6 +187,7 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/filters.cpp
                testing/utils/transforms.cpp
                testing/utils/response.cpp
+               testing/utils/rotate.cpp
                testing/utils/polarization.cpp)
 ADD_EXECUTABLE(testPPSC
                testing/postProcessing/singleChannel.cpp)
