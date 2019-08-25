@@ -12,6 +12,7 @@ namespace
 {
 
 using namespace RTSeis::Utilities::Polarization;
+namespace Rotate = RTSeis::Utilities::Rotate;
 
 TEST(UtilitiesPolarization, svdPolarizer)
 {
@@ -45,21 +46,17 @@ TEST(UtilitiesPolarization, eigenPolarizer)
     {
         for (auto &baz : bazs)
         {
-            //double aoi = 36.0;
-            //double baz = 301.0;
             double az = baz + 180;
             if (az > 360){az = az - 360;}
-            double ci = std::cos(aoi*M_PI/180.0);
-            double si = std::sin(aoi*M_PI/180.0);
-            double cb = std::cos(baz*M_PI/180.0);
-            double sb = std::sin(baz*M_PI/180.0);
             std::vector<double> vertical(nt), east(nt), north(nt);
-            for (int i=0; i<nt; ++i)
-            {
-                vertical[i] =     ci*longitudinal[i] +    si*radial[i];
-                east[i]     = -si*sb*longitudinal[i] + ci*sb*radial[i] - cb*transverse[i];
-                north[i]    = -si*cb*longitudinal[i] + ci*cb*radial[i] + sb*transverse[i];
-            }
+            // Rotate LQT to ZNE
+            double *vPtr = vertical.data();
+            double *nPtr = north.data();
+            double *ePtr = east.data();
+            Rotate::longitudinalRadialTransverseToVerticalNorthEast(
+                        nt, baz*M_PI/180, aoi*M_PI/180,
+                        longitudinal.data(), radial.data(), transverse.data(),
+                        &vPtr, &nPtr, &ePtr); 
             // Now, recover the azimuth and incidence angle
             EXPECT_TRUE(eigen.isInitialized());
             EXPECT_EQ(eigen.getNumberOfSamples(), nt);

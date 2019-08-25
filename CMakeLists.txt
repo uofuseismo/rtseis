@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(RTSeis VERSION 0.2.1 LANGUAGES C CXX)
+project(RTSeis VERSION 0.2.1 LANGUAGES CXX)
 enable_testing()
 
 ##########################################################################################
@@ -90,7 +90,7 @@ set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 
 #SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
-    src/utilities/verbosity.c
+    src/utilities/verbosity.cpp
     src/utilities/deconvolution/instrumentResponse.cpp
     src/utilities/filterDesign/filterDesigner.cpp
     src/utilities/filterDesign/response.cpp

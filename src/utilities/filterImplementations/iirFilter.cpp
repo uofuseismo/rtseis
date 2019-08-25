@@ -4,6 +4,7 @@
 #include <ipps.h>
 #include <ippversion.h>
 #include <ippcore.h>
+#include <ipptypes.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.h"
 #include "rtseis/private/throw.hpp"
