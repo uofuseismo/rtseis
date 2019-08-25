@@ -34,8 +34,6 @@ jobs:
             -DCMAKE_CXX_COMPILER=g++-7 \
             -DCMAKE_C_FLAGS="-Wall" \
             -DCMAKE_CXX_FLAGS="-Wall" \
-            -DIPP_INCLUDE_DIR=${IPP_DIR}/include \
-            -DIPP_LIBRARY="${IPP_LIB_ROOT}/libipps.so;${IPP_LIB_ROOT}/libippvm.so;${IPP_LIB_ROOT}/libippcore.so" \
             -DMKL_INCLUDE_DIR="${MKL_DIR}/include" \
             -DMKL_LIBRARY="${MKL_LIB_ROOT}/libmkl_intel_lp64.so;${MKL_LIB_ROOT}/libmkl_sequential.so;${MKL_LIB_ROOT}/libmkl_core.so;${MKL_LIB_ROOT}/libmkl_avx2.so" \
             -DRTSEIS_WRAP_PYTHON=TRUE \

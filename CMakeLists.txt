@@ -46,8 +46,9 @@ if (RTSEIS_WRAP_PYTHON)
    message(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
    find_package(pybind11 REQUIRED)
 endif()
-
+set(FindIPP_DIR ${CMAKE_SOURCE_DIR}/CMakeModules)
 find_package(GTest REQUIRED)
+find_package(FindIPP REQUIRED)
 
 ##########################################################################################
 #                                       Include Directories                              #
