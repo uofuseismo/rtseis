@@ -14,7 +14,6 @@
 #include <string.h>
 #endif
 #include <unistd.h>
-#include "rtseis/config.h"
 #include "rtseis/verbosity.h"
 
 #define ANSI_COLOR_RED     "\x1b[31m"

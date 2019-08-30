@@ -83,8 +83,6 @@ ENDIF()
 #                                      Define Library Dependencies                       #
 ##########################################################################################
 
-configure_file(${CMAKE_SOURCE_DIR}/include/rtseis/config.h.in
-               ${CMAKE_SOURCE_DIR}/include/rtseis/config.h)
 configure_file(${CMAKE_SOURCE_DIR}/src/utilities/version.cpp.in
                ${CMAKE_SOURCE_DIR}/src/utilities/version.cpp)
 
