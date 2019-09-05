@@ -84,8 +84,12 @@ public:
       * @param[out] y    The Fourier transformed signal.  This has
       *                  dimension [maxy] though only the first 
       *                  getTransformLength() points are defined. 
-      *                  Here, y[0] is the zero-frequency and 
+      *                  Here, y[0] is the zero-frequency.  When 
+      *                  \c getMaximumSignalLength() is even 
       *                  y[getTransformLength()-1] is the Nyquist.
+      *                  Otherwise, y[getTransformLength()-1] is
+      *                  (\c getMaximumSignalLength() - 1 )
+      *                 /(samplingPeriod*\c getMaximumSignalLength()).
       * @throws std::invalid_argument if any arguments are invalid.
       * @throws std::runtime_error if the class is not initialized.
       */
