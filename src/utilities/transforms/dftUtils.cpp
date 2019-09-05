@@ -190,6 +190,94 @@ int DFTUtilities::nextPowerOfTwo(const int n)
     return n2;
 }
 
+/// fftshift
+template<typename T> std::vector<T> 
+RTSeis::Utilities::Transforms::DFTUtilities::fftShift(const std::vector<T> &x)
+{
+    std::vector<T> y;
+    if (x.empty()){return y;}
+    int npts = static_cast<int> (x.size());
+    y.resize(x.size());
+    T *yPtr = y.data();
+    fftShift(npts, x.data(), &yPtr); 
+    return y;
+}
+
+template<typename T>
+void RTSeis::Utilities::Transforms::DFTUtilities::fftShift(
+    const int n, const T x[], T *yIn[])
+{
+    T *y = *yIn; 
+    // Base cases
+    if (n == 1)
+    {
+        y[0] = x[0];
+        return;
+    }
+    if (n == 2)
+    {
+        y[0] = x[1];
+        y[1] = x[0];
+        return;
+    }
+    // Figure out the copy indices
+    int jf, ncopy1, ncopy2;
+    int i1 = n/2;
+    if (n%2 == 1)
+    {
+        i1 = n/2 + 1;
+        ncopy1 = n - i1; // Tail shift
+        ncopy2 = i1;
+        jf = i1 - 1; 
+    }
+    else
+    {
+        i1 = n/2;
+        ncopy1 = n/2;
+        ncopy2 = ncopy1;
+        jf = i1;  
+    }
+    // Now copy second half of x to start of y
+    std::copy(&x[i1], &x[i1]+ncopy1, y);
+    // And copy first half of x to second half of y
+    std::copy(x, x+ncopy2, &y[jf]); 
+}
+
+// Instantiate templates
+template
+std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::fftShift<double>
+    (const std::vector<double> &x);
+template
+void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<double>
+    (const int n, const double x[], double *yIn[]);
+
+template
+std::vector<float> RTSeis::Utilities::Transforms::DFTUtilities::fftShift<float>
+    (const std::vector<float> &x);
+template
+void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<float>
+    (const int n, const float x[], float *yIn[]);
+
+template std::vector<std::complex<double>> 
+RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<double>>
+    (const std::vector<std::complex<double>> &x);
+template
+void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<double>>
+    (const int n, const std::complex<double> x[], std::complex<double> *yIn[]);
+
+template std::vector<std::complex<float>>
+RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<float>>
+    (const std::vector<std::complex<float>> &x);
+template
+void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<float>>
+    (const int n, const std::complex<float> x[], std::complex<float> *yIn[]);
+
+template std::vector<int>
+RTSeis::Utilities::Transforms::DFTUtilities::fftShift<int>
+    (const std::vector<int> &x);
+template
+void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<int>
+    (const int n, const int x[], int *yIn[]);
 
 #pragma omp declare simd
 static double rem(const double x, double y)

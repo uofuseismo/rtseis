@@ -146,5 +146,31 @@ void realToComplexDFTFrequencies(const int nSamples,
  */
 int nextPowerOfTwo(const int n);
 
+/*! @name Shuffle
+ * @{
+ */
+/*! 
+ * @brief Shifts the zero-frequency component of a transform to the
+ *        center of the spectrum.
+ * @param[in] x   The transform to shuffle.
+ * @result The shuffled transform.  This has the same size as x but now
+ *         the zero frequency is at the center of the spectrum.
+ */
+template<class T> std::vector<T> fftShift(const std::vector<T> &x);
+/*!
+ * @brief Shifts the zero-frequency component of a transform to the center
+ *        of the spectrum.
+ * @param[in] nSamples  The number of samples in x.
+ * @param[in] x         The transform to shuffle.  This is an array whose
+ *                      dimension is [nSamples].
+ * @param[out] y        This is the (potentially symmetric) transform where
+ *                      the zero-frequency of the transform is now the center
+ *                      element.  This is an array whose dimension is [n]. 
+ * @throws std::invalid_argument if nSamples is not positive or x or y is NULL.
+ */
+template<typename T>
+void fftShift(const int nSamples, const T x[], T *y[]);
+/*! } */
+
 }
 #endif

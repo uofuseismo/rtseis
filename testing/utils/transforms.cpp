@@ -224,6 +224,39 @@ TEST(UtilitiesTransforms, rfftFreqs)
     } 
 }
 
+TEST(UtilitiesTransforms, fftShift)
+{
+    std::vector<double> f1({1});
+    auto r1 = DFTUtilities::fftShift(f1);
+    EXPECT_EQ(r1[0], f1[0]);
+
+    std::vector<double> f2({1, 2});
+    auto r2 = DFTUtilities::fftShift(f2);
+    EXPECT_EQ(r2[0], f2[1]);
+    EXPECT_EQ(r2[1], f1[0]);
+
+    std::vector<double> f3({2, 3, 1});
+    auto r3 = DFTUtilities::fftShift(f3);
+    for (int i=0; i<3; ++i)
+    {
+        EXPECT_EQ(static_cast<double> (i+1), r3[i]);
+    }
+
+    std::vector<double> f9({5, 6, 7, 8, 9, 1, 2, 3, 4});
+    auto r9 = DFTUtilities::fftShift(f9);
+    for (int i=0; i<9; ++i)
+    {
+        EXPECT_EQ(static_cast<double> (i+1), r9[i]);
+    }
+
+    std::vector<double> f10({6, 7, 8, 9, 10, 1, 2, 3, 4, 5});
+    auto r10 = DFTUtilities::fftShift(f10);
+    for (int i=0; i<10; ++i)
+    {
+        EXPECT_EQ(static_cast<double> (i+1), r10[i]);
+    }
+}
+
 //int transforms_test_dft()
 TEST(UtilitiesTransforms, dft)
 {
