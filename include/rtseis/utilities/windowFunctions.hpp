@@ -23,8 +23,8 @@ namespace WindowFunctions
  * @result The Hamming window of length len.
  * @throws std::invalid_argument if len is not positive.
  */
-//std::vector<double> hamming(const int len);
-//std::vector<float> hamming(const int len);
+//std::vector<double> hamming(int len);
+//std::vector<float> hamming(int len);
 /*!
  * @brief Creates a Hamming window which is defined as
  *        \f$ 
@@ -34,8 +34,8 @@ namespace WindowFunctions
  * @param[out] window  The Hamming window of length len.
  * @throws std::invalid_argument if len is not positive or window is NULL.
  */
-void hamming(const int len, double *window[]);
-void hamming(const int len, float *window[]);
+void hamming(int len, double *window[]);
+void hamming(int len, float *window[]);
 
 /*!
  * @brief Creates a Hann window which is defined as
@@ -46,8 +46,8 @@ void hamming(const int len, float *window[]);
  * @param[out] window  The Hann window of length len.
  * @throws std::invalid_argment if len is not positive or window is NULL.
  */
-void hann(const int len, double *window[]);
-void hann(const int len, float *window[]);
+void hann(int len, double *window[]);
+void hann(int len, float *window[]);
 
 /*!
  * @brief Creates a Blackman window which is defined as
@@ -61,8 +61,8 @@ void hann(const int len, float *window[]);
  * @param[out] window  The Blackman window of length len.
  * @throws std::invalid_argument if len is not positive or window is NULL.
  */
-void blackman(const int len, double *window[]);
-void blackman(const int len, float *window[]);
+void blackman(int len, double *window[]);
+void blackman(int len, float *window[]);
 
 /*!
  * @brief Creates a sine window which is defined as
@@ -76,8 +76,8 @@ void blackman(const int len, float *window[]);
  * @param[out] window  The sine window of length len.
  * @throws std::invalid_argument if len is not postiive or window is NULL.
  */
-void sine(const int len, double *window[]);
-void sine(const int len, float *window[]);
+void sine(int len, double *window[]);
+void sine(int len, float *window[]);
 
 /*!
  * @brief Creates a Bartlett window which is defined as
@@ -93,8 +93,8 @@ void sine(const int len, float *window[]);
  * @param[out] window  The Bartlett window of length len.
  * @throw std::invalid_argument if len is not positive or window is NULL.
  */
-void bartlett(const int len, double *window[]);
-void bartlett(const int len, float *window[]);
+void bartlett(int len, double *window[]);
+void bartlett(int len, float *window[]);
 
 /*!
  * @brief Creates a Kaiser window which is defined as
@@ -117,8 +117,8 @@ void bartlett(const int len, float *window[]);
  *      will only be valid to 6 digits.  C++17 will compute a high-accuracy
  *      Bessel function using an intrinsic.
  */
-void kaiser(const int len, double *window[], const double beta = 0.5);
-void kaiser(const int len, float *window[], const float beta = 0.5f);
+void kaiser(int len, double *window[], double beta = 0.5);
+void kaiser(int len, float *window[], float beta = 0.5f);
 
 /*!
  * @}

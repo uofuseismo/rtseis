@@ -16,6 +16,7 @@
 namespace VM = RTSeis::Utilities::Math::VectorMath;
 using namespace RTSeis::Utilities;
 
+/*
 std::vector<double>
 Interpolation::interpft(const std::vector<double> &x, const int npnew)
 {
@@ -25,17 +26,49 @@ Interpolation::interpft(const std::vector<double> &x, const int npnew)
     }
     auto npts = static_cast<int> (x.size());
     if (npts < 1){RTSEIS_THROW_IA("%s", "x is empty");}
-    // Straight copy case
     std::vector<double> yint(npnew);
-    if (npts == npnew)
+    double *yptr = yint.data();
+    interpft(npts, x.data(), npnew, &yptr);
+    return yint;
+}
+*/
+
+// Template instantiation
+//template int RTSeis::Utilities::Interpolation::interpft<double> (
+//     const int npts, const double x[], const int npnew, double *y[]);
+
+template<>
+void Interpolation::interpft<>(const int nx, const double x[],
+                               const int npnew, double *yIn[])
+{
+    // Get pointer to output and do error checks
+    double *yint = *yIn; 
+    if (npnew < 1 || nx < 1 || x == nullptr || yint == nullptr)
     {
-        ippsCopy_64f(x.data(), yint.data(), npnew);
-        return yint;
+        if (nx < 1){RTSEIS_THROW_IA("nx = %d must be positive", nx);}
+        if (npnew < 1)
+        {
+            RTSEIS_THROW_IA("%s", "No points at which to interpolate");
+        }
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    // Straight copy case
+    if (nx == npnew)
+    {
+        ippsCopy_64f(x, yint, npnew);
+        return;
+    }
+    // Only one point in x - amounts to a fill
+    if (nx == 1)
+    {
+        ippsSet_64f(x[0], yint, npnew);
+        return;
     }
     // Figure out the size of the forward and inverse transforms
     IppStatus status;
     int bufferSizeI, bufferSizeF, specSizeF, specSizeI, sizeInitF, sizeInitI;
-    status = ippsDFTGetSize_R_64f(npts,
+    status = ippsDFTGetSize_R_64f(nx,
                                   IPP_FFT_DIV_INV_BY_N,
                                   ippAlgHintNone,
                                   &specSizeF,
@@ -58,7 +91,7 @@ Interpolation::interpft(const std::vector<double> &x, const int npnew)
     // Initialize the forward transform
     auto *pDFTForwardSpec = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeF);
     Ipp8u *pDFTInitBuf = ippsMalloc_8u(std::max(sizeInitF, sizeInitI));
-    status = ippsDFTInit_R_64f(npts, 
+    status = ippsDFTInit_R_64f(nx, 
                                IPP_FFT_DIV_FWD_BY_N,
                                ippAlgHintNone,
                                pDFTForwardSpec,
@@ -86,20 +119,131 @@ Interpolation::interpft(const std::vector<double> &x, const int npnew)
     }
     // Set the workspace
     Ipp8u *pBuf = ippsMalloc_8u(std::max(bufferSizeF, bufferSizeI));
-    int maxDFTLen = std::max(npts/2+1, npnew/2+1);
+    int maxDFTLen = std::max(nx/2+1, npnew/2+1);
     Ipp64f *pDst = ippsMalloc_64f(2*maxDFTLen); // Hold real and complex
     ippsZero_64f(pDst, 2*maxDFTLen); // Pre-zero-pad in frequency domain
     // Forward transform
-    ippsDFTFwd_RToCCS_64f(x.data(), pDst, pDFTForwardSpec, pBuf);
+    ippsDFTFwd_RToCCS_64f(x, pDst, pDFTForwardSpec, pBuf);
     // It's pre-zero padded so inverse transform
-    ippsDFTInv_CCSToR_64f(pDst, yint.data(), pDFTInverseSpec, pBuf);
+    ippsDFTInv_CCSToR_64f(pDst, yint, pDFTInverseSpec, pBuf);
     // Clean up
     ippsFree(pBuf);
     ippsFree(pDst);
     ippsFree(pDFTForwardSpec);
     ippsFree(pDFTInverseSpec);
+}
+
+template<>
+void Interpolation::interpft<>(const int nx, const float x[],
+                               const int npnew, float *yIn[])
+{
+    // Get pointer to output and do error checks
+    float *yint = *yIn;
+    if (npnew < 1 || nx < 1 || x == nullptr || yint == nullptr)
+    {
+        if (nx < 2){RTSEIS_THROW_IA("nx = %d must be positive", nx);}
+        if (npnew < 1)
+        {
+            RTSEIS_THROW_IA("%s", "No points at which to interpolate");
+        }
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    // Straight copy case
+    if (nx == npnew)
+    {
+        ippsCopy_32f(x, yint, npnew);
+        return;
+    }
+    // Only one point in x - amounts to a fill
+    if (nx == 1)
+    {
+        ippsSet_32f(x[0], yint, npnew);
+        return;
+    }
+    // Figure out the size of the forward and inverse transforms
+    IppStatus status;
+    int bufferSizeI, bufferSizeF, specSizeF, specSizeI, sizeInitF, sizeInitI;
+    status = ippsDFTGetSize_R_32f(nx,
+                                  IPP_FFT_DIV_INV_BY_N,
+                                  ippAlgHintNone,
+                                  &specSizeF,
+                                  &sizeInitF,
+                                  &bufferSizeF);
+    if (status != ippStsNoErr)
+    {
+        RTSEIS_THROW_RTE("%s", "Forward transform inquiry failed");
+    }
+    status = ippsDFTGetSize_R_32f(npnew,
+                                  IPP_FFT_DIV_INV_BY_N,
+                                  ippAlgHintNone,
+                                  &specSizeI,
+                                  &sizeInitI,
+                                  &bufferSizeI);
+    if (status != ippStsNoErr)
+    {
+        RTSEIS_THROW_RTE("%s", "Inverse transform inquiry failed");
+    }
+    // Initialize the forward transform
+    auto *pDFTForwardSpec = (IppsDFTSpec_R_32f *) ippsMalloc_8u(specSizeF);
+    Ipp8u *pDFTInitBuf = ippsMalloc_8u(std::max(sizeInitF, sizeInitI));
+    status = ippsDFTInit_R_32f(nx,
+                               IPP_FFT_DIV_FWD_BY_N,
+                               ippAlgHintNone,
+                               pDFTForwardSpec,
+                               pDFTInitBuf);
+    if (status != ippStsNoErr)
+    {
+        ippsFree(pDFTForwardSpec);
+        ippsFree(pDFTInitBuf);
+        RTSEIS_THROW_RTE("%s", "Forward transform init failed");
+    }
+    // Initialize the inverse transform
+    auto *pDFTInverseSpec = (IppsDFTSpec_R_32f *) ippsMalloc_8u(specSizeI);
+    status = ippsDFTInit_R_32f(npnew,
+                               IPP_FFT_DIV_FWD_BY_N,
+                               ippAlgHintNone,
+                               pDFTInverseSpec,
+                               pDFTInitBuf);
+    if (pDFTInitBuf){ippsFree(pDFTInitBuf);}
+    if (status != ippStsNoErr)
+    {
+        ippsFree(pDFTForwardSpec);
+        ippsFree(pDFTInverseSpec);
+        ippsFree(pDFTInitBuf);
+        RTSEIS_THROW_RTE("%s", "Inverse transform init failed");
+    }
+    // Set the workspace
+    Ipp8u *pBuf = ippsMalloc_8u(std::max(bufferSizeF, bufferSizeI));
+    int maxDFTLen = std::max(nx/2+1, npnew/2+1);
+    Ipp32f *pDst = ippsMalloc_32f(2*maxDFTLen); // Hold real and complex
+    ippsZero_32f(pDst, 2*maxDFTLen); // Pre-zero-pad in frequency domain
+    // Forward transform
+    ippsDFTFwd_RToCCS_32f(x, pDst, pDFTForwardSpec, pBuf);
+    // It's pre-zero padded so inverse transform
+    ippsDFTInv_CCSToR_32f(pDst, yint, pDFTInverseSpec, pBuf);
+    // Clean up
+    ippsFree(pBuf);
+    ippsFree(pDst);
+    ippsFree(pDFTForwardSpec);
+    ippsFree(pDFTInverseSpec);
+}
+
+std::vector<double>
+Interpolation::interpft(const std::vector<double> &x, const int npnew)
+{
+    if (npnew < 1)
+    {
+        RTSEIS_THROW_IA("%s", "No points at which to intepolate");
+    }
+    auto npts = static_cast<int> (x.size());
+    if (npts < 1){RTSEIS_THROW_IA("%s", "x is empty");}
+    std::vector<double> yint(npnew);
+    double *yptr = yint.data();
+    interpft(npts, x.data(), npnew, &yptr);
     return yint;
 }
+//----------------------------------------------------------------------------//
 
 using namespace RTSeis::Utilities::Interpolation;
 

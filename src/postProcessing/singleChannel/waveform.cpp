@@ -28,12 +28,14 @@
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
+#include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/normalization/minMax.hpp"
 #include "rtseis/utilities/normalization/signBit.hpp"
 #include "rtseis/utilities/normalization/zscore.hpp"
@@ -636,6 +638,90 @@ void Waveform<T>::downsample(const int nq)
     {
         RTSEIS_ERRMSG("Downsampling failed: %s", ra.what());
     }
+}
+
+template<class T>
+void Waveform<T>::decimate(const int nq, const int filterLength)
+{
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        return;
+    }
+    if (nq < 2)
+    {
+        RTSEIS_THROW_IA("Downsampling factor = %d must be at least 2", nq);
+    }
+    if (filterLength < 5)
+    {
+        RTSEIS_THROW_IA("filterLength = %d must be at least 5", filterLength);
+    }
+    // Handle odd length so I can remove the phase shift from the FIR filter
+    int nfir = filterLength;
+    if (nfir%2 == 0){nfir = nfir + 1;}
+    Utilities::FilterImplementations::Decimate<T> decimate;
+    try
+    {
+        constexpr bool lremovePhaseShift = true;
+        decimate.initialize(nq, nfir, lremovePhaseShift, 
+                            RTSeis::ProcessingMode::POST_PROCESSING);
+        // Space estimate
+        int leny = decimate.estimateSpace(len);
+        pImpl->resizeOutputData(leny);
+        T *y = pImpl->getOutputDataPointer(); // Handle on output
+        const T *x = pImpl->getInputDataPointer(); // Handle on input
+        int nyout;
+        decimate.apply(len, x, leny, &nyout, &y);  // Finally downsample
+#ifdef DEBUG
+        assert(nyout == leny);
+#endif
+        pImpl->dt_ = pImpl->dt_*static_cast<T> (nq);
+        pImpl->lfirstFilter_ = false;
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("Decimation failed: %s", e.what());
+    }
+}
+
+template<class T>
+void Waveform<T>::resampleDFT(const double newSamplingPeriod)
+{
+    if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
+    int len = pImpl->getLengthOfInputSignal();
+    if (len < 1)
+    {
+        RTSEIS_WARNMSG("%s", "No data set in module");
+        return;
+    }
+    if (newSamplingPeriod <= 0)
+    {
+        RTSEIS_THROW_IA("New sampling period = %lf must be positive",
+                        newSamplingPeriod);
+    }
+    // Get the duration of the current signal
+    auto tdur = pImpl->dt_*static_cast<double> (len - 1);
+    auto npnew = static_cast<int> (tdur/newSamplingPeriod) + 1;
+    // Avoid extrapolating
+    if (static_cast<double> (npnew - 1)*newSamplingPeriod > tdur)
+    {
+        npnew = npnew - 1;
+    }
+    try
+    {
+        pImpl->resizeOutputData(npnew);
+        T *y = pImpl->getOutputDataPointer(); // Handle on output 
+        const T *x = pImpl->getInputDataPointer(); // Handle on input
+        RTSeis::Utilities::Interpolation::interpft(len, x, npnew, &y);
+        pImpl->dt_ = newSamplingPeriod;
+        pImpl->lfirstFilter_ = false;
+    }
+    catch (const std::exception &e)
+    {
+        RTSEIS_ERRMSG("Interpolation failed: %s", e.what());
+    } 
 }
 
 //----------------------------------------------------------------------------//

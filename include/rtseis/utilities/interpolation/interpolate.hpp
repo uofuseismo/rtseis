@@ -103,7 +103,7 @@ private:
 
 /*!
  * @brief FFT interpolation of a signal x.
- * @param[in] x   The signal to interpolate.
+ * @param[in] x   The signal to interpolate.  x.size() must at least 2.
  * @param[in] npnew  This is the desired number of points in the
  *                   interpolated signal, yint.  This must be positive
  *                   will likely be greater than the length of x.
@@ -115,7 +115,19 @@ private:
  * @throws std::runtime_error if an internal error has occurred. 
  * @ingroup rtseis_utils_math_interpolation
  */
-std::vector<double> interpft(const std::vector<double> &x, const int npnew);
+std::vector<double> interpft(const std::vector<double> &x, int npnew);
+/*!
+ * @brief FFT interpolation of a signal x.
+ * @param[in] nx     The number of samples in x.  This must at least 2.
+ * @param[in] x      The signal to interpolate.
+ * @param[in] npnew  The number of new samples to interpolate to.
+ * @param[out] y     The FFT interpolated variant of x.  This is an array
+ *                   whose dimension is [npnew].
+ * @throws std::invalid_argument if nx has less than length 2, 
+ *         npnew is not positive, x is NULL, or y is NULL.
+ */
+template<typename T>
+void interpft(int nx, const T x[], int npnew, T *y[]);
 
 } // End RTSeis
 #endif

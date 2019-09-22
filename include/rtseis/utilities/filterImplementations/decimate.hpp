@@ -58,7 +58,7 @@ public:
      * @brief Initializes the decimator.
      * @param[in] downFactor         The downsampling factor.  This will retain
      *                               every (downFactor-1)'th sample.  This must
-     *                               be positive.
+     *                               be at least 2.
      * @param[in] filterLength       The length of the FIR filter.  This must
      *                               be at least 5.
      * @param[in] lremovePhaseShift  If true then this will remove the phase
@@ -68,7 +68,7 @@ public:
      * @param[in] mode               The processing mode.
      * @throws std::invalid_argument if the downFactor is not positive, the
      *         filter length is too small.
-     * @note This will design an Hamming window-based filter whose cutoff
+     * @note This will design a Hamming window-based filter whose cutoff
      *       frequency is 1/downFactor.  Additionally, when post-processing
      *       and removing the phase shift, the algorithm will increase
      *       the filter length so that it's group delay + 1 is evenly
