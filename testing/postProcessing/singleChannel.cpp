@@ -90,11 +90,11 @@ int main(void)
 
     ierr = testResampleDFT(gse2);
     if (ierr != EXIT_SUCCESS)
-    { 
+    {
         RTSEIS_ERRMSG("%s", "Failed interp dft test");
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed interp dft test"); 
+    RTSEIS_INFOMSG("%s", "Passed interp dft test");
 
     ierr = testFilter(gse2);
     if (ierr != EXIT_SUCCESS)
