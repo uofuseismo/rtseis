@@ -36,6 +36,7 @@ int testDemean(void);
 int testDetrend(void);
 int testDownsample(const std::vector<double> &x);
 int testDecimate(const std::vector<double> &x);
+int testResampleDFT(const std::vector<double> &x);
 int testNormalization();
 int testFilter(const std::vector<double> &x);
 int testBandSpecificSOSFilters(const std::vector<double> &x);
@@ -78,12 +79,22 @@ int main(void)
         return EXIT_FAILURE;
     }
     RTSEIS_INFOMSG("%s", "Passed downsample test");
+
     ierr = testDecimate(gse2);
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed decimate test");
         return EXIT_FAILURE;
     }
+    RTSEIS_INFOMSG("%s", "Passed decimation test");
+
+    ierr = testResampleDFT(gse2);
+    if (ierr != EXIT_SUCCESS)
+    { 
+        RTSEIS_ERRMSG("%s", "Failed interp dft test");
+        return EXIT_FAILURE;
+    }
+    RTSEIS_INFOMSG("%s", "Passed interp dft test"); 
 
     ierr = testFilter(gse2);
     if (ierr != EXIT_SUCCESS)
@@ -894,7 +905,43 @@ int testDecimate(const std::vector<double> &x)
 
 int testResampleDFT(const std::vector<double> &x)
 {
+    double df = 200;
+    std::vector<double> dfNews({200, 300, 400, 450, 500});
+    // This is computed: 
+    //   destStride = lcm/df 
+    // where lcm is the least common multiple defined by:
+    // (df*dfNew)/(GCD(df, dfNew)) where GCD is the greatest common denominator.
+    std::vector<int> srcStrides({1, 2, 1, 4, 2}); 
+    std::vector<int> destStrides({1, 3, 2, 9, 5}); 
+    for (int k=0; k<static_cast<int> (dfNews.size()); ++k)
+    {
+        auto dfNew = dfNews[k];
+        double dt = 1.0/df;
+        double dtNew = 1.0/dfNew;
+        PostProcessing::SingleChannel::Waveform waveform;
+        waveform.setSamplingPeriod(dt);
+        waveform.setData(x); 
+        waveform.detrend(); // Remove trend
+        auto xDetrend = waveform.getData(); // Get detrended data
+        waveform.resampleDFT(dtNew); // Resampling with DFT
+        auto yint = waveform.getData(); // Get resampled data
 
+        double error = 0;
+        int ic = 0;
+        for (auto i=0; i<static_cast<int> (xDetrend.size()); i=i+srcStrides[k])
+        {
+            auto j = ic*destStrides[k];
+            error = std::max(error, std::abs(yint[j] - x[i]) );
+            ic = ic + 1;
+        }
+        // Basically on the same order b/c max is 1000 
+        if (error > 1.e-1)
+        {
+            RTSEIS_ERRMSG("Failed interfpt on iteration %d, %e\n", ic, error);
+            return EXIT_FAILURE; 
+        }
+     }
+     return EXIT_SUCCESS;
 }
 
 //============================================================================//

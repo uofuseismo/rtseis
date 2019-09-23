@@ -701,14 +701,11 @@ void Waveform<T>::resampleDFT(const double newSamplingPeriod)
         RTSEIS_THROW_IA("New sampling period = %lf must be positive",
                         newSamplingPeriod);
     }
-    // Get the duration of the current signal
-    auto tdur = pImpl->dt_*static_cast<double> (len - 1);
-    auto npnew = static_cast<int> (tdur/newSamplingPeriod) + 1;
-    // Avoid extrapolating
-    if (static_cast<double> (npnew - 1)*newSamplingPeriod > tdur)
-    {
-        npnew = npnew - 1;
-    }
+    // From Matlab documentation: if x as size m with sampling rate dx,
+    // then the new sampling rate from interpft dy = dx*m/n.
+    // Solving for n we obtain: n = m*(dx/dy) where n > m.
+    auto npnew
+        = static_cast<int> (len*(pImpl->dt_/newSamplingPeriod) + 0.5);
     try
     {
         pImpl->resizeOutputData(npnew);
