@@ -28,6 +28,7 @@ enum class CubicSplineBoundaryConditionType
 };
 
 /*!
+ * @class CubicSpline cubicSpline.hpp "rtseis/utilities/interpolation/cubicSpline.hpp"
  * @brief A class for performing cubic spline interoplation.
  * @author Ben Baker (University of Utah)
  * @copyright Ben Baker distributed under the MIT license.
@@ -74,15 +75,13 @@ public:
 
     /*!
      * @brief Initializes the cubic spline over the closed interval 
-     *        [xInterval.first, xInterval.second] with function values
-     *        \f$ y(x) \f$.
-     * @note This will assume the y values are distributed uniformly over
-     *       interval.
+     *        [xInterval.first, xInterval.second] with regularly spaced
+     *        function values \f$ y(x) \f$.
      * @param[in] npts       The number of data points in y.  This must be at
      *                       least 4.
-     * @param[in] xInterval  The closed interval which begins at xPair.first
-     *                       and ends at xPair.second.  xPair.first must be
-     *                       less than xPair.second.
+     * @param[in] xInterval  The closed interval which begins at xInterval.first
+     *                       and ends at xInterval.second.  xInterval.first must
+     *                       be less than xInterval.second.
      * @param[in] y          The function values.  This is an array of dimension
      *                       [npts].  If the boundary conditions are periodic
      *                       then y[0] must equal y[npts-1].
@@ -90,7 +89,7 @@ public:
      *                       the type of cubic spline.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */ 
-    void initialize(const int npts,
+    void initialize(int npts,
                     const std::pair<double, double> xInterval,
                     const double y[],
                     const CubicSplineBoundaryConditionType boundaryCondition);
@@ -110,7 +109,7 @@ public:
      *                     the type of cubic spline.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    void initialize(const int npts,
+    void initialize(int npts,
                     const double x[],
                     const double y[],
                     const CubicSplineBoundaryConditionType boundaryCondition);
@@ -148,7 +147,7 @@ public:
      *         out of the interpolation range.
      * @sa isInitialized(), getMinimumX(), getMaximum().
      */
-    void interpolate(const int nq, const double xq[], double *yq[]) const;
+    void interpolate(int nq, const double xq[], double *yq[]) const;
     /*!
      * @brief Integrates the cubic spline over the intervals.
      * @param[in] nIntervals  The number of intervals.
@@ -165,7 +164,7 @@ public:
      * @throws std::invalid_argument if intervals or integrals is NULL or
      *         at least one interval integrand range is out of bounds.
      */
-    void integrate(const int nIntervals,
+    void integrate(int nIntervals,
                    const std::pair<double, double> intervals[],
                    double *integrals[]) const;
     /*!
