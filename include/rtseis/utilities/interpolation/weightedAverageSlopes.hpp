@@ -30,7 +30,7 @@ public:
      *                        initialize this class.  On exit, slopes's
      *                        behavior will be undefined.
      */
-    WeightedAverageSlopes(WeightedAverageSlopes &&slopes);
+    WeightedAverageSlopes(WeightedAverageSlopes &&slopes) noexcept;
     /*! @} */
 
     /*! @name Operators

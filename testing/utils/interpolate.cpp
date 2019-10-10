@@ -11,6 +11,7 @@
 //include<mkl.h>
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/interpolation/cubicSpline.hpp"
+#include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include <gtest/gtest.h>
 
 namespace
@@ -221,6 +222,65 @@ TEST(UtilitiesInterpolation, cubicSpline)
     ippsNormDiff_Inf_64f(integrals.data(), integralsRef.data(),
                          nIntervals, &error);
     EXPECT_LE(error, 1.e-14);
+}
+
+TEST(UtilitiesInterpolation, weighedAverageSlopes)
+{
+    // Load the data
+    double dt = 1.0/200.0;
+    double dtnew = 1.0/250.0;
+    std::string dataFile = "data/gse2.txt";    
+    std::string refFile = "data/wigint.txt";
+    // Get input signal
+    std::ifstream textFile(dataFile);
+    std::string line;
+    int i = 0;
+    std::vector<double> y;
+    y.reserve(12000);
+    while (std::getline(textFile, line))
+    {
+        double yval;
+        std::sscanf(line.c_str(), "%lf\n", &yval);
+        y.push_back(yval);
+        i = i + 1;
+    }
+    textFile.close();
+    EXPECT_EQ(y.capacity(), i);
+    EXPECT_EQ(y.size(), y.capacity());
+    // Get reference signal
+    textFile.open(refFile);
+    std::vector<double> xq, yIntRef;
+    int nqref = 14999;
+    xq.reserve(nqref);
+    yIntRef.reserve(nqref);
+    i = 0;
+    while (std::getline(textFile, line))
+    {
+        double xin, yin;
+        std::sscanf(line.c_str(), "%lf, %lf\n", &xin, &yin);
+        xq.push_back(xin);
+        yIntRef.push_back(yin);
+        i = i + 1;
+    }
+    textFile.close();
+    EXPECT_EQ(yIntRef.capacity(), i);
+    EXPECT_EQ(yIntRef.size(), yIntRef.capacity());
+
+    std::pair<double, double> xinterval(0, dt*(y.size() - 1));
+    // Initialize
+    WeightedAverageSlopes<double> slopes;
+    EXPECT_NO_THROW(slopes.initialize(y.size(), xinterval, y.data()));
+    // Compute number of new points 
+    auto tmax = static_cast<double> (y.size() - 1)*dt;
+    auto nq = static_cast<int> (tmax/dtnew + 0.5);
+    EXPECT_EQ(nq, nqref);
+    std::vector<double> yInt(nq); 
+    double *yIntPtr = yInt.data(); 
+    slopes.interpolate(nq, xq.data(), &yIntPtr); 
+    // Tabulate the error
+    double error = 0;
+    ippsNormDiff_Inf_64f(yIntRef.data(), yInt.data(), nq, &error); 
+    EXPECT_LE(error, 1.e-8);
 }
 
 /*
