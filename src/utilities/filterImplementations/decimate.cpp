@@ -102,7 +102,7 @@ void Decimate<double>::initialize(const int downFactor,
     clear();
     if (downFactor < 1)
     {
-        RTSEIS_THROW_IA("Downsampling factor = %d must be positive",
+        RTSEIS_THROW_IA("Downsampling factor = %d must be at least 2",
                         downFactor);
     }
     if (filterLength < 5)
@@ -146,7 +146,7 @@ void Decimate<double>::initialize(const int downFactor,
         pImpl->mGroupDelay = nfir/2;
         pImpl->mRemovePhaseShift = true;
     } 
-    // Create a hamming filter
+    // Create a hamming filter.  Note, downFactor = 1 can trigger an error.
     pImpl->mFIRLength = nfir;
     int order = nfir - 1; 
     auto r = 1.0/static_cast<double> (downFactor);
@@ -184,9 +184,9 @@ void Decimate<float>::initialize(const int downFactor,
 {
     constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
     clear();
-    if (downFactor < 1)
+    if (downFactor < 2)
     {
-        RTSEIS_THROW_IA("Downsampling factor = %d must be positive",
+        RTSEIS_THROW_IA("Downsampling factor = %d must be at least 2",
                         downFactor);
     }
     if (filterLength < 5)
@@ -220,7 +220,7 @@ void Decimate<float>::initialize(const int downFactor,
         pImpl->mGroupDelay = nfir/2;
         pImpl->mRemovePhaseShift = true;
     }
-    // Create a hamming filter
+    // Create a hamming filter.
     pImpl->mFIRLength = nfir;
     int order = nfir - 1;
     auto r = 1.0/static_cast<double> (downFactor);

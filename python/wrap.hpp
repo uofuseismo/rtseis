@@ -35,31 +35,31 @@ public:
     void firFilter(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &taps);
     /// Generic IIR filter data using biquad second-order sections
     /// IIR lowpass filter using second order sections
-    void sosLowpassFilter(const double fc, const int order,
+    void sosLowpassFilter(double fc, int order,
                           const std::string &prototype,
-                          const double ripple,
-                          const bool zeroPhase);
+                          double ripple,
+                          bool zeroPhase);
     /// IIR highpass filter using second order sections
-    void sosHighpassFilter(const double fc, const int order,
+    void sosHighpassFilter(double fc, int order,
                            const std::string &prototype,
-                           const double ripple,
-                           const bool zeroPhase); 
+                           double ripple,
+                           bool zeroPhase); 
     /// IIR bandpass filter using second order sections
-    void sosBandpassFilter(const std::pair<double,double> fc, const int order,
+    void sosBandpassFilter(const std::pair<double,double> fc, int order,
                            const std::string &prototype,
-                           const double ripple,
-                           const bool zeroPhase);
+                           double ripple,
+                           bool zeroPhase);
     /// IIR bandstop filter using second order sections
-    void sosBandstopFilter(const std::pair<double,double> fc, const int order,
+    void sosBandstopFilter(const std::pair<double,double> fc, int order,
                            const std::string &prototype,
-                           const double ripple,
-                           const bool zeroPhase);
+                           double ripple,
+                           bool zeroPhase);
     /// Normalization
     void normalizeMinMax(const std::pair<double, double> targetRange);
     void normalizeSignBit();
     void normalizeZScore();
     /// Taper
-    void taper(const double pct, const std::string &taperName); 
+    void taper(double pct, const std::string &taperName); 
     /// Set data
     void setData(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &x);
     /// Get data

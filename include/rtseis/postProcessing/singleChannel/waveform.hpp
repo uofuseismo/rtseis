@@ -171,7 +171,7 @@ public:
      * @param[in] x   The signal to set.  This is an array of dimension [n].
      * @throws std::invalid_argument if x is null or n is less than 1.
      */
-    void setData(const size_t n, const T x[]);
+    void setData(size_t n, const T x[]);
     /*!
      * @brief Sets a pointer to the input data on the module.
      * @param[in] n   The number of points in the signal.
@@ -183,7 +183,7 @@ public:
      *       with \c releaseDataPointer().
      * @sa \c releaseDataPointer()
      */
-    void setDataPointer(const size_t n, const T *x);
+    void setDataPointer(size_t n, const T *x);
     /*!
      * @brief Releases the data pointer back to the owner.
      * @note This will reset the number of data points to 0. 
@@ -203,7 +203,7 @@ public:
      *                   are accessed.
      * @throws std::invalid_argument if y is NULL or nwork is too small.
      */
-    void getData(const size_t nwork, T *y[]) const;
+    void getData(size_t nwork, T *y[]) const;
     /*!
      * @brief Gets the length of the output signal.
      * @result The length of the output signal, y.
@@ -286,7 +286,7 @@ public:
      *       filter design are compatible.
      */
     void firFilter(const Utilities::FilterRepresentations::FIR &fir,
-                   const bool lremovePhase=false);
+                   bool lremovePhase=false);
     /*! 
      * @brief Lowpass filters a signal using an FIR filter.
      * @param[in] ntaps   The number of filter taps.  This must be at least 4.
@@ -304,9 +304,9 @@ public:
      * @throws std::invalid_argument if the number of taps or critical frequency
      *         is invalid.
      */
-    void firLowpassFilter(const int ntaps, const double fc, 
+    void firLowpassFilter(int ntaps, double fc, 
                           const FIRWindow window,
-                          const bool lremovePhase=false);
+                          bool lremovePhase=false);
     /*! 
      * @brief Highpass filters a signal using an FIR filter.
      * @param[in] ntaps   The number of filter taps.
@@ -317,9 +317,9 @@ public:
      *         is invalid.
      * @sa firLowpassFilter()
      */
-    void firHighpassFilter(const int ntaps, const double fc,
+    void firHighpassFilter(int ntaps, double fc,
                            const FIRWindow window,
-                           const bool lremovePhase=false);
+                           bool lremovePhase=false);
     /*! 
      * @brief Bandpass filters a signal using an FIR filter.
      * @param[in] ntaps   The number of filter taps.
@@ -334,7 +334,7 @@ public:
      *         is invalid.
      * @sa firLowpassFilter()
      */
-    void firBandpassFilter(const int ntaps, const std::pair<double,double> fc,
+    void firBandpassFilter(int ntaps, const std::pair<double,double> fc,
                            const FIRWindow window,
                            const bool lremovePhase=false);
     /*! 
@@ -351,9 +351,9 @@ public:
      *         is invalid.
      * @sa firBandpassFilter()
      */
-    void firBandstopFilter(const int ntaps, const std::pair<double,double> fc,
+    void firBandstopFilter(int ntaps, const std::pair<double,double> fc,
                            const FIRWindow window,
-                           const bool lremovePhase=false);
+                           bool lremovePhase=false);
     /*! @} */
 
     /*! @name Second Order Section (Biquadratic) Filtering
@@ -377,7 +377,7 @@ public:
      *       filter design are compatible.
      */
     void sosFilter(const Utilities::FilterRepresentations::SOS &sos,
-                   const bool lzeroPhase=false);
+                   bool lzeroPhase=false);
     /*! 
      * @brief Lowpass filters a signal using an IIR filter specified as a series
      *        of second order sections.
@@ -406,10 +406,10 @@ public:
      * @snippet testing/postProcessing/singleChannel.cpp ppSCSOSLowpassExample
      *
      */
-    void sosLowpassFilter(const int order, const double fc, 
+    void sosLowpassFilter(int order, double fc, 
                           const IIRPrototype prototype,
                           const double ripple,
-                          const bool lzeroPhase=false);
+                          bool lzeroPhase=false);
     /*!
      * @brief Highpass filters a signal using an IIR filter.
      * @param[in] order   The filter order which equals the number of npoles.
@@ -423,10 +423,10 @@ public:
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa sosLowpassFilter()
      */
-    void sosHighpassFilter(const int order, const double fc,
+    void sosHighpassFilter(int order, double fc,
                            const IIRPrototype prototype,
                            const double ripple,
-                           const bool lzeroPhase=false);
+                           bool lzeroPhase=false);
     /*! 
      * @brief Bandpass filters a signal using an IIR filter.
      * @param[in] order   The filter order which equals the number of npoles.
@@ -444,10 +444,10 @@ public:
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa sosLowpassFilter()
      */
-    void sosBandpassFilter(const int order, const std::pair<double,double> fc,
+    void sosBandpassFilter(int order, const std::pair<double,double> fc,
                            const IIRPrototype prototype,
-                           const double ripple,
-                           const bool lzeroPhase=false);
+                           double ripple,
+                           bool lzeroPhase=false);
     /*! 
      * @brief Bandstop filters a signal using an IIR filter.
      * @param[in] order   The filter order which equals the number of npoles.
@@ -462,10 +462,10 @@ public:
      * @sa sosLowpassFilter()
      * @sa sosBandpassFilter()
      */
-    void sosBandstopFilter(const int order, const std::pair<double,double> fc,
+    void sosBandstopFilter(int order, const std::pair<double,double> fc,
                            const IIRPrototype prototype,
-                           const double ripple,
-                           const bool lzeroPhase=false);
+                           double ripple,
+                           bool lzeroPhase=false);
     /*! @} */
 
     /*! @name Infinite Impulse Response Filtering
@@ -484,7 +484,7 @@ public:
      * @throws std::invalid_argument if the filter is invalid.
      */
     void iirFilter(const Utilities::FilterRepresentations::BA &ba,
-                   const bool lzeroPhase=false);
+                   bool lzeroPhase=false);
     /*!
      * @brief Lowpass filters a signal using an IIR direct form filter.
      * @param[in] order   The filter order which equals the number of npoles.
@@ -501,10 +501,10 @@ public:
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa sosLowpassFilter()
      */
-    void iirLowpassFilter(const int order, const double fc,
+    void iirLowpassFilter(int order, double fc,
                           const IIRPrototype prototype,
-                          const double ripple,
-                          const bool lzeroPhase=false);
+                          double ripple,
+                          bool lzeroPhase=false);
     /*!
      * @brief Highpass filters a signal using an IIR filter.
      * @param[in] order   The filter order which equals the number of npoles.
@@ -518,10 +518,10 @@ public:
      *         isn't positive for Chebyshev I or Chebyshev II filter design.
      * @sa sosLowpassFilter()
      */
-    void iirHighpassFilter(const int order, const double fc,
+    void iirHighpassFilter(int order, double fc,
                            const IIRPrototype prototype,
-                           const double ripple,
-                           const bool lzeroPhase=false);
+                           double ripple,
+                           bool lzeroPhase=false);
     /*! 
      * @brief Bandpass filters a signal using an IIR filter.
      * @param[in] order   The filter order which equals the number of npoles.
@@ -536,10 +536,10 @@ public:
      * @sa iirLowpassFilter()
      * @sa iirBandpassFilter()
      */
-    void iirBandpassFilter(const int order, const std::pair<double,double> fc,
+    void iirBandpassFilter(int order, const std::pair<double,double> fc,
                            const IIRPrototype prototype,
-                           const double ripple,
-                           const bool lzeroPhase=false);
+                           double ripple,
+                           bool lzeroPhase=false);
     /*! 
      * @brief Bandstop filters a signal using an IIR filter.
      * @param[in] order   The filter order which equals the number of npoles.
@@ -554,10 +554,10 @@ public:
      * @sa sosLowpassFilter()
      * @sa sosBandpassFilter()
      */
-    void iirBandstopFilter(const int order, const std::pair<double,double> fc,
+    void iirBandstopFilter(int order, const std::pair<double,double> fc,
                            const IIRPrototype prototype,
-                           const double ripple,
-                           const bool lzeroPhase=false);
+                           double ripple,
+                           bool lzeroPhase=false);
     /*! @} */
 
     /*! @name Normalization
@@ -607,7 +607,7 @@ public:
      *       pct = 100*(2*fraction).
      * @throw std::invalid_argument if the parameters are invalid.
      */
-    void taper(const double pct = 5,
+    void taper(double pct = 5,
                const TaperParameters::Type window = TaperParameters::Type::HAMMING);
     /*! @} */
 
@@ -620,21 +620,30 @@ public:
      *                be retained.  This must be positive.
      * @throws std::invalid_argument if nq is negative.
      */
-    void downsample(const int nq);
+    void downsample(int nq);
     /*!
      * @brief Decimates a signal.
      * @param[in] nq  The downsampling factor.  Every (nq - 1)'th sample will
-     *                be retained.  This must be positive.  Moreover, for 
+     *                be retained.  This must be at least 2.  Moreover, for 
      *                downsampling factors greater than 13 it may be better
      *                to break this operation into decimation stages.
      * @param[in] nfir   The length of the FIR filter.  Note, that if this even
      *                   then it will be increased by one sample to better 
-     *                   correct the FIR filter's group delay.
-     * @param[in] rollf  The normalized corner frequency of the lowpass filter.
-     *                   This must be in the range (0,1).
+     *                   correct the FIR filter's group delay.  This must at
+     *                   least length 5.
      * @throws std::invalid_argument if any arguments are incorrect.
+     * @note This will design a Hamming window-based filter whose cutoff
+     *        frequency is 1/nq.
      */
-    void decimate(const int nq, const int nfir, const double rollf = 0.9);
+    void decimate(int nq, int nfir);
+    /*!
+     * @brief Resamples a signal using the Fourier transform.
+     * @param[in] newSamplingPeriod  The desired sampling period.
+     * @throws std::invalid_argument if newSamplingPeriod is not positive.
+     * @note While upsampling is a fairly safe operation, the user must take
+     *       care to lowpass the signal prior to calling this as a downsampler.
+     */
+    void resampleDFT(double newSamplingPeriod);
     /*! @} */
 
     /*! @name Envelope 
@@ -647,7 +656,7 @@ public:
      *                  transformer.  This must be positive.
      * @throws std::invalid_argument if nfir is not positive.
      */
-    void firEnvelope(const int nfir);
+    void firEnvelope(int nfir);
     /*!
      * @brief Computes the envelope of the signal by computing the absolute
      *        value of the analytic signal.
@@ -664,7 +673,7 @@ public:
      *                This must be positive.
      * @throws std::invalid_argument if dt is not positive.
      */
-    void setSamplingPeriod(const double dt);
+    void setSamplingPeriod( double dt);
     /*!
      * @brief Gets the sampling period.
      * @result The signal sampling period in seconds.
