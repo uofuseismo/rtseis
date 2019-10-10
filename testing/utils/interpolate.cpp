@@ -245,7 +245,7 @@ TEST(UtilitiesInterpolation, weighedAverageSlopes)
         i = i + 1;
     }
     textFile.close();
-    EXPECT_EQ(y.capacity(), i);
+    EXPECT_EQ(static_cast<int> (y.capacity()), i);
     EXPECT_EQ(y.size(), y.capacity());
     // Get reference signal
     textFile.open(refFile);
