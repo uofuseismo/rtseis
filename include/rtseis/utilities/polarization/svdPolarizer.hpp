@@ -35,7 +35,14 @@ public:
     /*! @name Destructors
      * @{
      */
+    /*!
+     * @brief Destructor.
+     */
     ~SVDPolarizer();
+    /*!
+     * @brief Releases all memory and resets the class.
+     */
+    void clear() noexcept;
     /*! @}*/
 
     /*!
@@ -49,7 +56,7 @@ public:
      *                          one could compute the number of samples in the
      *                          S-wave window, Ns, and set this to (Ns - 1)/Ns.
      */
-    void initialize(const double decayFactor,
+    void initialize(double decayFactor,
                     const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Computes the incidence angle w.r.t. z, the rectilinearity,
@@ -74,8 +81,8 @@ public:
      *                             whose dimension is [n].
      * @throws std::invalid_argument if n is positive and zne is NULL. 
      */
-    void polarize(const int n, const T zne[],
-                  T incidenceAngle[], T rectilinearity[], T r[]);
+    void polarize(int npts, const T z[], const T n[], const T e[],
+                  T incidenceAngle[], T rectilinearity[]);
     /*!
      * @brief Polarizes the 3-component seismgoram.
      * @param[in] n    The number of input samples.
@@ -87,10 +94,18 @@ public:
      * @param[out] re  The P-polarized east channel.  This is an array of dimension [n].
      * @throws std::runtime_error if the class is not inititalized.
      */
-    void polarize(const int n,
+/*
+    void polarize(int n,
                   const T z1[], const T n2[], const T e3[],
                   T rz[], T rn[], T re[]);
+*/
 //                  SVDPolarizer::PolarizationType type);
+
+    /*!
+     * @brief Determines whether or not the class is initialized.
+     * @result True indicates that the class is initialized.
+     */
+    bool isInitialized() const noexcept;
 private:
     class SVDPolarizerImpl;
     std::unique_ptr<SVDPolarizerImpl> pImpl;
