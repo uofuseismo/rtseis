@@ -36,13 +36,13 @@ After descending into rtseis you will have to configure CMake.  I prefer to do t
 
     #!/bin/sh
     # Set the compilers
-    export CC=/usr/bin/clang-6.0
     export CXX=/usr/bin/clang++-6.0
     # Set the libraries
     export IPP_DIR=/opt/intel/ipp
     export IPP_LIB_ROOT=${IPP_DIR}/lib/intel64
     export MKL_DIR=/opt/intel/mkl
     export MKL_LIB_ROOT=${MKL_DIR}/lib/intel64
+    export GTEST_ROOT=/local
     # Only matters if you intend to 
     export pybind11_INCLUDE_DIR=/usr/local/include/pybind11
     # Set the working directory
@@ -57,14 +57,12 @@ After descending into rtseis you will have to configure CMake.  I prefer to do t
     # Configure a build release - to disable Python wrapping remove -DRTSEIS_WRAP_PYTHON
     cmake ../ \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_COMPILER=${CC} \
     -DCMAKE_CXX_COMPILER=${CXX} \
-    -DCMAKE_C_FLAGS="-Wall" \
     -DCMAKE_CXX_FLAGS="-Wall" \
-    -DIPP_INCLUDE_DIR=${IPP_DIR}/include \
-    -DIPP_LIBRARY="${IPP_LIB_ROOT}/libipps.so;${IPP_LIB_ROOT}/libippvm.so;${IPP_LIB_ROOT}/libippcore.so" \
     -DMKL_INCLUDE_DIR="${MKL_DIR}/include" \
     -DMKL_LIBRARY="${MKL_LIB_ROOT}/libmkl_intel_lp64.so;${MKL_LIB_ROOT}/libmkl_sequential.so;${MKL_LIB_ROOT}/libmkl_core.so;${MKL_LIB_ROOT}/libmkl_avx2.so" \
+    -DGTEST_INCLUDE_DIR=${GTEST_ROOT}/include \
+    -DGTEST_BOTH_LIBRARIES="${GTEST_ROOT}/lib/libgtest.a;${GTEST_ROOT}/lib/libgtest_main.a" \
     -DRTSEIS_WRAP_PYTHON=TRUE \
     -Dpybind11_INCLUDE_DIR="/usr/local/include/pybind11"
 
