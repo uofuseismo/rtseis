@@ -18,10 +18,9 @@ jobs:
           command: |
             export CC=gcc-7
             export CXX=g++-7
-            export IPP_DIR=/opt/intel/ipp
-            export IPP_LIB_ROOT=${IPP_DIR}/lib/intel64
-            export MKL_DIR=/opt/intel/mkl
-            export MKL_LIB_ROOT=${MKL_DIR}/lib/intel64
+            export IPP_ROOT=/opt/intel/ipp
+            export MKL_ROOT=/opt/intel/mkl
+            export GTEST_ROOT=/usr/local
             export BUILD_DIR=build
             if [ -d ${BUILD_DIR} ]; then
                echo "Removing build directory" ${BUILD_DIR}
@@ -33,8 +32,6 @@ jobs:
             -DCMAKE_CXX_COMPILER=g++-7 \
             -DCMAKE_C_FLAGS="-Wall" \
             -DCMAKE_CXX_FLAGS="-Wall" \
-            -DMKL_INCLUDE_DIR="${MKL_DIR}/include" \
-            -DMKL_LIBRARY="${MKL_LIB_ROOT}/libmkl_intel_lp64.so;${MKL_LIB_ROOT}/libmkl_sequential.so;${MKL_LIB_ROOT}/libmkl_core.so;${MKL_LIB_ROOT}/libmkl_avx2.so" \
             -DRTSEIS_WRAP_PYTHON=TRUE \
             -Dpybind11_INCLUDE_DIR="/usr/local/include/pybind11"
       - run:

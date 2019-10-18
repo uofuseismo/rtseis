@@ -47,8 +47,10 @@ if (RTSEIS_WRAP_PYTHON)
    find_package(pybind11 REQUIRED)
 endif()
 set(FindIPP_DIR ${CMAKE_SOURCE_DIR}/CMakeModules)
+set(FindMKL_DIR ${CMAKE_SOURCE_DIR}/CMakeModules)
 find_package(GTest REQUIRED)
 find_package(FindIPP REQUIRED)
+find_package(FindMKL REQUIRED)
 
 ##########################################################################################
 #                                       Include Directories                              #
