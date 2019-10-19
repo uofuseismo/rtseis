@@ -36,6 +36,7 @@
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
 #include "rtseis/utilities/interpolation/interpolate.hpp"
+#include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include "rtseis/utilities/normalization/minMax.hpp"
 #include "rtseis/utilities/normalization/signBit.hpp"
 #include "rtseis/utilities/normalization/zscore.hpp"
@@ -687,7 +688,8 @@ void Waveform<T>::decimate(const int nq, const int filterLength)
 }
 
 template<class T>
-void Waveform<T>::resampleDFT(const double newSamplingPeriod)
+void Waveform<T>::interpolate(const double newSamplingPeriod,
+                              const InterpolationMethod method)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
@@ -706,20 +708,32 @@ void Waveform<T>::resampleDFT(const double newSamplingPeriod)
     // Solving for n we obtain: n = m*(dx/dy) where n > m.
     auto npnew
         = static_cast<int> (len*(pImpl->dt_/newSamplingPeriod) + 0.5);
-    try
+    // Get pointers
+    pImpl->resizeOutputData(npnew);
+    T *y = pImpl->getOutputDataPointer(); // Handle on output
+    const T *x = pImpl->getInputDataPointer(); // Handle on input
+    // Apply appropriate interpolation
+    if (method == InterpolationMethod::DFT)
     {
-        pImpl->resizeOutputData(npnew);
-        T *y = pImpl->getOutputDataPointer(); // Handle on output 
-        const T *x = pImpl->getInputDataPointer(); // Handle on input
         RTSeis::Utilities::Interpolation::interpft(len, x, npnew, &y);
-        pImpl->dt_ = newSamplingPeriod;
-        pImpl->lfirstFilter_ = false;
     }
-    catch (const std::exception &e)
+    else if (method == InterpolationMethod::WEIGHTED_AVERAGE_SLOPES)
     {
-        RTSEIS_ERRMSG("Interpolation failed: %s", e.what());
-    } 
+        RTSeis::Utilities::Interpolation::WeightedAverageSlopes<T> was;
+        std::pair<T, T> xInterval(0, (len - 1)*pImpl->dt_);
+        was.initialize(len, xInterval, x);
+        std::pair<T, T> xIntervalNew(0, (npnew - 1)*newSamplingPeriod);
+        was.interpolate(npnew, xIntervalNew, &y);
+    }
+    else
+    {
+        RTSEIS_THROW_IA("%s", "Invalid interpolation type");
+    }
+    // Update sampling period
+    pImpl->dt_ = newSamplingPeriod;
+    pImpl->lfirstFilter_ = false;
 }
+
 
 //----------------------------------------------------------------------------//
 //                                   Envelope                                 //

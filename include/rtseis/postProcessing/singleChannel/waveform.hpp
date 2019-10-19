@@ -80,6 +80,21 @@ enum class Bandtype
     BANDPASS, /*!< Bandpass filter. */
     BANDSTOP  /*!< Bandstop (notch) filter. */ 
 };
+/*!
+ * @brief Defines the time series interpolation strategy.
+ * @ingroup rtseis_postprocessing_sc
+ */
+enum class InterpolationMethod
+{
+    DFT,                     /*!< This resamples a signal in the Fourier domain.
+                                  For upsampling, this amounts to zero-stuffing
+                                  in the frequency domain.  */ 
+    WEIGHTED_AVERAGE_SLOPES, /*!< This uses the weighted-average slopes method
+                                  of Wiggins.  While designed for unevenly
+                                  sampled data, this can be quite effective at
+                                  resampling evenly spaced data.  This is the
+                                  algorithm used in SAC.  */
+};
 
 /*!
  * @brief Defines the nature of the convolution or correlation
@@ -639,11 +654,14 @@ public:
     /*!
      * @brief Resamples a signal using the Fourier transform.
      * @param[in] newSamplingPeriod  The desired sampling period.
-     * @throws std::invalid_argument if newSamplingPeriod is not positive.
+     * @param[in] method             The interpolation method.
+     * @throws std::invalid_argument if newSamplingPeriod is not positive or
+     *         method is not known.
      * @note While upsampling is a fairly safe operation, the user must take
      *       care to lowpass the signal prior to calling this as a downsampler.
      */
-    void resampleDFT(double newSamplingPeriod);
+    void interpolate(double newSamplingPeriod,
+                     const InterpolationMethod method = InterpolationMethod::DFT);
     /*! @} */
 
     /*! @name Envelope 

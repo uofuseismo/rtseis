@@ -316,8 +316,8 @@ void WeightedAverageSlopes<double>::interpolate(
     ippsMinMax_64f(xq, nq, &xqMin, &xqMax);
     if (xqMin < xMin || xqMax > xMax)
     {
-       RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
-                       xqMin, xqMax, xMin, xMax);
+        RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
+                        xqMin, xqMax, xMin, xMax);
     }
     // Check this is sorted
     bool lsorted = Math::VectorMath::isSorted(nq, xq);
@@ -327,6 +327,47 @@ void WeightedAverageSlopes<double>::interpolate(
     if (!lsorted){sortedHint = DF_NO_HINT;}
     constexpr MKL_INT nOrder = 1;  // Length of dorder
     const MKL_INT dOrder[1] = {0}; // Order of derivatives
+    auto status = dfdInterpolate1D(pImpl->mTask64f, DF_INTERP, DF_METHOD_PP,
+                                   nsite, xq,
+                                   sortedHint, nOrder, dOrder,
+                                   DF_NO_APRIORI_INFO, yq,
+                                   DF_MATRIX_STORAGE_ROWS, NULL);
+    if (status != DF_STATUS_OK)
+    {
+        RTSEIS_THROW_RTE("%s", "Interpolation failed\n");
+    }
+}
+
+// Uniform interpolation
+template<>
+void WeightedAverageSlopes<double>::interpolate(
+    const int nq, const std::pair<double, double> xInterval,
+    double *yqIn[]) const
+{
+    // Checks
+    if (nq < 1){return;} // Nothing to do
+    double xMin = getMinimumX(); // Throws on initialization
+    double xMax = getMaximumX(); // Throws on initialization
+    double *yq = *yqIn;
+    if (yq == nullptr){RTSEIS_THROW_IA("%s", "yq is NULL");}
+    double xqMin = xInterval.first;
+    double xqMax = xInterval.second;
+    if (xqMin > xqMax)
+    {
+        RTSEIS_THROW_IA("xInterval.first = %lf > xInterval.second = %lf",
+                         xqMin, xqMax);
+    }
+    if (xqMin < xMin || xqMax > xMax)
+    {
+        RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
+                        xqMin, xqMax, xMin, xMax);
+    }
+    // Interpolate
+    const MKL_INT nsite = nq;
+    MKL_INT sortedHint = DF_UNIFORM_PARTITION;
+    constexpr MKL_INT nOrder = 1;  // Length of dorder
+    const MKL_INT dOrder[1] = {0}; // Order of derivatives
+    double xq[2] = {xqMin, xqMax};
     auto status = dfdInterpolate1D(pImpl->mTask64f, DF_INTERP, DF_METHOD_PP,
                                    nsite, xq,
                                    sortedHint, nOrder, dOrder,

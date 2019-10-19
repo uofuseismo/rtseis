@@ -266,20 +266,25 @@ TEST(UtilitiesInterpolation, weighedAverageSlopes)
     EXPECT_EQ(yIntRef.capacity(), i);
     EXPECT_EQ(yIntRef.size(), yIntRef.capacity());
 
-    std::pair<double, double> xinterval(0, dt*(y.size() - 1));
+    std::pair<double, double> xInterval(0, dt*(y.size() - 1));
     // Initialize
     WeightedAverageSlopes<double> slopes;
-    EXPECT_NO_THROW(slopes.initialize(y.size(), xinterval, y.data()));
+    EXPECT_NO_THROW(slopes.initialize(y.size(), xInterval, y.data()));
     // Compute number of new points 
     auto tmax = static_cast<double> (y.size() - 1)*dt;
     auto nq = static_cast<int> (tmax/dtnew + 0.5);
     EXPECT_EQ(nq, nqref);
-    std::vector<double> yInt(nq); 
-    double *yIntPtr = yInt.data(); 
+    std::vector<double> yInt(nq);
+    double *yIntPtr = yInt.data();
     slopes.interpolate(nq, xq.data(), &yIntPtr); 
     // Tabulate the error
     double error = 0;
     ippsNormDiff_Inf_64f(yIntRef.data(), yInt.data(), nq, &error); 
+    EXPECT_LE(error, 1.e-8);
+    // Interpolate on the evenly spaced interval
+    std::pair<double, double> xIntervalNew(0, dtnew*(nq - 1));
+    slopes.interpolate(nq, xIntervalNew, &yIntPtr);
+    ippsNormDiff_Inf_64f(yIntRef.data(), yInt.data(), nq, &error);
     EXPECT_LE(error, 1.e-8);
 }
 

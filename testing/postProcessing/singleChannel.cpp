@@ -36,7 +36,7 @@ int testDemean(void);
 int testDetrend(void);
 int testDownsample(const std::vector<double> &x);
 int testDecimate(const std::vector<double> &x);
-int testResampleDFT(const std::vector<double> &x);
+int testInterpolate(const std::vector<double> &x);
 int testNormalization();
 int testFilter(const std::vector<double> &x);
 int testBandSpecificSOSFilters(const std::vector<double> &x);
@@ -88,7 +88,7 @@ int main(void)
     }
     RTSEIS_INFOMSG("%s", "Passed decimation test");
 
-    ierr = testResampleDFT(gse2);
+    ierr = testInterpolate(gse2);
     if (ierr != EXIT_SUCCESS)
     {
         RTSEIS_ERRMSG("%s", "Failed interp dft test");
@@ -903,7 +903,7 @@ int testDecimate(const std::vector<double> &x)
     return EXIT_SUCCESS;
 }
 
-int testResampleDFT(const std::vector<double> &x)
+int testInterpolate(const std::vector<double> &x)
 {
     double df = 200;
     std::vector<double> dfNews({200, 300, 400, 450, 500});
@@ -923,7 +923,7 @@ int testResampleDFT(const std::vector<double> &x)
         waveform.setData(x); 
         waveform.detrend(); // Remove trend
         auto xDetrend = waveform.getData(); // Get detrended data
-        waveform.resampleDFT(dtNew); // Resampling with DFT
+        waveform.interpolate(dtNew, InterpolationMethod::DFT);
         auto yint = waveform.getData(); // Get resampled data
 
         double error = 0;

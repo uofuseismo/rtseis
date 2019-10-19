@@ -100,14 +100,14 @@ public:
      */
     double getMaximumX() const;
     /*!
-     * @brief Interolates function values \f$ y_q = f(x_q) \f$ where \f$ f \f$
-     *        is the weighted average slopes interpolator.
+     * @brief Interpolates function values \f$ y_q = f(x_q) \f$ where \f$ f \f$
+     *        with the weighted average slopes interpolator.
      * @param[in] nq   The number of points at which to interpolate.
      * @param[in] xq   The abscissas at which to interpolate yq.  This is
      *                 an array of dimension [nq].  Additionally, each 
      *                 xq must be in the range 
      *                 [\c getMinimumX(), \c getMaximumX()].
-     * @param[out] yq  The interpolates values at \f$ x_q \f$.  This is an
+     * @param[out] yq  The interpolated values at \f$ x_q \f$.  This is an
      *                 array of dimension [nq].
      * @throws std::runtime_error if the class was not initialized.
      * @throws std::invalid_argument if xq or yq is NULL or any xq is
@@ -115,6 +115,24 @@ public:
      * @sa isInitialized(), getMinimumX(), getMaximum().
      */
     void interpolate(int nq, const T xq[], T *yq[]) const; 
+    /*!
+     * @brief Interpolates function values \f$ y_q = f(x_q) \f$ where \f$ f \f$
+     *        with the weighted average slopes interpolator.
+     * @note This is for evenly spaced interpolation points.
+     * @param[in] nq         The number of points at which to interpolate.
+     * @param[in] xInterval  The left and right inclusive endpoints on 
+     *                       which yq will be evaluated.  xInterval.first
+     *                       must be greater than or equal to \c getMinimumX(),
+     *                       xInterval.second must be less than or equal to
+     *                       \c getMaximumX(), and x.second must be greater than
+     *                       or equal to x.first.
+     * @param[out] yq        The interpolated on the regular spaced abscissas
+     *                       in xInterval.  This is an array of dimension [nq].
+     * @throws std::runtime_error if the class was not initialized.
+     * @throws std::invalid_argument if yq is NULL or xInterval is invalid.
+     * @sa isInitialized(), getMinimumX(), getMaximum().
+     */
+    void interpolate(int nq, const std::pair<T, T> xInterval, T *y[]) const;
 private:
     class WeightedAverageSlopesImpl;
     std::unique_ptr<WeightedAverageSlopesImpl> pImpl;
