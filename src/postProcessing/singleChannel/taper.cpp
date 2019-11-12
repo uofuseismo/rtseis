@@ -162,13 +162,14 @@ void Taper<T>::setParameters(const TaperParameters &parameters)
 }
 
 template<>
-void Taper<double>::apply(const int nx, const double x[], double y[])
+void Taper<double>::apply(const int nx, const double x[], double *yIn[])
 {
     if (nx <= 0){return;}
     if (!pImpl->linit)
     {
         RTSEIS_THROW_IA("%s", "Taper never initialized");
     }
+    double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
@@ -237,13 +238,14 @@ void Taper<double>::apply(const int nx, const double x[], double y[])
 }
 
 template<>
-void Taper<float>::apply(const int nx, const float x[], float y[])
+void Taper<float>::apply(const int nx, const float x[], float *yIn[])
 {
     if (nx <= 0){return;}
     if (!pImpl->linit)
     {
         RTSEIS_THROW_IA("%s", "Taper never initialized");
     }
+    float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}

@@ -1282,7 +1282,7 @@ void Waveform<T>::taper(const double pct,
     const T *x = pImpl->getInputDataPointer();
     pImpl->resizeOutputData(len);
     T *y = pImpl->getOutputDataPointer();
-    taper.apply(len, x, y);
+    taper.apply(len, x, &y);
     pImpl->lfirstFilter_ = false;
 }
 

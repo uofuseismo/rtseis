@@ -133,7 +133,7 @@ private:
  * @ingroup rtseis_postprocessing_sc_taper
  * @copyright Ben Baker distributed under the MIT license.
  */
-template<class T>
+template<class T = double>
 class Taper
 {
 public:
@@ -203,7 +203,7 @@ public:
      * @param[out] y   The tapered signal.  This has dimension [nx].
      * @throw std::invalid_argument if the parameters are invalid. 
      */
-    void apply(int nx, const T x[], T y[]);
+    void apply(int nx, const T x[], T *y[]);
 private:
     class TaperImpl;
     std::unique_ptr<TaperImpl> pImpl;
