@@ -48,12 +48,10 @@ public:
      *                  the signal will be tapered with the given window.
      *                  This must be in the range [0,100].
      * @param[in] type  The window type.
-     * @param[in] precision  The precision which the taper will be applied.
      * @throws std::invalid_argument if parameters are incorrect.
      */ 
-    TaperParameters(const double pct = 5,
-                    const Type type = Type::HAMMING,
-                    const RTSeis::Precision precision = RTSeis::Precision::DOUBLE);
+    TaperParameters(double pct = 5,
+                    const Type type = Type::HAMMING);
     /*!
      * @brief Copy constructor.
      * @param[in] parms  Taper parameters class from which to initialize
@@ -91,18 +89,7 @@ public:
      * @brief Gets the taper type.
      * @result The taper type to apply to the signal.
      */
-    Type getTaperType(void) const;
-    /*!
-     * @brief Sets the precision which the taper should be applied.
-     * @param[in] precision  The precision which the taper should
-     *                       be applied.
-     */
-    void setPrecision(RTSeis::Precision precision);
-    /*!
-     * @brief Gets the precision which the taper should be applied.
-     * @result The precision which the taper should be applied.
-     */
-    RTSeis::Precision getPrecision(void) const;
+    Type getTaperType() const;
     /*!
      * @brief Sets the percentage of the signal to taper.
      * @param[in] pct   The percentage of the signal to which the taper
@@ -116,13 +103,13 @@ public:
      *       So to taper 20 percent of the signal in SAC one would use
      *       frac=0.2 which corresponds to pct=10.
      */
-    void setPercentage(const double pct);
+    void setPercentage(double pct);
     /*!
      * @brief Gets the percentage of the signal to taper.
      * @result The percentage of the signal to which the taper will
      *         be applied.
      */
-    double getPercentage(void) const;
+    double getPercentage() const;
     /*!
      * @brief Determines if the taper parameters are valid.
      * @retval True indicates that this is a correctly initialized
@@ -130,11 +117,11 @@ public:
      * @retval False indiates that this is an incorrectly initialized
      *         parameter class.
      */
-    bool isValid(void) const;
+    bool isValid() const;
     /*!
      * @brief Clears variables in class and restores defaults.
      */
-    void clear(void);
+    void clear();
 private:
     class TaperParametersImpl;
     std::unique_ptr<TaperParametersImpl> pImpl;
@@ -146,6 +133,7 @@ private:
  * @ingroup rtseis_postprocessing_sc_taper
  * @copyright Ben Baker distributed under the MIT license.
  */
+template<class T>
 class Taper
 {
 public:
@@ -155,12 +143,12 @@ public:
     /*!
      * @brief Default constructor.
      */
-    Taper(void);
+    Taper();
     /*!
      * @brief Copy constructor.
      * @param[in] taper   Taper class from which to initialize.
      */
-    explicit Taper(const Taper &taper);
+    Taper(const Taper &taper);
     /*!
      * @brief Constructs a taper command from the parameters.
      * @param[in] parameters  The taper parameters.
@@ -186,11 +174,11 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~Taper(void);
+    ~Taper();
     /*! 
      * @brief Clears the memory and restores the defaults.
      */
-    void clear(void);
+    void clear();
     /*! @} */
 
     /*!
@@ -207,7 +195,7 @@ public:
      * @retval False indicates that the class is not ready to be
      *         applied to data.
      */
-    bool isInitialized(void) const;
+    bool isInitialized() const;
     /*!
      * @brief Applies the taper to the data.
      * @param[in] nx   Number of points in the signal.
@@ -215,7 +203,7 @@ public:
      * @param[out] y   The tapered signal.  This has dimension [nx].
      * @throw std::invalid_argument if the parameters are invalid. 
      */
-    void apply(const int nx, const double x[], double y[]);
+    void apply(int nx, const T x[], T y[]);
 private:
     class TaperImpl;
     std::unique_ptr<TaperImpl> pImpl;

@@ -1277,8 +1277,8 @@ void Waveform<T>::taper(const double pct,
         return;
     }
     // Taper the data
-    TaperParameters parms(pct, window, RTSeis::Precision::DOUBLE);
-    Taper taper(parms);
+    TaperParameters parms(pct, window); //, RTSeis::Precision::DOUBLE);
+    Taper<T> taper(parms);
     const T *x = pImpl->getInputDataPointer();
     pImpl->resizeOutputData(len);
     T *y = pImpl->getOutputDataPointer();
