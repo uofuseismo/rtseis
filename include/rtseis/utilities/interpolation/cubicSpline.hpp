@@ -104,7 +104,7 @@ public:
      *                     \f$ x_i < x_{i+1} \forall i=0,\cdots,n_{pts}-2 \f$.
      * @param[in] y        The function values.  This is an array of dimension
      *                     [npts].  If the boundary conditions are periodic
-     *                     then y[0] must equal y[npts-1]..
+     *                     then y[0] must equal y[npts-1].
      * @param[in] bcType   Defines the boundary conditions and by extension
      *                     the type of cubic spline.
      * @throws std::invalid_argument if any of the arguments are invalid.

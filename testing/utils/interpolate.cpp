@@ -71,6 +71,11 @@ TEST(UtilitiesInterpolation, interpft)
     EXPECT_LE(emax, 1.e-1);
 }
 
+TEST(UtilitiesInterpolation, linearInterolation)
+{
+
+}
+
 TEST(UtilitiesInterpolation, cubicSpline)
 {
     int nq = 101;

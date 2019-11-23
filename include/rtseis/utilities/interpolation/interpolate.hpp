@@ -36,11 +36,11 @@ public:
     /*!
      * @brief Default constructor.
      */
-    Interp1D(void);
+    Interp1D();
     /*!
      * @brief Default destructor.
      */
-    ~Interp1D(void);
+    ~Interp1D();
     /*!
      * @brief Creates an interpolator given the coordinates (x,v(x)).
      * @param[in] x   The x ordinates at which the function, \f$ v \f$, has
@@ -67,9 +67,9 @@ public:
      * @param[in] method  The interpolation method.
      * @throws std::invalid_argument for invalid inputs.
      */
-    void initialize(const int npts,
+    void initialize(int npts,
                     const std::pair<double,double> x,
-                    const std::vector<double> &v, 
+                    const std::vector<double> &v,
                     const Interp1D::Method method);
     /*!
      * @brief Interpolates points \f$ \hat{y} = v_q(x_q) \f$.
