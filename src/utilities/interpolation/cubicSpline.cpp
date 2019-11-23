@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <cfloat>
+#include <limits>
 #include <vector>
 #include <mkl.h>
 #include <ipps.h>
@@ -54,7 +55,9 @@ public:
         deleteTask();
         mXMin = xInterval.first;
         mXMax = xInterval.second;
-        mX.resize(npts);
+        //mX.resize(npts);
+        if (mX){MKL_free(mX);}
+        mX = static_cast<double *> (MKL_calloc(npts, sizeof(double), 64));
         double dx = (mXMax - mXMin)/static_cast<double> (npts - 1);
         #pragma omp simd
         for (auto i=0; i<npts; ++i)
@@ -63,9 +66,12 @@ public:
         }
         const MKL_INT nx = npts; // Length of x
         const MKL_INT ny = 1;    // Dimension of vector valued function
-        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
-        std::fill(mSplineCoeffs.begin(), mSplineCoeffs.end(), 0);
-        auto status = dfdNewTask1D(&mTask, nx, mX.data(),
+        //mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
+        if (mSplineCoeffs){MKL_free(mSplineCoeffs);}
+        mSplineCoeffs = static_cast<double *>
+                     (MKL_calloc(ny*mSplineOrder*(nx - 1), sizeof(double), 64));
+        //std::fill(mSplineCoeffs.begin(), mSplineCoeffs.end(), 0);
+        auto status = dfdNewTask1D(&mTask, nx, mX, //.data(),
                                    DF_QUASI_UNIFORM_PARTITION,
                                    ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
@@ -78,14 +84,19 @@ public:
                    const double y[])
     {
         deleteTask();
-        mX.resize(npts);
-        std::copy(x, x+npts, mX.data());
+        //mX.resize(npts);
+        if (mX){MKL_free(mX);}
+        mX = static_cast<double *> (MKL_calloc(npts, sizeof(double), 64));
+        std::copy(x, x+npts, mX);//.data());
         mXMin = x[0];
         mXMax = x[npts-1]; 
         const MKL_INT nx = npts;
         const MKL_INT ny = 1; // Dimension of vector valued function
-        mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
-        auto status = dfdNewTask1D(&mTask, nx, mX.data(), DF_NO_HINT,
+        //mSplineCoeffs.resize(ny*mSplineOrder*(nx - 1));
+        if (mSplineCoeffs){MKL_free(mSplineCoeffs);}
+        mSplineCoeffs = static_cast<double *>
+                     (MKL_calloc(ny*mSplineOrder*(nx - 1), sizeof(double), 64));
+        auto status = dfdNewTask1D(&mTask, nx, mX, DF_NO_HINT,
                                    ny, y, DF_NO_HINT);
         if (status != DF_STATUS_OK){return -1;}
         mHaveTask = true;
@@ -126,7 +137,7 @@ public:
                                         bcs,
                                         mSplineIC,
                                         ics,
-                                        mSplineCoeffs.data(),
+                                        mSplineCoeffs, //.data(),
                                         DF_NO_HINT);
         if (status != DF_STATUS_OK)
         {
@@ -242,10 +253,12 @@ public:
     void clear() noexcept
     {
         deleteTask();
-        mSplineCoeffs.clear();
-        mX.clear();
-        mXMin =-DBL_MAX;
-        mXMax = DBL_MAX;
+        if (mSplineCoeffs){MKL_free(mSplineCoeffs);}
+        mSplineCoeffs = nullptr;
+        if (mX){MKL_free(mX);}
+        mX = nullptr;
+        mXMin = std::numeric_limits<double>::max();
+        mXMax = std::numeric_limits<double>::min();
         mSplineBC = DF_BC_FREE_END;
         mSplineIC = DF_NO_IC;
         mBCType = CubicSplineBoundaryConditionType::NATURAL;
@@ -256,14 +269,14 @@ public:
     /// The data fitting task
     DFTaskPtr mTask;
     /// The spline coefficients
-    std::vector<double> mSplineCoeffs;
+    double* mSplineCoeffs = nullptr;
     /// Copy of x data points.  Unclear if MKL copies x.  If not, then x
     /// can go out of scope or be deleted prior to usage.
-    std::vector<double> mX;
+    double* mX = nullptr;
     /// The minimum value of mX
-    double mXMin =-DBL_MAX;
+    double mXMin = std::numeric_limits<double>::max();
     /// The maximum value of mX
-    double mXMax = DBL_MAX;    
+    double mXMax = std::numeric_limits<double>::min();
     /// Default to natural cubic spline
     MKL_INT mSplineBC = DF_BC_FREE_END;
     /// Default to no initial conditions
