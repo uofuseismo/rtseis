@@ -105,6 +105,7 @@ SET(UTILS_SRCS
     src/utilities/filterImplementations/sos.cpp
     src/utilities/interpolation/cubicSpline.cpp
     src/utilities/interpolation/interpolate.cpp
+    src/utilities/interpolation/linear.cpp
     src/utilities/interpolation/weightedAverageSlopes.cpp
     src/utilities/math/convolve.cpp
     src/utilities/math/polynomial.cpp

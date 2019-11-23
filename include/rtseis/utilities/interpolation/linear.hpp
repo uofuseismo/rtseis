@@ -27,7 +27,7 @@ public:
      *                        initialize this class.  On exit, linear's behavior
      *                        is undefined.
      */
-    Linear(CubicSpline &&spline) noexcept;
+    Linear(Linear &&linear) noexcept;
     /*! @} */
 
     /*!
@@ -80,13 +80,12 @@ public:
      *                     [npts].
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    void initialize(int npts,
-                    const double x[],
-                    const double y[]);
-
+    //void initialize(int npts,
+    //                const double x[],
+    //                const double y[]);
     /*! 
-     * @brief Determines if the cubic spline has been inititalized or not.
-     * @retval True indicates that the spline was inititalized.
+     * @brief Determines if the class has been initialized or not.
+     * @retval True indicates that the class was inititalized.
      */
     bool isInitialized() const noexcept;
     /*! 
@@ -120,6 +119,20 @@ public:
      * @sa isInitialized(), getMinimumX(), getMaximum()
      */
     void interpolate(int nq, const double xq[], double *yq[]) const;
+    /*! 
+     * @brief Initializes the linear interpolation for data points defined
+     *        at \f$ y(x) \f$.
+     * @param[in] npts     The number of data points in x and y.  This must be
+     *                     at least 2.
+     * @param[in] x        The ordinates at which y is evaluated.  This is an
+     *                     array of dimension [npts] with the further caveat
+     *                     that
+     *                     \f$ x_i < x_{i+1} \forall i=0,\cdots,n_{pts}-2 \f$.
+     * @param[in] y        The function values.  This is an array of dimension
+     *                     [npts].
+     * @throws std::invalid_argument if any of the arguments are invalid.
+     */
+    void initialize(int npts, const double x[], const double y[]);
     /*!
      * @brief Interpolates the function faluves \f$ y_q = f(x_q) \f$ where
      *        \f$ f \f$ is the linear interpolation function.  This is for

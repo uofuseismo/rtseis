@@ -11,6 +11,7 @@
 //include<mkl.h>
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/interpolation/cubicSpline.hpp"
+#include "rtseis/utilities/interpolation/linear.hpp"
 #include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include <gtest/gtest.h>
 
@@ -73,7 +74,63 @@ TEST(UtilitiesInterpolation, interpft)
 
 TEST(UtilitiesInterpolation, linearInterolation)
 {
-
+    // Test linear interpolation
+    int nq = 11;
+    std::pair<double, double> interval(0, 100);
+    std::vector<double> xqEqual(nq), yqEqual(nq);
+    double dx = (interval.second - interval.first)/(nq - 1);
+    for (int i=0; i<nq; ++i)
+    {
+        xqEqual[i] = interval.first + dx*i;
+        yqEqual[i] = 2*(interval.first + dx*i);
+    }
+    // Initialize
+    Linear linear;
+    EXPECT_NO_THROW(linear.initialize(nq, interval, yqEqual.data()));
+    EXPECT_TRUE(linear.isInitialized());
+    EXPECT_NEAR(linear.getMinimumX(), interval.first,  1.e-14);
+    EXPECT_NEAR(linear.getMaximumX(), interval.second, 1.e-14);
+    // Do a subinterval test
+    int nint = 99;
+    std::vector<double> y(nint);
+    std::vector<double> xq(nint);
+    double *yptr = y.data();
+    std::pair<double, double> intervalInterp(1,99);
+    EXPECT_NO_THROW(linear.interpolate(nint, intervalInterp, &yptr));
+    double dxFine = (intervalInterp.second - intervalInterp.first)/(nint - 1);
+    double error = 0;
+    for (int i=0; i<nint; ++i)
+    {
+        xq[i] = intervalInterp.first + i*dxFine;
+        auto ref = 2*(intervalInterp.first + i*dxFine);
+        error = std::max(error, std::abs(y[i] - ref));
+    }
+    EXPECT_LE(error, 1.e-14);
+    // Do with all interpolation points
+    EXPECT_NO_THROW(linear.interpolate(nint, xq.data(), &yptr));
+    error = 0;
+    for (int i=0; i<nint; ++i)
+    {   
+        auto ref = 2*(intervalInterp.first + i*dxFine);
+        error = std::max(error, std::abs(y[i] - ref));
+    }
+    EXPECT_LE(error, 1.e-14);
+    // Repeat for many points
+    EXPECT_NO_THROW(linear.clear());
+    EXPECT_NO_THROW(linear.initialize(nq, xqEqual.data(), yqEqual.data()));
+    EXPECT_TRUE(linear.isInitialized());
+    EXPECT_NEAR(linear.getMinimumX(), interval.first,  1.e-14);
+    EXPECT_NEAR(linear.getMaximumX(), interval.second, 1.e-14);
+    EXPECT_NO_THROW(linear.interpolate(nint, intervalInterp, &yptr));
+    error = 0;
+    for (int i=0; i<nint; ++i)
+    {
+        auto ref = 2*(intervalInterp.first + i*dxFine);
+        error = std::max(error, std::abs(y[i] - ref));
+    }
+    EXPECT_LE(error, 1.e-14);
+    // Try a two point example
+ 
 }
 
 TEST(UtilitiesInterpolation, cubicSpline)
