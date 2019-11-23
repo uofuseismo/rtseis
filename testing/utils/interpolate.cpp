@@ -129,8 +129,25 @@ TEST(UtilitiesInterpolation, linearInterolation)
         error = std::max(error, std::abs(y[i] - ref));
     }
     EXPECT_LE(error, 1.e-14);
-    // Try a two point example
- 
+    // Try a two point example - count from 0 to 100 on interval [-50,50]
+    double x2[2] = {-50, 50};
+    double y2[2] = {0, 100};
+    EXPECT_NO_THROW(linear.clear());
+    EXPECT_NO_THROW(linear.initialize(2, x2, y2));
+    intervalInterp.first = -50;
+    intervalInterp.second = 50;
+    nint = 101;
+    y.resize(nint); 
+    yptr = y.data();
+    EXPECT_NO_THROW(linear.interpolate(nint, intervalInterp, &yptr));
+    dx = (intervalInterp.second - intervalInterp.first)/(nint - 1);
+    error = 0;
+    for (int i=0; i<nint; ++i)
+    {
+        double ref = i; //intervalInterp.first + dx*i;
+        error = std::max(error, std::abs(y[i] - ref)); 
+    }
+    EXPECT_LE(error, 1.e-14);
 }
 
 TEST(UtilitiesInterpolation, cubicSpline)
