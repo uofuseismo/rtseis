@@ -36,7 +36,7 @@ public:
      * @param[in] major  The major version number.
      * @param[in] minor  The minor version number.
      * @param[in] patch  The patch number.
-     * @result True indicates taht the version is at least equal to the
+     * @result True indicates that the version is at least equal to the
      *         given major, minor, patch.
      */
     static bool isAtLeast(int major, int minor, int patch) noexcept;
