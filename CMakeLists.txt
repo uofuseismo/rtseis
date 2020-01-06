@@ -73,8 +73,8 @@ ENDIF()
 #                                      Define Library Dependencies                       #
 ##########################################################################################
 
-configure_file(${CMAKE_SOURCE_DIR}/src/utilities/version.cpp.in
-               ${CMAKE_SOURCE_DIR}/src/utilities/version.cpp)
+configure_file(${CMAKE_SOURCE_DIR}/include/rtseis/version.hpp.in
+               ${CMAKE_SOURCE_DIR}/include/rtseis/version.hpp)
 
 set(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
 set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})

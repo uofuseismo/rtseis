@@ -3,11 +3,6 @@
 #include <string>
 #include "rtseis/version.hpp"
 
-#define MAJOR @RTSeis_VERSION_MAJOR@
-#define MINOR @RTSeis_VERSION_MINOR@
-#define PATCH @RTSeis_VERSION_PATCH@
-#define VERSION "@PROJECT_VERSION@"
-
 using namespace RTSeis;
 
 int Version::getMajor() noexcept

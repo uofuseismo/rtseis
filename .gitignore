@@ -1,1 +1,1 @@
-src/utilities/version.cpp
+include/rtseis/version.hpp
