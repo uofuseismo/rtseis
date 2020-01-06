@@ -7,32 +7,32 @@ using namespace RTSeis;
 
 int Version::getMajor() noexcept
 {
-    return MAJOR;
+    return RTSEIS_MAJOR;
 }
 
 int Version::getMinor() noexcept
 {
-    return MINOR;
+    return RTSEIS_MINOR;
 }
 
 int Version::getPatch() noexcept
 {
-    return PATCH;
+    return RTSEIS_PATCH;
 }
 
 bool Version::isAtLeast(const int major, const int minor,
                         const int patch) noexcept
 {
-    if (MAJOR < major){return false;}
-    if (MAJOR > major){return true;}
-    if (MINOR < minor){return false;}
-    if (MINOR > minor){return true;}
-    if (PATCH < patch){return false;}
+    if (RTSEIS_MAJOR < major){return false;}
+    if (RTSEIS_MAJOR > major){return true;}
+    if (RTSEIS_MINOR < minor){return false;}
+    if (RTSEIS_MINOR > minor){return true;}
+    if (RTSEIS_PATCH < patch){return false;}
     return true;
 }
 
 std::string Version::getVersion() noexcept
 {
-    std::string version(VERSION);
+    std::string version(RTSEIS_VERSION);
     return version;
 }
