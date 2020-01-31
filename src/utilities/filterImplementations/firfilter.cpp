@@ -371,11 +371,26 @@ FIRFilter<T>::FIRFilter(const FIRFilter &fir)
 }
 
 template<class T>
+FIRFilter<T>::FIRFilter(FIRFilter &&fir) noexcept
+{
+    *this = std::move(fir);
+}
+
+template<class T>
 FIRFilter<T>& FIRFilter<T>::operator=(const FIRFilter &fir)
 {
     if (&fir == this){return *this;}
     if (pFIR_){pFIR_->clear();}
     pFIR_ = std::make_unique<FIRImpl> (*fir.pFIR_);
+    return *this;
+}
+
+template<class T>
+FIRFilter<T>& FIRFilter<T>::operator=(FIRFilter &&fir) noexcept
+{
+    if (&fir == this){return *this;}
+    if (pFIR_){pFIR_->clear();}
+    pFIR_ = std::move(fir.pFIR_);
     return *this;
 }
 
@@ -502,8 +517,9 @@ bool FIRFilter<T>::isInitialized() const noexcept
 
 /// Get initial conditions
 template<class T>
-void FIRFilter<T>::getInitialConditions(const int nz, double zi[]) const
+void FIRFilter<T>::getInitialConditions(const int nz, double *ziOut[]) const
 {
+    auto zi = *ziOut;
     if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class is not yet initialized");

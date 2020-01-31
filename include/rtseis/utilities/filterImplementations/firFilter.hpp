@@ -29,6 +29,12 @@ public:
      * @param[in] fir   FIR class from which to initialize.
      */
     FIRFilter(const FIRFilter &fir);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] fir   FIR class from which to initialize this class.
+     *                      On exit, fir's behavior is undefined.
+     */
+    FIRFilter(FIRFilter &&fir) noexcept; 
     /*! @} */
 
     /*! @name Operators
@@ -40,6 +46,13 @@ public:
      * @result A deep copy of the FIR class.
      */
     FIRFilter& operator=(const FIRFilter &fir);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] fir   FIR class whose memory will be moved to this.
+     *                      On exit, fir's behavior is undefined.
+     * @result FIR's memory moved to this.
+     */
+    FIRFilter& operator=(FIRFilter &&fir) noexcept;
     /*! @} */
 
     /*! @name Destructors
@@ -62,8 +75,8 @@ public:
      *                            The default is to use the direct form.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    void initialize(const int nb, const double b[],
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
+    void initialize(int nb, const double b[],
+                    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
                     FIRImplementation implementation = FIRImplementation::DIRECT);
     /*!
      * @brief Determines if the module is initialized.
@@ -89,7 +102,7 @@ public:
      *         and zi is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(int nz, const double zi[]);
     /*!
      * @brief Gets a copy of the initial conditions.
      * @param[in] nz   The FIR filter initial condition length.
@@ -100,7 +113,7 @@ public:
      *         and zi is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void getInitialConditions(const int nz, double zi[]) const;
+    void getInitialConditions(int nz, double *zi[]) const;
     /*!
      * @brief Applies the FIR filter to the data.
      * @param[in] n   Number of points in signals.
@@ -109,7 +122,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const T x[], T *y[]);
+    void apply(int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions
