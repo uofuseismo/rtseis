@@ -1,6 +1,6 @@
 # RTSeis
 
-RTSeis is a toolkit intended to aid in real-time filtering of seismic signals.  As real-time signals processing is a superset of post-processing, RTSeis naturally has an extensive suite of post-processing algorithms.  While the core library is written in C++, it is worth nothign that there exist Python bindings that expose a subset of the library's functionality.  These Python wrappers can outperform NumPy/SciPy equivalent implementations by 2-4x and ObsPy by factors in excess of 10x.
+RTSeis is a toolkit intended to aid in real-time filtering of seismic signals.  As real-time signals processing is a superset of post-processing, RTSeis naturally has an extensive suite of post-processing algorithms.  While the core library is written in C++, it is worth noting that there exist Python bindings that expose a subset of the library's functionality.  These Python wrappers can outperform NumPy/SciPy equivalent implementations by 2-4x and ObsPy by factors in excess of 10x.
 
 To get started go to the directory of your choosing and get the code
 
