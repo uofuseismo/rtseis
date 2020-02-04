@@ -403,6 +403,7 @@ void SVDPolarizer<T>::initialize(const T decayFactor,
 }
 
 /// Set the initial conditions
+/*
 template<class T>
 void SVDPolarizer<T>::setInitialConditions(
     const T z, const T n, const T e)
@@ -430,6 +431,7 @@ void SVDPolarizer<T>::setInitialConditions(
     pImpl->mHaveFirstSample = true;
     pImpl->mHaveInitialConditions = true;
 }
+*/
 
 /// Reset the initial conditions
 template<class T>
@@ -440,14 +442,9 @@ void SVDPolarizer<T>::resetInitialConditions()
     {
         throw std::runtime_error("Class is not initialized\n");
     }
-    if (pImpl->mHaveInitialConditions)
-    {
-        initializeUS(pImpl->mInitialConditions[0],
-                     pImpl->mInitialConditions[1],
-                     pImpl->mInitialConditions[2],
-                     pImpl->mU.data(), pImpl->mS.data());
-        pImpl->mHaveFirstSample = true;
-    }
+    std::fill(pImpl->mQ.begin(), pImpl->mQ.end(), 0);
+    std::fill(pImpl->mU.begin(), pImpl->mU.end(), 0);
+    std::fill(pImpl->mS.begin(), pImpl->mS.end(), 0);
 }
 
 /// Compute everything 
@@ -567,7 +564,6 @@ bool SVDPolarizer<T>::isInitialized() const noexcept
 //                                 Utility Functions                          //
 //============================================================================//
 
-/*
 /// Modulates a signal using p_n = I_n R_n r_n 
 template<typename T>
 void RTSeis::Utilities::Polarization::modulateP(
@@ -577,17 +573,26 @@ void RTSeis::Utilities::Polarization::modulateP(
     T *pzIn[], T *pnIn[], T *peIn[])
 {
     if (npts < 1){return;}
-    if (z == nullptr || n = nullptr || e == nullptr)
+    if (z == nullptr || n == nullptr || e == nullptr ||
+        inc == nullptr || rect == nullptr)
     {
         if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
         if (n == nullptr){RTSEIS_THROW_IA("%s", "n is NULL");}
-        RTSEIS_THROW_IA("%s", "e is NULL");
+        if (e == nullptr){RTSEIS_THROW_IA("%s", "e is NULL");}
+        if (inc == nullptr){RTSEIS_THROW_IA("%s", "cosIncidenceAngle is NULL");}
+        RTSEIS_THROW_IA("%s", "rectilinearity is NULL");
     }
     auto pz = *pzIn;
     auto pn = *pnIn;
     auto pe = *peIn;
+    if (pz == nullptr || pn == nullptr || pe == nullptr)
+    {
+        if (pz == nullptr){RTSEIS_THROW_IA("%s", "pz is NULL");}
+        if (pn == nullptr){RTSEIS_THROW_IA("%s", "pn is NULL");}
+        RTSEIS_THROW_IA("%s", "pe is NULL");
+    }
     #pragma omp simd
-    for (int i=0; i<n; ++i)
+    for (int i=0; i<npts; ++i)
     {
         auto r = inc[i]*rect[i];
         pz[i] = r*z[i];
@@ -602,29 +607,57 @@ void RTSeis::Utilities::Polarization::modulateS(
     const int npts,
     const T z[], const T n[], const T e[],
     const T inc[], const T rect[],
-    T *pzIn[], T *pnIn[], T *peIn[])
+    T *szIn[], T *snIn[], T *seIn[])
 {
     if (npts < 1){return;}
-    if (z == nullptr || n = nullptr || e == nullptr)
-    {   
+    if (z == nullptr || n == nullptr || e == nullptr ||
+        inc == nullptr || rect == nullptr)
+    {
         if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
         if (n == nullptr){RTSEIS_THROW_IA("%s", "n is NULL");}
-        RTSEIS_THROW_IA("%s", "e is NULL");
-    }   
-    auto pz = *pzIn;
-    auto pn = *pnIn;
-    auto pe = *peIn;
+        if (e == nullptr){RTSEIS_THROW_IA("%s", "e is NULL");}
+        if (inc == nullptr){RTSEIS_THROW_IA("%s", "cosIncidenceAngle is NULL");}
+        RTSEIS_THROW_IA("%s", "rectilinearity is NULL");
+    }
+    auto sz = *szIn;
+    auto sn = *snIn;
+    auto se = *seIn;
+    if (sz == nullptr || sn == nullptr || se == nullptr)
+    {
+        if (sz == nullptr){RTSEIS_THROW_IA("%s", "sz is NULL");}
+        if (sn == nullptr){RTSEIS_THROW_IA("%s", "sn is NULL");}
+        RTSEIS_THROW_IA("%s", "se is NULL");
+    }
     #pragma omp simd
-    for (int i=0; i<n; ++i)
-    {   
-        auto r = inc[i]*rect[i];
-        pz[i] = r*z[i];
-        pn[i] = r*n[i];
-        pe[i] = r*e[i];
-    }   
+    for (int i=0; i<npts; ++i)
+    {
+        auto r = (1 - inc[i])*rect[i];
+        sz[i] = r*z[i];
+        sn[i] = r*n[i];
+        se[i] = r*e[i];
+    }
 }
-*/
 
 /// Template instantiation
 template class RTSeis::Utilities::Polarization::SVDPolarizer<double>;
 template class RTSeis::Utilities::Polarization::SVDPolarizer<float>;
+template void RTSeis::Utilities::Polarization::modulateP(
+    const int npts,
+    const double z[], const double n[], const double e[],
+    const double inc[], const double rect[],
+    double *pzIn[], double *pnIn[], double *peIn[]);
+template void RTSeis::Utilities::Polarization::modulateP(
+    const int npts,
+    const float z[], const float n[], const float e[],
+    const float inc[], const float rect[],
+    float *pzIn[], float *pnIn[], float *peIn[]);
+template void RTSeis::Utilities::Polarization::modulateS(
+    const int npts,
+    const double z[], const double n[], const double e[],
+    const double inc[], const double rect[],
+    double *szIn[], double *snIn[], double *seIn[]);
+template void RTSeis::Utilities::Polarization::modulateS(
+    const int npts,
+    const float z[], const float n[], const float e[],
+    const float inc[], const float rect[],
+    float *szIn[], float *snIn[], float *seIn[]);

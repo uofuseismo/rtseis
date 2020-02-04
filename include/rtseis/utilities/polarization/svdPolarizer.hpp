@@ -102,21 +102,9 @@ public:
     bool isInitialized() const noexcept;
 
     /*!
-     * @brief Returns the length of the initial conditions.
-     * @result The length of the initial conditions which is 1.
-     */
-    int getInitialConditionsLength() const;
-    /*!
-      * @brief Sets the initial conditions which initializes the SVD.
-      * @param[in] z   The first z component sample.
-      * @param[in] n   The first north component sample.
-      * @param[in] e   The first east component sample.
-      */
-    void setInitialConditions(T z, T n, T e);
-
-    /*!
-     * @brief Computes the incidence angle w.r.t. z, the rectilinearity,
-     *        and rotated data at each sample.
+     * @brief Computes the Karhunen-Loeve transform of the input data, the
+     *        cosine of the incidence angle w.r.t. z, and the rectilinearity
+     *        at each sample.
      * @param[in] npts  The number of samples.
      * @param[in] z     The trace on the vertical channel.  This is an array
      *                  whose dimension is [npts].
@@ -149,15 +137,72 @@ public:
      *                             singular value and \f$ sigma_0 \f$ is the 
      *                             largest singular value.  This is an array
      *                             whose dimension is [npts].
-     * @throws std::invalid_argument if n is positive or any array is NULL.
+     * @throws std::runtime_error if the class is not initialized.
+     * @throws std::invalid_argument if any array is NULL.
+     * @sa \c isInitialized()
      */
     void polarize(int npts, const T z[], const T n[], const T e[],
                   T *klz[], T *kln[], T *kle[],
-                  T *incidenceAngle[], T *rectilinearity[]);
+                  T *cosIncidenceAngle[], T *rectilinearity[]);
+    /*! 
+     * @brief Computes the Karhunen-Loeve transform of the input data.
+     * @param[in] npts  The number of samples.
+     * @param[in] z     The trace on the vertical channel.  This is an array
+     *                  whose dimension is [npts].
+     * @param[in] n     The trace on the north channel.  This is an array whose
+     *                  dimension is [npts].
+     * @param[in] e     the trace on the east channel.  This is an array whose
+     *                  dimension is [npts].
+     * @param[out] klz  The Karhunen-Loeve transform of the vertical channel.
+     *                  It is projected into the reduced rank subspace then
+     *                  projected back to the ZNE frame.
+     *                  This is an array whose dimension is [npts].
+     * @param[out] kln  The Karhunen-Loeve transform of the north channel.
+     *                  It is projected into the reduced rank subspace then
+     *                  projected back to the ZNE frame.
+     *                  This is an array whose dimension is [npts].
+     * @param[out] kle  The Karhunen-Loeve transform of the east channel.
+     *                  It is projected into the reduced rank subspace then
+     *                  projected back to the ZNE frame.
+     *                  This is an array whose dimension is [npts].
+     * @throws std::runtime_error if the class is not initialized.
+     * @throws std::invalid_argument if any array is NULL.
+     * @sa \c isInitialized()
+     */
     void polarize(int npts, const T z[], const T n[], const T e[],
                   T *klz[], T *kln[], T *kle[]);
+    /*!
+     * @brief Computes the cosine of the incidence angle w.r.t. z, and the
+     *        rectilinearity at each sample.
+     * @param[in] npts  The number of samples.
+     * @param[in] z     The trace on the vertical channel.  This is an array
+     *                  whose dimension is [npts].
+     * @param[in] n     The trace on the north channel.  This is an array whose
+     *                  dimension is [npts].
+     * @param[in] e     the trace on the east channel.  This is an array whose
+     *                  dimension is [npts].
+     * @param[out] cosIncidenceAngle  The cosine of the incidence angle w.r.t.
+     *                                to the vertical channel.  This will be
+     *                                close to 1 for for particle motion close
+     *                                to the vertical which is indicative of a
+     *                                P wave.  Conversely, this will be close
+     *                                to 0 for an S-wave.  This is an array
+     *                                whose dimension is [npts].  This will be
+     *                                bounded to [0,1].  If you want the 
+     *                                angle of incidence then you must apply 
+     *                                an arccos to this.
+     * @param[out] rectilinearity  The rectilinearity.  This is defined as 
+     *                             \f$ 1 - \frac{sigma_1}{sigma_0} \f$ where 
+     *                             \f$ sigma_1 \f$ is the second largest
+     *                             singular value and \f$ sigma_0 \f$ is the 
+     *                             largest singular value.  This is an array
+     *                             whose dimension is [npts].
+     * @throws std::runtime_error if the class is not initialized.
+     * @throws std::invalid_argument if any array is NULL.
+     * @sa \c isInitialized()
+     */
     void polarize(int npts, const T z[], const T n[], const T e[],
-                  T *incidenceAngle[], T *rectilinearity[]);
+                  T *cosIncidenceAngle[], T *rectilinearity[]);
     /*!
      * @brief Resets the initial conditions on the source delay line
      *        to the default conditions or the initial conditions
@@ -170,14 +215,67 @@ private:
     std::unique_ptr<SVDPolarizerImpl> pImpl;
 };
 
+/*!
+ * @brief Enhances a P-wave by modulating the signal using:
+ *        \f$ I_n R_n x_n \f$ to the n'th sample.  Here, \f$ I_n \f$ is the
+ *        cosine of the incidence angle, \f$ R_n \f$ is the rectilinearity,
+ *        and \f$ x_n \f$ is the trace.  This can also be the KL-transformed
+ *        trace.
+ * @param[in] npts    The number of samples.
+ * @param[in] z       The vertical trace to modulate.  This is an array whose
+ *                    dimension is [npts].
+ * @param[in] n       The north trace to modulate.  This is an array whose 
+ *                    dimension is [npts].
+ * @param[in] e       The east trace to modulate.  This is an array whose
+ *                    dimension is [npts].
+ * @param[in] cosIncidenceAngle  The cosine of the incidence angle at each
+ *                               sample.  This is an array whose dimension
+ *                               is [npts].
+ * @param[in] rectlinearity      The rectilinearity at each sample.  This is
+ *                               an array whose dimension is [nts]. 
+ * @param[out] pz     The P-modulated vertical trace.  This is an array whose
+ *                    dimension is [npts].
+ * @param[out] pn     The P-modulated north trace.  This is an array whose
+ *                    dimension is [npts].
+ * @param[out] pe     The P-modulated east trace.  This is an array whose
+ *                    dimension is [npts].
+ * @throws std::invalid_argument of if any array is NULL.
+ */
 template<typename T>
-void polarizeP(int n, const T zne[],
-               const T inc[], const T rect[], const T r[],
-               T pPolarized[]);
+void modulateP(int npts,
+               const T z[], const T n[], const T e[],
+               const T cosIncidenceAngle[], const T rectilinearity[],
+               T *pz[], T *pn[], T *pe[]);
+/*!
+ * @brief Enhances the S-wave by modulating the signal using:
+ *        \f$ (1 - I_n) R_n x_n \f$ to the n'th sample.  Here, \f$ I_n \f$ is
+ *        the cosine of the incidence angle, \f$ R_n \f$ is the rectilinearity,
+ *        and \f$ x_n \f$ is the trace.  This can also be the KL-transformed
+ *        trace.
+ * @param[in] npts    The number of samples.
+ * @param[in] z       The vertical trace to modulate.  This is an array whose
+ *                    dimension is [npts].
+ * @param[in] n       The north trace to modulate.  This is an array whose 
+ *                    dimension is [npts].
+ * @param[in] e       The east trace to modulate.  This is an array whose
+ *                    dimension is [npts].
+ * @param[in] cosIncidenceAngle  The cosine of the incidence angle at each
+ *                               sample.  This is an array whose dimension
+ *                               is [npts].
+ * @param[in] rectlinearity      The rectilinearity at each sample.  This is
+ *                               an array whose dimension is [nts]. 
+ * @param[out] sz     The S-modulated vertical trace.  This is an array whose
+ *                    dimension is [npts].
+ * @param[out] sn     The S-modulated north trace.  This is an array whose
+ *                    dimension is [npts].
+ * @param[out] se     The S-modulated east trace.  This is an array whose
+ *                    dimension is [npts].
+ * @throws std::invalid_argument of if any array is NULL.
+ */
 template<typename T>
-void polarizeS(int n, const T zne[],
-               const T inc[], const T rect[], const T r[],
-               T sPolarized[]);
-
+void modulateS(int npts,
+               const T z[], const T n[], const T e[],
+               const T cosIncidenceAngle[], const T rectilinearity[],
+               T *sz[], T *sn[], T *se[]);
 }
 #endif
