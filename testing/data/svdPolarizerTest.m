@@ -6,10 +6,12 @@ function svdPolarizerTest()
    n = data(:,3);
    e = data(:,4);
 
-   [kl, re, incl] = svdPolarizer(z, n, e, lambd, SMALL);
+   [kl, re, incl, pmod, smod] = svdPolarizer(z, n, e, lambd, SMALL);
    fileID = fopen('svdReference.txt','w');
    for i=1:length(re)
-       fprintf(fileID, '%.8e, %.8e, %.8e, %.13e, %.13e\n', ...
-               kl(i,1), kl(i,2), kl(i,3), re(i), incl(i) );
+       fprintf(fileID, '%.8e, %.8e, %.8e, %.13e, %.13e, %.6e, %.6e, %.6e, %.6e, %.6e, %.6e\n', ...
+               kl(i,1), kl(i,2), kl(i,3), re(i), incl(i), ...
+               pmod(i,1), pmod(i,2), pmod(i,3), ...
+               smod(i,1), smod(i,2), smod(i,3));
    end
    fclose(fileID);

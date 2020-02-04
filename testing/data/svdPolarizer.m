@@ -1,4 +1,27 @@
-function [kl, re, incl] = svdPolarizer(z, n, e, lambd, SMALL)
+function [kl, re, incl, pmod, smod] = svdPolarizer(z, n, e, lambd, SMALL)
+    % This is performs the SVD polarization described in Rosenberger's
+    % Real-time ground-motion analysis: Distinguishing P and S arrivals
+    % in a noisy environment.
+    % It takes as input a vertical, north, and east trace (z,n,e) a 
+    % decay factor, and a tolerance.  
+    % To select a decay factor, lambd, you may
+    % try doing the following - Choose a P-wave window, say, 1 s, which at  
+    % 100 samples per secondsampling is 100 samples.  Then set lambda 
+    % to (Nw-1)/Nw = 99/100.  Likewise, for a 5 second S-wave window
+    % you should find have 499/500.  Pretty much - if you make this number
+    % greater than or equal to 1 then this algorithm will be metastable
+    % or unstable.
+    % The tolerance, SMALL, can be made to machine  epsilon if you so 
+    % choose but it may be more useful to make close to a fraction of the 
+    % standard deviation of the sensor's noise. 
+    % The results are the Z, N, E Karhunen-Louve filtered channels,
+    % a measure of rectilinearity, a measure of the cosine of the 
+    % incidence angle measured from vertical, the P-modulated waveforms
+    % and the S-modulated waveforms.  Note, that while the P and S 
+    % modulation is applied to the KL filtered data this does not need to
+    % be the case and you could instead modulate the original data.
+    % Additionally, it may be worthwhile to compute the magnitude of the 
+    % modulated signals on top of your original data.
     U = zeros(3,2);
     S = zeros(2,2);
     M = length(z);
@@ -21,6 +44,9 @@ function [kl, re, incl] = svdPolarizer(z, n, e, lambd, SMALL)
         s = m'*m;
         t = U*m;
         % Innovation p = |(I - U_{n-1} U_{n-1}^T) d_n|
+        %              = sqrt( d'd - 2 U'd + d'U U' U U' d )
+        %              = sqrt( d'd - 2 U'd + d'U U' d )
+        %              = sqrt( r - 2*s + m'm )
         pp = r - 2*s + t'*t;
         abs_pp = abs(pp);
         % Instrument noise level
@@ -53,6 +79,15 @@ function [kl, re, incl] = svdPolarizer(z, n, e, lambd, SMALL)
         incl(i) = abs(U(1,1)); % cos(angle of incidence) vs. Z
         kl(i,1:3) = U*U'*d; % kl transform
     end % End main loop
+    % Modulate the P and S waves.  There should be a switch in here
+    % that requests one or the other.
+    pmod = zeros(M, 3);
+    smod = zeros(M, 3);
+    for j=1:3
+        pmod(:,j) = incl.*re.*kl(:,j);
+        smod(:,j) = (1 - incl).*re.*kl(:,j);
+    end
+    
 end
     
 %SMALL = 0.8;  % 10'th of the standard deviation of the first 200 points

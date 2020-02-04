@@ -24,7 +24,13 @@ void loadSVDresults(const std::string &fileName,
                     std::vector<double> &kln,
                     std::vector<double> &kle,
                     std::vector<double> &rect,
-                    std::vector<double> &incl);
+                    std::vector<double> &incl,
+                    std::vector<double> &pz,
+                    std::vector<double> &pn,
+                    std::vector<double> &pe,
+                    std::vector<double> &sz,
+                    std::vector<double> &sn,
+                    std::vector<double> &se);
 
 
 TEST(UtilitiesPolarization, svdPolarizer)
@@ -37,14 +43,16 @@ TEST(UtilitiesPolarization, svdPolarizer)
     auto npts = static_cast<int> (zTrace.size());
     ASSERT_EQ(npts, 5001);
     std::vector<double> klzRef, klnRef, kleRef, rectRef, incRef;
-    loadSVDresults(refFile, klzRef, klnRef, kleRef, rectRef, incRef);
+    std::vector<double> pzRef, pnRef, peRef, szRef, snRef, seRef;
+    loadSVDresults(refFile, klzRef, klnRef, kleRef, rectRef, incRef,
+                   pzRef, pnRef, peRef, szRef, snRef, seRef);
     ASSERT_EQ(klzRef.size(), zTrace.size());
     // Initialize the polarizer
     SVDPolarizer<double> svd;
     RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING; 
     double noise = 0.8;    // Minimize size for innovation
     double decayP = 0.99;  // 99/100 1s window at 100 samples per second
-    double decayS = 0.998; // 499/500 5s window at 100 samples per second
+    //double decayS = 0.998; // 499/500 5s window at 100 samples per second
     EXPECT_NO_THROW(svd.initialize(decayP, noise, mode));
     // Let's fire this thing off
     EXPECT_TRUE(svd.isInitialized());
@@ -88,8 +96,73 @@ TEST(UtilitiesPolarization, svdPolarizer)
     EXPECT_LT(emax, 1.e-10);
     ippsNormDiff_Inf_64f(rectRef.data(), rect.data(), rectRef.size(), &emax);
     EXPECT_LT(emax, 1.e-10);
-    // Try real-time example
-fprintf(stdout, "POLARIZER NEEDS REAL-TIME TEST!\n");
+    // Modulate the signals
+    std::vector<double> pzMod(npts, 0), pnMod(npts, 0), peMod(npts, 0);
+    std::vector<double> szMod(npts, 0), snMod(npts, 0), seMod(npts, 0);
+    auto zModPtr = pzMod.data();
+    auto nModPtr = pnMod.data();
+    auto eModPtr = peMod.data();
+    modulateP(npts,
+              klz.data(), kln.data(), kle.data(),
+              inc.data(), rect.data(),
+              &zModPtr, &nModPtr, &eModPtr);  
+    ippsNormDiff_Inf_64f(pzRef.data(), pzMod.data(), pzMod.size(), &emax);
+    EXPECT_LT(emax, 1.e-4);
+    ippsNormDiff_Inf_64f(pnRef.data(), pnMod.data(), pnMod.size(), &emax); 
+    EXPECT_LT(emax, 1.e-4);
+    ippsNormDiff_Inf_64f(peRef.data(), peMod.data(), peMod.size(), &emax);
+    EXPECT_LT(emax, 1.e-4);
+
+    zModPtr = szMod.data();
+    nModPtr = snMod.data();
+    eModPtr = seMod.data();
+    modulateS(npts,
+              klz.data(), kln.data(), kle.data(),
+              inc.data(), rect.data(),
+              &zModPtr, &nModPtr, &eModPtr);  
+    ippsNormDiff_Inf_64f(szRef.data(), szMod.data(), szMod.size(), &emax);
+    EXPECT_LT(emax, 1.e-4);
+    ippsNormDiff_Inf_64f(snRef.data(), snMod.data(), snMod.size(), &emax); 
+    EXPECT_LT(emax, 1.e-4);
+    ippsNormDiff_Inf_64f(seRef.data(), seMod.data(), seMod.size(), &emax);
+    EXPECT_LT(emax, 1.e-4);
+
+    // Try real-time example. Initialize the polarizer
+    SVDPolarizer<double> svdrt;
+    mode = RTSeis::ProcessingMode::REAL_TIME;
+    EXPECT_NO_THROW(svdrt.initialize(decayP, noise, mode));
+    EXPECT_TRUE(svdrt.isInitialized());
+
+    std::vector<double> klzRT(npts, 0), klnRT(npts, 0), kleRT(npts, 0);
+    std::vector<double> rectRT(npts, 0), incRT(npts, 0);
+    int packetSize = 100;
+    for (int i=0; i<npts; i=i+packetSize)
+    {
+        auto i1 = i;
+        auto i2 = std::min(npts, i + packetSize);
+        auto nproc = i2 - i1;
+
+        klzPtr = klzRT.data() + i1;
+        klnPtr = klnRT.data() + i1;
+        klePtr = kleRT.data() + i1;
+        rectPtr = rectRT.data() + i1;
+        incPtr = incRT.data() + i1;
+
+        svdrt.polarize(nproc,
+                       zTrace.data()+i1, nTrace.data()+i1, eTrace.data()+i1,
+                       &klzPtr, &klnPtr, &klePtr, &incPtr, &rectPtr);
+    }
+    ippsNormDiff_Inf_64f(klz.data(), klzRT.data(), klzRT.size(), &emax);
+    EXPECT_LT(emax, 1.e-14);
+    ippsNormDiff_Inf_64f(kln.data(), klnRT.data(), klnRT.size(), &emax);
+    EXPECT_LT(emax, 1.e-14);
+    ippsNormDiff_Inf_64f(kle.data(), kleRT.data(), kleRT.size(), &emax);
+    EXPECT_LT(emax, 1.e-14);
+    ippsNormDiff_Inf_64f(inc.data(), incRT.data(), incRT.size(), &emax);
+    EXPECT_LT(emax, 1.e-14);
+    ippsNormDiff_Inf_64f(rect.data(), rectRT.data(), rectRT.size(), &emax);
+    EXPECT_LT(emax, 1.e-14);
+
 }
 
 TEST(UtilitiesPolarization, eigenPolarizer)
@@ -193,7 +266,13 @@ void loadSVDresults(const std::string &fileName,
                     std::vector<double> &kln,
                     std::vector<double> &kle,
                     std::vector<double> &rect,
-                    std::vector<double> &inc)
+                    std::vector<double> &inc,
+                    std::vector<double> &pz,
+                    std::vector<double> &pn,
+                    std::vector<double> &pe,
+                    std::vector<double> &sz,
+                    std::vector<double> &sn,
+                    std::vector<double> &se)
 {
     // Null out result
     klz.resize(0);
@@ -201,6 +280,12 @@ void loadSVDresults(const std::string &fileName,
     kle.resize(0);
     rect.resize(0);
     inc.resize(0);
+    pz.resize(0);
+    pn.resize(0);
+    pe.resize(0);
+    sz.resize(0);
+    sn.resize(0);
+    se.resize(0);
     // Open and read file
     std::ifstream inFile;
     inFile.open(fileName);
@@ -221,13 +306,20 @@ void loadSVDresults(const std::string &fileName,
         kle.resize(npts);
         rect.resize(npts);
         inc.resize(npts);
+        pz.resize(npts);
+        pn.resize(npts);
+        pe.resize(npts);
+        sz.resize(npts);
+        sn.resize(npts);
+        se.resize(npts);
         // Load the data
         // Load data
         int i = 0;
         while (std::getline(inFile, line))
         {
-            sscanf(line.c_str(), "%lf, %lf, %lf, %lf, %lf\n",
-                    &klz[i], &kln[i], &kle[i], &rect[i], &inc[i]);
+            sscanf(line.c_str(), "%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n",
+                    &klz[i], &kln[i], &kle[i], &rect[i], &inc[i],
+                    &pz[i], &pn[i], &pe[i], &sz[i], &sn[i], &se[i]);
             i = i + 1;
         }
     }
