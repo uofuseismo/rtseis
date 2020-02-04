@@ -42,6 +42,7 @@ function iirTest()
   for i=1:length(yfilt)
      fprintf(fileID, '%.13e\n', yfilt(i));
   end
+  fclose(fileID);
   fileID = fopen('iirReference2.txt','w');
   for i=1:length(yfilt)
      fprintf(fileID, '%.13e\n', yfilt2(i));

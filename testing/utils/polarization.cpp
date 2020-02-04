@@ -1,7 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
+#include <string>
 #include <cmath>
+#include <fstream>
 #include <ipps.h>
 #include "rtseis/utilities/polarization/eigenPolarizer.hpp"
 #include "rtseis/utilities/polarization/svdPolarizer.hpp"
@@ -14,9 +16,80 @@ namespace
 using namespace RTSeis::Utilities::Polarization;
 namespace Rotate = RTSeis::Utilities::Rotate;
 
+void load3C(const std::string &fileName,
+            std::vector<double> &z, std::vector<double> &n, 
+            std::vector<double> &e);
+void loadSVDresults(const std::string &fileName,
+                    std::vector<double> &klz,
+                    std::vector<double> &kln,
+                    std::vector<double> &kle,
+                    std::vector<double> &rect,
+                    std::vector<double> &incl);
+
+
 TEST(UtilitiesPolarization, svdPolarizer)
 {
+    // Load the data
+    const std::string dataFile = "data/pb.b206.eh.windowed.txt"; 
+    const std::string refFile = "data/svdReference.txt";
+    std::vector<double> zTrace, nTrace, eTrace;
+    load3C(dataFile, zTrace, nTrace, eTrace);
+    auto npts = static_cast<int> (zTrace.size());
+    ASSERT_EQ(npts, 5001);
+    std::vector<double> klzRef, klnRef, kleRef, rectRef, incRef;
+    loadSVDresults(refFile, klzRef, klnRef, kleRef, rectRef, incRef);
+    ASSERT_EQ(klzRef.size(), zTrace.size());
+    // Initialize the polarizer
     SVDPolarizer<double> svd;
+    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING; 
+    double noise = 0.8;    // Minimize size for innovation
+    double decayP = 0.99;  // 99/100 1s window at 100 samples per second
+    double decayS = 0.998; // 499/500 5s window at 100 samples per second
+    EXPECT_NO_THROW(svd.initialize(decayP, noise, mode));
+    // Let's fire this thing off
+    EXPECT_TRUE(svd.isInitialized());
+    std::vector<double> klz(npts, 0), kln(npts, 0), kle(npts, 0);
+    std::vector<double> rect(npts, 0), inc(npts, 0);
+    auto klzPtr = klz.data();
+    auto klnPtr = kln.data();
+    auto klePtr = kle.data();
+    auto rectPtr = rect.data();
+    auto incPtr = inc.data();
+    svd.polarize(zTrace.size(),
+                 zTrace.data(), nTrace.data(), eTrace.data(),
+                 &klzPtr, &klnPtr, &klePtr,
+                 &incPtr, &rectPtr);
+    double emax;
+    ippsNormDiff_Inf_64f(klzRef.data(), klz.data(), klzRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-6);
+    ippsNormDiff_Inf_64f(klnRef.data(), kln.data(), klnRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-6);
+    ippsNormDiff_Inf_64f(kleRef.data(), kle.data(), kleRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-6);
+    ippsNormDiff_Inf_64f(incRef.data(), inc.data(), incRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-10);
+    ippsNormDiff_Inf_64f(rectRef.data(), rect.data(), rectRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-10);
+    // Try the other interfaces - KL transform
+    svd.polarize(zTrace.size(),
+                 zTrace.data(), nTrace.data(), eTrace.data(),
+                 &klzPtr, &klnPtr, &klePtr);
+    ippsNormDiff_Inf_64f(klzRef.data(), klz.data(), klzRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-6);
+    ippsNormDiff_Inf_64f(klnRef.data(), kln.data(), klnRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-6);
+    ippsNormDiff_Inf_64f(kleRef.data(), kle.data(), kleRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-6);
+    // cosIncidence angle, rectilinearity only
+    svd.polarize(zTrace.size(),
+                 zTrace.data(), nTrace.data(), eTrace.data(),
+                 &incPtr, &rectPtr);
+    ippsNormDiff_Inf_64f(incRef.data(), inc.data(), incRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-10);
+    ippsNormDiff_Inf_64f(rectRef.data(), rect.data(), rectRef.size(), &emax);
+    EXPECT_LT(emax, 1.e-10);
+    // Try real-time example
+fprintf(stdout, "POLARIZER NEEDS REAL-TIME TEST!\n");
 }
 
 TEST(UtilitiesPolarization, eigenPolarizer)
@@ -74,6 +147,91 @@ TEST(UtilitiesPolarization, eigenPolarizer)
             //printf("%lf %lf %lf %lf\n", eigen.getAzimuth(false), eigen.getBackAzimuth(false), eigen.getIncidenceAngle(false), eigen.getRectilinearity());
         }
     }
+}
+
+void load3C(const std::string &fileName,
+            std::vector<double> &z, std::vector<double> &n,
+            std::vector<double> &e)
+{
+    // Null out result
+    z.resize(0);
+    n.resize(0);
+    e.resize(0);
+    // Open and read file
+    std::ifstream inFile;
+    inFile.open(fileName);
+    if (inFile.is_open())
+    {
+        // Space query
+        std::string line;
+        int npts = 0;
+        while (std::getline(inFile, line))
+        {
+            npts = npts + 1;
+        }
+        inFile.close();
+        inFile.open(fileName);
+        // Allocate space
+        z.resize(npts);
+        n.resize(npts);
+        e.resize(npts);
+        // Load data
+        int i = 0;
+        while (std::getline(inFile, line))
+        {
+            double t;
+            sscanf(line.c_str(), "%lf, %lf, %lf, %lf\n",
+                    &t, &z[i], &n[i], &e[i]);
+            i = i + 1;
+        }
+    }
+    inFile.close();
+}
+
+void loadSVDresults(const std::string &fileName,
+                    std::vector<double> &klz,
+                    std::vector<double> &kln,
+                    std::vector<double> &kle,
+                    std::vector<double> &rect,
+                    std::vector<double> &inc)
+{
+    // Null out result
+    klz.resize(0);
+    kln.resize(0);
+    kle.resize(0);
+    rect.resize(0);
+    inc.resize(0);
+    // Open and read file
+    std::ifstream inFile;
+    inFile.open(fileName);
+    if (inFile.is_open())
+    {   
+        // Space query
+        std::string line;
+        int npts = 0;
+        while (std::getline(inFile, line))
+        {
+            npts = npts + 1;
+        }
+        inFile.close();
+        inFile.open(fileName);
+        // Allocate space
+        klz.resize(npts);
+        kln.resize(npts);
+        kle.resize(npts);
+        rect.resize(npts);
+        inc.resize(npts);
+        // Load the data
+        // Load data
+        int i = 0;
+        while (std::getline(inFile, line))
+        {
+            sscanf(line.c_str(), "%lf, %lf, %lf, %lf, %lf\n",
+                    &klz[i], &kln[i], &kle[i], &rect[i], &inc[i]);
+            i = i + 1;
+        }
+    }
+    inFile.close();
 }
 
 }

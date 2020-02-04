@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <limits>
 #include <array>
 #include <ipps.h>
 #include <mkl.h>
@@ -22,7 +23,7 @@ namespace
 template<typename T>
 inline void updateU(const bool lPositiveP,
                     const T *__restrict__ p, const T magp,
-                    const T *__restrict__ A, // LDA = 3
+                    const T *__restrict__ A,
                     T *__restrict__ U)
 {
     T Uwork[9];
@@ -31,39 +32,50 @@ inline void updateU(const bool lPositiveP,
        // Rank reduction:
        Uwork[0] = U[0];
        Uwork[1] = U[1];
-       Uwork[2] = p[0]/magp;
- 
-       Uwork[3] = U[2];
-       Uwork[4] = U[3];
-       Uwork[5] = p[1]/magp;
- 
-       Uwork[6] = U[4];
-       Uwork[7] = U[5];
+       Uwork[2] = U[2];
+
+       Uwork[3] = U[3];
+       Uwork[4] = U[4];
+       Uwork[5] = U[5];
+
+       Uwork[6] = p[0]/magp;
+       Uwork[7] = p[1]/magp;
        Uwork[8] = p[2]/magp;
-       // First row 
-       U[0] = Uwork[0]*A[0] + Uwork[1]*A[3] + Uwork[2]*A[6];
-       U[1] = Uwork[0]*A[1] + Uwork[1]*A[4] + Uwork[2]*A[7];
-       // Second row
-       U[2] = Uwork[3]*A[0] + Uwork[4]*A[3] + Uwork[5]*A[6];
-       U[3] = Uwork[3]*A[1] + Uwork[4]*A[4] + Uwork[5]*A[7];
-       // Third row
-       U[0] = Uwork[6]*A[0] + Uwork[7]*A[3] + Uwork[8]*A[6];
-       U[1] = Uwork[6]*A[1] + Uwork[7]*A[4] + Uwork[8]*A[7];
+       // First column
+       U[0] = Uwork[0]*A[0] + Uwork[3]*A[1] + Uwork[6]*A[2];
+       U[1] = Uwork[1]*A[0] + Uwork[4]*A[1] + Uwork[7]*A[2];
+       U[2] = Uwork[2]*A[0] + Uwork[5]*A[1] + Uwork[8]*A[2];
+       // Second column 
+       U[3] = Uwork[0]*A[3] + Uwork[3]*A[4] + Uwork[6]*A[5];
+       U[4] = Uwork[1]*A[3] + Uwork[4]*A[4] + Uwork[7]*A[5];
+       U[5] = Uwork[2]*A[3] + Uwork[5]*A[4] + Uwork[8]*A[5];
     }
     else
     { 
        std::copy(U, U+6, Uwork);
        // Rank preserving: U_{n} = U_{n-1} A
-       // First row
-       U[0] = Uwork[0]*A[0] + Uwork[1]*A[3];
-       U[1] = Uwork[0]*A[1] + Uwork[1]*A[4];
-       // Second row
-       U[2] = Uwork[2]*A[0] + Uwork[3]*A[3];
-       U[3] = Uwork[2]*A[1] + Uwork[3]*A[4];
-       // Third row
-       U[4] = Uwork[4]*A[0] + Uwork[5]*A[3];
-       U[5] = Uwork[4]*A[1] + Uwork[5]*A[4];
+       // First column
+       U[0] = Uwork[0]*A[0] + Uwork[3]*A[1];
+       U[1] = Uwork[1]*A[0] + Uwork[4]*A[1];
+       U[2] = Uwork[2]*A[0] + Uwork[5]*A[1];
+       // Second column 
+       U[3] = Uwork[0]*A[3] + Uwork[3]*A[4];
+       U[4] = Uwork[1]*A[3] + Uwork[4]*A[4];
+       U[5] = Uwork[2]*A[3] + Uwork[5]*A[4];
     }
+}
+
+/// Computes the KL transform by computing U_n U_n' d_n
+template<typename T> 
+void klTransform(const T *__restrict__ U,
+                 const T *__restrict__ d,
+                 T *dkz, T *dkn, T *dke)
+{
+    T y0 = U[0]*d[0] + U[1]*d[1] + U[2]*d[2];
+    T y1 = U[3]*d[0] + U[4]*d[1] + U[5]*d[2];
+    *dkz = U[0]*y0 + U[3]*y1;
+    *dkn = U[1]*y0 + U[4]*y1;
+    *dke = U[2]*y0 + U[5]*y1;
 }
 
 /// Computes the Euclidean norm of a length 3 vector
@@ -73,14 +85,20 @@ inline T norm2(const T v[3])
     return std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
+template<typename T>
+inline T norm2(const T a, const T b, const T c)
+{
+    return std::sqrt(a*a + b*b + c*c);
+}
+
 /// Computes \f$ U_{n-1}^T d_n \f$
 template<typename T>
 inline void computeUTd(const T *__restrict__ U,
                        const T *__restrict__ d,
                        T *__restrict__ m)
 {
-    m[0] = U[0]*d[0] + U[2]*d[1] + U[4]*d[2];
-    m[1] = U[0]*d[0] + U[3]*d[1] + U[5]*d[2];
+    m[0] = U[0]*d[0] + U[1]*d[1] + U[2]*d[2];
+    m[1] = U[3]*d[0] + U[4]*d[1] + U[5]*d[2];
 }
 
 /// Computes p = (I - U_{n-1} U_{n-1}^T) d_n = d_n - U_{n-1} 
@@ -90,18 +108,9 @@ inline void computeP(const T *__restrict__ d,
                      const T *__restrict__ m,
                      T *__restrict__ p)
 {
-    p[0] = d[0] - (U[0]*m[0] + U[1]*m[1]);
-    p[1] = d[1] - (U[2]*m[0] + U[3]*m[1]);
-    p[2] = d[2] - (U[4]*m[0] + U[5]*m[1]);
-}
-
-/// Scales a length 3 vector y = alpha*x
-template<typename T>
-inline void scal3(const T alpha, const T x[3], T y[3])
-{
-    y[0] = alpha*x[0];
-    y[1] = alpha*x[1];
-    y[2] = alpha*x[2];
+    p[0] = d[0] - (U[0]*m[0] + U[3]*m[1]);
+    p[1] = d[1] - (U[1]*m[0] + U[4]*m[1]);
+    p[2] = d[2] - (U[2]*m[0] + U[5]*m[1]);
 }
 
 /// Computes the left singular vector and singular values of Q
@@ -110,8 +119,8 @@ inline void svd(double Q[], double S[], double U[])
     std::array<double, LWORK> work;
     constexpr lapack_int m = 3;
     constexpr lapack_int n = 3;
-    auto info = LAPACKE_dgesvd_work(LAPACK_ROW_MAJOR,
-                                    'A', 'N', m, n, Q, 3, 
+    auto info = LAPACKE_dgesvd_work(LAPACK_COL_MAJOR,
+                                    'A', 'N', m, n, Q, 3,
                                     S, U, 3, NULL, 1, work.data(), LWORK);
 #ifdef DEBUG
     assert(info == 0);
@@ -124,7 +133,7 @@ inline void svd(float Q[], float S[], float U[])
     std::array<float, LWORK> work;
     constexpr lapack_int m = 3;
     constexpr lapack_int n = 3;
-    auto info = LAPACKE_sgesvd_work(LAPACK_ROW_MAJOR,
+    auto info = LAPACKE_sgesvd_work(LAPACK_COL_MAJOR,
                                     'A', 'N', m, n, Q, 3,
                                     S, U, 3, NULL, 1, work.data(), LWORK);
 #ifdef DEBUG
@@ -142,15 +151,113 @@ inline void fillQ(const T lambda,
 {
     Q[0] = lambda*S[0];
     Q[1] = 0;
-    Q[2] = m[0];
+    Q[2] = 0;
 
     Q[3] = 0;
     Q[4] = lambda*S[1];
-    Q[5] = m[1];
+    Q[5] = 0;
 
-    Q[6] = 0;
-    Q[7] = 0;
+    Q[6] = m[0];
+    Q[7] = m[1];
     Q[8] = magp;
+}
+
+/// Initializes the recurrence
+template<typename T>
+inline void initializeUS(const T z, const T n, const T e,
+                         T U[], T S[])
+{
+    // The decomposition is U_0 = [ d_0 / |d_0| ] with singular value |d_0|
+    auto magd = norm2(z, n, e);
+    U[0] = z/magd;
+    U[1] = n/magd;
+    U[2] = e/magd;
+    U[3] = 0;
+    U[4] = 0;
+    U[5] = 0;
+    S[0] = magd;
+    S[1] = 0;
+}
+
+/// Do the actual processing
+template<class T>
+void polarizeSignal(const int npts,
+                    const T mLambda, const T mNoise,
+                    const RTSeis::ProcessingMode mode,
+                    const T *__restrict__ z,
+                    const T *__restrict__ n,
+                    const T *__restrict__ e,
+                    bool *mHaveFirstSample,
+                    T *__restrict__ U, T *__restrict__ Q, T *__restrict__ S,
+                    T *__restrict__ klz,
+                    T *__restrict__ kln,
+                    T *__restrict__ kle,
+                    T *__restrict__ cosIncidenceAngle,
+                    T *__restrict__ rectilinearity)
+{
+    const T one = 1;
+    // Do I want the KL transformed time series?
+    bool lwantKL = false;
+    if (klz && kln && kle){lwantKL = true;}
+    // Rectilinearity?
+    bool lwantRect = false;
+    if (rectilinearity){lwantRect = true;}
+    // Incidence angle?
+    bool lwantInc = false;
+    if (cosIncidenceAngle){lwantInc = true;}
+    // Initialize?
+    if (!*mHaveFirstSample)
+    {
+        initializeUS(z[0], n[0], e[0], U, S);
+        *mHaveFirstSample = true;
+    }
+    // Loop on samples
+    T d[3], A[9], m[2], p[3];
+    for (int i=0; i<npts; ++i)
+    {
+        // Extract (z, n, e)
+        d[0] = z[i];
+        d[1] = n[i];
+        d[2] = e[i];
+        computeUTd(U, d, m);  // Eqn (5): m = U_{n-1}'d
+        computeP(d, U, m, p); // Eqn (6): p = (I - U{n-1} U_{n-1}') d_n
+        T magp = norm2(p);    // |p|
+        // Instrument noise
+        bool lPositiveP = true;
+        if (magp < mNoise)
+        {
+             magp = 0;
+             lPositiveP = false;
+        }
+        // Eqn 11
+        fillQ(mLambda, S, m, magp, Q);
+        // Diagonalize Q with SVD
+        svd(Q, S, A); // A now holds the left singular vectors of Q
+        // Update U
+        updateU(lPositiveP, p, magp, A, U); 
+        // Compute the KL transform.  Basically, we project the data into
+        // the space defined by U, i.e., y = U' d, and then we project y
+        // back to the original space, i.e., d_{kl} = U U' d.
+        if (lwantKL){klTransform(U, d, &klz[i], &kln[i], &kle[i]);}
+        // Save rectilinearity
+        if (lwantRect)
+        {
+            rectilinearity[i] = 0;
+            if (S[0] > 0)
+            {
+                rectilinearity[i] = 1 - S[1]/S[0];
+            }
+        }
+        // Save cosine of incidence angle?
+        if (lwantInc)
+        {
+            cosIncidenceAngle[i] = std::min(one, std::abs(U[0,0]));
+        }
+    }
+    if (mode == RTSeis::ProcessingMode::POST_PROCESSING)
+    {
+        *mHaveFirstSample = false;
+    }
 }
 
 }
@@ -166,12 +273,16 @@ public:
     std::array<double, 6> mU;
     /// The diagonal matrix of singular values
     std::array<double, 3> mS;
+    /// The initial conditions
+    std::array<double, 3> mInitialConditions = {0.0, 0.0, 0.0};
     /// The forgetting factor.
     double mLambda = 0.9995;
     /// The noise level
-    double mNoise = 1.e-13;
+    double mNoise = std::numeric_limits<double>::epsilon()*100; //1.e-13;
     /// Flag indicating that the first sample has been set.
     bool mHaveFirstSample = false;
+    /// Flag indicating that the initial conditions were set.
+    bool mHaveInitialConditions = false;
     /// Flag indicating that the class is initialized.
     bool mInitialized = false;
     /// The processing mode
@@ -188,12 +299,16 @@ public:
     std::array<float, 6> mU;
     /// The diagonal matrix of singular values
     std::array<float, 3> mS;
+    /// The initial conditions
+    std::array<float, 3> mInitialConditions = {0.0f, 0.0f, 0.0f};
     /// The forgetting factor.
     float mLambda = 0.9995;
     /// The noise level
-    float mNoise = 1.e-5;
+    float mNoise = std::numeric_limits<float>::epsilon()*100; //1.e-5;
     /// Flag indicating that the first sample has been set.
     bool mHaveFirstSample = false;
+    /// Flag indicating that the initial conditions were set.
+    bool mHaveInitialConditions = false;
     /// Flag indicating that the class is initialized.
     bool mInitialized = false;
     /// The processing mode
@@ -206,11 +321,38 @@ template<class T>
 SVDPolarizer<T>::SVDPolarizer() :
     pImpl(std::make_unique<SVDPolarizerImpl> ())
 {
-/*
-double U[9], q[9], s[3];
-svd(3, 3, q, s, U);
-svd(2, 3, q, s, U); 
-*/
+}
+
+/// Copy c'tor
+template<class T>
+SVDPolarizer<T>::SVDPolarizer(const SVDPolarizer &polarizer)
+{
+    *this = polarizer;
+}
+
+/// Move c'tor
+template<class T>
+SVDPolarizer<T>::SVDPolarizer(SVDPolarizer &&polarizer) noexcept
+{
+    *this = std::move(polarizer);
+}
+
+/// Copy assignment operator
+template<class T>
+SVDPolarizer<T>& SVDPolarizer<T>::operator=(const SVDPolarizer &polarizer)
+{
+    if (&polarizer == this){return *this;}
+    pImpl = std::make_unique<SVDPolarizerImpl> (*polarizer.pImpl);
+    return *this;
+}
+
+/// Move assignment operator
+template<class T>
+SVDPolarizer<T>& SVDPolarizer<T>::operator=(SVDPolarizer &&polarizer) noexcept
+{
+    if (&polarizer == this){return *this;}
+    pImpl = std::move(polarizer.pImpl);
+    return *this;
 }
 
 /// Destructor
@@ -232,80 +374,186 @@ void SVDPolarizer<T>::clear() noexcept
 
 /// Initialize
 template<class T>
-void SVDPolarizer<T>::initialize(const double decayFactor,
+void SVDPolarizer<T>::initialize(const T decayFactor,
+                                 const T noise,
                                  const RTSeis::ProcessingMode mode)
 {
     clear();
     if (decayFactor <= 0 || decayFactor >= 1)
-    {
+    {   
         RTSEIS_THROW_IA("decayFactor = %lf must be in range (0,1)",
                         decayFactor); 
     }
+    if (noise < 0)
+    {
+        RTSEIS_THROW_IA("noise = %lf must be at least 0", noise);
+    }
     pImpl->mLambda = decayFactor; 
+    pImpl->mNoise = noise;
     pImpl->mMode = mode;
     pImpl->mInitialized = true;
 }
 
-/// 
+/// Initialize with default epsilon
 template<class T>
-void SVDPolarizer<T>::polarize(const int npts, const T z[], const T n[], const T e[],
-                               T incidenceAngle[], T rectilinearity[])
+void SVDPolarizer<T>::initialize(const T decayFactor,
+                                 const RTSeis::ProcessingMode mode)
+{
+    initialize(decayFactor, std::numeric_limits<T>::epsilon()*100, mode);
+}
+
+/// Set the initial conditions
+template<class T>
+void SVDPolarizer<T>::setInitialConditions(
+    const T z, const T n, const T e)
+{
+    pImpl->mHaveInitialConditions = false;
+    pImpl->mHaveFirstSample = false;
+    pImpl->mInitialConditions[0] = 0;
+    pImpl->mInitialConditions[1] = 0;
+    pImpl->mInitialConditions[2] = 0;
+    if (!isInitialized())
+    {
+        throw std::runtime_error("Class is not initialized\n");
+    }
+    if (z == 0 && n == 0 && e == 0)
+    {
+        throw std::invalid_argument("Initial samples cannot all be zero\n"); 
+    } 
+    pImpl->mInitialConditions[0] = z;
+    pImpl->mInitialConditions[1] = n;
+    pImpl->mInitialConditions[2] = e;
+    initializeUS(pImpl->mInitialConditions[0],
+                 pImpl->mInitialConditions[1],
+                 pImpl->mInitialConditions[2],
+                 pImpl->mU.data(), pImpl->mS.data());
+    pImpl->mHaveFirstSample = true;
+    pImpl->mHaveInitialConditions = true;
+}
+
+/// Reset the initial conditions
+template<class T>
+void SVDPolarizer<T>::resetInitialConditions()
+{
+    pImpl->mHaveFirstSample = false;
+    if (!isInitialized())
+    {
+        throw std::runtime_error("Class is not initialized\n");
+    }
+    if (pImpl->mHaveInitialConditions)
+    {
+        initializeUS(pImpl->mInitialConditions[0],
+                     pImpl->mInitialConditions[1],
+                     pImpl->mInitialConditions[2],
+                     pImpl->mU.data(), pImpl->mS.data());
+        pImpl->mHaveFirstSample = true;
+    }
+}
+
+/// Compute everything 
+template<class T>
+void SVDPolarizer<T>::polarize(const int npts,
+                               const T z[], const T n[], const T e[],
+                               T *klzIn[], T *klnIn[], T *kleIn[],
+                               T *cosIncidenceAngleIn[], T *rectilinearityIn[])
 {
     if (npts < 1){return;}
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    if (z == nullptr){RTSEIS_THROW_RTE("%s", "z is NULL");}
-    if (n == nullptr){RTSEIS_THROW_RTE("%s", "n is NULL");}
-    if (e == nullptr){RTSEIS_THROW_RTE("%s", "e is NULL");}
-    T *U = pImpl->mU.data();
-    T *Q = pImpl->mQ.data();
-    T *S = pImpl->mS.data();
-    // Initialize?
-    T d[3];
-    int ibeg = 0;
-    if (!pImpl->mHaveFirstSample)
+    if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
+    if (n == nullptr){RTSEIS_THROW_IA("%s", "n is NULL");}
+    if (e == nullptr){RTSEIS_THROW_IA("%s", "e is NULL");}
+    // Extract the pointers
+    auto klz = *klzIn;
+    auto kln = *klnIn;
+    auto kle = *kleIn;
+    auto cosIncidenceAngle = *cosIncidenceAngleIn;
+    auto rectilinearity = *rectilinearityIn;
+    if (klz == nullptr){RTSEIS_THROW_IA("%s", "klz is NULL");}
+    if (kln == nullptr){RTSEIS_THROW_IA("%s", "kln is NULL");}
+    if (kle == nullptr){RTSEIS_THROW_IA("%s", "kle is NULL");}
+    if (cosIncidenceAngle == nullptr)
     {
-        // Extract (z, n, e)
-        d[0] = z[0];
-        d[1] = n[0];
-        d[2] = e[0];
-        // Eqn 7: X_0 = [ d_0 ] 
-        // The decomposition is U_0 = [ d_0 / |d_0| ] with singular value |d_0|
-        std::fill(pImpl->mU.begin(), pImpl->mU.end(), 0);
-        auto magd = norm2(d);
-        pImpl->mU[0] = d[0]/magd;
-        pImpl->mU[2] = d[1]/magd;
-        pImpl->mU[4] = d[2]/magd;
-        std::fill(pImpl->mS.begin(), pImpl->mS.end(), 0);
-        pImpl->mS[0] = magd;
-        ibeg = 1;
-        pImpl->mHaveFirstSample = true;
+         RTSEIS_THROW_IA("%s", "cosIncidenceAngle is NULL");
     }
-    // Loop on samples
-    T A[9], m[2], p[3];
-    for (int i=ibeg; i<npts; ++i)
+    if (rectilinearity == nullptr)
     {
-        // Extract (z, n, e)
-        d[0] = z[i];
-        d[1] = n[i];
-        d[2] = e[i]; 
-        computeUTd(U, d, m);  // Eqn (5)
-        computeP(d, U, m, p); // Eqn (6)
-        T magp = norm2(p);    // |p| 
-        // Instrument noise
-        bool lPositiveP = true;
-        if (magp < pImpl->mNoise)
-        {
-             magp = 0;
-             lPositiveP = false;
-        }
-        // Eqn 11
-        fillQ(pImpl->mLambda, S, m, magp, Q);
-        // Diagonalize Q with SVD
-        std::copy(Q, Q+9, A);
-        svd(Q, S, A); // A now holds the left singular vectors of Q
-        // Update U
-        updateU(lPositiveP, p, magp, A, U);
+        RTSEIS_THROW_IA("%s", "rectilinearity is NULL");
     }
+    // Extract the pointers
+    polarizeSignal(npts,
+                   pImpl->mLambda, pImpl->mNoise, pImpl->mMode,
+                   z, n, e, 
+                   &pImpl->mHaveFirstSample,
+                   pImpl->mU.data(), pImpl->mQ.data(), pImpl->mS.data(),
+                   klz, kln, kle,
+                   cosIncidenceAngle, rectilinearity);
+    
+}
+
+/// Compute KL transform only
+template<class T>
+void SVDPolarizer<T>::polarize(const int npts, 
+                               const T z[], const T n[], const T e[],
+                               T *klzIn[], T *klnIn[], T *kleIn[])
+{
+    if (npts < 1){return;}
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
+    if (n == nullptr){RTSEIS_THROW_IA("%s", "n is NULL");}
+    if (e == nullptr){RTSEIS_THROW_IA("%s", "e is NULL");}
+    // Extract the pointers
+    auto klz = *klzIn;
+    auto kln = *klnIn;
+    auto kle = *kleIn;
+    if (klz == nullptr){RTSEIS_THROW_IA("%s", "klz is NULL");}
+    if (kln == nullptr){RTSEIS_THROW_IA("%s", "kln is NULL");}
+    if (kle == nullptr){RTSEIS_THROW_IA("%s", "kle is NULL");}
+    T *cosIncidenceAngle = nullptr;
+    T *rectilinearity = nullptr;
+    // Extract the pointers
+    polarizeSignal(npts,
+                   pImpl->mLambda, pImpl->mNoise, pImpl->mMode,
+                   z, n, e,  
+                   &pImpl->mHaveFirstSample,
+                   pImpl->mU.data(), pImpl->mQ.data(), pImpl->mS.data(),
+                   klz, kln, kle,
+                   cosIncidenceAngle, rectilinearity);
+}
+
+/// Compute incidence angle and rectilinearity
+template<class T>
+void SVDPolarizer<T>::polarize(const int npts, 
+                               const T z[], const T n[], const T e[],
+                               T *cosIncidenceAngleIn[], T *rectilinearityIn[])
+{
+    if (npts < 1){return;}
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
+    if (n == nullptr){RTSEIS_THROW_IA("%s", "n is NULL");}
+    if (e == nullptr){RTSEIS_THROW_IA("%s", "e is NULL");}
+    // Extract the pointers
+    auto cosIncidenceAngle = *cosIncidenceAngleIn;
+    auto rectilinearity = *rectilinearityIn;
+    if (cosIncidenceAngle == nullptr)
+    {
+         RTSEIS_THROW_IA("%s", "cosIncidenceAngle is NULL");
+    }
+    if (rectilinearity == nullptr)
+    {
+        RTSEIS_THROW_IA("%s", "rectilinearity is NULL");
+    }
+    T *klz = nullptr;
+    T *kln = nullptr;
+    T *kle = nullptr;
+    // Extract the pointers
+    polarizeSignal(npts,
+                   pImpl->mLambda, pImpl->mNoise, pImpl->mMode,
+                   z, n, e,  
+                   &pImpl->mHaveFirstSample,
+                   pImpl->mU.data(), pImpl->mQ.data(), pImpl->mS.data(),
+                   klz, kln, kle,
+                   cosIncidenceAngle, rectilinearity);
+      
 }
 
 /// Initialized?
@@ -319,42 +567,63 @@ bool SVDPolarizer<T>::isInitialized() const noexcept
 //                                 Utility Functions                          //
 //============================================================================//
 
-/// Polarizes a signal using p_n = I_n R_n r_n 
+/*
+/// Modulates a signal using p_n = I_n R_n r_n 
 template<typename T>
-void RTSeis::Utilities::Polarization::pPolarize(
-    const int n, const T zne[],
-    const T inc[], const T rect[], const T r[],
-    T pPolarized[])
+void RTSeis::Utilities::Polarization::modulateP(
+    const int npts,
+    const T z[], const T n[], const T e[],
+    const T inc[], const T rect[],
+    T *pzIn[], T *pnIn[], T *peIn[])
 {
+    if (npts < 1){return;}
+    if (z == nullptr || n = nullptr || e == nullptr)
+    {
+        if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
+        if (n == nullptr){RTSEIS_THROW_IA("%s", "n is NULL");}
+        RTSEIS_THROW_IA("%s", "e is NULL");
+    }
+    auto pz = *pzIn;
+    auto pn = *pnIn;
+    auto pe = *peIn;
     #pragma omp simd
     for (int i=0; i<n; ++i)
     {
-        auto ir = inc[i]*rect[i];
-        pPolarized[3*i]   = ir;
-        pPolarized[3*i+1] = ir;
-        pPolarized[3*i+2] = ir;
+        auto r = inc[i]*rect[i];
+        pz[i] = r*z[i];
+        pn[i] = r*n[i];
+        pe[i] = r*e[i];
     }
-    #pragma omp simd
-    for (int i=0; i<3*n; ++i){pPolarized[i] = pPolarized[i]*r[i];}
 }
-/// Polarizes a signal using s_n = (1 - I_n) R_n r_n
+
+/// Modulates a signal using s_n = (1 - I_n) R_n r_n
 template<typename T>
-void RTSeis::Utilities::Polarization::sPolarize(
-    const int n, const T zne[],
-    const T inc[], const T rect[], const T r[],
-    T pPolarized[])
+void RTSeis::Utilities::Polarization::modulateS(
+    const int npts,
+    const T z[], const T n[], const T e[],
+    const T inc[], const T rect[],
+    T *pzIn[], T *pnIn[], T *peIn[])
 {
+    if (npts < 1){return;}
+    if (z == nullptr || n = nullptr || e == nullptr)
+    {   
+        if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
+        if (n == nullptr){RTSEIS_THROW_IA("%s", "n is NULL");}
+        RTSEIS_THROW_IA("%s", "e is NULL");
+    }   
+    auto pz = *pzIn;
+    auto pn = *pnIn;
+    auto pe = *peIn;
     #pragma omp simd
     for (int i=0; i<n; ++i)
-    {
-        auto ir = 1 - inc[i]*rect[i];
-        pPolarized[3*i]   = ir;
-        pPolarized[3*i+1] = ir;
-        pPolarized[3*i+2] = ir;
-    }
-    #pragma omp simd
-    for (int i=0; i<3*n; ++i){pPolarized[i] = pPolarized[i]*r[i];}
+    {   
+        auto r = inc[i]*rect[i];
+        pz[i] = r*z[i];
+        pn[i] = r*n[i];
+        pe[i] = r*e[i];
+    }   
 }
+*/
 
 /// Template instantiation
 template class RTSeis::Utilities::Polarization::SVDPolarizer<double>;
