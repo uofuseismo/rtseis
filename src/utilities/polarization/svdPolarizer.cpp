@@ -251,7 +251,7 @@ void polarizeSignal(const int npts,
         // Save cosine of incidence angle?
         if (lwantInc)
         {
-            cosIncidenceAngle[i] = std::min(one, std::abs(U[0,0]));
+            cosIncidenceAngle[i] = std::min(one, std::abs(U[0]));
         }
     }
     if (mode == RTSeis::ProcessingMode::POST_PROCESSING)
@@ -661,3 +661,37 @@ template void RTSeis::Utilities::Polarization::modulateS(
     const float z[], const float n[], const float e[],
     const float inc[], const float rect[],
     float *szIn[], float *snIn[], float *seIn[]);
+
+namespace
+{
+template void polarizeSignal(const int npts,
+                             const double mLambda, const double mNoise,
+                             const RTSeis::ProcessingMode mode,
+                             const double *__restrict__ z,
+                             const double *__restrict__ n,
+                             const double *__restrict__ e,
+                             bool *mHaveFirstSample,
+                             double *__restrict__ U,
+                             double *__restrict__ Q,
+                             double *__restrict__ S,
+                             double *__restrict__ klz,
+                             double *__restrict__ kln,
+                             double *__restrict__ kle,
+                             double *__restrict__ cosIncidenceAngle,
+                             double *__restrict__ rectilinearity);
+template void polarizeSignal(const int npts,
+                             const float mLambda, const float mNoise,
+                             const RTSeis::ProcessingMode mode,
+                             const float *__restrict__ z,
+                             const float *__restrict__ n,
+                             const float *__restrict__ e,
+                             bool *mHaveFirstSample,
+                             float *__restrict__ U,
+                             float *__restrict__ Q,
+                             float *__restrict__ S,
+                             float *__restrict__ klz,
+                             float *__restrict__ kln,
+                             float *__restrict__ kle,
+                             float *__restrict__ cosIncidenceAngle,
+                             float *__restrict__ rectilinearity);
+}
