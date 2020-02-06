@@ -17,7 +17,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
 {
     public:
         /// Default constructor
-        ClassicSTALTAImpl(void)
+        ClassicSTALTAImpl()
         {
             return;
         }
@@ -28,7 +28,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             return;
         }
         /// Classic destructor
-        ~ClassicSTALTAImpl(void) 
+        ~ClassicSTALTAImpl() 
         {
             clear();
             return;
@@ -71,7 +71,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             return *this;
         }
         /// Releases memory on the module
-        void clear(void)
+        void clear()
         {
             firNum_.clear();
             firDen_.clear();
@@ -93,7 +93,6 @@ class ClassicSTALTA::ClassicSTALTAImpl
             mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
             precision_ = RTSeis::Precision::DOUBLE;
             linit_ = false;
-            return;
         }
         //--------------------------------------------------------------------//
         int initialize(const int nsta, const int nlta,
@@ -151,17 +150,17 @@ class ClassicSTALTA::ClassicSTALTAImpl
             return 0;
         } 
         /// Determines if the module is initialized
-        bool isInitialized(void) const
+        bool isInitialized() const
         {
             return linit_;
         }
         /// Gets length of the numerator initial conditons
-        int getNumeratorInitialConditionLength(void) const
+        int getNumeratorInitialConditionLength() const
         {
             return firNum_.getInitialConditionLength();
         }
         /// Gets length of the denominator initial conditons
-        int getDenominatorInitialConditionLength(void) const
+        int getDenominatorInitialConditionLength() const
         {
             return firDen_.getInitialConditionLength();
         }
@@ -181,7 +180,7 @@ class ClassicSTALTA::ClassicSTALTAImpl
             return 0;
         }
         /// Resets the initial conditions
-        int resetInitialConditions(void)
+        int resetInitialConditions()
         {
             firNum_.resetInitialConditions();
             firDen_.resetInitialConditions();
@@ -317,14 +316,12 @@ class ClassicSTALTA::ClassicSTALTAImpl
 
 ClassicSTALTAParameters::ClassicSTALTAParameters()
 {
-    return;
 }
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
     const ClassicSTALTAParameters &parameters)
 {
     *this = parameters;
-    return;
 }
 
 ClassicSTALTAParameters&
@@ -356,9 +353,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     }
     setProcessingMode(mode);
     precision_ = prec;
-    // Validate
     validate_();
-    return;
 }
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
@@ -376,9 +371,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     }
     setProcessingMode(mode);
     precision_ = prec;
-    // Validate
     validate_();
-    return;
 }
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
@@ -402,9 +395,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     }
     setProcessingMode(mode);
     precision_ = prec;
-    // Validate
     validate_();
-    return;
 }
 
 ClassicSTALTAParameters::ClassicSTALTAParameters(
@@ -428,9 +419,7 @@ ClassicSTALTAParameters::ClassicSTALTAParameters(
     }
     setProcessingMode(mode);
     precision_ = prec;
-    // Validate
     validate_();
-    return;
 }
 
 ClassicSTALTAParameters::~ClassicSTALTAParameters()
@@ -438,7 +427,7 @@ ClassicSTALTAParameters::~ClassicSTALTAParameters()
     clear();
 }
 
-void ClassicSTALTAParameters::clear()
+void ClassicSTALTAParameters::clear() noexcept
 {
     nsta_ = 0;
     nlta_ = 0;
@@ -446,7 +435,6 @@ void ClassicSTALTAParameters::clear()
     precision_ = defaultPrecision_;
     processingMode_ = RTSeis::ProcessingMode::POST_PROCESSING;
     isValid_ = false;
-    return;
 }
 
 int ClassicSTALTAParameters::setChunkSize(const size_t chunkSize)
@@ -530,24 +518,23 @@ int ClassicSTALTAParameters::getShortTermWindowSize() const
 }
 
 void ClassicSTALTAParameters::setProcessingMode(
-    const RTSeis::ProcessingMode mode)
+    const RTSeis::ProcessingMode mode) noexcept
 {
     processingMode_ = mode;
     validate_();
-    return;
 }
 
-RTSeis::ProcessingMode ClassicSTALTAParameters::getProcessingMode(void) const
+RTSeis::ProcessingMode ClassicSTALTAParameters::getProcessingMode() const
 {
     return processingMode_;
 }
 
-RTSeis::Precision ClassicSTALTAParameters::getPrecision(void) const
+RTSeis::Precision ClassicSTALTAParameters::getPrecision() const
 {
     return precision_;
 }
 
-bool ClassicSTALTAParameters::isValid() const
+bool ClassicSTALTAParameters::isValid() const noexcept
 {
     return isValid_;
 }
@@ -561,15 +548,14 @@ void ClassicSTALTAParameters::validate_()
     if (getPrecision() != RTSeis::Precision::DOUBLE &&
         getPrecision() != RTSeis::Precision::FLOAT){return;}
     isValid_ = true;
-    return;
 }
 
 //============================================================================//
 //                                 End Parameters                             //
 //============================================================================//
 
-ClassicSTALTA::ClassicSTALTA(void) :
-    pSTALTA_(new ClassicSTALTAImpl())
+ClassicSTALTA::ClassicSTALTA() :
+    pSTALTA_(std::make_unique<ClassicSTALTAImpl> ())
 {
     clear();
 }
@@ -582,17 +568,15 @@ ClassicSTALTA::ClassicSTALTA(const ClassicSTALTA &cstalta)
 ClassicSTALTA::~ClassicSTALTA()
 {
     clear();
-    return;
 }
 
 void ClassicSTALTA::clear()
 {
     pSTALTA_->clear();
-    return;
 }
 
 ClassicSTALTA::ClassicSTALTA(const ClassicSTALTAParameters &parameters) :
-    pSTALTA_(new ClassicSTALTAImpl())
+    pSTALTA_(std::make_unique<ClassicSTALTAImpl> ())
 {
     clear();
     if (!parameters.isValid())
@@ -618,8 +602,7 @@ ClassicSTALTA& ClassicSTALTA::operator=(const ClassicSTALTA &cstalta)
 {
     if (&cstalta == this){return *this;}
     if (pSTALTA_){pSTALTA_->clear();}
-    pSTALTA_ = std::unique_ptr<ClassicSTALTAImpl>
-              (new ClassicSTALTAImpl(*cstalta.pSTALTA_));
+    pSTALTA_ = std::make_unique<ClassicSTALTAImpl> (*cstalta.pSTALTA_);
     return *this;
 }
 
@@ -702,7 +685,7 @@ bool ClassicSTALTA::isInitialized() const
     return pSTALTA_->isInitialized();
 }
 
-int ClassicSTALTA::apply(const int nx, const double x[], double y[])
+int ClassicSTALTA::apply(const int nx, const double x[], double *yIn[])
 {
     if (nx <= 0){return 0;} // Nothing to do
     if (!isInitialized())
@@ -710,6 +693,7 @@ int ClassicSTALTA::apply(const int nx, const double x[], double y[])
         RTSEIS_ERRMSG("%s", "Module not initialized");
         return -1; 
     }
+    auto *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
