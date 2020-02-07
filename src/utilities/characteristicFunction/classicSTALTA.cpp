@@ -44,11 +44,6 @@ void ippsSet(const int n, const double val, double x[])
     ippsSet_64f(val, x, n);
 }
 
-void ippsSet(const int n, const float val, float x[])
-{
-    ippsSet_32f(val, x, n);
-}
-
 void ippsThresholdToZero(const int n, const double x[], double y[], double tol)
 {
     ippsThreshold_LTAbsVal_64f(x, y, n, tol, 0);
@@ -179,7 +174,7 @@ public:
                                     std::numeric_limits<T>::epsilon());
             }
         }
-        if (mMode = RTSeis::ProcessingMode::POST_PROCESSING)
+        if (mMode == RTSeis::ProcessingMode::POST_PROCESSING)
         {
             resetInitialConditions();
         }
