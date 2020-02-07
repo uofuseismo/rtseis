@@ -20,7 +20,7 @@ namespace PostProcessing
  * @copyright Ben Baker (University of Utah) distributed under the MIT license.
  * @ingroup  rtseis_utils_characteristicFunction
  */
-template<class T>
+template<class T = double>
 class ClassicSTALTA
 {
 public:
@@ -152,7 +152,7 @@ namespace RealTime
  * @copyright Ben Baker (University of Utah) distributed under the MIT license.
  * @ingroup  rtseis_utils_characteristicFunction
  */
-template<class T>
+template<class T = double>
 class ClassicSTALTA
 {
 public:

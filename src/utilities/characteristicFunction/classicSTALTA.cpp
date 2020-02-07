@@ -94,6 +94,8 @@ public:
     ClassicSTALTAImpl& operator=(const ClassicSTALTAImpl &stalta)
     {
         if (&stalta == this){return *this;}
+        mSTAFilter = stalta.mSTAFilter;
+        mLTAFilter = stalta.mLTAFilter;
         mChunkSize = stalta.mChunkSize;
         mSta = stalta.mSta;
         mLta = stalta.mLta;
@@ -133,7 +135,8 @@ public:
         std::vector<double> filterCoeffs(std::max(nSta, nLta));
         double div =  1/static_cast<double> (nSta);
         ippsSet(nSta, div, filterCoeffs.data());
-        mSTAFilter.initialize(nSta, filterCoeffs.data(), mMode,
+        mSTAFilter.initialize(nSta, filterCoeffs.data(),
+           RTSeis::ProcessingMode::REAL_TIME,
            RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
         // Set the numerator's initial conditions to 0 
         ippsSet(nSta-1, 0, filterCoeffs.data());
@@ -142,13 +145,14 @@ public:
         // Create the denominator averaging FIR filter
         div = 1/static_cast<double> (nLta);
         ippsSet(nLta, div, filterCoeffs.data());
-        mLTAFilter.initialize(nLta, filterCoeffs.data(), mMode,
+        mLTAFilter.initialize(nLta, filterCoeffs.data(),
+           RTSeis::ProcessingMode::REAL_TIME,
            RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
 
         // Set the denominator's initial conditions to a large number.  This
         // will result in a calculation on startup like 0/big which is 0.
         div = std::numeric_limits<T>::max()/static_cast<T> ((4*nLta));
-        ippsSet(nLta-1, 0, filterCoeffs.data());
+        ippsSet(nLta-1, div, filterCoeffs.data());
         mLTAFilter.setInitialConditions(nLta-1, filterCoeffs.data());
 
         mInitialized = true;        
@@ -164,9 +168,9 @@ public:
             // Compute numerator average of squared input signal
             mSTAFilter.apply(nloc, mX2, &mYNum);
             // Compute denominator average of squared input signal
-            mSTAFilter.apply(nloc, mX2, &mYDen);
+            mLTAFilter.apply(nloc, mX2, &mYDen);
             // Divide numerator by denominator
-            auto status = ippsDiv(nloc, mYNum, mYDen, &y[i]);
+            auto status = ippsDiv(nloc, mYDen, mYNum, &y[i]);
             if (status == ippStsDivByZero)
             {
                 //RTSEIS_WARNMSG("%s", "Division by zero detected");

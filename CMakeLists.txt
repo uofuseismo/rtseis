@@ -181,6 +181,7 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/convolve.cpp
                testing/utils/filters.cpp
                testing/utils/transforms.cpp
+               testing/utils/characteristicFunction.cpp
                testing/utils/response.cpp
                testing/utils/rotate.cpp
                testing/utils/polarization.cpp)
