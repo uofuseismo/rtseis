@@ -18,8 +18,8 @@ using namespace RTSeis::Utilities::CharacteristicFunction;
 TEST(UtilitiesCharacteristicFunction, classicSTALTA)
 {
     const double dt = 1/200.;
-    auto nlta = static_cast<int> (10/dt) + 1;
-    auto nsta = static_cast<int> (5/dt) + 1;
+    auto nlta = 2000; //static_cast<int> (10./dt + 0.5);
+    auto nsta = 1000; //static_cast<int> (5./dt + 0.5);
     auto x = readTextFile("data/gse2.txt");
     auto yRef = readTextFile("data/classicSTALTA_ref.txt");
     ASSERT_TRUE(x.size() > 0);
