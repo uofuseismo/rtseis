@@ -83,7 +83,7 @@ set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 SET(UTILS_SRCS
     src/utilities/version.cpp
     src/utilities/verbosity.cpp
-    src/utilities/characteristicFunction/iirKurtosis.cpp
+    src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/deconvolution/instrumentResponse.cpp
     src/utilities/filterDesign/filterDesigner.cpp
     src/utilities/filterDesign/response.cpp
