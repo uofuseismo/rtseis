@@ -241,7 +241,7 @@ void SlidingWindowRealDFT::initialize(
     int dftLength = parameters.getDFTLength();
     int windowLength = parameters.getWindowLength();
     bool luseWindow = false;
-    if (parameters.getWindowType() != SlidingWindowWindowType::BOXCAR)
+    if (parameters.getWindowType() != SlidingWindowType::BOXCAR)
     {
         luseWindow = true; 
     }

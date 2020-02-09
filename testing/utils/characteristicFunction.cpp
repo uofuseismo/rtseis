@@ -17,7 +17,6 @@ using namespace RTSeis::Utilities::CharacteristicFunction;
 
 TEST(UtilitiesCharacteristicFunction, classicSTALTA)
 {
-    const double dt = 1/200.;
     auto nlta = 2000; //static_cast<int> (10./dt + 0.5);
     auto nsta = 1000; //static_cast<int> (5./dt + 0.5);
     auto x = readTextFile("data/gse2.txt");

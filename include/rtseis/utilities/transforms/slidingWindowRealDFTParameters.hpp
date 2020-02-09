@@ -80,7 +80,7 @@ public:
      * @param[in] nSamples  The number of samples in the signal.
      * @throws std::invalid_argument if the number of samples is not positive.
      */
-    void setNumberOfSamples(const int nSamples);
+    void setNumberOfSamples(int nSamples);
     /*!
      * @brief Gets the number of samples in the signal.
      * @result The number of samples in the signal.
@@ -102,8 +102,8 @@ public:
      * @throws std::invalid_argument if the window length is not positive or
      *         the window type is invalid.
      */
-    void setWindow(const int windowLength,
-                   const SlidingWindowWindowType window = SlidingWindowWindowType::BOXCAR);
+    void setWindow(int windowLength,
+                   SlidingWindowType window = SlidingWindowType::BOXCAR);
     /*!
      * @brief Sets a custom window function that will be applied to each sample.
      *        This is useful if the user wishes to use more involved window
@@ -118,7 +118,7 @@ public:
      * @throws std::invalid_argument if the window length is not positive
      *         or the window is NULL.
      */
-    void setWindow(const int windowLength, const double window[]);
+    void setWindow(int windowLength, const double window[]);
     /*!
      * @brief Gets the window length.
      * @result The length of the window which is equivalent to the number of
@@ -138,7 +138,7 @@ public:
      * @result The type of window function.
      * @throws std::runtime_error if the window was not set.
      */
-    SlidingWindowWindowType getWindowType() const; 
+    SlidingWindowType getWindowType() const; 
     /*! @} */
     /*! @} */
 
@@ -159,7 +159,7 @@ public:
      * @throws std::invalid_argument if nSamplesInOverlap is invalid.
      * @sa \c getWindowLength()
      */
-    void setNumberOfSamplesInOverlap(const int nSamplesInOverlap);
+    void setNumberOfSamplesInOverlap(int nSamplesInOverlap);
     /*!
      * @brief Gets the number of samples in the overlap.
      * @result The number of samples in the overlap.
@@ -175,7 +175,7 @@ public:
      *        the sliding DFT.
      * @param[in] detrendType  The detrend strategy.
      */
-    void setDetrendType(const SlidingWindowDetrendType detrendType) noexcept;
+    void setDetrendType(SlidingWindowDetrendType detrendType) noexcept;
     /*!
      * @brief Gets the detrend type to be applied to each segment of
      *        the sliding DFT.
@@ -194,7 +194,7 @@ public:
      * @throws std::invalid_argument if the DFT length is invalid.
      * @sa \c getWindowLength()
      */
-    void setDFTLength(const int dftLength);
+    void setDFTLength(int dftLength);
     /*!
      * @brief Gets the length of the DFT to be applied to each segment.
      * @result The length of the DFT.
@@ -208,7 +208,7 @@ public:
      * @param[in] precision  The precision of the underlying computations.
      * @note By default this is double precision. 
      */
-    void setPrecision(const RTSeis::Precision mPrecision) noexcept;
+    void setPrecision(RTSeis::Precision mPrecision) noexcept;
     /*!
      * @brief Returns the precision of the underlying computations.
      * @result The precision of the underlying sliding window real DFT 

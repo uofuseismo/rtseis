@@ -21,7 +21,7 @@ public:
     /// The number of samples in the overlap.
     int mSamplesInOverlap = 0;
     /// Describes the window function
-    SlidingWindowWindowType mWindowType = SlidingWindowWindowType::BOXCAR;
+    SlidingWindowType mWindowType = SlidingWindowType::BOXCAR;
     /// Describes the detrend strategy
     SlidingWindowDetrendType mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
     /// Defines the precision
@@ -78,7 +78,7 @@ void SlidingWindowRealDFTParameters::clear() noexcept
     pImpl->mSamples = 0;
     pImpl->mDFTLength = 0;
     pImpl->mSamplesInOverlap = 0;
-    pImpl->mWindowType = SlidingWindowWindowType::BOXCAR;
+    pImpl->mWindowType = SlidingWindowType::BOXCAR;
     pImpl->mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
     pImpl->mPrecision = RTSeis::Precision::DOUBLE;
 }
@@ -107,7 +107,7 @@ int SlidingWindowRealDFTParameters::getNumberOfSamples() const
 /// Sets the window
 void SlidingWindowRealDFTParameters::setWindow(
     const int windowLength,
-    const SlidingWindowWindowType windowType)
+    const SlidingWindowType windowType)
 {
     // Error checks
     pImpl->mDFTLength = 0;
@@ -117,7 +117,7 @@ void SlidingWindowRealDFTParameters::setWindow(
     {
         RTSEIS_THROW_IA("%s", "windowLength must be positive");
     }
-    if (windowType == SlidingWindowWindowType::CUSTOM)
+    if (windowType == SlidingWindowType::CUSTOM)
     {
         RTSEIS_THROW_IA("%s", "window type cannot be custom");
     } 
@@ -127,23 +127,23 @@ void SlidingWindowRealDFTParameters::setWindow(
     pImpl->mWindow.resize(windowLength);
     // Create window
     double *windowPtr = pImpl->mWindow.data();
-    if (windowType == SlidingWindowWindowType::HAMMING)
+    if (windowType == SlidingWindowType::HAMMING)
     {
         Utilities::WindowFunctions::hamming(windowLength, &windowPtr);
     }
-    else if (windowType == SlidingWindowWindowType::HANN)
+    else if (windowType == SlidingWindowType::HANN)
     {
         Utilities::WindowFunctions::hann(windowLength, &windowPtr);
     }
-    else if (windowType == SlidingWindowWindowType::BLACKMAN)
+    else if (windowType == SlidingWindowType::BLACKMAN)
     {
         Utilities::WindowFunctions::blackman(windowLength, &windowPtr);
     }
-    else if (windowType == SlidingWindowWindowType::BARTLETT)
+    else if (windowType == SlidingWindowType::BARTLETT)
     {
         Utilities::WindowFunctions::bartlett(windowLength, &windowPtr);
     }
-    else if (windowType == SlidingWindowWindowType::BOXCAR)
+    else if (windowType == SlidingWindowType::BOXCAR)
     {
         ippsSet_64f(1.0, windowPtr, windowLength);
     }
@@ -171,7 +171,7 @@ void SlidingWindowRealDFTParameters::setWindow(
     // Resize and copy
     pImpl->mDFTLength = windowLength;
     pImpl->mWindow.resize(windowLength);
-    pImpl->mWindowType = SlidingWindowWindowType::CUSTOM;
+    pImpl->mWindowType = SlidingWindowType::CUSTOM;
     ippsCopy_64f(window, pImpl->mWindow.data(), windowLength);
 }
 
@@ -193,7 +193,7 @@ int SlidingWindowRealDFTParameters::getWindowLength() const
     return static_cast<int> (pImpl->mWindow.size());
 }
 
-SlidingWindowWindowType SlidingWindowRealDFTParameters::getWindowType() const
+SlidingWindowType SlidingWindowRealDFTParameters::getWindowType() const
 {
     if (pImpl->mWindow.empty())
     {

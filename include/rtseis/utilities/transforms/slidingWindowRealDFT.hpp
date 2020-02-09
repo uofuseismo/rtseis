@@ -45,7 +45,6 @@ public:
      */
     SlidingWindowRealDFT(SlidingWindowRealDFT &&swdft) noexcept;
     /*! @} */
- 
     
     /*! @name Operators
      * @{
@@ -66,6 +65,7 @@ public:
      */
     SlidingWindowRealDFT& operator=(SlidingWindowRealDFT &&swdft) noexcept;
     /*! @} */
+
     /*! @name Destructors
      * @{
      */

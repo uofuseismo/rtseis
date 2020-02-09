@@ -66,8 +66,8 @@ public:
       *                            will be applied.
       * @result 0 indicates success.
       */
-     void initialize(const int length,
-                     const FourierTransformImplementation implementation = FourierTransformImplementation::DFT);
+     void initialize(int length,
+                     FourierTransformImplementation implementation = FourierTransformImplementation::DFT);
      /*!
       * @brief Fourier transforms a real-valued time domain signal to the
       *        frequency domain.   The transform is defined as 
@@ -93,10 +93,8 @@ public:
       * @throws std::invalid_argument if any arguments are invalid.
       * @throws std::runtime_error if the class is not initialized.
       */
-     void forwardTransform(const int n,
-                           const T x[],
-                           const int maxy,
-                           std::complex<T> *y[]);
+     void forwardTransform(int n, const T x[],
+                           int maxy, std::complex<T> *y[]);
      /*!
       * @brief Inverse transforms complex-valued frequency domian signal
       *        to a real-valued time domain signal.  The transform is
@@ -128,9 +126,8 @@ public:
       * @throws std::invalid_argument if any arguments are invalid.
       * @throws std::runtime_error if the class is not initialized.
       */
-     void inverseTransform(const int lenft,
-                           const std::complex<T> x[],
-                           const int maxy, T *y[]);
+     void inverseTransform(int lenft, const std::complex<T> x[],
+                           int maxy, T *y[]);
      /*!
       * @brief Gets the inverse transform length.
       * @result The length of the inverse DFT or FFT.

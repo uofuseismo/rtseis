@@ -96,8 +96,8 @@ public:
      * @param[in] mode     The processing mode.
      * @throws std::invalid_argument if ntaps is not positive.
      */
-    void initialize(const int ntaps,
-                    const RTSeis::ProcessingMode mode=RTSeis::POST_PROCESSING);
+    void initialize(int ntaps,
+                    RTSeis::ProcessingMode mode=RTSeis::POST_PROCESSING);
 
     /*!
      * @brief Gets the length of the initital condition array.
@@ -114,7 +114,7 @@ public:
      * @throws std::invalid_argument if the nz is not correct of zi is NULL. 
      * @throws std::runtime_error if the class is not inititalized.
      */
-    void setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(int nz, const double zi[]);
 
     /*!
      * @brief Computes the envelope of the signal.
@@ -126,7 +126,7 @@ public:
      * @throws std::invalid_argument if x or y are NULL.
      * @throws std::runtime_error if the class is not inititalized.
      */
-    void transform(const int n, const T x[], T *y[]);
+    void transform(int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions of the underlying FIR filters.
      *        This may be useful after a gap is encountered.

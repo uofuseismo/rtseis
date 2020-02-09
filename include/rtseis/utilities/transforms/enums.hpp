@@ -27,7 +27,7 @@ enum class SlidingWindowDetrendType
  * @brief Defines the window functions available to the sliding window
  *        real DFT.
  */
-enum class SlidingWindowWindowType
+enum class SlidingWindowType
 {
     HAMMING,   /*!< A Hamming window. */
     HANN,      /*!< A Hann window. */

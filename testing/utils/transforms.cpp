@@ -809,7 +809,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
     EXPECT_FALSE(parameters.isValid());
     EXPECT_NO_THROW(parameters.setWindow(windowLength,
-                                         SlidingWindowWindowType::HANN));
+                                         SlidingWindowType::HANN));
     EXPECT_TRUE(parameters.isValid());
     EXPECT_NO_THROW(parameters.setDFTLength(dftLength));
     EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(overlapLength));
@@ -817,7 +817,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::FLOAT));
  
     EXPECT_EQ(parameters.getNumberOfSamples(), nSamples);
-    EXPECT_EQ(parameters.getWindowType(), SlidingWindowWindowType::HANN);
+    EXPECT_EQ(parameters.getWindowType(), SlidingWindowType::HANN);
     EXPECT_EQ(parameters.getWindowLength(), windowLength); 
     EXPECT_EQ(parameters.getNumberOfSamplesInOverlap(), overlapLength);
     EXPECT_EQ(parameters.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
@@ -831,7 +831,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_LE(emax, 1.e-15);
     // set a custom window
     EXPECT_NO_THROW(parameters.setWindow(windowLength, window.data()));
-    EXPECT_EQ(parameters.getWindowType(), SlidingWindowWindowType::CUSTOM);
+    EXPECT_EQ(parameters.getWindowType(), SlidingWindowType::CUSTOM);
     window = parameters.getWindow();
     EXPECT_EQ(parameters.getWindowLength(), windowLength);
     EXPECT_EQ(parameters.getDFTLength(), windowLength); // Override DFT length
@@ -845,7 +845,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     parameters.setDFTLength(dftLength);
     SlidingWindowRealDFTParameters pcopy(parameters); 
     EXPECT_EQ(pcopy.getNumberOfSamples(), nSamples);
-    EXPECT_EQ(pcopy.getWindowType(), SlidingWindowWindowType::CUSTOM);
+    EXPECT_EQ(pcopy.getWindowType(), SlidingWindowType::CUSTOM);
     EXPECT_EQ(pcopy.getWindowLength(), windowLength);
     EXPECT_EQ(pcopy.getNumberOfSamplesInOverlap(), overlapLength);
     EXPECT_EQ(pcopy.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
@@ -979,7 +979,7 @@ TEST(UtilitiesTransforms, Welch)
     int nSamples = 10000;
     double freq = 1234.0;
     int nWindowLength = 1024;
-    SlidingWindowWindowType windowType = SlidingWindowWindowType::HANN;
+    SlidingWindowType windowType = SlidingWindowType::HANN;
     int fftLength = nWindowLength; // Default
     int nSamplesInOverlap = nWindowLength/2; // Good choice for Welch
     
@@ -1026,7 +1026,7 @@ TEST(UtilitiesTransforms, Welch)
     EXPECT_LE(error, 1.e-5);
     // Now feed the program some awkward numbers
     nWindowLength = 1013;
-    windowType = SlidingWindowWindowType::HAMMING;
+    windowType = SlidingWindowType::HAMMING;
     fftLength = 1091;
     nSamplesInOverlap = 501;
     EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));

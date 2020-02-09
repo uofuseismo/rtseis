@@ -74,7 +74,7 @@ public:
      *                       transform calculation.
      * @throws std::invalid_argument if n is not positive.
      */
-    void initialize(const int n);
+    void initialize(int n);
     /*!
      * @brief Computes the analytic signal of the signal.
      * @param[in] n   The number of samples in the signal to transform.
@@ -87,7 +87,7 @@ public:
      * @note The real part of \f$ h \f$ is the input signal and the imaginary
      *       part of \f$ h \f$ is the Hilbert transform.
      */
-    void transform(const int n, const T x[], std::complex<T> *h[]);
+    void transform(int n, const T x[], std::complex<T> *h[]);
 private:
     class HilbertImpl;
     std::unique_ptr<HilbertImpl> pImpl;

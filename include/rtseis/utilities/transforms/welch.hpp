@@ -111,7 +111,7 @@ public:
      * @throws std::invalid_argument if any parameters are incorrect.
      */
     void initialize(const SlidingWindowRealDFTParameters &parameters,
-                    const double samplingRate = 1.0);
+                    double samplingRate = 1.0);
     /*!
      * @brief Flag indicating whether or not the class is initialized.
      * @result True indicates that the class is inititalized.
@@ -134,7 +134,7 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      * @sa \c isInitialized(), \c getNumberOfSamples()
      */
-    void transform(const int nSamples, const double x[]);
+    void transform(int nSamples, const double x[]);
     /*!
      * @brief Returns whether or not the transform has been computed.
      * @retval True indicates that the transform has been computed.
@@ -160,7 +160,7 @@ public:
      * @sa \c getNumberOfFrequencies()
      * @sa \c isInitialized()
      */
-    void getFrequencies(const int nFrequencies, double *frequencies[]) const;
+    void getFrequencies(int nFrequencies, double *frequencies[]) const;
     /*!
      * @brief Gets the power spectral density estimate.
      * @param[in] nFrequencies  The number of frequencies. This must match the
@@ -176,7 +176,7 @@ public:
      * @sa \c isInitialized()
      * @sa \c haveTransform()
      */
-    void getPowerSpectralDensity(const int nFrequencies, double *psd[]) const;
+    void getPowerSpectralDensity(int nFrequencies, double *psd[]) const;
     /*!
      * @brief Gets the power spectrum.
      * @param[in] nFrequencies    The number of frequencies. This must match the
@@ -193,7 +193,7 @@ public:
      * @sa \c isInitialized()
      * @sa \c haveTransform()
      */
-    void getPowerSpectrum(const int nFrequencies, double *powerSpectrum[]) const;
+    void getPowerSpectrum(int nFrequencies, double *powerSpectrum[]) const;
 private:
     class WelchImpl;
     std::unique_ptr<WelchImpl> pImpl;
