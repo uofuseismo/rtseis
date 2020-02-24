@@ -125,7 +125,8 @@ SET(UTILS_SRCS
     src/utilities/transforms/firEnvelope.cpp
     src/utilities/transforms/slidingWindowRealDFT.cpp
     src/utilities/transforms/slidingWindowRealDFTParameters.cpp
-    src/utilities/transforms/welch.cpp)
+    src/utilities/transforms/welch.cpp
+    src/utilities/trigger/waterLevel.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c
 #    src/ipps/downsample.c 
@@ -184,7 +185,8 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/characteristicFunction.cpp
                testing/utils/response.cpp
                testing/utils/rotate.cpp
-               testing/utils/polarization.cpp)
+               testing/utils/polarization.cpp
+               testing/utils/trigger.cpp)
 ADD_EXECUTABLE(testPPSC
                testing/postProcessing/singleChannel.cpp)
                #testing/modules/modules.cpp
