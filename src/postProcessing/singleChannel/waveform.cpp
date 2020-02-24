@@ -703,26 +703,40 @@ void Waveform<T>::interpolate(const double newSamplingPeriod,
         RTSEIS_THROW_IA("New sampling period = %lf must be positive",
                         newSamplingPeriod);
     }
-    // From Matlab documentation: if x as size m with sampling rate dx,
-    // then the new sampling rate from interpft dy = dx*m/n.
-    // Solving for n we obtain: n = m*(dx/dy) where n > m.
-    auto npnew
-        = static_cast<int> (len*(pImpl->dt_/newSamplingPeriod) + 0.5);
-    // Get pointers
-    pImpl->resizeOutputData(npnew);
-    T *y = pImpl->getOutputDataPointer(); // Handle on output
     const T *x = pImpl->getInputDataPointer(); // Handle on input
-    // Apply appropriate interpolation
-    if (method == InterpolationMethod::DFT)
+    if (method == InterpolationMethod::DFT) 
     {
+        // From Matlab documentation: if x as size m with sampling rate dx,
+        // then the new sampling rate from interpft dy = dx*m/n.
+        // Solving for n we obtain: n = m*(dx/dy) where n > m.
+        auto npnew
+            = static_cast<int> (len*(pImpl->dt_/newSamplingPeriod) + 0.5);
+        pImpl->resizeOutputData(npnew);
+        T *y = pImpl->getOutputDataPointer(); // Handle on output
         RTSeis::Utilities::Interpolation::interpft(len, x, npnew, &y);
     }
     else if (method == InterpolationMethod::WEIGHTED_AVERAGE_SLOPES)
     {
-        RTSeis::Utilities::Interpolation::WeightedAverageSlopes<T> was;
+        // The spline interpolators are more stringent.  In the Fourier
+        // domain extrapolation amounts to wrap around (periodicity).
+        // Here, the underlying code will throw if it as asked to extrapolate.
+        // So let's approximate then refine the output length.
         std::pair<T, T> xInterval(0, (len - 1)*pImpl->dt_);
-        was.initialize(len, xInterval, x);
+        auto npnew
+            = static_cast<int> (len*(pImpl->dt_/newSamplingPeriod) + 0.5);
+        auto tmax = (npnew - 1)*newSamplingPeriod;
+        while (tmax > xInterval.second && npnew > 1)
+        {
+            npnew = npnew - 1;
+            tmax = (npnew - 1)*newSamplingPeriod;
+        }
         std::pair<T, T> xIntervalNew(0, (npnew - 1)*newSamplingPeriod);
+        // Get pointers
+        pImpl->resizeOutputData(npnew);
+        T *y = pImpl->getOutputDataPointer(); // Handle on output 
+        // Now interpolate 
+        RTSeis::Utilities::Interpolation::WeightedAverageSlopes<T> was;
+        was.initialize(len, xInterval, x);
         was.interpolate(npnew, xIntervalNew, &y);
     }
     else
