@@ -342,7 +342,7 @@ TEST(UtilitiesInterpolation, weighedAverageSlopes)
         i = i + 1;
     }
     textFile.close();
-    EXPECT_EQ(yIntRef.capacity(), i);
+    EXPECT_EQ(static_cast<int> (yIntRef.capacity()), i);
     EXPECT_EQ(yIntRef.size(), yIntRef.capacity());
 
     std::pair<double, double> xInterval(0, dt*(y.size() - 1));
