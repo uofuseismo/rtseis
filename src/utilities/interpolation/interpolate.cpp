@@ -76,7 +76,21 @@ void Interpolation::interpft<>(const int nx, const double x[],
                                   &bufferSizeF);
     if (status != ippStsNoErr)
     {
-        RTSEIS_THROW_RTE("%s", "Forward transform inquiry failed");
+        std::string errmsg;
+        if (status == ippStsNullPtrErr)
+        {
+            RTSEIS_THROW_RTE("%s", "Null pointer in transform inquiry");
+        }
+        if (status == ippStsSizeErr)
+        {
+            RTSEIS_THROW_RTE("Forward transform inquiry failed for nx = %d",
+                              nx);
+        }
+        if (status == ippStsFftOrderErr)
+        {
+            RTSEIS_THROW_RTE("Insufficient memory for nx = %d", nx);
+        }
+        RTSEIS_THROW_RTE("Forward transform inquiry failed with %d", status);
     }
     status = ippsDFTGetSize_R_64f(npnew,
                                   IPP_FFT_DIV_INV_BY_N,
