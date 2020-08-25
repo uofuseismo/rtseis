@@ -25,7 +25,7 @@ public:
      * @brief Copy constructor.
      * @param[in] minMax  The min-max class from which to initialize this class.
      */
-    MinMax(const MinMax &minMax);
+    [[maybe_unused]] MinMax(const MinMax &minMax);
     /*!
      * @brief Move constructor.
      * @param[in,out] minMax  The min-max class from which to initialize this
@@ -91,13 +91,13 @@ public:
      * @throws std::invalid_argument if npts is not positive, x is NULL, or all 
      *         of the samples in x have the value.
      */
-    void initialize(const int npts, const double x[],
+    void initialize(int npts, const double x[],
                     std::pair<double, double> targetRange = std::make_pair<double, double> (0.0, 1.0));
     /*!
      * @brief Determines if the class is initialized.
      * @retval True indicates that the class is initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
 
     /*!
      * @brief Applies the min-max normalization.
@@ -110,9 +110,9 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      * \c \isInitialized()
      */
-    void apply(const int npts, const double x[], double *y[]); 
+    void apply(int npts, const double x[], double *y[]);
     /*! @copydoc apply */
-    void apply(const int npts, const float x[], float *y[]); 
+    void apply(int npts, const float x[], float *y[]);
 private:
     class MinMaxImpl;
     std::unique_ptr<MinMaxImpl> pImpl;

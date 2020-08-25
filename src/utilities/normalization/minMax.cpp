@@ -25,7 +25,7 @@ MinMax::MinMax() :
 {
 }
 
-MinMax::MinMax(const MinMax &minMax)
+[[maybe_unused]] MinMax::MinMax(const MinMax &minMax)
 {
     *this = minMax;
 }
@@ -140,6 +140,42 @@ void MinMax::apply(const int npts, const double x[], double *yIn[])
         for (auto i=0; i<npts; ++i)
         {
             y[i] = alpha + beta*x[i];
+        }
+    }
+}
+
+void MinMax::apply(const int npts, const float *x, float *yIn[])
+{
+    if (npts < 1){return;}
+    if (!isInitialized())
+    {
+        RTSEIS_THROW_RTE("%s", "Class not initialized");
+    }
+    float *y = *yIn;
+    if (x == nullptr || y == nullptr)
+    {
+        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        RTSEIS_THROW_IA("%s", "y is NULL");
+    }
+    // Rescale
+    if (pImpl->mRescaleToUnitInterval)
+    {
+        // y = 0 + (x - xmin)/(xmax - xmin)*(1 - 0)
+        ippsNormalize_32f(x, y, npts,
+                          static_cast<float> (pImpl->mDataMin64f),
+                          static_cast<float> (pImpl->mDen64f));
+    }
+    else
+    {
+        auto bma = pImpl->mTargetMax64f - pImpl->mTargetMin64f;
+        auto alpha = static_cast<float> (
+            pImpl->mTargetMin64f
+                - (pImpl->mDataMin64f * bma) / pImpl->mDen64f);
+        auto beta = static_cast<float> (bma / pImpl->mDen64f);
+        #pragma omp simd
+        for (auto i = 0; i < npts; ++i)
+        {
+            y[i] = alpha + beta * x[i];
         }
     }
 }
