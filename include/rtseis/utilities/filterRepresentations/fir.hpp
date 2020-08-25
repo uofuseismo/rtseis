@@ -21,7 +21,7 @@ public:
     /*!
      * @brief Default constructor.
      */
-    FIR(void);
+    FIR();
     /*!
      * @brief Constructs an FIR class from the given filter taps.
      * @param[in] pTaps   Filter taps to set.
@@ -35,10 +35,10 @@ public:
     FIR(const FIR &fir);
     /*!
      * @brief Move constructor.
-     * @param[in,out] fir  Class to move to this class.
+     * @param[in,out] fir  Class to whose memory will be moved to this class.
      *                     On exit fir's behavior is undefined.
      */
-    FIR(FIR &&fir);
+    FIR(FIR &&fir) noexcept;
     /*! @} */
  
     /*! @name Operators
@@ -49,14 +49,14 @@ public:
      * @param[in] fir   Class to copy.
      * @result A deep copy of the input class.
      */
-    FIR &operator=(const FIR &fir);
+    FIR& operator=(const FIR &fir);
     /*! 
      * @brief Move operator.
      * @param[in,out] fir  FIR class to move.  On exit fir's behavior
      *                     is undefined.
-     * @result The moved version of fir.
+     * @result The memory on FIR moved to this.
      */
-    FIR &operator=(FIR &&fir);
+    FIR& operator=(FIR &&fir) noexcept;
     /*!
      * @brief Equality operator.
      * @param[in] fir  Class to compare to this class.
@@ -79,11 +79,11 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~FIR(void);
+    ~FIR();
     /*! 
      * @brief Clears the structure.
      */
-    void clear(void) noexcept;
+    void clear() noexcept;
     /*! @} */
 
     /*!
@@ -97,7 +97,7 @@ public:
      * @brief Gets the number of filter coefficients.
      * @result Number of filter taps.
      */
-    int getNumberOfFilterTaps(void) const noexcept;
+    [[nodiscard]] int getNumberOfFilterTaps() const noexcept;
 
     /*! @name Set Filter Taps
      * @{
@@ -109,7 +109,7 @@ public:
      *                  of dimension [n].
      * @throws std::invalid_argument if n is less than 1 or taps is NULL.
      */
-    void setFilterTaps(const size_t n, const double taps[]);
+    void setFilterTaps(size_t n, const double taps[]);
     /*!
      * @brief Sets the filter taps.
      * @param[in] taps  The filter coefficients to set.
@@ -125,14 +125,15 @@ public:
      * @brief Gets the filter taps.
      * @result The filter coefficients.
      */
-    std::vector<double> getFilterTaps(void) const noexcept;
+    [[nodiscard]] std::vector<double> getFilterTaps() const noexcept;
     /*! @}*/
 
     /*!
      * @brief Sets the tolerance when testing for equality.
-     * @param[in] tol   Tolerance.
+     * @param[in] tol  The maximum absolute tolerance between coefficients
+     *                 when checking for inequality.  Recommend 1.e-12.
      */
-    void setEqualityTolerance(const double tol = 1.e-12);
+    void setEqualityTolerance(double tol);
   
 private:
     class FIRImpl;

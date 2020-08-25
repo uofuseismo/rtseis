@@ -156,8 +156,10 @@ public:
     [[nodiscard]] std::vector<double> getDenominatorCoefficients() const noexcept;
     /*!
      * @brief Sets the equality tolerance.
+     * @param[in] tol  The maximum absolute tolerance between coefficients
+     *                 when checking for inequality.  Recommend 1.e-12.
      */
-    void setEqualityTolerance(double tol = 1.e-12);
+    void setEqualityTolerance(double tol);
 private:
     class BAImpl;
     std::unique_ptr<BAImpl> pImpl;

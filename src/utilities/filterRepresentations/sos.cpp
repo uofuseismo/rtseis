@@ -21,10 +21,9 @@ public:
     double tol = DEFAULT_TOL;
 };
 
-SOS::SOS(void) :
+SOS::SOS() :
     pImpl(std::make_unique<SOSImpl>())
 {
-    return;
 }
 
 SOS::SOS(const int ns,
@@ -33,22 +32,16 @@ SOS::SOS(const int ns,
     pImpl(std::make_unique<SOSImpl>())
 {
     setSecondOrderSections(ns, bs, as);
-    return;
 }
 
 SOS& SOS::operator=(const SOS &sos)
 {
     if (&sos == this){return *this;}
-    pImpl = std::make_unique<SOSImpl> ();
-    //pImpl = std::unique_ptr<SOSImpl> (new SOSImpl());
-    pImpl->bs  = sos.pImpl->bs;
-    pImpl->as  = sos.pImpl->as;
-    pImpl->ns  = sos.pImpl->ns;
-    pImpl->tol = sos.pImpl->tol;
+    pImpl = std::make_unique<SOSImpl> (*sos.pImpl);
     return *this;
 }
 
-SOS& SOS::operator=(SOS &&sos)
+SOS& SOS::operator=(SOS &&sos) noexcept
 {
     if (&sos == this){return *this;}
     pImpl = std::move(sos.pImpl);
@@ -85,24 +78,21 @@ bool SOS::operator!=(const SOS &sos) const
 SOS::SOS(const SOS &sos)
 {
    *this = sos;
-   return;
 }
 
-SOS::SOS(SOS &&sos)
+SOS::SOS(SOS &&sos) noexcept
 {
     *this = std::move(sos);
-    return;
 }
 
-SOS::~SOS(void) = default;
+SOS::~SOS() = default;
 
-void SOS::clear(void)
+void SOS::clear() noexcept
 {
     pImpl->bs.clear();
     pImpl->as.clear();
     pImpl->ns = 0;
     pImpl->tol = DEFAULT_TOL;
-    return;
 }
 
 void SOS::print(FILE *fout) const noexcept
@@ -121,7 +111,6 @@ void SOS::print(FILE *fout) const noexcept
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
                 pImpl->as[3*i], pImpl->as[3*i+1], pImpl->as[3*i+2]);
     }
-    return;
 }
 
 void SOS::setSecondOrderSections(const int ns,
@@ -169,20 +158,19 @@ void SOS::setSecondOrderSections(const int ns,
     pImpl->ns = ns;
     pImpl->bs = bs;
     pImpl->as = as;
-    return;
 }
 
-std::vector<double> SOS::getNumeratorCoefficients(void) const noexcept
+std::vector<double> SOS::getNumeratorCoefficients() const noexcept
 {
     return pImpl->bs;
 }
 
-std::vector<double> SOS::getDenominatorCoefficients(void) const noexcept
+std::vector<double> SOS::getDenominatorCoefficients() const noexcept
 {
     return pImpl->as;
 }
 
-int SOS::getNumberOfSections(void) const noexcept
+int SOS::getNumberOfSections() const noexcept
 {
     return pImpl->ns;
 }
@@ -191,5 +179,4 @@ void SOS::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
     pImpl->tol = tol;
-    return;
 }

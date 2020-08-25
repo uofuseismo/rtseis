@@ -21,7 +21,7 @@ public:
     /*!
      * @brief Default constructor. 
      */
-    SOS(void);
+    SOS();
     /*!
      * @brief Copy constructor.
      * @param[in] sos  SOS class from which to initialize.
@@ -32,7 +32,7 @@ public:
      * @param[in,out] sos  SOS class to move to this class.  
      *                     On exit sos is undefined.
      */
-    SOS(SOS &&sos);
+    SOS(SOS &&sos) noexcept;
     /*!
      * @brief Constructs an SOS class from the given second order sections.
      * @param[in] ns    Number of sections.  This must be positive.
@@ -47,7 +47,7 @@ public:
      * @throws std::invalid_argument if the ns is less than 1 or the leading 
      *         coefficient of as or bs is 0.
      */
-    SOS(const int ns,
+    SOS(int ns,
         const std::vector<double> &bs,
         const std::vector<double> &as);
     /*! @} */
@@ -60,14 +60,14 @@ public:
      * @param[in] sos  SOS class to copy.
      * @result A deep copy of the input class.
      */
-    SOS &operator=(const SOS &sos);
+    SOS& operator=(const SOS &sos);
     /*!
      * @brief Move assignement operator.
      * @param[in,out] sos  SOS class to move.  On exit sos's behavior is
      *                     undefined.
      * @result The moved version of sos.
      */
-    SOS &operator=(SOS &&sos);
+    SOS& operator=(SOS &&sos) noexcept;
     /*!
      * @brief Equality operator.
      * @param sos  Class to compare to this class.
@@ -90,11 +90,11 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~SOS(void);
+    ~SOS();
     /*! 
      * @brief Clears the class.
      */
-    void clear(void);
+    void clear() noexcept;
     /*! @} */
 
     /*!
@@ -118,7 +118,7 @@ public:
      * @throws std::invalid_argument if the ns is less than 1 or the leading 
      *         coefficient of as or bs is 0.
      */
-    void setSecondOrderSections(const int ns,
+    void setSecondOrderSections(int ns,
                                 const std::vector<double> &bs,
                                 const std::vector<double> &as);
     /*!
@@ -127,24 +127,24 @@ public:
      *        dimension [3 x ns] with leading dimension 3 where ns is
      *        given by getNumberOfSections().
      */
-    std::vector<double> getNumeratorCoefficients(void) const noexcept;
+    [[nodiscard]] std::vector<double> getNumeratorCoefficients() const noexcept;
     /*!
      * @brief Gets the denominator coefficients of the SOS filter.
      * @brief A vector holding the denominator coefficients.  This has
      *        dimension [3 x ns] with leading dimension 3 where ns is
      *        given by getNumberOfSections().
      */
-    std::vector<double> getDenominatorCoefficients(void) const noexcept;
+    [[nodiscard]] std::vector<double> getDenominatorCoefficients() const noexcept;
     /*!
      * @brief Returns the number of sections.
      * @result The number of second order sections.
      */
-    int getNumberOfSections(void) const noexcept;
+    [[nodiscard]] int getNumberOfSections() const noexcept;
     /*!
      * @brief Sets the tolerance when testing for equality.
-     * @param[in] tol   Tolerance.
+     * @param[in] tol   Tolerance.  Recommend 1.e-12.
      */
-    void setEqualityTolerance(const double tol = 1.e-12);
+    void setEqualityTolerance(double tol);
 private:
     class SOSImpl;
     std::unique_ptr<SOSImpl> pImpl;

@@ -83,13 +83,13 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Utility routine to determine the initial condition length.
      * @result The length of the initial condition array.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getInitialConditionLength() const;
+    [[nodiscard]] int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions for the filter.  This should
      *        be called prior to filter application as it will reset

@@ -22,7 +22,7 @@ public:
     /*!
      * @brief Default constructor.
      */
-    ZPK(void);
+    ZPK();
     /*!
      * @brief Constructs a ZPK class from the given zeros, poles, and gain.
      * @param[in] zeros   Zeros to set.
@@ -31,7 +31,7 @@ public:
      */
     ZPK(const std::vector<std::complex<double>> &zeros,
         const std::vector<std::complex<double>> &poles,
-        const double k);
+        double k);
     /*!
      * @brief Copy constructor.
      * @param[in] zpk  Class from which to initialize this class.
@@ -42,7 +42,7 @@ public:
      * @param[in,out] zpk  Class to move to this class.
      *                     On exit, zpk's behavior will be undefined.
      */
-    ZPK(ZPK &&zpk);
+    ZPK(ZPK &&zpk) noexcept;
     /*! @} */
     
     /*! @name Operators
@@ -53,14 +53,14 @@ public:
      * @param[in] zpk   ZPK class to copy.
      * @result A deep copy of the input ZPK class.
      */ 
-    ZPK &operator=(const ZPK &zpk);
+    ZPK& operator=(const ZPK &zpk);
     /*!
      * @brief Move operator.
      * @param[in,out] zpk  Class to move.  On exit zpk's behavior will be
      *                     undefined.
      * @result The moved version of zpk.
      */
-    ZPK &operator=(ZPK &&zpk);
+    ZPK& operator=(ZPK &&zpk) noexcept;
     /*!
      * @brief Equality operator.
      * @param[in] zpk  Class to compare to this class.
@@ -83,11 +83,11 @@ public:
     /*!
      * @brief Default destructor.
      */
-    ~ZPK(void);
+    ~ZPK();
     /*! 
      * @brief Clears the class.
      */
-    void clear(void);
+    void clear() noexcept;
     /*! @} */
 
     /*!
@@ -116,29 +116,29 @@ public:
      * @brief Sets the gain.
      * @param[in] k  The gain to set.
      */
-    void setGain(const double k);
+    void setGain(double k);
     /*!
      * @brief Gets the gain.
      * @result Gain of transfer function.
      */
-    double getGain(void) const;
+    [[nodiscard]] double getGain() const;
     /*!
      * @brief Gets the number of poles.
      * @result The number of poles in the transfer function.
      */
-    int getNumberOfPoles(void) const;
+    [[nodiscard]] int getNumberOfPoles() const;
     /*!
      * @brief Gets the number of zeros.
      * @result The number of zeros in the transfer function.
      */
-    int getNumberOfZeros(void) const;
+    [[nodiscard]] int getNumberOfZeros() const;
     /*!
      * @{
      * @brief Sets the poles in the transfer function.
      * @param[in] n      The number of poles.
      * @param[in] poles  The poles to set.  This is an array of dimension [n].
      */
-    void setPoles(const size_t n, std::complex<double> poles[]);
+    void setPoles(size_t n, std::complex<double> poles[]);
     /*!
      * @brief Sets the poles in the transfer function.
      * @param[in] poles  The poles to set on the transfer function.
@@ -151,7 +151,7 @@ public:
      * @param[in] zeros  The zeros to set.  This is an array of
      *                   dimension [n].
      */
-    void setZeros(const size_t n, std::complex<double> zeros[]);
+    void setZeros(size_t n, std::complex<double> zeros[]);
     /*!
      * @brief Sets the zeros in the transfer function.
      * @param[in] zeros  The zeros to set on the transfer function.
@@ -162,17 +162,18 @@ public:
      * @brief Gets the poles.
      * @result A vector containing the poles.
      */
-    std::vector<std::complex<double>> getPoles(void) const;
+    [[nodiscard]] std::vector<std::complex<double>> getPoles() const;
     /*!
      * @brief Gets the zeros.
      * @result A vector containing the zeros.
      */
-    std::vector<std::complex<double>> getZeros(void) const;
+    [[nodiscard]] std::vector<std::complex<double>> getZeros() const;
     /*!
      * @brief Sets the tolerance in the equality.
-     * @param[in] tol   Tolerance.
+     * @param[in] tol  The maximum absolute tolerance between coefficients
+     *                 when checking for inequality.  Recommend 1.e-12.
      */
-    void setEqualityTolerance(const double tol = 1.e-12);
+    void setEqualityTolerance(double tol);
  private:
     class ZPKImpl;
     std::unique_ptr<ZPKImpl> pImpl;

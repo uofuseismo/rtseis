@@ -22,10 +22,9 @@ public:
 
 };
 
-ZPK::ZPK(void) :
+ZPK::ZPK() :
     pImpl(std::make_unique<ZPKImpl>())
 {
-    return;
 }
 
 ZPK::ZPK(const std::vector<std::complex<double>> &zeros,
@@ -36,24 +35,21 @@ ZPK::ZPK(const std::vector<std::complex<double>> &zeros,
     setZeros(zeros);
     setPoles(poles); 
     setGain(k);
-    return;
 }
 
 ZPK::ZPK(const ZPK &zpk)
 {
     *this = zpk;
-    return;
 }
 
-ZPK::ZPK(ZPK &&zpk)
+ZPK::ZPK(ZPK &&zpk) noexcept
 {
     *this = std::move(zpk);
-    return;
 }
 
-ZPK::~ZPK(void) = default;
+ZPK::~ZPK() = default;
 
-ZPK& ZPK::operator=(ZPK &&zpk)
+ZPK& ZPK::operator=(ZPK &&zpk) noexcept
 {
     if (&zpk == this){return *this;}
     pImpl = std::move(zpk.pImpl);
@@ -63,12 +59,7 @@ ZPK& ZPK::operator=(ZPK &&zpk)
 ZPK& ZPK::operator=(const ZPK &zpk)
 {
     if (&zpk == this){return *this;}
-    pImpl = std::make_unique<ZPKImpl> ();
-    //pImpl = std::unique_ptr<ZPKImpl> (new ZPKImpl());
-    pImpl->z = zpk.pImpl->z;
-    pImpl->p = zpk.pImpl->p;
-    pImpl->k = zpk.pImpl->k;
-    pImpl->tol = zpk.pImpl->tol;
+    pImpl = std::make_unique<ZPKImpl> (*zpk.pImpl);
     return *this;
 }
 
@@ -105,20 +96,20 @@ void ZPK::print(FILE *fout) const noexcept
     if (fout != nullptr){f = fout;}
     fprintf(f, "Gain: %.16lf\n", pImpl->k);
     fprintf(f, "Zeros:\n");
-    for (size_t i=0; i<pImpl->z.size(); i++)
+    for (auto & z : pImpl->z)
     {
         fprintf(f, "%+.16lf + %+.16lfi\n",
-                std::real(pImpl->z[i]), std::imag(pImpl->z[i])); 
+                std::real(z), std::imag(z));
     }
     fprintf(f, "Poles:\n");
-    for (size_t i=0; i<pImpl->p.size(); i++)
+    for (auto & p : pImpl->p)
     {
         fprintf(f, "%+.16lf + %+.16lfi\n",
-                std::real(pImpl->p[i]), std::imag(pImpl->p[i]));
+                std::real(p), std::imag(p));
     }
-    return;
 }
 
+[[maybe_unused]]
 void ZPK::sortPoles(const bool ascending)
 {
     if (ascending)
@@ -141,9 +132,9 @@ void ZPK::sortPoles(const bool ascending)
                      return (std::abs(a) > std::abs(b));
                   });
     }
-    return; 
 }
 
+[[maybe_unused]]
 void ZPK::sortZeros(const bool ascending)
 {
     if (ascending)
@@ -166,36 +157,33 @@ void ZPK::sortZeros(const bool ascending)
                      return (std::abs(a) > std::abs(b));
                   });
     }   
-    return; 
 }
 
-void ZPK::clear(void)
+void ZPK::clear() noexcept
 {
     pImpl->p.clear();
     pImpl->z.clear();
     pImpl->k = 0;
     pImpl->tol = DEFAULT_TOL;
-    return;
 }
 
 void ZPK::setGain(const double k)
 {
     if (k == 0){RTSEIS_WARNMSG("%s", "Gain is zero");}
     pImpl->k = k;
-    return;
 }
 
-double ZPK::getGain(void) const
+double ZPK::getGain() const
 {
     return pImpl->k;
 }
 
-int ZPK::getNumberOfPoles(void) const
+int ZPK::getNumberOfPoles() const
 {
     return static_cast<int> (pImpl->p.size());
 }
 
-int ZPK::getNumberOfZeros(void) const
+int ZPK::getNumberOfZeros() const
 {
     return static_cast<int> (pImpl->z.size());
 }
@@ -213,13 +201,11 @@ void ZPK::setPoles(const size_t n, std::complex<double> poles[])
     {
         pImpl->p[i] = poles[i];
     }
-    return;
 }
 
 void ZPK::setPoles(const std::vector<std::complex<double>> &poles)
 {
     pImpl->p = poles;
-    return;
 }
 
 void ZPK::setZeros(const size_t n, std::complex<double> zeros[])
@@ -235,28 +221,26 @@ void ZPK::setZeros(const size_t n, std::complex<double> zeros[])
     {
         pImpl->z[i] = zeros[i];
     }
-    return;
 }
 
 void ZPK::setZeros(const std::vector<std::complex<double>> &zeros)
 {
     pImpl->z = zeros;
-    return;
 }
 
-std::vector<std::complex<double>> ZPK::getPoles(void) const
+std::vector<std::complex<double>> ZPK::getPoles() const
 {
     return pImpl->p;
 }
 
-std::vector<std::complex<double>> ZPK::getZeros(void) const
+std::vector<std::complex<double>> ZPK::getZeros() const
 {
     return pImpl->z;
 }
 
+[[maybe_unused]]
 void ZPK::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
     pImpl->tol = tol;
-    return;
 }

@@ -16,17 +16,15 @@ public:
     double tol = DEFAULT_TOL;
 };
 
-FIR::FIR(void) :
+FIR::FIR() :
     pImpl(std::make_unique<FIRImpl>())
 {
-    return;
 }
 
 FIR::FIR(const std::vector<double> &pTaps) :
     pImpl(std::make_unique<FIRImpl>())
 {
     setFilterTaps(pTaps);
-    return;
 }
 
 FIR& FIR::operator=(const FIR &fir)
@@ -39,7 +37,7 @@ FIR& FIR::operator=(const FIR &fir)
     return *this;
 }
 
-FIR& FIR::operator=(FIR &&fir)
+FIR& FIR::operator=(FIR &&fir) noexcept
 {
     if (&fir == this){return *this;}
     pImpl = std::move(fir.pImpl);
@@ -49,10 +47,14 @@ FIR& FIR::operator=(FIR &&fir)
 FIR::FIR(const FIR &fir)
 {
     *this = fir;
-    return;
 }
 
-FIR::~FIR(void) = default;
+FIR::FIR(FIR &&fir) noexcept
+{
+    *this = std::move(fir);
+}
+
+FIR::~FIR() = default;
 
 bool FIR::operator==(const FIR &fir) const
 {
@@ -77,24 +79,21 @@ void FIR::print(FILE *fout) const noexcept
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
     fprintf(f, "Filter Coefficients:\n");
-    for (size_t i=0; i<pImpl->pTaps.size(); i++)
+    for (const double pTap : pImpl->pTaps)
     {
-        fprintf(f, "%+.16lf\n", pImpl->pTaps[i]);
+        fprintf(f, "%+.16lf\n", pTap);
     }
-    return;
 }
 
-void FIR::clear(void) noexcept
+void FIR::clear() noexcept
 {
     pImpl->pTaps.clear();
     pImpl->tol = DEFAULT_TOL;
-    return;
 }
 
-int FIR::getNumberOfFilterTaps(void) const noexcept
+int FIR::getNumberOfFilterTaps() const noexcept
 {
-    int ntaps = static_cast<int> (pImpl->pTaps.size());
-    return ntaps;
+    return static_cast<int> (pImpl->pTaps.size());;
 }
 
 void FIR::setFilterTaps(const size_t n, const double pTaps[])
@@ -109,28 +108,24 @@ void FIR::setFilterTaps(const size_t n, const double pTaps[])
         pImpl->pTaps.resize(0);
         RTSEIS_ERRMSG("%s", "pTaps is null");
         throw std::invalid_argument("pTaps is NULL");
-        return;
     }
     pImpl->pTaps.resize(n);
     std::copy(pTaps, pTaps+n, pImpl->pTaps.begin());
-    return;
 }
 
 void FIR::setFilterTaps(const std::vector<double> &pTaps)
 {
     setFilterTaps(pTaps.size(), pTaps.data());
-    //pImpl->pTaps = pTaps;
-    return;
 }
 
-std::vector<double> FIR::getFilterTaps(void) const noexcept
+std::vector<double> FIR::getFilterTaps() const noexcept
 {
     return pImpl->pTaps;
 }
 
+[[maybe_unused]]
 void FIR::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
     pImpl->tol = tol;
-    return;
 }
