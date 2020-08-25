@@ -18,10 +18,9 @@ public:
     double tol = DEFAULT_TOL;
 };
 
-BA::BA(void) :
+BA::BA() :
     pImpl(std::make_unique<BAImpl>())
 {
-    return;
 }
 
 BA::BA(const std::vector<double> &b, const std::vector<double> &a) :
@@ -29,7 +28,6 @@ BA::BA(const std::vector<double> &b, const std::vector<double> &a) :
 {
     setNumeratorCoefficients(b);
     setDenominatorCoefficients(a);
-    return;
 }
 
 BA& BA::operator=(const BA &ba)
@@ -43,7 +41,7 @@ BA& BA::operator=(const BA &ba)
     return *this;
 }
 
-BA& BA::operator=(BA &&ba)
+BA& BA::operator=(BA &&ba) noexcept
 {
     if (&ba == this){return *this;}
     pImpl = std::move(ba.pImpl);
@@ -53,13 +51,11 @@ BA& BA::operator=(BA &&ba)
 BA::BA(const BA &ba)
 {
     *this = ba;
-    return;
 }
 
-BA::BA(BA &&ba)
+BA::BA(BA &&ba) noexcept
 {
     *this = std::move(ba);
-    return;
 }
 
 BA::~BA(void) = default;
@@ -95,22 +91,21 @@ void BA::print(FILE *fout) const noexcept
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
     fprintf(f, "Numerator Coefficients:\n");
-    for (size_t i=0; i<pImpl->b.size(); i++)
+    for (const double b : pImpl->b)
     {
-        fprintf(f, "%+.16lf\n", pImpl->b[i]);
+        fprintf(f, "%+.16lf\n", b);
     }
-    if (pImpl->a.size() > 0)
+    if (!pImpl->a.empty())
     {
         fprintf(f, "Denominator Coefficients:\n");
-        for (size_t i=0; i<pImpl->a.size(); i++)
+        for (const double a : pImpl->a)
         {
-            fprintf(f, "%+.16lf\n", pImpl->a[i]);
+            fprintf(f, "%+.16lf\n", a);
         }
     }
-    return;
 }
 
-void BA::clear(void) noexcept
+void BA::clear() noexcept
 {
     if (pImpl)
     {
@@ -118,15 +113,16 @@ void BA::clear(void) noexcept
         pImpl->a.clear();
         pImpl->tol = DEFAULT_TOL;
     }
-    return;
 }
 
-int BA::getNumberOfNumeratorCoefficients(void) const noexcept
+[[maybe_unused]]
+int BA::getNumberOfNumeratorCoefficients() const noexcept
 {
     return static_cast<int> (pImpl->b.size());
 }
 
-int BA::getNumberOfDenominatorCoefficients(void) const noexcept
+[[maybe_unused]]
+int BA::getNumberOfDenominatorCoefficients() const noexcept
 {
     return static_cast<int> (pImpl->a.size());
 }
@@ -143,18 +139,14 @@ void BA::setNumeratorCoefficients(const size_t n, const double b[])
         pImpl->b.resize(0);
         RTSEIS_ERRMSG("%s", "b is null");
         throw std::invalid_argument("b is NULL");
-        return;
     }
     pImpl->b.resize(n);
     std::copy(b, b+n, pImpl->b.begin());
-    return;
 }
 
 void BA::setNumeratorCoefficients(const std::vector<double> &b)
 {
     setNumeratorCoefficients(b.size(), b.data());
-    //pImpl->b = b;
-    return;
 }
 
 void BA::setDenominatorCoefficients(const size_t n, const double a[])
@@ -169,7 +161,6 @@ void BA::setDenominatorCoefficients(const size_t n, const double a[])
         pImpl->a.resize(0);
         RTSEIS_ERRMSG("%s", "a is null");
         throw std::invalid_argument("a is NULL or empty");
-        return;
     }
     if (n > 0 && a[0] == 0)
     {
@@ -178,31 +169,19 @@ void BA::setDenominatorCoefficients(const size_t n, const double a[])
     }
     pImpl->a.resize(n);
     std::copy(a, a+n, pImpl->a.begin());
-    return;
 }
 
 void BA::setDenominatorCoefficients(const std::vector<double> &a)
 {
     setDenominatorCoefficients(a.size(), a.data());
-/*
-    if (pImpl->a.size() > 0)
-    {
-        if (a[0] == 0)
-        {
-            RTSEIS_WARNMSG("%s", "a[0] = 0");
-        }
-    }
-    pImpl->a = a;
-*/
-    return;
 }
 
-std::vector<double> BA::getNumeratorCoefficients(void) const noexcept
+std::vector<double> BA::getNumeratorCoefficients() const noexcept
 {
     return pImpl->b;
 }
 
-std::vector<double> BA::getDenominatorCoefficients(void) const noexcept
+std::vector<double> BA::getDenominatorCoefficients() const noexcept
 {
     return pImpl->a;
 }
@@ -211,7 +190,6 @@ void BA::setEqualityTolerance(const double tol)
 {
     if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
     pImpl->tol = tol;
-    return;
 }
 
 /*
