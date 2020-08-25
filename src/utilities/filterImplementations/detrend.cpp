@@ -175,8 +175,8 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     if (length < 2)
     {
         *yin[0] = 0.f;
-        if (*intercept){*intercept = x[0];}
-        if (*slope){*slope = 0.0f;}
+        if (intercept != nullptr){*intercept = x[0];}
+        if (slope != nullptr){*slope = 0.0f;}
         return;
     }
     // Mean of x - analytic formula for evenly spaced samples starting
@@ -228,8 +228,8 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     if (length < 2)
     {
         *yin[0] = 0;
-        if (*intercept){*intercept = x[0];}
-        if (*slope){*slope = 0;}
+        if (intercept != nullptr){*intercept = x[0];}
+        if (slope != nullptr){*slope = 0;}
         return;
     }
     // Mean of x - analytic formula for evenly spaced samples starting

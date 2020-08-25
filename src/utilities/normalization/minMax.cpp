@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <algorithm>
 #include <ipps.h>
 #include "rtseis/private/throw.hpp"
 #include "rtseis/utilities/normalization/minMax.hpp"
@@ -7,43 +8,49 @@
 
 using namespace RTSeis::Utilities::Normalization;
 
-class MinMax::MinMaxImpl
+template<class T>
+class MinMax<T>::MinMaxImpl
 {
 public:
-    double mDataMin64f = 0;
-    double mDataMax64f = 0;
-    double mTargetMin64f = 0;
-    double mTargetMax64f = 0;
-    double mDen64f = 0;
+    T mDataMin = 0;
+    T mDataMax = 0;
+    T mTargetMin = 0;
+    T mTargetMax = 0;
+    T mDen = 0;
     bool mRescaleToUnitInterval = true; 
     bool mInitialized = false;
 };
 
 /// Constructors
-MinMax::MinMax() :
+template<class T>
+MinMax<T>::MinMax() :
     pImpl(std::make_unique<MinMaxImpl> ())
 {
 }
 
-[[maybe_unused]] MinMax::MinMax(const MinMax &minMax)
+template<class T>
+[[maybe_unused]] MinMax<T>::MinMax(const MinMax<T> &minMax)
 {
     *this = minMax;
 }
 
-MinMax::MinMax(MinMax &&minMax) noexcept
+template<class T>
+MinMax<T>::MinMax(MinMax &&minMax) noexcept
 {
     *this = std::move(minMax);
 }
 
 /// Operators
-MinMax& MinMax::operator=(const MinMax &minMax)
+template<class T>
+MinMax<T>& MinMax<T>::operator=(const MinMax &minMax)
 {
     if (&minMax == this){return *this;}
     pImpl = std::make_unique<MinMaxImpl> (*minMax.pImpl);
     return *this;
 }
 
-MinMax& MinMax::operator=(MinMax &&minMax) noexcept
+template<class T>
+MinMax<T>& MinMax<T>::operator=(MinMax &&minMax) noexcept
 {
     if (&minMax == this){return *this;}
     pImpl = std::move(minMax.pImpl);
@@ -51,22 +58,25 @@ MinMax& MinMax::operator=(MinMax &&minMax) noexcept
 }
 
 /// Destructors
-MinMax::~MinMax() = default;
+template<class T>
+MinMax<T>::~MinMax() = default;
 
-void MinMax::clear() noexcept
+template<class T>
+void MinMax<T>::clear() noexcept
 {
-    pImpl->mDataMin64f = 0;
-    pImpl->mDataMax64f = 0;
-    pImpl->mTargetMin64f = 0;
-    pImpl->mTargetMax64f = 0;
-    pImpl->mDen64f = 0;
+    pImpl->mDataMin = 0;
+    pImpl->mDataMax = 0;
+    pImpl->mTargetMin = 0;
+    pImpl->mTargetMax = 0;
+    pImpl->mDen = 0;
     pImpl->mRescaleToUnitInterval = true;
     pImpl->mInitialized = false;
 }
 
 /// Initializers
-void MinMax::initialize(const std::pair<double, double> dataMinMax,
-                        const std::pair<double, double> targetMinMax)
+template<class T>
+void MinMax<T>::initialize(const std::pair<T, T> dataMinMax,
+                           const std::pair<T, T> targetMinMax)
 {
     clear();
     if (dataMinMax.first == dataMinMax.second)
@@ -74,21 +84,22 @@ void MinMax::initialize(const std::pair<double, double> dataMinMax,
         RTSEIS_THROW_IA("dataMin = %lf cannot equal dataMax == %lf", 
                         dataMinMax.first, dataMinMax.second);
     }
-    pImpl->mDataMin64f = dataMinMax.first;
-    pImpl->mDataMax64f = dataMinMax.second;
-    pImpl->mTargetMin64f = targetMinMax.first;
-    pImpl->mTargetMax64f = targetMinMax.second;;
-    pImpl->mDen64f = (pImpl->mDataMax64f - pImpl->mDataMin64f);
+    pImpl->mDataMin = dataMinMax.first;
+    pImpl->mDataMax = dataMinMax.second;
+    pImpl->mTargetMin = targetMinMax.first;
+    pImpl->mTargetMax = targetMinMax.second;;
+    pImpl->mDen = (pImpl->mDataMax - pImpl->mDataMin);
     pImpl->mRescaleToUnitInterval = true;
-    if (pImpl->mTargetMin64f != 0 || pImpl->mTargetMax64f != 1)
+    if (pImpl->mTargetMin != 0 || pImpl->mTargetMax != 1)
     {
         pImpl->mRescaleToUnitInterval = false;
     }
     pImpl->mInitialized = true;
 }
 
-void MinMax::initialize(const int npts, const double x[],
-                        const std::pair<double, double> targetMinMax)
+template<class T>
+void MinMax<T>::initialize(const int npts, const T x[],
+                           const std::pair<T, T> targetMinMax)
 {
     clear();
     if (npts < 2 || x == nullptr)
@@ -97,18 +108,23 @@ void MinMax::initialize(const int npts, const double x[],
         RTSEIS_THROW_IA("%s", "x cannot be NULL");
     }
     // Find the min and max
+    const auto [dataMin, dataMax] = std::minmax_element(x, x+npts);
+    /*
     double dataMin, dataMax;
     ippsMinMax_64f(x, npts, &dataMin, &dataMax);
-    if (dataMin == dataMax)
+    */
+    if (*dataMin == *dataMax)
     {
         RTSEIS_THROW_IA("%s", "All elements of x are identical");
     }
-    std::pair<double, double> dataMinMax(dataMin, dataMax);
+    std::pair<T, T> dataMinMax(*dataMin, *dataMax);
     initialize(dataMinMax, targetMinMax);
 }        
 
 /// Apply min max normalization
-void MinMax::apply(const int npts, const double x[], double *yIn[])
+template<>
+void MinMax<double>::apply(const int npts,
+                           const double x[], double *yIn[]) const
 {
     if (npts < 1){return;}
     if (!isInitialized())
@@ -125,17 +141,16 @@ void MinMax::apply(const int npts, const double x[], double *yIn[])
     if (pImpl->mRescaleToUnitInterval)
     {
         // y = 0 + (x - xmin)/(xmax - xmin)*(1 - 0)
-        ippsNormalize_64f(x, y, npts, pImpl->mDataMin64f, pImpl->mDen64f);
+        ippsNormalize_64f(x, y, npts, pImpl->mDataMin, pImpl->mDen);
     }
     else
     {
         // y = a + (x - xmin)/(xmax - xmin)*(b - a)
         //   = a - xmin/(xmax - xmin)*(b - a) + x*(b - a)/(xmax - xmin)
         //   = \alpha + \beta x 
-        auto bma = pImpl->mTargetMax64f - pImpl->mTargetMin64f;
-        auto alpha = pImpl->mTargetMin64f
-                   - (pImpl->mDataMin64f*bma)/pImpl->mDen64f;
-        auto beta  = bma/pImpl->mDen64f;
+        auto bma = pImpl->mTargetMax - pImpl->mTargetMin;
+        auto alpha = pImpl->mTargetMin - (pImpl->mDataMin*bma)/pImpl->mDen;
+        auto beta  = bma/pImpl->mDen;
         #pragma omp simd
         for (auto i=0; i<npts; ++i)
         {
@@ -144,7 +159,8 @@ void MinMax::apply(const int npts, const double x[], double *yIn[])
     }
 }
 
-void MinMax::apply(const int npts, const float *x, float *yIn[])
+template<>
+void MinMax<float>::apply(const int npts, const float *x, float *yIn[]) const
 {
     if (npts < 1){return;}
     if (!isInitialized())
@@ -161,17 +177,13 @@ void MinMax::apply(const int npts, const float *x, float *yIn[])
     if (pImpl->mRescaleToUnitInterval)
     {
         // y = 0 + (x - xmin)/(xmax - xmin)*(1 - 0)
-        ippsNormalize_32f(x, y, npts,
-                          static_cast<float> (pImpl->mDataMin64f),
-                          static_cast<float> (pImpl->mDen64f));
+        ippsNormalize_32f(x, y, npts, pImpl->mDataMin, pImpl->mDen);
     }
     else
     {
-        auto bma = pImpl->mTargetMax64f - pImpl->mTargetMin64f;
-        auto alpha = static_cast<float> (
-            pImpl->mTargetMin64f
-                - (pImpl->mDataMin64f * bma) / pImpl->mDen64f);
-        auto beta = static_cast<float> (bma / pImpl->mDen64f);
+        auto bma = pImpl->mTargetMax - pImpl->mTargetMin;
+        auto alpha = pImpl->mTargetMin - (pImpl->mDataMin*bma)/pImpl->mDen;
+        auto beta = bma/pImpl->mDen;
         #pragma omp simd
         for (auto i = 0; i < npts; ++i)
         {
@@ -180,7 +192,12 @@ void MinMax::apply(const int npts, const float *x, float *yIn[])
     }
 }
 
-bool MinMax::isInitialized() const noexcept
+template<class T>
+bool MinMax<T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
+
+/// Template instantiation
+template class RTSeis::Utilities::Normalization::MinMax<double>;
+template class RTSeis::Utilities::Normalization::MinMax<float>;

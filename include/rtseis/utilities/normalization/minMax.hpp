@@ -11,6 +11,7 @@ namespace RTSeis::Utilities::Normalization
  *        \f]
  * @copyright Ben Baker (University of Utah) distributed under the MIT license.
  */
+template<class T=double>
 class MinMax
 {
 public:
@@ -76,8 +77,8 @@ public:
      *                         By default this will rescale to [0,1].
      * @throws std::invalid_argument if dataRange.first == dataRange.second.
      */
-    void initialize(std::pair<double, double> dataRange,
-                    std::pair<double, double> targetRange = std::make_pair<double, double> (0.0, 1.0));
+    void initialize(std::pair<T, T> dataRange,
+                    std::pair<T, T> targetRange = std::make_pair<T, T> (0, 1));
     /*!
      * @brief Initializes the min-max rescaling.  This will compute the data
      *        range from the given array.  
@@ -91,8 +92,8 @@ public:
      * @throws std::invalid_argument if npts is not positive, x is NULL, or all 
      *         of the samples in x have the value.
      */
-    void initialize(int npts, const double x[],
-                    std::pair<double, double> targetRange = std::make_pair<double, double> (0.0, 1.0));
+    void initialize(int npts, const T x[],
+                    std::pair<T, T> targetRange = std::make_pair<double, double> (0, 1));
     /*!
      * @brief Determines if the class is initialized.
      * @retval True indicates that the class is initialized.
@@ -110,9 +111,7 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      * \c \isInitialized()
      */
-    void apply(int npts, const double x[], double *y[]);
-    /*! @copydoc apply */
-    void apply(int npts, const float x[], float *y[]);
+    void apply(int npts, const T x[], T *y[]) const;
 private:
     class MinMaxImpl;
     std::unique_ptr<MinMaxImpl> pImpl;
