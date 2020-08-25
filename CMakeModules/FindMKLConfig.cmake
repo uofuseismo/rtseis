@@ -16,27 +16,33 @@ endif()
 # Find the include directory
 find_path(MKL_INCLUDE_DIR
           NAMES mkl.h
-          HINTS $ENV{MKL_ROOT}/include
+          HINTS $ENV{MKL_INC_DIR}
+                $ENV{MKL_ROOT}/include
                 /opt/intel/mkl/include)
 # Find the library components
 find_library(MKL_INTEL_LIBRARY
              NAMES ${INTEL}
-             PATHS $ENV{MKL_ROOT}/lib/intel64
+             PATHS $ENV{MKL_LIB_DIR}
+                   $ENV{MKL_ROOT}/lib/intel64
                    $ENV{MKL_ROOT}/lib/
                    $ENV{MKL_LIB_DIR}
-            )
+                   /opt/intel/mkl/lib/intel64
+                   /opt/intel/mkl/lib)
 find_library(MKL_SEQUENTIAL_LIBRARY
              NAMES ${SEQUENTIAL}
-             PATHS $ENV{MKL_ROOT}/lib/intel64
+             PATHS $ENV{MKL_LIB_DIR}
+                   $ENV{MKL_ROOT}/lib/intel64
                    $ENV{MKL_ROOT}/lib/
-                   $ENV{MKL_LIB_DIR}
-            )
+                   /opt/intel/mkl/lib/intel64
+                   /opt/intel/mkl/lib)
 find_library(MKL_CORE_LIBRARY
              NAMES ${CORE}
-             PATHS $ENV{MKL_ROOT}/lib/intel64
+             PATHS $ENV{MKL_LIB_DIR}
+                   $ENV{MKL_ROOT}/lib/intel64
                    $ENV{MKL_ROOT}/lib/
                    $ENV{MKL_LIB_DIR}
-            )
+                   /opt/intel/mkl/lib/intel64
+                   /opt/intel/mkl/lib)
 
 set(MKL_LIBRARY ${MKL_INTEL_LIBRARY} ${MKL_SEQUENTIAL_LIBRARY} ${MKL_CORE_LIBRARY})
 

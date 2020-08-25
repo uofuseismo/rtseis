@@ -16,27 +16,30 @@ endif()
 
 find_path(IPP_INCLUDE_DIR
           NAMES ipps.h
-          HINTS /opt/intel/ipp/include
+          HINTS $ENV{IPP_INC_DIR}
                 $ENV{IPP_ROOT}/include
-                $ENV{IPP_INC_DIR})
+                /opt/intel/ipp/include)
 find_library(IPP_IPPS_LIBRARY
              NAMES ${IPPS}
-             PATHS /opt/intel/ipp//lib/intel64
+             PATHS $ENV{IPP_LIB_DIR}
                    $ENV{IPP_ROOT}/lib/intel64
                    $ENV{IPP_ROOT}/lib/
-                   $ENV{IPP_LIB_DIR})
+                   /opt/intel/ipp/lib/intel64
+                   /opt/intel/ipp/lib)
 find_library(IPP_VM_LIBRARY
              NAMES ${VM}
-             PATHS /opt/intel/ipp/lib/intel64
+             PATHS $ENV{IPP_LIB_DIR}
                    $ENV{IPP_ROOT}/lib/intel64
                    $ENV{IPP_ROOT}/lib/
-                   $ENV{IPP_LIB_DIR})
+                   /opt/intel/ipp/lib/intel64
+                   /opt/intel/ipp/lib)
 find_library(IPP_CORE_LIBRARY
              NAMES ${CORE}
-             PATHS /opt/intel/ipp/lib/intel64
+             PATHS $ENV{IPP_LIB_DIR}
                    $ENV{IPP_ROOT}/lib/intel64
                    $ENV{IPP_ROOT}/lib/
-                   $ENV{IPP_LIB_DIR})
+                   /opt/intel/ipp/lib/intel64
+                   /opt/intel/ipp/lib)
 
 set(IPP_LIBRARY ${IPP_IPPS_LIBRARY} ${IPP_VM_LIBRARY} ${IPP_CORE_LIBRARY})
 
