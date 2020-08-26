@@ -28,7 +28,7 @@ enum rtseisVerbosityLevel_enum
 #ifdef __cplusplus
 namespace RTSeis
 {
-    enum ProcessingMode
+    enum class ProcessingMode
     {
         /*!< Indicates the module is to be used for post-processing. */
         POST_PROCESSING = 1,

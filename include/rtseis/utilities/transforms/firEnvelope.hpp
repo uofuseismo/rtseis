@@ -97,7 +97,7 @@ public:
      * @throws std::invalid_argument if ntaps is not positive.
      */
     void initialize(int ntaps,
-                    RTSeis::ProcessingMode mode=RTSeis::POST_PROCESSING);
+                    RTSeis::ProcessingMode mode=RTSeis::ProcessingMode::POST_PROCESSING);
 
     /*!
      * @brief Gets the length of the initital condition array.

@@ -852,6 +852,7 @@ int testDownsample(const std::vector<double> &x)
 int testDecimate(const std::vector<double> &x)
 {
     const int nq = 7;
+    bool removePhaseShift = true;
     int npts = static_cast<int> (x.size());
     int firLen = 33;
     const double dt = 1.0/200.0;
@@ -873,7 +874,7 @@ int testDecimate(const std::vector<double> &x)
         }
         // Verify
         RTSeis::Utilities::FilterImplementations::Decimate<double> decim;
-        decim.initialize(iq, firLen, 
+        decim.initialize(iq, firLen, removePhaseShift,
                          RTSeis::ProcessingMode::POST_PROCESSING);
         std::vector<double> yref(npts);
         double *yRefPtr = yref.data();
