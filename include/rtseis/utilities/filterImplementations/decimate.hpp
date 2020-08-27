@@ -27,7 +27,14 @@ public:
      * @param[in] decimate  The decimation class from which to initialize
      *                      this class.
      */
-    Decimate(const Decimate &decimate); 
+    Decimate(const Decimate &decimate);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] decimate  The decimation class from which to initialize
+     *                          this class.  On exit, decimate's behavior is
+     *                          undefined.
+     */
+    Decimate(Decimate &&decimate) noexcept;
     /*! @} */
 
     /*! @name Operators
@@ -39,6 +46,13 @@ public:
      * @result A deep copy of the decimate class.
      */
     Decimate& operator=(const Decimate &decimate);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] decimate  The decimate class to move to this.
+     *                          On exit, decimate's behavior is undefined.
+     * @result The memory from decimate moved to this.
+     */
+    Decimate& operator=(Decimate &&decimate) noexcept;
     /*! @} */
 
     /*! @name Destructors
@@ -74,21 +88,21 @@ public:
      *       the filter length so that it's group delay + 1 is evenly
      *       divisible by the downsampling factor.
      */
-    void initialize(const int downFactor,
-                    const int filterLength = 30,
-                    const bool lremovePhaseShift = true,
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
+    void initialize(int downFactor,
+                    int filterLength = 30,
+                    bool lremovePhaseShift = true,
+                    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Determines if the class is initialized.
      * @result True indicates that the class is initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial condition array.
      * @result The length of the initial condition array.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getInitialConditionLength() const;
+    [[nodiscard]] int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions array.
      * @param[in] nz   The length of the initial condition array.
@@ -99,7 +113,7 @@ public:
      *         and zi is NULL.
      * @throws std::runtime_error if class is not initialized.
      */
-    void setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(int nz, const double zi[]);
     /*!
      * @brief Estimates the space required to hold the downsampled signal.
      * @param[in] n   The length of the signal to downsample.  This must
@@ -108,7 +122,7 @@ public:
      * @throws std::runtime_error if the module is not initialized.
      * @throws std::invalid_argument if n is negative.
      */
-    int estimateSpace(const int n) const;
+    [[nodiscard]] int estimateSpace(int n) const;
 
     /*!
      * @brief Applies the decimator to the data.
@@ -124,8 +138,8 @@ public:
      * @throws std::invalid_argument if x or y is NULL.
      * @throws std::runtime_error if the module is not initialized.
      */
-    void apply(const int nx, const T x[],
-               const int ny, int *nyDown, T *y[]);
+    void apply(int nx, const T x[],
+               int ny, int *nyDown, T *y[]);
     /*!
      * @brief Resets the filter to its default initial conditions or the
      *        initial conditions set by \c setInitialConditions().
@@ -139,13 +153,13 @@ public:
      * @result The downsampling factor.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getDownsamplingFactor() const;
+    [[nodiscard]] int getDownsamplingFactor() const;
     /*! 
      * @brief Gets the length of the FIR filter.
      * @result The number of FIR filter coefficients.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getFIRFilterLength() const;
+    [[nodiscard]] int getFIRFilterLength() const;
 private:
     class DecimateImpl;
     std::unique_ptr<DecimateImpl> pImpl;

@@ -1,8 +1,4 @@
 #include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <cassert>
-#include <cfloat>
 #include <climits>
 #include <ipps.h>
 #include "rtseis/enums.h"
@@ -10,7 +6,6 @@
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
-//#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 
@@ -33,26 +28,28 @@ public:
     bool mInitialized = false;
 };
 
+/// C'tor
 template<class T>
 Decimate<T>::Decimate() :
     pImpl(std::make_unique<DecimateImpl> ())
 {
 }
 
+/// Copy c'tor
 template<class T>
 Decimate<T>::Decimate(const Decimate &decimate)
 {
     *this = decimate;
 }
 
-/*
+/// Move c'tor
 template<class T>
 Decimate<T>::Decimate(Decimate &&decimate) noexcept
 {
    *this = std::move(decimate);
 }
-*/
 
+/// Copy assignment
 template<class T>
 Decimate<T>& Decimate<T>::operator=(const Decimate &decimate)
 {
@@ -62,20 +59,20 @@ Decimate<T>& Decimate<T>::operator=(const Decimate &decimate)
     return *this;
 }
 
-/*
+/// Move assignemnt
 template<class T>
-Decimate<T>::Decimate(Decimate &&decimate) noexcept
+Decimate<T>& Decimate<T>::operator=(Decimate &&decimate) noexcept
 {
     if (&decimate == this){return *this;}
-    if (pImpl){pImpl.reset();}
     pImpl = std::move(decimate.pImpl);
     return *this;
 }
-*/
 
+/// Destructor
 template<class T>
 Decimate<T>::~Decimate() = default;
 
+/// Clears the class
 template<class T>
 void Decimate<T>::clear() noexcept
 {
@@ -250,12 +247,14 @@ void Decimate<float>::initialize(const int downFactor,
     pImpl->mInitialized = true;
 }
 
+/// Initialized?
 template<class T>
 bool Decimate<T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
+/// Estimate output space
 template<class T>
 int Decimate<T>::estimateSpace(const int n) const
 {
@@ -286,6 +285,7 @@ int Decimate::estimateSpace(const int n) const
 }
 */
 
+/// Get initial conditions length
 template<class T>
 int Decimate<T>::getInitialConditionLength() const
 {
@@ -294,6 +294,7 @@ int Decimate<T>::getInitialConditionLength() const
     //return pImpl->mMRFIRFilter.getInitialConditionLength(); 
 }
 
+/// Set initial conditions
 template<class T>
 void Decimate<T>::setInitialConditions(const int nz,const double zi[])
 {
@@ -312,6 +313,7 @@ void Decimate<T>::setInitialConditions(const int nz,const double zi[])
     pImpl->mDownsampler.resetInitialConditions();
 }
 
+/// Reset initial conditions
 template<class T>
 void Decimate<T>::resetInitialConditions()
 {
@@ -321,6 +323,7 @@ void Decimate<T>::resetInitialConditions()
     pImpl->mDownsampler.resetInitialConditions();
 }
 
+/// Apply decimator (float)
 template<>
 void Decimate<double>::apply(const int nx, const double x[],
                              const int ny, int *nyDown, double *yIn[])
@@ -368,6 +371,7 @@ void Decimate<double>::apply(const int nx, const double x[],
     }
 }
 
+/// Apply decimator (float)
 template<>
 void Decimate<float>::apply(const int nx, const float x[],
                             const int ny, int *nyDown, float *yIn[])
@@ -475,6 +479,7 @@ void Decimate::apply(const int nx, const double x[],
 }
 */
 
+/// Get downsampling factor
 template<class T>
 int Decimate<T>::getDownsamplingFactor() const
 {
@@ -482,6 +487,7 @@ int Decimate<T>::getDownsamplingFactor() const
     return pImpl->mDownFactor; 
 }
 
+/// Get FIR filter length
 template<class T>
 int Decimate<T>::getFIRFilterLength() const
 {
@@ -489,6 +495,8 @@ int Decimate<T>::getFIRFilterLength() const
     return pImpl->mFIRLength;
 }
 
-/// Template instantiation
+///--------------------------------------------------------------------------///
+///                         Template instantiation                           ///
+///--------------------------------------------------------------------------///
 template class RTSeis::Utilities::FilterImplementations::Decimate<double>;
 template class RTSeis::Utilities::FilterImplementations::Decimate<float>;

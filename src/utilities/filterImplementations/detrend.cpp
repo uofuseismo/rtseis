@@ -36,12 +36,12 @@ Detrend<T>::Detrend(const Detrend &detrend)
     *this = detrend;
 }
 
-/*
-Detrend::Detrend(const Detrend &&detrend)
+/// Move c'tor
+template<class T>
+Detrend<T>::Detrend(Detrend &&detrend) noexcept
 {
     *this = std::move(detrend);
 }
-*/
 
 /// Copy constructor
 template<class T>
@@ -52,13 +52,15 @@ Detrend<T>& Detrend<T>::operator=(const Detrend &detrend)
     return *this;
 }
 
-/*
-Detrend<T>& Detrend::operator=(const Detrend &&detrend)
+/// Move assignment
+template<class T>
+Detrend<T>& Detrend<T>::operator=(Detrend &&detrend) noexcept
 {
     if (&detrend == this){return *this;}
     pImpl = std::move(detrend.pImpl);
+    return *this;
 }
-*/
+
 
 /// Destructor
 template<class T>
@@ -161,6 +163,7 @@ void Detrend<float>::apply(const int nx, const float x[], float *yin[])
     }
 }
 
+/// Remove trend (float)
 void RTSeis::Utilities::FilterImplementations::removeTrend(
     const int length, const float x[], float *yin[],
     float *intercept, float *slope)
@@ -214,6 +217,7 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     if (slope){*slope = b1;}
 }
 
+/// Remove trend (double)
 void RTSeis::Utilities::FilterImplementations::removeTrend(
     const int length, const double x[], double *yin[],
     double *intercept, double *slope)
@@ -264,6 +268,7 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     if (slope){*slope = b1;}
 }
 
+/// Remove mean (double)
 void RTSeis::Utilities::FilterImplementations::removeMean(
     const int nx, const double x[], double *y[], double *mean)
 {
@@ -279,6 +284,7 @@ void RTSeis::Utilities::FilterImplementations::removeMean(
     if (mean){*mean = pMean;}
 }
 
+/// Remove mean (float)
 void RTSeis::Utilities::FilterImplementations::removeMean(
     const int nx, const float x[], float *y[], float *mean)
 {

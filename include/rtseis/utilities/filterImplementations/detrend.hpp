@@ -27,6 +27,13 @@ public:
      * @param[in] detrend  Detrend class from which to initialize this class.
      */
     Detrend(const Detrend &detrend);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] detrend  The detrend class from which to initialize this
+     *                         class.  On exit, detrend's behavior is
+     *                         undefined.
+     */
+    Detrend(Detrend &&detrend) noexcept;
     /*! @} */
 
     /*! @name Operators
@@ -38,6 +45,13 @@ public:
      * @result A deep copy of the detrend class.
      */
     Detrend& operator=(const Detrend &detrend);
+    /*!
+     * @brief Move assignment operator.
+     * @param detrend   The detrend class to move to this.  On exit, detrend's
+     *                  behavior is undefined.
+     * @return The memory from detrend moved to this.
+     */
+    Detrend& operator=(Detrend &&detrend) noexcept;
     /*! @} */
      
 
@@ -58,12 +72,12 @@ public:
      * @brief Initializes the class.
      * @param[in] type   Defines the trend removal strategy.
      */
-    void initialize(const DetrendType type);
+    void initialize(DetrendType type);
     /*!
      * @brief Determines whether or not the class is inititalized.
      * @result True indicates that the class is inititalized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
 
     /*!
      * @brief Detrends the data.
@@ -77,7 +91,7 @@ public:
      * @note If the detrend type is linear and nx is 1 then only the mean will
      *       be removed.
      */
-    void apply(const int nx, const T x[], T *y[]);
+    void apply(int nx, const T x[], T *y[]);
 private:
     class DetrendImpl;
     std::unique_ptr<DetrendImpl> pImpl;
@@ -93,9 +107,9 @@ private:
  * @param[out] mean   The mean of the dataset.
  * @throws std::invalid_argument if nx is positive and x or y is NULL.
  */
-void removeMean(const int nx, const double x[], double *y[], double *mean);
+void removeMean(int nx, const double x[], double *y[], double *mean);
 /*! @copydoc removeMean */
-void removeMean(const int nx, const float x[], float *y[], float *mean);
+void removeMean(int nx, const float x[], float *y[], float *mean);
 
 /*!
  * @brief Function that removes the linear trend from the data.
@@ -110,10 +124,10 @@ void removeMean(const int nx, const float x[], float *y[], float *mean);
  * @note If nx is less than 2 then the mean will be removed and the slope
  *       set to 0.
  */
-void removeTrend(const int nx, const double x[], double *y[],
+void removeTrend(int nx, const double x[], double *y[],
                  double *intercept, double *slope);
 /*! @copydoc removeTrend */
-void removeTrend(const int nx, const float x[], float *y[],
+void removeTrend(int nx, const float x[], float *y[],
                  float *intercept, float *slope);
 
 } // End rtseis

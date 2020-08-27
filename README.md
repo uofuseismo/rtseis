@@ -15,15 +15,15 @@ Finally, open the documentation with a web browser.  This should provide build e
 
 ## Disclaimers
 
-The API is still being refined but the usage is basically worked.  For the low-level stuff you would do something
+The API is still being refined but the usage is basically worked.  For the low-level stuff you would do something like
 
-   1.  Initialize the filter
-   2.  If needed, set some initial conditions.
-   3.  Continually apply the data.
+   1.  Initialize the filter.
+   2.  If needed, set the filter's initial conditions.
+   3.  Apply the filter to the data as many times as requierd.
    4.  For real-time processing reset the filter to its initial conditions in the presence of a gap.
-   5.  Clear the filter when you are finished (the destructor will automatically release all memory as well).
+   5.  Clear the filter when you are finished.  Note, the destructor will automatically release all memory as well once the filter class goes out of scope.
 
-More straightforward are higher level modules like:
+The higher level modules are more straightforward to use.  For example,
 
     postProcessing/singleChannel/waveform.hpp
 
