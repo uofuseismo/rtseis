@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cfloat>
 #define RTSEIS_LOGGING 1
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/log.h"
 #include <mkl_lapacke.h>

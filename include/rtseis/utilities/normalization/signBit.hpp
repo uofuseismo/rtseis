@@ -36,6 +36,12 @@ public:
      * @param[in] signBit  Sign-bit class from which to initialize.
      */
     SignBit(const SignBit &signBit);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] signBit  The sign-bit class from which to initialize this
+     *                         class.  On exit, signBit's behavior is undefined.
+     */
+    SignBit(SignBit &&signBit) noexcept;
     /*! @} */
 
     /*! @name Operators
@@ -47,6 +53,13 @@ public:
      * @result A deep copy of the SignBit class.
      */
     SignBit& operator=(const SignBit &signBit);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] signBit  The sign-bit normalization class to move to this.
+     *                         On exit, signBit's behavior is undefined.
+     * @result The memory from signBit moved to this.
+     */
+    SignBit& operator=(SignBit &&signBit) noexcept;
     /*! @} */
 
     /*! @name Destructors
@@ -68,7 +81,7 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Sets the initial conditions for the sign-bit normalization.
      *        Note, the sign operation is applied to each sample
@@ -86,9 +99,7 @@ public:
      * @throws std::invalid_argument if x or y is NULL and nx is positive.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int nx, const double x[], double *y[]);
-    /*! @copydoc apply */
-    void apply(const int nx, const float  x[], float  *y[]);
+    template<typename U> void apply(const int nx, const U x[], U *y[]);
     /*!
      * @brief Resets the filter to the initial conditions specified
      *        in setInitialConditions().  Note, the sign operation
@@ -104,12 +115,10 @@ public:
     void clear() noexcept;
 private:
     class SignBitImpl;
-    std::unique_ptr<SignBitImpl> pSignBit_;
-}; // End SignBit
-
-
-}; // End Normalization
-}; // End Utilities
-}; // End RTSeis
+    std::unique_ptr<SignBitImpl> pImpl;
+};
+} // End Normalization
+} // End Utilities
+} // End RTSeis
 #endif 
 

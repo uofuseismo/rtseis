@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/trigger/waterLevel.hpp"
 
 using namespace RTSeis::Utilities::Trigger::PostProcessing;

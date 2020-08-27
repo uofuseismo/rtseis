@@ -8,7 +8,7 @@
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.h"
 #include "rtseis/log.h"
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/polarization/svdPolarizer.hpp"
 
 /// Worksapce size

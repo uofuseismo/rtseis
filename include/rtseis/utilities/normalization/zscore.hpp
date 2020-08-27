@@ -91,7 +91,7 @@ public:
      * @brief Determines if the class is initialized.
      * @retval True indicates that the class is initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Applies the z-score normalization.
      * @param[in] nx     The number of points in the time series.

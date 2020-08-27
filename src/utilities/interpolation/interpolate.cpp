@@ -8,7 +8,7 @@
 #include <mkl.h>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/log.h"

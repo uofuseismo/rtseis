@@ -4,7 +4,7 @@
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.h"
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/log.h"
 
@@ -30,7 +30,7 @@ public:
         downFactor_ = downsample.downFactor_;
         phase_ = downsample.phase_;
         mode_ = downsample.mode_;
-        precision_ = downsample.precision_;
+        //precision_ = downsample.precision_;
         linit_ = downsample.linit_; 
         return *this;
     }
@@ -43,21 +43,21 @@ public:
         downFactor_ = 0;
         phase_ = 0;
         mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-        precision_ = RTSeis::Precision::DOUBLE;
+        //precision_ = RTSeis::Precision::DOUBLE;
         linit_ = false;
     }
     //--------------------------------------------------------------------//
     /// Initialize the filter
     int initialize(const int downFactor,
-                   const RTSeis::ProcessingMode mode,
-                   const RTSeis::Precision precision)
+                   const RTSeis::ProcessingMode mode)
+    //               const RTSeis::Precision precision)
     {
         clear();
         downFactor_ = downFactor;
         phase0_ = 0;
         phase_ = 0;
         mode_ = mode;
-        precision_ = precision;
+        //precision_ = precision;
         linit_ = true;
         return 0;
     }
@@ -172,7 +172,7 @@ private:
     /// By default the module does post-procesing.
     RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
     /// The default module implementation.
-    RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+    //RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
     /// Flag indicating the module is initialized.
     bool linit_ = false; 
 };
@@ -230,7 +230,7 @@ void Downsample<double>::initialize(const int downFactor,
     {
         RTSEIS_THROW_IA("Downsampling factor=%d must be positive", downFactor);
     }
-    pDownsample_->initialize(downFactor, mode, RTSeis::Precision::DOUBLE);
+    pDownsample_->initialize(downFactor, mode); //, RTSeis::Precision::DOUBLE);
 }
 
 template<>
@@ -242,7 +242,7 @@ void Downsample<float>::initialize(const int downFactor,
     {
         RTSEIS_THROW_IA("Downsampling factor=%d must be positive", downFactor);
     }
-    pDownsample_->initialize(downFactor, mode, RTSeis::Precision::FLOAT);
+    pDownsample_->initialize(downFactor, mode);//, RTSeis::Precision::FLOAT);
 }
 
 template<class T>

@@ -14,7 +14,7 @@
 #include "rtseis/utilities/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/log.h"
 
 //#define DEBUG 1

@@ -6,7 +6,7 @@
 #include <climits>
 #include <ipps.h>
 #include "rtseis/enums.h"
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
@@ -28,7 +28,7 @@ public:
     int mGroupDelay = 0;
     int mFIRLength = 0;
     RTSeis::ProcessingMode mMode = RTSeis::ProcessingMode::POST_PROCESSING;
-    RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
+    //RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
     bool mRemovePhaseShift = false;
     bool mInitialized = false;
 };
@@ -83,7 +83,7 @@ void Decimate<T>::clear() noexcept
     pImpl->mFIRFilter.clear();
     pImpl->mDownsampler.clear();
     pImpl->mMode = RTSeis::ProcessingMode::POST_PROCESSING;
-    pImpl->mPrecision = RTSeis::Precision::DOUBLE;
+    //pImpl->mPrecision = RTSeis::Precision::DOUBLE;
     pImpl->mDownFactor = 1;
     pImpl->mGroupDelay = 0;
     pImpl->mFIRLength = 0;
@@ -98,7 +98,7 @@ void Decimate<double>::initialize(const int downFactor,
                                   const bool lremovePhaseShift,
                                   const RTSeis::ProcessingMode mode)
 {
-    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
+    //constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     clear();
     if (downFactor < 1)
     {
@@ -112,7 +112,7 @@ void Decimate<double>::initialize(const int downFactor,
     }
     // Set some properties
     pImpl->mDownFactor = downFactor;
-    pImpl->mPrecision = precision;
+    //pImpl->mPrecision = precision;
     pImpl->mMode = mode;
     int nfir = filterLength;
     // Postprocessing is a little trickier - may have to extend filter length
@@ -182,7 +182,7 @@ void Decimate<float>::initialize(const int downFactor,
                                  const bool lremovePhaseShift,
                                  const RTSeis::ProcessingMode mode)
 {
-    constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
+    //constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
     clear();
     if (downFactor < 2)
     {
@@ -196,7 +196,7 @@ void Decimate<float>::initialize(const int downFactor,
     }
     // Set some properties
     pImpl->mDownFactor = downFactor;
-    pImpl->mPrecision = precision;
+    //pImpl->mPrecision = precision;
     pImpl->mMode = mode;
     int nfir = filterLength;
     // Postprocessing is a little trickier - may have to extend filter length

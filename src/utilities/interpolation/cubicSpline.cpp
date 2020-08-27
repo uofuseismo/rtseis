@@ -6,7 +6,7 @@
 #include <vector>
 #include <mkl.h>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/interpolation/cubicSpline.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 

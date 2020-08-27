@@ -7,7 +7,7 @@
 #include <cassert>
 #endif
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterDesign/enums.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"

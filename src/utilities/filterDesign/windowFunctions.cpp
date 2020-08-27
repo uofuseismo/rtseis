@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/log.h"
 

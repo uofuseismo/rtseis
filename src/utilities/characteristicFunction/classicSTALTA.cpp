@@ -4,7 +4,7 @@
 #include <limits>
 #include <vector>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/enums.h"
 #include "rtseis/utilities/characteristicFunction/classicSTALTA.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"

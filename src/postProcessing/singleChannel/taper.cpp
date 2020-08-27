@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <memory>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/enums.h"

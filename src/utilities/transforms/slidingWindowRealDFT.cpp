@@ -5,7 +5,7 @@
 #include <complex> // Put this before fftw
 #include <fftw/fftw3.h>
 #include <ipps.h>
-#include <rtseis/private/throw.hpp>
+#include <private/throw.hpp>
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"

@@ -15,7 +15,7 @@
 #include <pstl/algorithm>
 #endif
 #include <vector>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #define RTSEIS_LOGGING 1
 #include "rtseis/log.h"
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"

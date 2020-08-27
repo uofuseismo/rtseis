@@ -4,7 +4,7 @@
 #include <exception>
 #include <string>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/demean.hpp"
 
 

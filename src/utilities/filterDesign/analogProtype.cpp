@@ -6,7 +6,7 @@
 #define RTSEIS_LOGGING 1
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"
 #include "rtseis/utilities/filterDesign/analogPrototype.hpp"
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterDesign::IIR;

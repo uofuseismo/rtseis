@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/normalization/zscore.hpp"
 
 using namespace RTSeis::Utilities::Normalization;
@@ -22,11 +22,13 @@ ZScore::ZScore() :
 {
 }
 
+/// Copy c'tor
 ZScore::ZScore(const ZScore &zscore)
 {
     *this = zscore;
 }
 
+/// Move c'tor
 ZScore::ZScore(ZScore &&zscore) noexcept
 {
     *this = std::move(zscore);
@@ -50,6 +52,7 @@ ZScore& ZScore::operator=(ZScore &&zscore) noexcept
 /// Destructors
 ZScore::~ZScore() = default;
 
+/// Clears the class
 void ZScore::clear() noexcept
 {
     pImpl->mMean64f = 0;
@@ -75,6 +78,7 @@ void ZScore::initialize(const double mean,
     pImpl->mInitialized = true;
 }
 
+/// Initialize the class
 void ZScore::initialize(const int nx, const double x[])
 {
     clear();
@@ -92,6 +96,7 @@ void ZScore::initialize(const int nx, const double x[])
     initialize(pMean, pStdDev); 
 }
 
+/// Initialized?
 bool ZScore::isInitialized() const noexcept
 {
     return pImpl->mInitialized;

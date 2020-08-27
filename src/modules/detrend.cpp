@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cstdint>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/detrend.hpp"
 
 using namespace RTSeis::PostProcessing::SingleChannel;

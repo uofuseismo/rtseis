@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <mkl.h>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/interpolation/linear.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/log.h"

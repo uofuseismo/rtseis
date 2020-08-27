@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <complex>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/hilbert.hpp"
 

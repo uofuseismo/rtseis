@@ -28,27 +28,40 @@ enum rtseisVerbosityLevel_enum
 #ifdef __cplusplus
 namespace RTSeis
 {
-    enum class ProcessingMode
-    {
-        /*!< Indicates the module is to be used for post-processing. */
-        POST_PROCESSING = 1,
-        /*!< Indicates the mdoule is to be used for real-time processing. */
-        REAL_TIME = 2
-    };
-    enum Precision
-    {
-        /*!< Indicates the computations underlying the module should be
-             performed in floating point precision. */
-        FLOAT = 1,
-        /*!< Indicates the computations underlying the module should be
-             performed in double precision. */
-        DOUBLE = 2
-    };
-//            /*!< Float precision. */
-//            static constexpr enum rtseisPrecision_enum FLOAT   = RTSEIS_FLOAT;
-//            /*!< Double precision. */
-//            static constexpr enum rtseisPrecision_enum DOUBLE  = RTSEIS_DOUBLE;
-//    };
+/*!
+ * @brief Defines the log-level.
+ */
+enum class LogLevel
+{
+    NONE = 0,   /*!< No log information will be printed. */
+    ERROR = 1,  /*!< Only errors will be printed. */
+    WARN = 2,   /*!< Errors and warnings will be printed. */
+    INFO = 3,   /*!< Errors, warnings, and information will be printed. */
+    DEBUG = 4   /*!< Errors, warnings, information messages, and debugging
+                     messages will be printed. */
+};
+/*!
+ * @brief Defines a classes's processing mode.
+ */
+enum class ProcessingMode
+{
+    POST_PROCESSING = 1, /*!< Indicates the module is to be used for post-processing. */
+    REAL_TIME = 2        /*!< Indicates the mdoule is to be used for real-time processing. */
+};
+/*!
+ * @brief Defines a classes precision.
+ * @note This is deprecated and will be deleted.
+ */
+enum class Precision
+{
+    /*!< Indicates the computations underlying the module should be
+        performed in floating point precision. */
+    FLOAT = 1,
+    /*!< Indicates the computations underlying the module should be
+        performed in double precision. */
+    DOUBLE = 2
+};
+
     class Verbosity
     {
         public:

@@ -9,7 +9,7 @@
 #include <pstl/execution>
 #endif
 #define RTSEIS_LOGGING 1
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/transforms/enums.hpp"
 #include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/dftRealToComplex.hpp"

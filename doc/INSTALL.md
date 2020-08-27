@@ -13,6 +13,10 @@ Prior to building RTSeis the following dependencies must be cleared:
    5. [Intel's MKL](https://software.intel.com/en-us/mkl) backfills some of the matrix algebra and any massive correlations.
    6. [GoogleTest](https://github.com/google/googletest) for regression testing.
 
+Future dependency: 
+
+   1. [SpdLog](https://github.com/gabime/spdlog) for logging.  This should be better in a production system.
+
 In addition, if the Python bindings are sought
 
    1. Python3 with NumPy and SciPy.

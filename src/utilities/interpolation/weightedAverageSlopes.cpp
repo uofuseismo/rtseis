@@ -9,7 +9,7 @@
 #include "rtseis/enums.h"
 #include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include <ipps.h>
 
 using namespace RTSeis::Utilities::Interpolation;

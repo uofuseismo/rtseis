@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <stdexcept>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/rotate/utilities.hpp"
 
 /// Convert north/east to radial/transverse

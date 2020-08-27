@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <ipps.h>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/normalization/minMax.hpp"
 
 

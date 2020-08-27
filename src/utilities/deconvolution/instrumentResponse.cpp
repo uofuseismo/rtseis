@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <complex>
 #include <cmath>
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/deconvolution/instrumentResponse.hpp"
 #include "rtseis/utilities/filterDesign/iir.hpp"
 #include "rtseis/utilities/filterRepresentations/zpk.hpp"

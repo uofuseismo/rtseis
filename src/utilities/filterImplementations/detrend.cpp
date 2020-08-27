@@ -5,7 +5,7 @@
 #include <ippversion.h>
 #include <ippcore.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/private/throw.hpp"
+#include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 
 using namespace RTSeis::Utilities::FilterImplementations;

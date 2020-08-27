@@ -73,7 +73,7 @@ ENDIF()
 #                                      Define Library Dependencies                       #
 ##########################################################################################
 
-configure_file(${CMAKE_SOURCE_DIR}/include/rtseis/version.hpp.in
+configure_file(${CMAKE_SOURCE_DIR}/include/private/version.hpp.in
                ${CMAKE_SOURCE_DIR}/include/rtseis/version.hpp)
 
 set(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
@@ -82,6 +82,7 @@ set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 #SET(PYTHON_SRC src/modules/wrap.cpp)
 SET(UTILS_SRCS
     src/utilities/version.cpp
+    #src/utilities/logger.cpp
     src/utilities/verbosity.cpp
     src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/deconvolution/instrumentResponse.cpp
