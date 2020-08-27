@@ -645,29 +645,49 @@ private:
     bool linit_ = false;
 };
 
+/// C'tor
 template<class T>
 DFTRealToComplex<T>::DFTRealToComplex() :
     pImpl(std::make_unique<DFTImpl> ())
 {
 }
 
+/// Destructor
 template<class T>
 DFTRealToComplex<T>::~DFTRealToComplex() = default;
 
+/// Copy c'tor 
 template<class T>
 DFTRealToComplex<T>::DFTRealToComplex(const DFTRealToComplex &dftr2c)
 {
     *this = dftr2c;
 }
 
+/// Move c'tor
+template<class T>
+DFTRealToComplex<T>::DFTRealToComplex(DFTRealToComplex &&dftr2c) noexcept
+{
+    *this = std::move(dftr2c);
+}
+
+/// Copy assignment
 template<class T>
 DFTRealToComplex<T>& 
 DFTRealToComplex<T>::operator=(const DFTRealToComplex &dftr2c)
 {
     if (&dftr2c == this){return *this;}
     if (pImpl){pImpl->clear();}
-    clear();
     pImpl = std::make_unique<DFTImpl> (*dftr2c.pImpl);
+    return *this;
+}
+
+/// Move assignment
+template<class T>
+DFTRealToComplex<T>&
+DFTRealToComplex<T>::operator=(DFTRealToComplex &&dftr2c) noexcept
+{
+    if (&dftr2c == this){return *this;}
+    pImpl = std::move(dftr2c.pImpl);
     return *this;
 }
 
