@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <cstdlib>
 #include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
@@ -17,19 +16,16 @@ public:
     /// Default constructor
     FIRImpl()
     {
-        return;
     }
     /// Copy constructor
     FIRImpl(const FIRImpl &fir)
     {
         *this = fir;
-        return;
     }
     /// Default destructor.
     ~FIRImpl()
     {
         clear();
-        return;
     }
     /// (Deep) copy operator
     FIRImpl& operator=(const FIRImpl &fir)
@@ -101,7 +97,6 @@ public:
         precision_ = RTSeis::Precision::DOUBLE;
         mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
         linit_ = false;
-        return;
     }
     //========================================================================//
     /// Initializes the filter 
@@ -187,12 +182,12 @@ public:
         return 0;
     }
     /// Determines if the module is initialized.
-    bool isInitialized() const
+    [[nodiscard]] bool isInitialized() const
     {
         return linit_;
     }
     /// Determines the length of the initial conditions.
-    int getInitialConditionLength() const
+    [[nodiscard]] int getInitialConditionLength() const
     {
         return order_;
     }
@@ -225,7 +220,7 @@ public:
         return 0;
     }
     /// Resets the initial conditions
-    int resetInitialConditions() const
+    void resetInitialConditions() noexcept
     {
         if (order_ > 0)
         {   
@@ -238,7 +233,6 @@ public:
                 ippsConvert_64f32f(zi_, dlysrc32_, order_);
             }
         }
-        return 0;
     }
     /// Applies the filter
     int apply(const int n, const double x[], double y[])
@@ -353,29 +347,32 @@ private:
 
 //============================================================================//
 
+/// C'tor
 template<class T>
 FIRFilter<T>::FIRFilter() :
     pFIR_(std::make_unique<FIRImpl> ())
 {
-    return;
 }
 
-template<class T>
-FIRFilter<T>::~FIRFilter() = default;
-
+/// Copy c'tor
 template<class T>
 FIRFilter<T>::FIRFilter(const FIRFilter &fir)
 {
     *this = fir;
-    return;
 }
 
+/// Move c'tor
 template<class T>
 FIRFilter<T>::FIRFilter(FIRFilter &&fir) noexcept
 {
     *this = std::move(fir);
 }
 
+/// Destructor
+template<class T>
+FIRFilter<T>::~FIRFilter() = default;
+
+/// Copy assignment
 template<class T>
 FIRFilter<T>& FIRFilter<T>::operator=(const FIRFilter &fir)
 {
@@ -385,6 +382,7 @@ FIRFilter<T>& FIRFilter<T>::operator=(const FIRFilter &fir)
     return *this;
 }
 
+/// Move assignment
 template<class T>
 FIRFilter<T>& FIRFilter<T>::operator=(FIRFilter &&fir) noexcept
 {
@@ -491,7 +489,6 @@ void FIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 #else
     pFIR_->apply(n, x, y);
 #endif
-    return;
 }
 
 /// Utility routine for initial conditon length

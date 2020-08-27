@@ -26,17 +26,30 @@ public:
      * @param[in] median  Median class from which to initialize.
      */
     MedianFilter(const MedianFilter &median);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] median   The median class to move to this.
+     *                         On exit, median's behavior is undefined.
+     */
+    MedianFilter(MedianFilter &&median) noexcept;
     /*! @} */
 
     /*! @name Operators
      * @{
      */
     /*!
-     * @brief Copy operator.
+     * @brief Copy assignment operator.
      * @param[in] median  The median class to copy.
      * @result A deep copy of the median filter class.
      */
     MedianFilter& operator=(const MedianFilter &median);
+    /*!
+     * @brief Move assignment operator.
+     * @param median[in,out]   The median class to move to this.
+     *                         On exit, median's behavior is undefined.
+     * @return The memory from median moved to this.
+     */
+    MedianFilter& operator=(MedianFilter &&median) noexcept;
     /*! @} */
 
     /*! @name Destructors
@@ -46,7 +59,7 @@ public:
      * @brief Destructor.
      */
     ~MedianFilter();
-    /* @} */
+    /*! @} */
 
     /*!
      * @brief Initializes the median filter.
@@ -57,27 +70,27 @@ public:
      *                  is for post-processing.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    void initialize(const int n,
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
+    void initialize(int n,
+                    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Utility routine to determine the initial condition length.
      * @result A non-negative number is the length of the initial
      *         condition array.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getInitialConditionLength() const;
+    [[nodiscard]] int getInitialConditionLength() const;
     /*!
      * @brief Returns the group delay of the filter.  Note, that this
      *        shift is required to get a correspondence to Matlab.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getGroupDelay() const;
+    [[nodiscard]] int getGroupDelay() const;
     /*!
      * @brief Sets the initial conditions for the filter.  This should
      *        be called prior to filter application as it will reset
@@ -89,7 +102,7 @@ public:
      *         zi is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(int nz, const double zi[]);
     /*!
      * @brief Appplies the median filter to the array x.
      * @param[in] n   Number of points in x.
@@ -98,7 +111,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const T x[], T *y[]);
+    void apply(int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions on the source delay line to
      *        the default initial conditions or the initial conditions

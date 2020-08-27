@@ -15,21 +15,20 @@ class IIRIIRFilter<T>::IIRIIRImpl
 {
 public:
     /// Default constructor
+    /*
     IIRIIRImpl()
     {
-        return;
     }
     /// Copy constructor
     IIRIIRImpl(const IIRIIRImpl &iiriir)
     {
         *this = iiriir;
-        return;
     }
+    */
     /// Destructor
     ~IIRIIRImpl()
     {
         clear();
-        return;
     }
     /// (Deep) Copy operator
     IIRIIRImpl& operator=(const IIRIIRImpl &iiriir)
@@ -68,7 +67,7 @@ public:
         return *this; 
     }
     /// Releases memory on the module.
-    void clear(void)
+    void clear()
     {
         if (pTaps64_ != nullptr){ippsFree(pTaps64_);}
         if (dlysrc64_ != nullptr){ippsFree(dlysrc64_);}
@@ -96,8 +95,7 @@ public:
         lhaveZI_ = false;
         precision_ = RTSeis::Precision::DOUBLE;
         linit_ = false;
-        return;
-    } 
+    }
     /// Sets the initial conditions
     int initialize(const int nb, const double b[],
                    const int na, const double a[],
@@ -136,7 +134,7 @@ public:
             ippsCopy_64f(a, &pTaps64_[order_+1], na);
             // Initialize the IIR state 
             status = ippsIIRIIRInit_64f(&pState64_, pTaps64_, order_,
-                                        NULL, pBuf_);
+                                        nullptr, pBuf_);
             if (status != ippStsNoErr)
             {
                 RTSEIS_ERRMSG("%s", "Failed to initialize IIRIIR state");
@@ -165,7 +163,7 @@ public:
             ippsConvert_64f32f(a, &pTaps32_[order_+1], na);
             // Initialize the IIR state 
             status = ippsIIRIIRInit_32f(&pState32_, pTaps32_, order_,
-                                        NULL, pBuf_);
+                                        nullptr, pBuf_);
             if (status != ippStsNoErr)
             {
                 RTSEIS_ERRMSG("%s", "Failed to initialize IIRIIR state");
@@ -179,17 +177,17 @@ public:
         return 0;
     }
     /// Determines if the module is initialized
-    bool isInitialized(void) const
+    [[nodiscard]] bool isInitialized() const
     {
         return linit_;
     }
     /// Gets the length of the initial conditions
-    int getInitialConditionLength(void) const
+    [[nodiscard]] int getInitialConditionLength() const
     {
         return order_;
     }
     /// Gets the filter order
-    int getFilterOrder(void) const
+    [[nodiscard]] int getFilterOrder() const
     {
         return order_;
     }
@@ -259,7 +257,7 @@ public:
             return -1;
         }
         // Undo the action of setting a delay line
-        if (lhaveZI_){ippsIIRIIRSetDlyLine_64f(pState64_, NULL);}
+        if (lhaveZI_){ippsIIRIIRSetDlyLine_64f(pState64_, nullptr);}
         return 0; 
     }
     /// Applies the filter
@@ -303,7 +301,7 @@ public:
             return -1;
         }
         // Undo the action of setting a delay line
-        if (lhaveZI_){ippsIIRIIRSetDlyLine_32f(pState32_, NULL);}
+        if (lhaveZI_){ippsIIRIIRSetDlyLine_32f(pState32_, nullptr);}
         return 0;
     }
 private:
@@ -349,19 +347,28 @@ private:
     bool linit_ = false;
 };
 
-/// Constructors
+/// C'tor
 template<class T>
 IIRIIRFilter<T>::IIRIIRFilter() :
     pIIRIIR_(std::make_unique<IIRIIRImpl> ())
 {
 }
 
+/// Copy c'tor
 template<class T>
 IIRIIRFilter<T>::IIRIIRFilter(const IIRIIRFilter &iiriir)
 {
     *this = iiriir;
 }
 
+/// Move c'tor
+template<class T>
+IIRIIRFilter<T>::IIRIIRFilter(IIRIIRFilter &&iiriir) noexcept
+{
+    *this = std::move(iiriir);
+}
+
+/// Copy assignment
 template<class T>
 IIRIIRFilter<T>& IIRIIRFilter<T>::operator=(const IIRIIRFilter &iiriir)
 {
@@ -371,18 +378,30 @@ IIRIIRFilter<T>& IIRIIRFilter<T>::operator=(const IIRIIRFilter &iiriir)
     return *this;
 }
 
+/// Move assignment
+template<class T>
+IIRIIRFilter<T>& IIRIIRFilter<T>::operator=(IIRIIRFilter &&iiriir) noexcept
+{
+    if (&iiriir == this){return *this;}
+    pIIRIIR_ = std::move(iiriir.pIIRIIR_);
+    return *this;
+}
+
+/// Destructor
 template<class T>
 IIRIIRFilter<T>::~IIRIIRFilter()
 {
     pIIRIIR_->clear();
 }
 
+/// Clears the class
 template<class T>
 void IIRIIRFilter<T>::clear() noexcept
 {
     pIIRIIR_->clear();
 }
 
+/// Initialize the filter
 template<>
 void IIRIIRFilter<double>::initialize(const int nb, const double b[],
                                       const int na, const double a[])
@@ -409,6 +428,7 @@ void IIRIIRFilter<double>::initialize(const int nb, const double b[],
 #endif
 }
 
+/// Initialize the filter (float)
 template<>
 void IIRIIRFilter<float>::initialize(const int nb, const double b[],
                                      const int na, const double a[])
@@ -452,6 +472,7 @@ void IIRIIRFilter<T>::setInitialConditions(const int nz, const double zi[])
     pIIRIIR_->setInitialConditions(nz, zi);
 }
 
+/// Initialized?
 template<class T>
 bool IIRIIRFilter<T>::isInitialized() const noexcept
 {
@@ -482,6 +503,7 @@ void IIRIIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 #endif
 }
 
+/// Reset initial conditions
 template<class T>
 void IIRIIRFilter<T>::resetInitialConditions()
 {
@@ -492,6 +514,7 @@ void IIRIIRFilter<T>::resetInitialConditions()
     pIIRIIR_->resetInitialConditions();
 }
 
+/// Get initial condition length
 template<class T>
 int IIRIIRFilter<T>::getInitialConditionLength() const
 {
@@ -503,6 +526,7 @@ int IIRIIRFilter<T>::getInitialConditionLength() const
     return len;
 }
 
+/// Get filter order
 template<class T>
 int IIRIIRFilter<T>::getFilterOrder() const
 {

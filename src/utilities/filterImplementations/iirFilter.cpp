@@ -252,7 +252,7 @@ public:
                 ippsZero_32f(pTaps32f_, 2*(order_ + 1));
                 ippsConvert_64f32f(bRef_, &pTaps32f_[0],        nbRef_);
                 ippsConvert_64f32f(aRef_, &pTaps32f_[order_+1], naRef_);
-                float a04 = static_cast<float> (a0);
+                auto a04 = static_cast<float> (a0);
                 ippsDivC_32f_I(a04, &pTaps32f_[0],        nbRef_);
                 ippsDivC_32f_I(a04, &pTaps32f_[order_+1], naRef_);
                 // Initialize the filter
@@ -275,7 +275,7 @@ public:
             }
             else
             {
-                float a04 = static_cast<float> (a0);
+                auto a04 = static_cast<float> (a0);
                 bNorm32f_ = ippsMalloc_32f(order_+1);
                 ippsZero_32f(bNorm32f_, order_+1);
                 ippsConvert_64f32f(bRef_, bNorm32f_, nbRef_);
@@ -298,17 +298,17 @@ public:
         return 0;
     }
     /// Determines if the filter is initialized
-    bool isInitialized() const noexcept
+    [[nodiscard]] bool isInitialized() const noexcept
     {
         return linit_;
     }
     /// Gets the length of the initial conditions
-    int getInitialConditionLength(void) const
+    [[nodiscard]] int getInitialConditionLength(void) const
     {
         return order_;
     }
     /// Sets the initial conditions
-    int setInitialConditions(const int nz, const double zi[])
+    void setInitialConditions(const int nz, const double zi[]) noexcept
     {
         resetInitialConditions();
         int nzRef = getInitialConditionLength();
@@ -316,7 +316,7 @@ public:
         {
             RTSEIS_ERRMSG("%s", "Shouldn't be here");
         }
-        if (nzRef == 0){return 0;}
+        if (nzRef == 0){return;}
         ippsCopy_64f(zi, zi_, nzRef);
         if (precision_ == RTSeis::Precision::DOUBLE)
         {
@@ -328,10 +328,9 @@ public:
             ippsConvert_64f32f(zi_, pBufIPP32f_, nzRef);
             ippsIIRSetDlyLine_32f(pIIRState32f_, pBufIPP32f_);
         }
-        return 0;
-    } 
+    }
     /// Resets the initial conditions
-    int resetInitialConditions()
+    void resetInitialConditions() noexcept
     {
         if (precision_ == RTSeis::Precision::DOUBLE)
         {
@@ -355,10 +354,9 @@ public:
             }
             ippsIIRSetDlyLine_32f(pIIRState32f_, pBufIPP32f_);
         }
-        return 0;
     }
     /// Applies the filter
-    int apply(const int n, const double x[], double y[])
+    [[nodiscard]] int apply(const int n, const double x[], double y[])
     {
         if (n <= 0){return 0;}
         if (precision_ == RTSeis::Precision::FLOAT)
@@ -399,7 +397,7 @@ public:
         return 0; 
     }
     /// Applies the filter
-    int apply(const int n, const float x[], float y[])
+    [[nodiscard]] int apply(const int n, const float x[], float y[])
     {
         if (n <= 0){return 0;}
         if (precision_ == RTSeis::Precision::DOUBLE)
@@ -573,18 +571,28 @@ private:
 
 //============================================================================//
 
+/// C'tor
 template<class T>
 IIRFilter<T>::IIRFilter(void) :
     pIIR_(std::make_unique<IIRFilterImpl> ())
 {
 }
 
+/// Copy c'tor
 template<class T>
 IIRFilter<T>::IIRFilter(const IIRFilter &iir)
 {
     *this = iir;
 }
 
+/// Move c'tor
+template<class T>
+IIRFilter<T>::IIRFilter(IIRFilter &&iir) noexcept
+{
+    *this = std::move(iir);
+}
+
+/// Copy assignment
 template<class T>
 IIRFilter<T>& IIRFilter<T>::operator=(const IIRFilter &iir)
 {
@@ -594,12 +602,23 @@ IIRFilter<T>& IIRFilter<T>::operator=(const IIRFilter &iir)
     return *this;
 }
 
+/// Move assignment
+template<class T>
+IIRFilter<T>& IIRFilter<T>::operator=(IIRFilter &&iir) noexcept
+{
+    if (&iir == this){return  *this;}
+    pIIR_ = std::move(iir.pIIR_);
+    return *this;
+}
+
+/// Destructor
 template<class T>
 IIRFilter<T>::~IIRFilter()
 {
     clear();
 }
 
+/// Resets the class
 template<class T>
 void IIRFilter<T>::clear() noexcept
 {
@@ -721,7 +740,11 @@ void IIRFilter<T>::apply(const int n, const T x[], T *yIn[])
     int ierr = pIIR_->apply(n, x, y);
     assert(ierr == 0);
 #else
-    pIIR_->apply(n, x, y);
+    auto error = pIIR_->apply(n, x, y);
+    if (error != 0)
+    {
+        throw std::runtime_error("Failed to apply filter");
+    }
 #endif
 }
 

@@ -19,8 +19,7 @@ public:
      * @{
      */
     /*!
-     * @brief Default constructor.  Note, this class is not yet 
-     *        initialized and cannot be used.
+     * @brief Default constructor.
      */
     IIRIIRFilter();
     /*! 
@@ -28,12 +27,26 @@ public:
      * @param[in] iiriir  The IIRIIRFilter class to initialize from.
      */
     IIRIIRFilter(const IIRIIRFilter &iiriir);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] iiriir   The IIRIIR filter class from which to initialize
+     *                         this class.  On exit, iiriir's behavior
+     *                         is undefined.
+     */
+    IIRIIRFilter(IIRIIRFilter &&iiriir) noexcept;
     /*! 
-     * @brief A copy operator.
+     * @brief Copy assignment operator.
      * @param[in] iiriir  The IIRIIRFilter class to copy.
      * @result A deep copy of the iiriir filter class.
      */
     IIRIIRFilter &operator=(const IIRIIRFilter &iiriir);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] iiriir   The IIRIIIR filter class to move to this.
+     *                         On exit, iiriir's behavior is undefined.
+     * @return The memory from iiriir moved to this.
+     */
+    IIRIIRFilter &operator=(IIRIIRFilter &&iiriir) noexcept;
     /*! @} */
 
     /*!
@@ -54,20 +67,20 @@ public:
      *                       this is double precision.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    void initialize(const int nb, const double b[],
-                    const int na, const double a[]);
+    void initialize(int nb, const double b[],
+                    int na, const double a[]);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial conditions array.
      * @result The length of the initial conditions array.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getInitialConditionLength() const;
+    [[nodiscard]] int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions.
      * @param[in] nz   The length of the initial conditions.  This
@@ -78,7 +91,7 @@ public:
      *         and zi is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(int nz, const double zi[]);
     /*!
      * @brief Applies the zero-phase IIR filter to the data.  Note,
      *        the class must be initialized prior to using this function.
@@ -89,7 +102,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const T x[], T *y[]);
+    void apply(int n, const T x[], T *y[]);
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().  Note, this will not do anything
@@ -109,7 +122,7 @@ public:
      * @result The filter order.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getFilterOrder() const;
+    [[nodiscard]] int getFilterOrder() const;
 private:
     class IIRIIRImpl;
     std::unique_ptr<IIRIIRImpl> pIIRIIR_;

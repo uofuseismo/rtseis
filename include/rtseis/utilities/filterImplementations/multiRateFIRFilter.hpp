@@ -34,17 +34,32 @@ public:
      *                   initialize this class.
      */
     MultiRateFIRFilter(const MultiRateFIRFilter &firmr);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] firmr   The multi-rate filter class from which to
+     *                        initialize this class.  On exit, firmr's
+     *                        behavior is undefined.
+     */
+    MultiRateFIRFilter(MultiRateFIRFilter &&firmr) noexcept;
     /*! @} */
 
     /*! @name Operators
      * @{
      */
     /*!
-     * @brief Copy operator.
+     * @brief Copy assignment operator.
      * @param[in] firmr  The multi-rate filter class to copy.
      * @result A deep copy of hte multi-rate filter.
      */
     MultiRateFIRFilter &operator=(const MultiRateFIRFilter &firmr);
+    /*!
+     * @brief Move assignment operator.
+     * @param[in,out] firmr  The multi-rate filter class whose memory will be
+     *                       moved to this.  On exit, firmr's behavior is
+     *                       undefined.
+     * @return The memory from firmr moved to this.
+     */
+    MultiRateFIRFilter &operator=(MultiRateFIRFilter &&firmr) noexcept;
     /*! @} */
 
     /*! @name Destructors
@@ -76,18 +91,18 @@ public:
      *                        is for post-processing.
      * @throws std::invalid_argument if any arguments are incorrect.
      */
-    void initialize(const int upFactor, const int downFactor,
-                    const int nb, const double b[],
-                    const RTSeis::ProcessingMode mode
+    void initialize(int upFactor, int downFactor,
+                    int nb, const double b[],
+                    RTSeis::ProcessingMode mode
                         = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @copydoc initialize()
      * @param[in] chunkSize   This is an optional tuning parameter.
      */
-    void initialize(const int upFactor, const int downFactor,
-                    const int nb, const double b[],
-                    const int chunkSize,
-                    const RTSeis::ProcessingMode mode 
+    void initialize(int upFactor,  int downFactor,
+                    int nb, const double b[],
+                    int chunkSize,
+                    RTSeis::ProcessingMode mode
                         = RTSeis::ProcessingMode::POST_PROCESSING);
     /* @} */
 
@@ -96,13 +111,13 @@ public:
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Gets the length of the initial conditions array.
      * @result The length of the initial conditions array.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getInitialConditionLength() const;
+    [[nodiscard]] int getInitialConditionLength() const;
     /*!
      * @brief Applies the zero-phase IIR filter to the data.  Note,
      *        the class must be initialized prior to using this
@@ -133,14 +148,14 @@ public:
      *         and zi is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(int nz, const double zi[]);
     /*!
      * @brief Estimates the space required to store the output signal.
      * @param[in] n  The length of the input signal.
      * @result The array length required to store the output signal.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int estimateSpace(const int n) const;
+    [[nodiscard]] int estimateSpace(int n) const;
     /*!
      * @brief Applies the multi-rate filter to the signal.
      * @param[in] n       Number of points in the signal.
@@ -154,8 +169,8 @@ public:
      *         or nywork is too small, or nywork is positive and y is NULL.
      * @throws std::runtime_error if the class is not initialized
      */
-    void apply(const int n, const T x[],
-               const int nywork, int *ny, T *y[]);
+    void apply(int n, const T x[],
+               int nywork, int *ny, T *y[]);
     /*!
      * @brief Resets the initial conditions to those set in
      *        setInitialConditions().

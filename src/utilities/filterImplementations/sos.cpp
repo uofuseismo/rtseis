@@ -1,7 +1,5 @@
 #include <cstdio>
-#include <cstdlib>
 #include <cmath>
-#include <cassert>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.h"
@@ -187,22 +185,22 @@ public:
         return 0;
     }
     /// Determines if the module is initialized
-    bool isInitialized() const
+    [[nodiscard]] bool isInitialized() const
     {
         return linit_;
     }
     /// Determines the length of the initial conditions
-    int getInitialConditionLength() const
+    [[nodiscard]] int getInitialConditionLength() const
     {
         return 2*nsections_;
     }
     /// Gets the number of sections
-    int getNumberOfSections() const
+    [[nodiscard]] int getNumberOfSections() const
     {
         return nsections_;
     }
     /// Sets the initial conditions
-    int setInitialConditions(const int nz, const double zi[])
+    void setInitialConditions(const int nz, const double zi[]) noexcept
     {
         resetInitialConditions();
         int nzRef = getInitialConditionLength();
@@ -216,10 +214,9 @@ public:
         {
             ippsConvert_64f32f(zi_, dlySrc32f_, nzRef);
         }
-        return 0;
     }
     /// Resets the initial conditions
-    int resetInitialConditions()
+    void resetInitialConditions() noexcept
     {
         if (precision_ == RTSeis::Precision::DOUBLE)
         {
@@ -229,10 +226,9 @@ public:
         {
             ippsConvert_64f32f(zi_, dlySrc32f_, 2*nsections_);
         }
-        return 0; 
-    } 
+    }
     /// Applies the filter
-    int apply(const int n, const double x[], double y[])
+    [[nodiscard]] int apply(const int n, const double x[], double y[])
     {
         if (n <= 0){return 0;}
         if (precision_ == RTSeis::Precision::FLOAT)
@@ -279,7 +275,7 @@ public:
         return 0;
     }
     /// Applies the filter
-    int apply(const int n, const float x[], float y[])
+    [[nodiscard]] int apply(const int n, const float x[], float y[])
     {
         if (n <= 0){return 0;} 
         if (precision_ == RTSeis::Precision::DOUBLE)
@@ -371,36 +367,39 @@ private:
 
 //============================================================================//
 
+/// C'tor
 template<class T>
 SOSFilter<T>::SOSFilter() :
     pSOS_(std::make_unique<SOSFilterImpl>())
 {
 }
 
-template<class T>
-SOSFilter<T>::~SOSFilter() = default;
-
-template<class T>
-void SOSFilter<T>::clear() noexcept
-{
-    pSOS_->clear();
-}
-
+/// Copy c'tor
 template<class T>
 SOSFilter<T>::SOSFilter(const SOSFilter &sos)
 {
     *this = sos;
 }
 
-/*
+/// Move c'tor
 template<class T>
-SOSFilter<T>::SOSFilter(SOSFilter &&sos)
+SOSFilter<T>::SOSFilter(SOSFilter &&sos) noexcept
 {
     *this = std::move(sos);
-    return;
 }
-*/
 
+/// Destructor
+template<class T>
+SOSFilter<T>::~SOSFilter() = default;
+
+//// Clear the class
+template<class T>
+void SOSFilter<T>::clear() noexcept
+{
+    pSOS_->clear();
+}
+
+/// Copy assignment
 template<class T>
 SOSFilter<T>& SOSFilter<T>::operator=(const SOSFilter &sos)
 {
@@ -410,14 +409,14 @@ SOSFilter<T>& SOSFilter<T>::operator=(const SOSFilter &sos)
     return *this;
 }
 
-/*
+/// Move assignment
 template<class T>
-SOSFilter<T>& SOSFilter<T>::operator=(SOSFilter &&sos)
+SOSFilter<T>& SOSFilter<T>::operator=(SOSFilter &&sos) noexcept
 {
     if (&sos == this){return *this;}
     pSOS_ = std::move(sos.pSOS_);
+    return *this;
 }
-*/
 
 /// Initialization
 template<>
@@ -494,7 +493,7 @@ void SOSFilter<float>::initialize(const int ns,
     }
 }
 
-
+/// Set initial conditions
 template<class T>
 void SOSFilter<T>::setInitialConditions(const int nz, const double zi[])
 {
@@ -512,6 +511,7 @@ void SOSFilter<T>::setInitialConditions(const int nz, const double zi[])
     pSOS_->setInitialConditions(nz, zi);
 }
 
+/// Reset initial conditions
 template<class T>
 void SOSFilter<T>::resetInitialConditions()
 {
@@ -522,6 +522,7 @@ void SOSFilter<T>::resetInitialConditions()
     pSOS_->resetInitialConditions();
 }
 
+/// Apply filter
 template<>
 void SOSFilter<double>::apply(const int n, const double x[], double *yIn[]) 
 {
@@ -540,7 +541,11 @@ void SOSFilter<double>::apply(const int n, const double x[], double *yIn[])
     int ierr = pSOS_->apply(n, x, y);
     assert(ierr == 0);
 #else
-    pSOS_->apply(n, x, y);
+    auto error = pSOS_->apply(n, x, y);
+    if (error != 0)
+    {
+        throw std::runtime_error("Failed to apply filter");
+    }
 #endif
 }
 
@@ -562,10 +567,15 @@ void SOSFilter<float>::apply(const int n, const float x[], float *yIn[])
     int ierr = pSOS_->apply(n, x, y);
     assert(ierr == 0);
 #else
-    pSOS_->apply(n, x, y);
+    auto error = pSOS_->apply(n, x, y);
+    if (error != 0)
+    {
+        throw std::runtime_error("Failed to apply filter");
+    }
 #endif
 }
 
+/// Get initial conditions
 template<class T>
 int SOSFilter<T>::getInitialConditionLength() const
 {
@@ -576,6 +586,7 @@ int SOSFilter<T>::getInitialConditionLength() const
     return pSOS_->getInitialConditionLength();
 }
 
+/// Get number of sections
 template<class T>
 int SOSFilter<T>::getNumberOfSections() const
 {
@@ -586,6 +597,7 @@ int SOSFilter<T>::getNumberOfSections() const
     return pSOS_->getNumberOfSections();
 }
 
+/// Initialized?
 template<class T>
 bool SOSFilter<T>::isInitialized() const noexcept
 {

@@ -1,6 +1,4 @@
 #include <cstdio>
-#include <cstdlib>
-#include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.h"
@@ -136,18 +134,18 @@ public:
         return 0;
     }
     /// Determines if the module is initialized.
-    bool isInitialized() const noexcept
+    [[nodiscard]] bool isInitialized() const noexcept
     {
         return linit_;
     }
     /// Determines the length of the initial conditions.
-    int getInitialConditionLength() const
+    [[nodiscard]] int getInitialConditionLength() const
     {
         int len = maskSize_ - 1;;
         return len;
     }
     /// Gets the group delay.
-    int getGroupDelay() const
+    [[nodiscard]] int getGroupDelay() const
     {
         int grpDelay = maskSize_/2;
         return grpDelay;
@@ -307,18 +305,28 @@ private:
     bool linit_ = false;
 };
 
+/// C'tor
 template<class T>
 MedianFilter<T>::MedianFilter() :
     pMedian_(std::make_unique<MedianFilterImpl> ())
 {
 }
 
+/// Copy c'tor
 template<class T>
 MedianFilter<T>::MedianFilter(const MedianFilter &median)
 {
     *this = median;
 }
 
+/// Move c'tor
+template<class T>
+MedianFilter<T>::MedianFilter(MedianFilter &&median) noexcept
+{
+    *this = std::move(median);
+}
+
+/// Copy assignment
 template<class T>
 MedianFilter<T>& MedianFilter<T>::operator=(const MedianFilter &median)
 {
@@ -328,9 +336,20 @@ MedianFilter<T>& MedianFilter<T>::operator=(const MedianFilter &median)
     return *this;
 }
 
+/// Move assignment
+template<class T>
+MedianFilter<T>& MedianFilter<T>::operator=(MedianFilter &&median) noexcept
+{
+    if (&median == this){return *this;}
+    pMedian_ = std::move(median.pMedian_);
+    return *this;
+}
+
+/// Destructor
 template<class T>
 MedianFilter<T>::~MedianFilter() = default;
 
+/// Clears the class
 template<class T>
 void MedianFilter<T>::clear() noexcept
 {

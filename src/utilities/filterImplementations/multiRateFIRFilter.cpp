@@ -1,5 +1,4 @@
-#include <cstdlib>
-#include <cmath>
+#include <cstdio>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.h"
@@ -150,7 +149,7 @@ public:
     }
     //========================================================================//
     /// Gets the length of the intiial conditions
-    int getInitialConditionLength() const
+    [[nodiscard]] int getInitialConditionLength() const
     {
         return nbDly_;
     }
@@ -278,7 +277,7 @@ public:
                 // By injecting upFactor_ times the points into the signal
                 // to filter we have to gain the FIR filter upFactor_ times.
                 // This is not done automatically by Matlab.
-                double gain = static_cast<double> (upFactor_);
+                auto gain = static_cast<double> (upFactor_);
                 ippsMulC_64f(b, gain, pTaps64_, tapsLen_); 
             }
             else
@@ -335,7 +334,7 @@ public:
                 // By injecting upFactor_ times the points into the signal
                 // to filter we have to gain the FIR filter upFactor_ times.
                 // This is not done automatically by Matlab.
-                float gain = static_cast<float> (upFactor_);
+                auto gain = static_cast<float> (upFactor_);
                 ippsMulC_32f_I(gain, pTaps32_, tapsLen_); 
             }
             // Delay lines
@@ -732,18 +731,28 @@ private:
     bool linit_ = false;
 };
 
+/// C'tor
 template<class T>
 MultiRateFIRFilter<T>::MultiRateFIRFilter() :
     pFIR_(std::make_unique<MultiRateFIRImpl> ())
 {
 }
 
+/// Copy c'tor
 template<class T>
 MultiRateFIRFilter<T>::MultiRateFIRFilter(const MultiRateFIRFilter &firmr)
 {
     *this = firmr;
 }
 
+/// Move c'tor
+template<class T>
+MultiRateFIRFilter<T>::MultiRateFIRFilter(MultiRateFIRFilter &&firmr) noexcept
+{
+    *this = std::move(firmr);
+}
+
+/// Copy assignment
 template<class T>
 MultiRateFIRFilter<T>&
 MultiRateFIRFilter<T>::operator=(const MultiRateFIRFilter &firmr)
@@ -751,6 +760,16 @@ MultiRateFIRFilter<T>::operator=(const MultiRateFIRFilter &firmr)
     if (&firmr == this){return *this;}
     if (pFIR_){pFIR_->clear();}
     pFIR_ = std::make_unique<MultiRateFIRImpl> (*firmr.pFIR_);
+    return *this;
+}
+
+/// Move assignment
+template<class T>
+MultiRateFIRFilter<T>&
+MultiRateFIRFilter<T>::operator=(MultiRateFIRFilter<T> &&firmr) noexcept
+{
+    if (&firmr == this){return *this;}
+    pFIR_ = std::move(firmr.pFIR_);
     return *this;
 }
 
@@ -853,7 +872,7 @@ void MultiRateFIRFilter<T>::initialize(
 template<class T>
 int MultiRateFIRFilter<T>::estimateSpace(const int n) const
 {
-    if (!pFIR_->isInitialized())
+    if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Module is not initialized");
     }
@@ -865,7 +884,7 @@ int MultiRateFIRFilter<T>::estimateSpace(const int n) const
 template<class T>
 int MultiRateFIRFilter<T>::getInitialConditionLength() const
 {
-    if (!pFIR_->isInitialized())
+    if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
@@ -876,7 +895,7 @@ template<class T>
 void MultiRateFIRFilter<T>::setInitialConditions(
     const int nz, const double zi[])
 {
-    if (!pFIR_->isInitialized())
+    if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Class not initialized");
     }
@@ -895,7 +914,7 @@ void MultiRateFIRFilter<T>::apply(const int n, const T x[],
 {
     *ny = 0;
     if (n <= 0){return;} // Nothing to do
-    if (!pFIR_->isInitialized())
+    if (!isInitialized())
     {
         RTSEIS_THROW_RTE("%s", "Module is not initialized");
     }
@@ -958,6 +977,7 @@ int MultiRateFIRFilter::apply(const int n, const float x[],
 }
 */
 
+/// Reset initial conditions
 template<class T>
 void MultiRateFIRFilter<T>::resetInitialConditions()
 {
@@ -971,6 +991,13 @@ void MultiRateFIRFilter<T>::resetInitialConditions()
 #else
     pFIR_->resetInitialConditions();
 #endif
+}
+
+/// Initialized?
+template<class T>
+bool MultiRateFIRFilter<T>::isInitialized() const noexcept
+{
+    return pFIR_->isInitialized();
 }
 
 /// Template instantiation

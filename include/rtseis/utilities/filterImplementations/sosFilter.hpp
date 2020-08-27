@@ -25,22 +25,43 @@ public:
      */
     SOSFilter();
     /*!
-     * @brief A copy constructor.
+     * @brief Copy constructor.
      * @param[in] sos  The SOS class from which to initialize.
      */
     SOSFilter(const SOSFilter &sos);
+    /*!
+     * @brief Move constructor.
+     * @param[in,out] sos  The SOS class from which to initialize this class.
+     *                     On exit, sos's behavior is undefined.
+     */
+    SOSFilter(SOSFilter &&sos) noexcept;
+    /*! @} */
+
+    /*! @name Operators
+     * @{
+     */
     /*!
      * @brief Copy operator.
      * @param[in] sos  The class to copy.
      * @result A deep copy of the input SOS class.
      */
     SOSFilter& operator=(const SOSFilter &sos);
+    /*!
+     * @brief Move operator.
+     * @param[in,out] sos  The sos class whose memory will be moved to this.
+     *                     On exit, sos's behavior is undefined.
+     */
+    SOSFilter& operator=(SOSFilter &&sos) noexcept;
     /*! @} */
 
+    /*! @name Destructors
+     * @{
+     */
     /*!
      * @brief Default destructor.
      */
     ~SOSFilter();
+    /*! @} */
 
     /*!
      * @brief Initializes the second order section filter.
@@ -60,22 +81,22 @@ public:
      * @result 0 indicates success.
      * @throws std::invalid_argument if ns, bs, or as is invalid.
      */
-    void initialize(const int ns,
+    void initialize(int ns,
                     const double bs[],
                     const double as[],
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
+                    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Returns the length of the initial conditions.
      * @result The length of the initial condtions array.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getInitialConditionLength() const;
+    [[nodiscard]] int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions for the filter.  This should
      *        be called prior to filter application as it will reset
@@ -88,7 +109,7 @@ public:
      *         and zi is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void setInitialConditions(const int nz, const double zi[]);
+    void setInitialConditions(int nz, const double zi[]);
 
     /*! @name Filter Application
      * @{
@@ -101,7 +122,7 @@ public:
      * @throws std::invalid_argument if n is positive and x or y is NULL.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void apply(const int n, const T x[], T *y[]);
+    void apply(int n, const T x[], T *y[]);
     /*! @} */
 
     /*!
@@ -122,7 +143,7 @@ public:
      * @result The number of second order sections.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getNumberOfSections() const;
+    [[nodiscard]] int getNumberOfSections() const;
 
 private:
     class SOSFilterImpl;
