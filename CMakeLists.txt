@@ -75,7 +75,10 @@ ENDIF()
 
 configure_file(${CMAKE_SOURCE_DIR}/include/private/version.hpp.in
                ${CMAKE_SOURCE_DIR}/include/rtseis/version.hpp)
-
+set(PUBLIC_HEADER_DIRECTORIES
+    include/rtseis)
+set(PRIVATE_HEADER_DIRECTORIES
+    include/private)
 set(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
 set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 
@@ -237,26 +240,28 @@ if (RTSEIS_WRAP_PYTHON)
    install(TARGETS rtseis pyrtseis
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+           PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 else()
    install(TARGETS rtseis
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+           PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 
 ##########################################################################################
 #                                     CPACK Packaging                                    #
 ##########################################################################################
-#set(CPACK_PACKAGE_NAME "rtseis")
-#set(CPACK_PACKAGE_VENDOR "The Internet")
-#set(CPACK_PACKAGE_CONTACT "bakerb845@gmail.com")
-#set(CPACK_PACKAGE_LICENSE "MIT")
-#set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A real-time seismic signals processing library")
-#set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-#set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-#set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_NAME "rtseis")
+set(CPACK_PACKAGE_VENDOR "UUSS")
+set(CPACK_PACKAGE_CONTACT "bbaker@seis.utah.edu")
+set(CPACK_PACKAGE_LICENSE "MIT")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A real-time seismic signals processing library")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 ##IF (WIN32 AND NOT UNIX)
 #
 ##ELSE(WIN32 AND NOT UNIX)

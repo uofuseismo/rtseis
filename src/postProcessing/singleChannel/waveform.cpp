@@ -1219,7 +1219,7 @@ void Waveform<T>::normalizeMinMax(const std::pair<double, double> targetRange)
         return;
     }
     // Normalize the data
-    RTSeis::Utilities::Normalization::MinMax minMax;
+    RTSeis::Utilities::Normalization::MinMax<T> minMax;
     const T *x = pImpl->getInputDataPointer();
     minMax.initialize(len, x, targetRange); // Throws
     pImpl->resizeOutputData(len);
