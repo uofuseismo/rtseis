@@ -8,12 +8,38 @@
 #include "private/throw.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/log.h"
+#include "private/convolve.hpp"
 
-using namespace::RTSeis::Utilities::Math;
+using namespace  RTSeis::Utilities::Math;
 
 
-static IppEnum getImplementation(const Convolve::Implementation implementation);
-static std::pair<int,int> computeTrimIndices(const Convolve::Mode mode, const int n1, const int n2);
+//static IppEnum getImplementation(const Convolve::Implementation implementation);
+//static std::pair<int,int> computeTrimIndices(const Convolve::Mode mode, const int n1, const int n2);
+
+namespace
+{
+/*!
+ * @brief Utility function to get appropriate IPP implementaiton.
+ * @param[in] implementatation  The desired implementation.
+ * @result The corresponding IPP implementation enum.
+ * @ingroup rtseis_utils_convolve
+ */
+IppEnum getImplementation(const Convolve::Implementation implementation)
+{
+    if (implementation == Convolve::Implementation::FFT)
+    {
+        return ippAlgFFT;
+    }
+    else if (implementation == Convolve::Implementation::DIRECT)
+    {
+        return ippAlgDirect;
+    }
+    else
+    {
+        return ippAlgAuto;
+    }
+}
+}
 
 std::vector<double>
 Convolve::convolve(const std::vector<double> &a,
@@ -334,6 +360,7 @@ int Convolve::computeConvolutionLength(const int n1, const int n2,
  * @result The corresponding IPP implementation enum.
  * @ingroup rtseis_utils_convolve
  */
+/*
 IppEnum getImplementation(const Convolve::Implementation implementation)
 {
     if (implementation == Convolve::Implementation::FFT)
@@ -349,6 +376,7 @@ IppEnum getImplementation(const Convolve::Implementation implementation)
         return ippAlgAuto;
     }   
 }
+*/
 
 /*!
  * @brief Computes the start and stop indices of the convolution or correlation.
@@ -360,6 +388,7 @@ IppEnum getImplementation(const Convolve::Implementation implementation)
  * @result The start and stop index from which to copy the full convolution.
  * @ingroup rtseis_utils_convolve
  */
+/*
 std::pair<int,int> computeTrimIndices(const Convolve::Mode mode,
                                       const int n1,  const int n2)
 {
@@ -406,3 +435,4 @@ std::pair<int,int> computeTrimIndices(const Convolve::Mode mode,
     std::pair<int,int> result(nLeft, nRight);
     return result;
 }
+*/
