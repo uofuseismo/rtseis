@@ -28,15 +28,32 @@ public:
     DFTRealToComplex();
     /*!
      * @brief Copy constructor.
-     * @param[in] dftr2c  Class from which to initialize from.
+     * @param[in] dftr2c  DFT class from which to initialize this class.
      */
     DFTRealToComplex(const DFTRealToComplex &dftr2c); 
+    /*! @brief Move constructor.
+     * @param[in,out] dftr2c  DFT class from which to initialize this class. 
+     *                        On exit, dftr2c's behavior is undefined.
+     */
+    DFTRealToComplex(DFTRealToComplex &&dftr2c) noexcept;
+    /*! @} */
+
+    /*! @name Operators
+     * @{
+     */
     /*!
      * @brief Copy operator.
-     * @param[in] dftr2c  DFTRealToComplex class to copy.
+     * @param[in] dftr2c  DFTRealToComplex class to copy to this.
      * @result A deep copy of the input class.
      */
     DFTRealToComplex& operator=(const DFTRealToComplex &dftr2c);
+    /*!
+     * @brief Move operator.
+     * @param[in,out] dftr2c  The DFTRealToComplex class whose memory will be
+     *                        to this.  On exit, dftr2c's behavior is undefined.
+     * @result The memory from dftr2c moved to this.
+     */
+    DFTRealToComplex& operator=(DFTRealToComplex &&dftr2c) noexcept; 
     /*! @} */
 
     /*! @name Destructors
