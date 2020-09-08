@@ -37,11 +37,11 @@ public:
      * @param[in] dt   The sampling period in seconds.
      * @throws std::invalid_argument if dt is not positive.
      */
-    virtual void setSamplingPeriod(const double dt) = 0;
+    //virtual void setSamplingPeriod(const double dt) = 0;
     /*!
      * @brief Gets the sampling period (seconds).
      */
-    virtual double getSamplingPeriod() const noexcept = 0;
+    //virtual double getSamplingPeriod() const noexcept = 0;
     /*!
      * @result The e-folding time.
      * @param[in] s   The wavelet's scale in seconds/radian.
@@ -59,24 +59,24 @@ public:
     //[[nodiscard]] virtual double getWavelength(double s) const = 0;
     /*!
      * @brief Evaluates the wavelet at the given scales.
-     * @param[in] n   The number of scales.
-     * @param[in] s   The scale in seconds.
-     * @param[in] k   The wavenumbers at which to evaluate the wavelets.
-     * @param[out] w  The daughter wavelet evaluated at the scales.
-     *                This is an array whose dimension is [n]. 
+     * @param[in] n   The number of samples at which to evaluate the wavelet.
+     * @param[in] s   The dimensionless scale at which to evalute the
+     *                wavelet.
+     * @param[out] daughter  The daughter wavelet evaluated at the n samples.
+     *                       This is an array whose dimension is [n]. 
      * @result The wavelet daughter evaluted at the given scales. 
      * @throws std::runtime_error if the class is not initialized.
      */  
     virtual void evaluate(int n, double scale,
-                          const double k[], std::complex<double> *w[]) const = 0;
+                          std::complex<double> *daughter[]) const = 0;
     virtual void evaluate(int n, float scale,
-                          const float k[], std::complex<float> *w[]) const = 0;
+                          std::complex<float> *daughter[]) const = 0;
     /*!
      * @result The cone of influence scalar for the given nominal wavenumber.
      *         The cone of influence at a time is given by scalar*time
      *         where time is measured from window's start.
      */
-    virtual double computeConeOfInfluenceScalar() const noexcept = 0;
+    //virtual double computeConeOfInfluenceScalar() const noexcept = 0;
 };
 }
 #endif

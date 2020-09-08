@@ -23,6 +23,8 @@
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
+#include "rtseis/utilities/transforms/wavelets/morlet.hpp"
+#include "rtseis/utilities/transforms/continuousWavelet.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 #include <gtest/gtest.h>
 
@@ -1057,6 +1059,12 @@ TEST(UtilitiesTransforms, Welch)
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
 }
+
+TEST(UtilitiesTransforms, CWT)
+{
+
+}
+
 //============================================================================//
 //                              Private functions                             //
 //============================================================================//

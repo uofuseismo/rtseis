@@ -5,9 +5,9 @@
 #include <exception>
 #include <vector>
 #include <ipps.h>
-#include "rtseis/utilities/transforms/wavelets/derivativeOfGaussian.hpp"
+//#include "rtseis/utilities/transforms/wavelets/derivativeOfGaussian.hpp"
 #include "rtseis/utilities/transforms/wavelets/morlet.hpp"
-#include "rtseis/utilities/transforms/wavelets/ricker.hpp"
+//#include "rtseis/utilities/transforms/wavelets/ricker.hpp"
 #include <gtest/gtest.h>
 
 namespace
@@ -15,6 +15,7 @@ namespace
 
 using namespace RTSeis::Utilities::Transforms;
 
+/*
 TEST(UtilitiesTransformsWavelets, dog)
 {
     int order = 3;
@@ -85,7 +86,9 @@ TEST(UtilitiesTransformsWavelets, dog)
     EXPECT_NEAR(dogCopy.computeConeOfInfluenceScalar(),
                 2.3748208234474517, 1.e-14);
 }
+*/
 
+/*
 TEST(UtilitiesTransformsWavelets, ricker)
 {
     std::vector<std::complex<double>> refWavelet1({ 
@@ -153,15 +156,83 @@ TEST(UtilitiesTransformsWavelets, ricker)
                 2.8099258924162904, 1.e-14);
 
 }
+*/
 
 TEST(UtilitiesTransformsWavelets, morlet)
 {
+    // from scipy.signal import morlet2
+    // morlet2(25, s = 4, w=8)
+    const std::vector<std::complex<double>> wRef({
+       std::complex<double> (0.0017697280686101674,+0.0037781866095412506),
+       std::complex<double> (-0.008560310412059065,+7.577292337759703e-05),
+       std::complex<double> (0.006733793359028701, -0.015064579509298948),
+       std::complex<double> (0.019729992282475312, +0.02243919076717591),
+       std::complex<double> (-0.04867485704121378, +0.014633231402493077),
+       std::complex<double> (0.011105953507896739, -0.08045826426135003),
+       std::complex<double> (0.10288890284209785,  +0.06542293042124467),
+       std::complex<double> (-0.14427429382906345, +0.093541800528087),
+       std::complex<double> (-0.03314350159009988, -0.22536624742831696),
+       std::complex<double> (0.27219834187680325,  +0.07921140277081239),
+       std::complex<double> (-0.21663905522635993, +0.25082930872918496),
+       std::complex<double> (-0.1514807445857645,  -0.3309914654364319),
+       std::complex<double> (0.37556277223247125,  +0),
+       std::complex<double> (-0.1514807445857645,  +0.3309914654364319),
+       std::complex<double> (-0.21663905522635993, -0.25082930872918496),
+       std::complex<double> (0.27219834187680325,  -0.07921140277081239),
+       std::complex<double> (-0.03314350159009988, +0.22536624742831696),
+       std::complex<double> (-0.14427429382906345, -0.093541800528087),
+       std::complex<double> (0.10288890284209785,  -0.06542293042124467),
+       std::complex<double> (0.011105953507896739, +0.08045826426135003),
+       std::complex<double> (-0.04867485704121378, -0.014633231402493077),
+       std::complex<double> (0.019729992282475312, -0.02243919076717591),
+       std::complex<double> (0.006733793359028701, +0.015064579509298948),
+       std::complex<double> (-0.008560310412059065,-7.577292337759703e-05),
+       std::complex<double> (0.0017697280686101674,-0.0037781866095412506)
+    });
+    // morlet2(8, s = 4, w=8)
+    const std::vector<std::complex<double>> wRef8({
+       std::complex<double> (0.19308308170504393,-0.16826186205005536),
+       std::complex<double> (0.08763161987861195,+0.2962400060213443),
+       std::complex<double> (-0.3465597394124581,-0.04940089282196845),
+       std::complex<double> (0.201338315852819,-0.31356584837818885),
+       std::complex<double> (0.201338315852819,+0.31356584837818885),
+       std::complex<double> (-0.3465597394124581,+0.04940089282196845),
+       std::complex<double> (0.08763161987861195,-0.2962400060213443),
+       std::complex<double> (0.19308308170504393,+0.16826186205005536)
+    });
     Wavelets::Morlet morlet;
-    double k0 = 8;
-    EXPECT_NO_THROW(morlet.setWaveNumber(k0));
-    EXPECT_NEAR(morlet.getWaveNumber(), k0, 1.e-14);
-    EXPECT_NEAR(morlet.computeConeOfInfluenceScalar(),
-                0.55108811163349181, 1.e-14);
+    double omega0 = 8;
+    const double scale = 4;
+    EXPECT_NO_THROW(morlet.setParameter(omega0));
+    EXPECT_NEAR(morlet.getParameter(), omega0, 1.e-14);
+    //EXPECT_NEAR(morlet.computeConeOfInfluenceScalar(),
+    //            0.55108811163349181, 1.e-14);
+    auto n = static_cast<int> (wRef.size());
+    std::vector<std::complex<double>> daughter(n);
+    auto dPtr = daughter.data();
+    morlet.evaluate(n, scale, &dPtr);
+    double error = 0;
+    for (int i=0; i<n; ++i)
+    {
+        // Normalize to conform with scipy
+        auto xnorm = 1./std::sqrt(scale);
+        error = std::max(error, std::abs(xnorm*daughter[i] - wRef[i]));
+    }
+    EXPECT_NEAR(error, 0, 1.e-14);
+    
+    Wavelets::Morlet mcopy(morlet);
+    EXPECT_NEAR(mcopy.getParameter(), omega0, 1.e-14); 
+    n = static_cast<int> (wRef8.size());
+    dPtr = daughter.data();
+    mcopy.evaluate(n, scale, &dPtr);
+    error = 0;
+    for (int i=0; i<n; ++i)
+    {
+        // Normalize to conform with scipy
+        auto xnorm = 1./std::sqrt(scale);
+        error = std::max(error, std::abs(xnorm*daughter[i] - wRef8[i]));
+    }
+    EXPECT_NEAR(error, 0, 1.e-14);
 }
 
 

@@ -9,13 +9,14 @@ using namespace RTSeis::Utilities::Transforms::Wavelets;
 namespace
 {
 
+/*
 template<typename T>
-void evaluateMorlet(const int n,
-                    const T waveNumber,
-                    const T dt,
-                    const T scale,
-                    const T k[],
-                    std::complex<T> *daughter)
+void evaluateFrequencyDomain(const int n,
+                             const T waveNumber,
+                             const T dt,
+                             const T scale,
+                             const T k[],
+                             std::complex<T> *daughter)
 {
     const std::complex<T> czero(0, 0);
     const T half = 0.5;
@@ -33,14 +34,38 @@ void evaluateMorlet(const int n,
         daughter[i] = std::complex<T> (norm*expnt, zero);
     }
 }
+*/
+
+template<typename T>
+void evaluateTimeDomain(const int n, 
+                        const T omega0, // Dimensionless wavenumber: omega_0
+                        const T scale,  // Frequency (Hz)
+                        std::complex<T> *daughter)
+{
+    const T half = 0.5;
+    //auto norm = static_cast<T> (1./(std::sqrt(scale*std::sqrt(M_PI))));
+    const T norm = 0.7511255444649425;
+    T xhalf = half*static_cast<T> (n - 1);
+    #pragma omp simd
+    for (int i=0; i<n; ++i)
+    {
+        T xs = (static_cast<T> (i) - xhalf)/scale;
+        T damp = norm*std::exp(-half*(xs*xs));
+        T carg = omega0*xs;
+        // \pi^{-1/4} \exp(i \omega_0 \eta) 
+        auto dr = damp*std::cos(carg);
+        auto di = damp*std::sin(carg);
+        daughter[i] = std::complex<T> (dr, di);
+    }
+}
 
 }
 
 class Morlet::MorletImpl
 {
 public:
-    double mSamplingPeriod = 1; // Sampling period (seconds)
-    double mWaveNumber = 6;  // Waveumber (Angular frequency?)
+    //double mSamplingPeriod = 1; // Sampling period (seconds)
+    double mOmega0 = 6; // Morlet wavelet parameter
 };
 
 /// C'tor
@@ -88,23 +113,24 @@ Morlet& Morlet::operator=(Morlet &&morlet) noexcept
 /// Destructor
 Morlet::~Morlet() = default;
 
-/// WaveNumber
-void Morlet::setWaveNumber(double k)
+/// Wavelet parameter 
+void Morlet::setParameter(double omega0)
 {
-    if (k <= 0)
+    if (omega0 <= 0)
     {
-        throw std::invalid_argument("wavenumber = " + std::to_string(k)
+        throw std::invalid_argument("omega0 = " + std::to_string(omega0)
                                   + " must be positive");
     }
-    pImpl->mWaveNumber = k;
+    pImpl->mOmega0 = omega0;
 }
 
-double Morlet::getWaveNumber() const noexcept
+double Morlet::getParameter() const noexcept
 {
-    return pImpl->mWaveNumber;
+    return pImpl->mOmega0;
 }
 
 /// Sampling period
+/*
 void Morlet::setSamplingPeriod(const double dt)
 {
     if (dt <= 0)
@@ -119,7 +145,9 @@ double Morlet::getSamplingPeriod() const noexcept
 {
     return pImpl->mSamplingPeriod;
 }
+*/
 
+/*
 /// Evaluate
 void Morlet::evaluate(const int n, const double scale,
                       const double k[],
@@ -130,7 +158,7 @@ void Morlet::evaluate(const int n, const double scale,
     if (scale < 0){throw std::invalid_argument("The scale must be positive");}
     if (k == nullptr){throw std::invalid_argument("k is NULL");}
     if (daughter == nullptr){throw std::invalid_argument("daughter is NULL");}
-    evaluateMorlet(n,
+    evaluateFrequencyDomain(n,
                    getWaveNumber(),
                    getSamplingPeriod(),
                    scale,
@@ -146,11 +174,11 @@ void Morlet::evaluate(const int n, const float scale,
     if (scale < 0){throw std::invalid_argument("The scale must be positive");}
     if (k == nullptr){throw std::invalid_argument("k is NULL");}
     if (daughter == nullptr){throw std::invalid_argument("daughter is NULL");}
-    evaluateMorlet(n,
-                   static_cast<float> (getWaveNumber()),
-                   static_cast<float> (getSamplingPeriod()),
-                   scale,
-                   k, daughter);
+    evaluateFrequencyDomain(n,
+                            static_cast<float> (getWaveNumber()),
+                            static_cast<float> (getSamplingPeriod()),
+                            scale,
+                            k, daughter);
 }
 
 /// Cone of influence
@@ -163,9 +191,31 @@ double Morlet::computeConeOfInfluenceScalar() const noexcept
     auto coiScalar = fourierFactor*sqrt2i;
     return coiScalar;
 }
+*/
+
+void Morlet::evaluate(const int n, const double scale,
+                      std::complex<double> *daughterIn[]) const
+{
+    if (n < 1){return;}
+    if (scale <= 0){throw std::invalid_argument("scale must be positive");}
+    auto daughter = *daughterIn;
+    if (daughter == nullptr){throw std::invalid_argument("daughter is NULL");}
+    auto omega0 = getParameter();
+    evaluateTimeDomain(n, omega0, scale, daughter);
+}
+
+void Morlet::evaluate(const int n, const float scale,
+                      std::complex<float> *daughterIn[]) const
+{
+    if (n < 1){return;}
+    if (scale <= 0){throw std::invalid_argument("scale must be positive");}
+    auto daughter = *daughterIn;
+    if (daughter == nullptr){throw std::invalid_argument("daughter is NULL");}
+
+}
 
 /// Clear
 void Morlet::clear() noexcept
 {
-    pImpl->mSamplingPeriod = 1;
+    pImpl->mOmega0 = 6;
 } 
