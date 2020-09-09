@@ -211,7 +211,8 @@ void Morlet::evaluate(const int n, const float scale,
     if (scale <= 0){throw std::invalid_argument("scale must be positive");}
     auto daughter = *daughterIn;
     if (daughter == nullptr){throw std::invalid_argument("daughter is NULL");}
-
+    auto omega0 = static_cast<float> (getParameter());
+    evaluateTimeDomain(n, omega0, scale, daughter);
 }
 
 /// Clear

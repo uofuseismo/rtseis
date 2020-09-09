@@ -29,25 +29,40 @@ void realToComplex(const int n, const T *x, std::complex<T> *z)
     }
 }
 
-void convolve(const int n, const double x[],
-              const int nWidths, const double widths[],
+/*
+void convolve(const int n, const float x[],
+              const int nWidths, const float widths[],
               const Wavelets::IContinuousWavelet &wavelet,
-              std::complex<double> *cwt,
+              std::complex<float> *cwt,
               const bool direct = false)
 {
-    MKL_INT mode = VSL_CONV_MODE_FFT;
+}
+*/
+
+int convolve(const int n, const double x[],
+             const int nWidths, const double widths[],
+             const Wavelets::IContinuousWavelet &wavelet,
+             std::complex<double> *cwt,
+             const int option,
+             const double dt)
+{
+    // Get correlation length
     auto indices = computeTrimIndices(Convolve::Mode::SAME, n, n);
-    auto nCopy = Convolve::computeConvolutionLength(n, n, Convolve::Mode::SAME);
+    auto nCopy = Convolve::computeConvolutionLength(n, n, Convolve::Mode::SAME); 
+    auto i1 = indices.first;
 #ifndef NDEBUG
     auto i2 = indices.second;
     assert(i2 - i1 == nCopy);
 #endif
-    if (direct){mode = VSL_CONV_MODE_DIRECT;}
-    int ierr = 0;
+    // Figure out the convolution mode
+    MKL_INT mode = VSL_CONV_MODE_AUTO;
+    if (option == 1){mode = VSL_CONV_MODE_DIRECT;}
+    if (option == 2){mode = VSL_CONV_MODE_FFT;}
     // Set space on each thread
+    int ierr = 0;
     #pragma omp parallel \
      shared(cwt) \
-     firstprivate(indices, nCopy, mode) \
+     firstprivate(i1, nCopy, mode) \
      reduction(+ : ierr) \
      default(none)
     {
@@ -83,14 +98,29 @@ void convolve(const int n, const double x[],
     {
         // Evaluate the wavelet transform
         auto wPtr = reinterpret_cast<std::complex<double> *> (y);
-        //wavelet.evaluate(n, widths[i], &wPtr);
+        wavelet.evaluate(n, widths[i], &wPtr);
+        // Formula is signal times conjugate of wavelet
+        #pragma omp simd
+        for (int j=0; j<n; ++j){wPtr[j] = std::conj(wPtr[j]);}
         // Convolve
-        vslzConvExecX1D(task, y, yStride, z, zStride); 
-        // Only take the center component of the convolution
+        status = vslzConvExecX1D(task, y, yStride, z, zStride); 
+        if (status != VSL_STATUS_OK)
+        {
+             std::cerr << "Convolution failed" << std::endl;
+             ierr = 1;
+        }
+        // Only take the center component of the convolution and normalize
+        // by 1/sqrt(a).  Note, part of dt should be baked into sqrt(a) through
+        // the 1/sqrt(a) = sqrt(2*f*pi*dt/w0).  However, we're still off by 
+        // a factor of sqrt(dt) which we additionally contribute here.
+        auto xnorm = std::sqrt(dt)/std::sqrt(widths[i]);
         auto offset = i*n;
         auto zPtr = reinterpret_cast<std::complex<double> *> (z);
-        std::copy(zPtr + indices.first, zPtr + indices.second,
-                  cwt + offset);
+        #pragma omp simd 
+        for (int j=0; j<nCopy; ++j)
+        {
+             cwt[offset+j] = xnorm*zPtr[i1 + j];
+        }
     }
     // Clean up
     vslConvDeleteTask(&task);
@@ -98,6 +128,11 @@ void convolve(const int n, const double x[],
     MKL_free(y);
     MKL_free(z);
     } // End parallel 
+    if (ierr != 0)
+    {
+        std::cerr << "Errors detected during convolution" << std::endl;
+    }
+    return ierr;
 }
 
 }
@@ -106,19 +141,7 @@ template<class T>
 class ContinuousWavelet<T>::ContinuousWaveletImpl
 {
 public:
-    ~ContinuousWaveletImpl()
-    {
-        clear();
-    } 
-    void clear() noexcept
-    {
-        if (mHaveTask){vslConvDeleteTask(&mTask);}
-        mHaveTask = false;
-    }
-    void inverseTransform( )
-    {
-
-    }
+/*
     VSLConvTaskPtr mTask;
     bool mHaveTask = false;
     /// Forward transform signal
@@ -129,14 +152,17 @@ public:
     fftw_plan  mDoublePlan;
     /// FFTw single precision plan
     fftwf_plan mFloatPlan;
+*/
+    /// Result
+    std::vector<std::complex<T>> mCWT;
+    /// Scales
+    std::vector<T> mScales;
     /// Wavelet
     std::unique_ptr<Wavelets::IContinuousWavelet> mWavelet;
     /// Sampling period in seconds
-    double mSamplingPeriod = 1;
+    double mSamplingRate = 1;
     /// Number of samples
     int mSamples = 0;
-    /// Number of DFT samples
-    int mDFTSamples = 0; 
     /// Initialized?
     bool mInitialized = false;
 };
@@ -156,6 +182,40 @@ ContinuousWavelet<T>::ContinuousWavelet() :
 template<class T>
 ContinuousWavelet<T>::~ContinuousWavelet() = default;
 
+template<class T>
+void ContinuousWavelet<T>::clear() noexcept
+{
+    pImpl->mCWT.clear();
+    pImpl->mScales.clear();
+    pImpl->mWavelet = nullptr;
+    pImpl->mSamplingRate = 1;
+    pImpl->mSamples = 0;
+    pImpl->mInitialized = false;
+}
+
+/// Initialize
+template<class T>
+void ContinuousWavelet<T>::initialize(
+    const int nSamples, const int nScales, const double scales[],
+    const Wavelets::IContinuousWavelet &wavelet, const double samplingRate)
+{
+    clear();
+    if (nSamples < 1){throw std::invalid_argument("nSamples must be positive");}
+    if (nScales < 1){throw std::invalid_argument("nScales must be positive");}
+    if (scales == nullptr){throw std::invalid_argument("scales is NULL");}
+    if (samplingRate <= 0)
+    {
+        throw std::invalid_argument("Sampling rate must be positive");
+    }
+    pImpl->mCWT.resize(nSamples*nScales, std::complex<T> (0, 0));
+    pImpl->mWavelet = wavelet.clone();
+    pImpl->mScales.resize(nScales);
+    std::copy(scales, scales + nScales, pImpl->mScales.data());
+    pImpl->mSamplingRate = samplingRate;
+    pImpl->mSamples = nSamples;
+    pImpl->mInitialized = true;
+}
+
 /// Transform
 template<class T>
 void ContinuousWavelet<T>::transform(const int n, const T x[])
@@ -168,32 +228,19 @@ void ContinuousWavelet<T>::transform(const int n, const T x[])
                                   + std::to_string(nSamples));
     }
     if (x == nullptr){throw std::invalid_argument("x is NULL");}
-    // Demean the signal
-    std::vector<T> xDemeaned(n);
-    auto xPtr = xDemeaned.data();
-    T xmean;
-    RTSeis::Utilities::FilterImplementations::removeMean(n, x, &xPtr, &xmean);
-    // Fourier transform the signal
-    auto lendft = pImpl->mDFTR2C.getTransformLength();
-    std::vector<std::complex<T>> xDFT(lendft);
-    auto xDFTPtr = xDFT.data();
-    pImpl->mDFTR2C.forwardTransform(n, xDemeaned.data(), lendft, &xDFTPtr);
-    // Wavenumber array (Eqn 5)
-    auto dOmega = 2*M_PI/(pImpl->mDFTSamples*pImpl->mSamplingPeriod);
-    std::vector<double> kWave(pImpl->mDFTSamples, 0);
-    for (int i=1; i<pImpl->mDFTSamples/2+1; ++i)
+    // Do the work
+    auto nScales = getNumberOfScales();
+    auto cwt = pImpl->mCWT.data();
+    auto dt = static_cast<T> (1./getSamplingRate());
+    int option = 0; // Let algorithm decide
+    auto error = convolve(nSamples, x, 
+                          nScales, pImpl->mScales.data(),
+                          *pImpl->mWavelet, cwt, option, dt);
+    if (error != 0)
     {
-        kWave[i] = i*dOmega;
+        throw std::runtime_error("Error computing CWT");
     }
-  
 
-    // Main wavelet loop on scales
-    std::vector<std::complex<T>> w(kWave.size(), std::complex<T> (0, 0));
-    for (const auto &scale : pImpl->mScales)
-    {
-        auto wPtr = w.data();
-        //pImpl->mWavelet->evaluate(kWave.size(), scale, kWave.data(), &wPtr);
-    }
 }
 
 /// Number of samples
@@ -202,6 +249,22 @@ int ContinuousWavelet<T>::getNumberOfSamples() const
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mSamples;
+}
+
+/// Number of scales
+template<class T>
+int ContinuousWavelet<T>::getNumberOfScales() const
+{
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    return static_cast<int> (pImpl->mScales.size());
+}
+
+/// Sampling rate
+template<class T>
+double ContinuousWavelet<T>::getSamplingRate() const
+{
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    return pImpl->mSamplingRate;
 }
 
 /// Initialized?

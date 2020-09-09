@@ -74,19 +74,27 @@ public:
 
     /*!
      * @brief Initializes the 
-     * @param[in] nSamples        The number of samples in the signal to
-     *                            transform.
-     * @param[in] wavelet         The wavelet to evaluate.
-     *                            \c wavelet.isInitialized() must be true. 
-     * @param[in] scales          The scales at which to evaluate the CWT.
-     * @param[in] samplingPeriod  The signal sampling rate in seconds.
-     *                            Note, this will override the sampling period
-     *                            set in wavelet.
-     * @throws std::invalid_argument nSamples is less than 1, samplingPeriod is not positive,
+     * @param[in] nSamples   The number of samples in the signal to transform.
+     * @param[in] nScales    The number of scales.  This is the scaleogram 
+     *                       equivalent to the number of frequencies in an
+     *                       spectrogram.
+     * @param[in] scales     These are the dimensionless scales.  This is an 
+     *                       array of dimension [n].  Note, if you are using
+     *                       the Morlet wavelet then scale, s, is related to
+     *                       frequency, f in Hz, by
+     *                       \f$ s = \frac{\omega_0 f_s}{2 \pi f} \f$
+     *                       where \f$ f_s \f$ is the sampling rate in Hz.
+     * @param[in] wavelet    The wavelet to evaluate.  This must have an 
+     *                       evaluate method which, for a given scale,
+     *                       returns the wavelet's nSamples time domain samples.
+     * @param[in] samplingRate  The sampling rate in Hz.
+     * @throws std::invalid_argument nSamples is less than 1,
+     *         nScales is less than 1, samplingPeriod is not positive,
+     *         or any scale is not positive.
      */
     void initialize(int nSamples,
+                    int nScales, const double scales[],
                     const Wavelets::IContinuousWavelet &wavelet,
-                    std::vector<double> &scales,
                     double samplingRate = 1);
 
     /*!
@@ -100,11 +108,16 @@ public:
      */
     [[nodiscard]] int getNumberOfScales() const;
     /*!
+     * @result The sampling rate in Hz.
+     * @throws std::runtime_error if \c isInitialized() is false.
+     */
+    [[nodiscard]] double getSamplingRate() const;
+    /*!
      * @result The e-folding factors (in Hz) at each sample.
      *         This has dimension [\c getNumberOfSamples].
      * @throws std::runtime_error if the class is not initialized.
      */
-    [[nodiscard]] std::vector<T> getConeOfInfluence() const;
+    //[[nodiscard]] std::vector<T> getConeOfInfluence() const;
     /*!
      * @result True indicates that the class is initialized.
      */

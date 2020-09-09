@@ -37,6 +37,8 @@ void readEnvelopeFile(const std::string &fileName,
                       std::vector<double> *x,
                       std::vector<double> *upRef,
                       std::vector<double> *loRef);
+void readTextFile(const std::string &fileName,
+                  std::vector<double> *x);
 int fft(const int nx, const std::complex<double> *x, 
         const int ny, std::complex<double> *y);
 int ifft(const int nx, const std::complex<double> *x, 
@@ -1062,7 +1064,36 @@ TEST(UtilitiesTransforms, Welch)
 
 TEST(UtilitiesTransforms, CWT)
 {
-
+    // Read the signal
+    std::vector<double> x;
+    readTextFile("data/zwave_cwt_example.txt", &x);
+    // Create morlet wavelet
+    double omega0 = 6;
+    Wavelets::Morlet morlet;
+    EXPECT_NO_THROW(morlet.setParameter(omega0));
+    // Initialize cwt
+    ContinuousWavelet<double> cwt;
+    int nSamples = 1008;
+    EXPECT_EQ(nSamples, static_cast<int> (x.size()));
+    double samplingRate = 100;
+    double fmin = 1;
+    double fmax = 40;
+    int nf = 200;
+    auto nScales = nf;
+    double df = (fmax - fmin)/static_cast<int> (nf - 1);
+    std::vector<double> scales(nScales, 0);
+    for (int i=0; i<nf; ++i)
+    {
+        auto f = fmin + i*df;
+        scales[i] = (omega0*samplingRate)/(2*M_PI*f); // Inversely propto f
+    }
+    //morlet.initialize(nSamples, morlet, samplingRate); 
+    EXPECT_NO_THROW(cwt.initialize(nSamples, nScales, scales.data(),
+                                   morlet, samplingRate));
+    EXPECT_TRUE(cwt.isInitialized());
+    EXPECT_EQ(cwt.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(cwt.getNumberOfScales(), nScales);
+    EXPECT_NO_THROW(cwt.transform(x.size(), x.data()));
 }
 
 //============================================================================//
@@ -1098,6 +1129,25 @@ void readEnvelopeFile(const std::string &fileName,
     auto npts = static_cast<int> (x->size());
     assert(npts == 4000);
 #endif
+}
+
+// Reads a text file
+void readTextFile(const std::string &fileName,
+                  std::vector<double> *x)
+{
+    // Load the data
+    x->resize(0);
+    x->reserve(5000);
+    std::ifstream textFile(fileName);
+    std::string line;
+    auto i = 0;
+    while (std::getline(textFile, line))
+    {
+        double xVal;
+        std::sscanf(line.c_str(), "%lf\n", &xVal);
+        x->push_back(xVal);
+        i = i + 1;
+    }
 }
 
 int fft(const int nx, const std::complex<double> *x,
