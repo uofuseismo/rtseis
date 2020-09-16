@@ -31,15 +31,23 @@ std::pair<int,int> computeTrimIndices(
     // Valid
     else if (mode == RTSeis::Utilities::Math::Convolve::Mode::VALID)
     {
-        lc = std::max(n1,n2) - std::min(n1,n2) + 1;
+        lc = std::max(n1, n2) - std::min(n1, n2) + 1;
         if (n2 > n1)
         {
             nLeft = n1/2 + 1;
+            if (n1%2 == 0 && n2%2 == 0 && n1 != n2)
+            {
+                nLeft = std::max(0, nLeft - 1);
+            }
             nRight = nLeft + lc;
         }
         else
         {
             nLeft = n2/2 + 1;
+            if (n1%2 == 0 && n2%2 == 0 && n1 != n2)
+            {
+                nLeft = std::max(0, nLeft - 1);
+            }
             nRight = nLeft + lc;
         }
     }
@@ -50,11 +58,13 @@ std::pair<int,int> computeTrimIndices(
         if (n1 < n2)
         {
             nLeft = n1/2;
+            if (n1%2 == 0 && n2%2 == 0){nLeft = std::max(0, nLeft - 1);}
             nRight = nLeft + lc;
         }
         else
         {
             nLeft = n2/2;
+            if (n1%2 == 0 && n2%2 == 0){nLeft = std::max(0, nLeft - 1);}
             nRight = nLeft + lc;
         }
     }

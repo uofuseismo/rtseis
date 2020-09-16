@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -142,6 +143,48 @@ TEST(UtilitiesConvolve, Convolve)
         EXPECT_EQ(static_cast<int> (c.size()), 6);
         ippsNormDiff_Inf_64f(c.data(), r2.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
+        //--------------------------------------------------------------------//
+        //                   Do some extra tests on SAME and VALID            //
+        //--------------------------------------------------------------------//
+        std::vector<double> aSame4({1, 1, 1, 1});
+        std::vector<double> bSame2({1, 1});
+        std::vector<double> cSameRef1({1, 2, 2, 2});
+        // Test 13 - Same, Even but unequal sizes
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(aSame4, bSame2,
+                                   Convolve::Mode::SAME, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 4);
+        ippsNormDiff_Inf_64f(c.data(), cSameRef1.data(), c.size(), &emax);
+        EXPECT_LE(emax, 1.e-10);
+        // Test 14 - Same, Even but unequal sizes reversed
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(bSame2, aSame4,
+                                   Convolve::Mode::SAME, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 4);
+        ippsNormDiff_Inf_64f(c.data(), cSameRef1.data(), c.size(), &emax);
+        EXPECT_LE(emax, 1.e-10);
+
+        // Test 15 - Same, Even and equal size
+        std::vector<double> bSame4({1, 1, 1, 1});
+        std::vector<double> cSameRef2({2, 3, 4, 3});
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(aSame4, bSame4,
+                                   Convolve::Mode::SAME, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 4);
+        ippsNormDiff_Inf_64f(c.data(), cSameRef2.data(), c.size(), &emax);
+        EXPECT_LE(emax, 1.e-10);
+        // Test 16 - Valid - Even and unequal sizes
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(bSame2, aSame4,
+                                   Convolve::Mode::VALID, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 3);
+        for (int i=0; i<3; ++i){EXPECT_NEAR(c[i], 2.0, 1.e-10);}
+        // Test 17 - Valid - Equal sizes 
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(bSame4, aSame4,
+                                   Convolve::Mode::VALID, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 1);
+        EXPECT_NEAR(c[0], 4, 1.e-10);
     }
 }
 //============================================================================//
