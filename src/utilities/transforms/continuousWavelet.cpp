@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <complex> // Put this before fftw
@@ -63,7 +64,7 @@ int convolve(const int n, const int ldx, const double x[],
     // Set space on each thread
     int ierr = 0;
     #pragma omp parallel \
-     shared(cwt) \
+     shared(cwt, x, std::cerr, wavelet, widths) \
      firstprivate(i1, nCopy, mode) \
      reduction(+ : ierr) \
      default(none)
