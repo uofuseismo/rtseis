@@ -72,6 +72,9 @@ std::pair<int,int> computeTrimIndices(
     {
         throw std::invalid_argument("Invalid trim type");
     }
+#ifndef NDEBUG
+    assert(nRight - nLeft == lc);
+#endif
     std::pair<int,int> result(nLeft, nRight);
     return result;
 }
