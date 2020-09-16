@@ -1,6 +1,9 @@
 #ifndef RTSEIS_PRIVATE_CONVOLVE_HPP
 #define RTSEIS_PRIVATE_CONVOLVE_HPP
 #include <cmath>
+#ifndef NDEBUG
+    #include <cassert>
+#endif
 namespace
 {
 
