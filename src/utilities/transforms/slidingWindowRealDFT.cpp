@@ -5,7 +5,8 @@
 #include <complex> // Put this before fftw
 #include <fftw/fftw3.h>
 #include <ipps.h>
-#include <private/throw.hpp>
+#include "private/throw.hpp"
+#include "private/pad.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
@@ -13,6 +14,7 @@
 
 using namespace RTSeis::Utilities::Transforms;
 
+/*
 namespace
 {
 
@@ -37,6 +39,7 @@ inline int padLength32f(const int n, const int alignment=64)
 }
 
 }
+*/
 
 class SlidingWindowRealDFT::SlidingWindowRealDFTImpl
 {
