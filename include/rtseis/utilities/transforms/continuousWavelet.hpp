@@ -10,7 +10,12 @@ class IContinuousWavelet;
 }
 /*!
  * @class ContinuousWavelet continuousWavelet.hpp "include/rtseis/utilities/transforms/continuousWavelet.hpp"
- * @brief Computes the continuous wavelet transform of a signal.  
+ * @brief Computes the continuous wavelet transform of a signal
+ *        \f[
+ *           \frac{1}{\sqrt{|a|}} 
+ *           \int s(t) \psi^* \left ( \frac{t}{a} \right ) \, dt
+ *        \f]
+ *        where \f$ a \f$ is the scale.
  * @ingroup rtseis_utils_transforms
  * @sa Hilbert
  */
@@ -72,6 +77,9 @@ public:
     void clear() noexcept;
     /*! @} */
 
+    /*! @name Initialization
+     * @{
+     */
     /*!
      * @brief Initializes the 
      * @param[in] nSamples   The number of samples in the signal to transform.
@@ -122,8 +130,76 @@ public:
      * @result True indicates that the class is initialized.
      */
     [[nodiscard]] bool isInitialized() const noexcept;
+    /*! @} */
 
+    /*! @name Transform
+     * @{
+     */
+    /*!
+     * @brief Computes the continuous wavelet transform of the given signal. 
+     * @param[in] n   The number of samples in x.  This must match
+     *                \c getNumberOfSamples().
+     * @param[in] x   The signal to transform.  This is an array whose dimension
+     *                is [n].
+     * @throws std::invalid_argument if n is the wrong size or x is NULL.
+     * @throws std::runtime_error if \c isInitialized() is false. 
+     */
     void transform(int n, const T x[]);
+    /*! @} */
+
+    /*! @name Results
+     * @{
+     */
+    /*!
+     * @result True indicates the continuous wavelet transform has been
+     *         computed.
+     */
+    [[nodiscard]] bool haveTransform() const noexcept;
+    /*!
+     * @brief Gets the CWT.  
+     * @param[in] nSamples  The number of samples in the CWT. 
+     *                      This must match \c getNumberOfSamples().
+     * @param[in] nScales   The number of scales in the CWT.
+     *                      This must match \c getNumberOfScales().
+     * @param[out] cwt      The CWT.  This is an [nScales x nSamples] matrix
+     *                      stored in row major order.  cwt[0,:] corresponds
+     *                      to the first scale.
+     * @throws std::runtime_error if \c haveTransform() is false.
+     * @throws std::invalid_argument if nSamples or nScales is the wrong size
+     *         or cwt is NULL.
+     */
+    void getTransform(int nSamples, int nScales, std::complex<T> *cwt[]) const;
+    /*!
+     * @brief Gets the amplitude of the complex CWT.
+     * @param[in] nSamples  The number of samples in the CWT.
+     *                      This must match \c getNumberOfSamples().
+     * @param[in] nScales   The number of scales in the CWT.
+     *                      This must match \c getNumberOfScales().
+     * @param[out] amplitude   The amplitude of the CWT.  This is an
+     *                         [nScales x nSamples] matrix stored in row major
+     *                         order.
+     * @throws std::runtime_error if \c haveTransform() is false.
+     * @throws std::invalid_argument if nSamples or nScales is the wrong size
+     *         or amplitude is NULL.
+     * @sa \c getTransform()
+     */
+    void getAmplitudeTransform(int nSamples, int nScales, T *amplitude[]) const;
+    /*!
+     * @brief Gets the phase of the complex CWT.
+     * @param[in] nSamples  The number of samples in the CWT.
+     *                      This must match \c getNumberOfSamples().
+     * @param[in] nScales   The number of scales in the CWT.
+     *                      This must match \c getNumberOfScales().
+     * @param[out] phase    The phase angle of the CWT in radians.  This is an
+     *                      [nScales x nSamples] matrix stored in row major
+     *                      order.
+     * @throws std::runtime_error if \c haveTransform() is false.
+     * @throws std::invalid_argument if nSamples or nScales is the wrong size
+     *         or phase is NULL.
+     * @sa \c getTransform()
+     */
+    void getPhaseTransform(int nSamples, int nScales, T *phase[]) const;
+    /*! @} */
 private:
     class ContinuousWaveletImpl;
     std::unique_ptr<ContinuousWaveletImpl> pImpl;

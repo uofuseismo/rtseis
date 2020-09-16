@@ -45,6 +45,10 @@ int ifft(const int nx, const std::complex<double> *x,
          const int ny, std::complex<double> *y);
 int rfft(const int nx, double x[], const int n,
          const int ny, std::complex<double> y[]);
+void readCWTFile(const std::string &fileName,
+                 std::vector<double> *times,
+                 std::vector<double> *freqs,
+                 std::vector<std::complex<double>> *x);
 //int irfft(const int nx, const std::complex<double> x[],
 //          const int n, double y[]);
 
@@ -1064,27 +1068,35 @@ TEST(UtilitiesTransforms, Welch)
 
 TEST(UtilitiesTransforms, CWT)
 {
-    // Read the signal
+    // Read the signal and answer
     std::vector<double> x;
     readTextFile("data/zwave_cwt_example.txt", &x);
+//std::fill(x.begin(), x.end(), 0);
+//x[0] = 1;
+    std::vector<double> times, freqs;
+    std::vector<std::complex<double>> cwtRef;
+    //std::cout << "FIX ME" << std::endl;
+    //readCWTFile("../testing/data/z_cwt_amp_phase.txt", &times, &freqs, &cwtRef);
+    readCWTFile("data/z_cwt_amp_phase.txt", &times, &freqs, &cwtRef);
     // Create morlet wavelet
     double omega0 = 6;
     Wavelets::Morlet morlet;
+    morlet.disableNormalization();
     EXPECT_NO_THROW(morlet.setParameter(omega0));
     // Initialize cwt
     ContinuousWavelet<double> cwt;
     int nSamples = 1008;
     EXPECT_EQ(nSamples, static_cast<int> (x.size()));
     double samplingRate = 100;
-    double fmin = 1;
-    double fmax = 40;
-    int nf = 200;
+    //double fmin = 1;
+    //double fmax = 20;
+    int nf = static_cast<int> (freqs.size());
     auto nScales = nf;
-    double df = (fmax - fmin)/static_cast<int> (nf - 1);
+    //double df = (fmax - fmin)/static_cast<int> (nf - 1);
     std::vector<double> scales(nScales, 0);
     for (int i=0; i<nf; ++i)
     {
-        auto f = fmin + i*df;
+        auto f = freqs[i]; //fmin + i*df;
         scales[i] = (omega0*samplingRate)/(2*M_PI*f); // Inversely propto f
     }
     //morlet.initialize(nSamples, morlet, samplingRate); 
@@ -1093,7 +1105,30 @@ TEST(UtilitiesTransforms, CWT)
     EXPECT_TRUE(cwt.isInitialized());
     EXPECT_EQ(cwt.getNumberOfSamples(), nSamples);
     EXPECT_EQ(cwt.getNumberOfScales(), nScales);
+    EXPECT_NEAR(cwt.getSamplingRate(), samplingRate, 1.e-14);
     EXPECT_NO_THROW(cwt.transform(x.size(), x.data()));
+    EXPECT_TRUE(cwt.haveTransform());
+    std::vector<std::complex<double>> cwtOut(nSamples*nScales);
+    auto cwtPtr = cwtOut.data();
+    EXPECT_NO_THROW(cwt.getTransform(nSamples, nScales, &cwtPtr));
+    // Rescale the transform.  The library will mutliply by dt.  However,
+    // to be consistent with obspy the reference solution multiplied by 
+    // sqrt(dt) which means I need to multiply by 1/sqrt(dt) = sqrt(df)
+    double xscale = std::sqrt(samplingRate);
+    double emax = 0;
+    for (int i=0; i<static_cast<int> (cwtOut.size()); ++i)
+    {
+        cwtOut[i] = xscale*cwtOut[i];
+        emax = std::max(emax, std::abs(cwtRef[i] - cwtOut[i]));
+    }
+    EXPECT_NEAR(emax, 0, 1.e-6);
+/*
+    for (int i=0; i<nSamples; ++i)
+    {
+        int idx = 1*nSamples + i;
+        std::cout << idx << " " << cwtRef[idx] << " " << cwtOut[idx] << std::endl;
+    }
+*/
 }
 
 //============================================================================//
@@ -1115,7 +1150,7 @@ void readEnvelopeFile(const std::string &fileName,
     loRef->reserve(4000);
     std::ifstream textFile(fileName);
     std::string line;
-    auto i = 0;
+    int i = 0;
     while (std::getline(textFile, line))
     {
         double xVal, uVal, lVal;
@@ -1125,10 +1160,13 @@ void readEnvelopeFile(const std::string &fileName,
         loRef->push_back(lVal);
         i = i + 1;
     }
-#ifdef DEBUG
+    textFile.close();
+/*
+#ifndef NDEBUG
     auto npts = static_cast<int> (x->size());
     assert(npts == 4000);
 #endif
+*/
 }
 
 // Reads a text file
@@ -1140,7 +1178,7 @@ void readTextFile(const std::string &fileName,
     x->reserve(5000);
     std::ifstream textFile(fileName);
     std::string line;
-    auto i = 0;
+    int i = 0;
     while (std::getline(textFile, line))
     {
         double xVal;
@@ -1148,6 +1186,44 @@ void readTextFile(const std::string &fileName,
         x->push_back(xVal);
         i = i + 1;
     }
+    textFile.close();
+}
+
+// Reads the CWT file
+void readCWTFile(const std::string &fileName,
+                 std::vector<double> *times,
+                 std::vector<double> *freqs,
+                 std::vector<std::complex<double>> *x)
+{
+    int nSamples = 1008;
+    int nFreqs = 25;
+    times->reserve(nSamples);
+    freqs->reserve(nFreqs);
+    x->reserve(nSamples*nFreqs);
+    std::ifstream textFile(fileName);
+    std::string line;
+    for (int j=0; j<nFreqs; ++j)
+    {
+        for (int i=0; i<nSamples; ++i)
+        {
+            if (!std::getline(textFile, line))
+            {
+                throw std::runtime_error("Failed to read CWT");
+            }
+            double t, f, a, p;
+            std::sscanf(line.c_str(), "%lf %lf %lf %lf\n", &t, &f, &a, &p);
+            auto re = a*std::cos(p);
+            auto im = a*std::sin(p); 
+            x->push_back(std::complex<double> (re, im)); 
+            if (i == 0){freqs->push_back(f);}
+            if (j == 0){times->push_back(t);}
+        }
+        if (!std::getline(textFile, line))
+        {
+            throw std::runtime_error("Failed to read CWT");
+        }
+    }
+    textFile.close();     
 }
 
 int fft(const int nx, const std::complex<double> *x,

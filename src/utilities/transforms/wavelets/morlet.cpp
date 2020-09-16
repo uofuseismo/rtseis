@@ -40,11 +40,14 @@ template<typename T>
 void evaluateTimeDomain(const int n, 
                         const T omega0, // Dimensionless wavenumber: omega_0
                         const T scale,  // Frequency (Hz)
-                        std::complex<T> *daughter)
+                        std::complex<T> *daughter,
+                        const bool normalize)
 {
+    const T one = 1;
     const T half = 0.5;
     //auto norm = static_cast<T> (1./(std::sqrt(scale*std::sqrt(M_PI))));
-    const T norm = 0.7511255444649425;
+    T norm = 0.7511255444649425;
+    if (normalize){norm = one/std::sqrt(std::abs(scale))*norm;}
     T xhalf = half*static_cast<T> (n - 1);
     #pragma omp simd
     for (int i=0; i<n; ++i)
@@ -66,6 +69,7 @@ class Morlet::MorletImpl
 public:
     //double mSamplingPeriod = 1; // Sampling period (seconds)
     double mOmega0 = 6; // Morlet wavelet parameter
+    bool mNormalize = false; // Divide by 1/sqrt(s)
 };
 
 /// C'tor
@@ -127,6 +131,22 @@ void Morlet::setParameter(double omega0)
 double Morlet::getParameter() const noexcept
 {
     return pImpl->mOmega0;
+}
+
+/// Normalization
+void Morlet::enableNormalization() noexcept
+{
+    pImpl->mNormalize = true;
+}
+
+void Morlet::disableNormalization() noexcept
+{
+    pImpl->mNormalize = false;
+}
+
+bool Morlet::normalize() const noexcept
+{
+    return pImpl->mNormalize;
 }
 
 /// Sampling period
@@ -201,7 +221,8 @@ void Morlet::evaluate(const int n, const double scale,
     auto daughter = *daughterIn;
     if (daughter == nullptr){throw std::invalid_argument("daughter is NULL");}
     auto omega0 = getParameter();
-    evaluateTimeDomain(n, omega0, scale, daughter);
+    auto lnorm = normalize();
+    evaluateTimeDomain(n, omega0, scale, daughter, lnorm);
 }
 
 void Morlet::evaluate(const int n, const float scale,
@@ -212,11 +233,13 @@ void Morlet::evaluate(const int n, const float scale,
     auto daughter = *daughterIn;
     if (daughter == nullptr){throw std::invalid_argument("daughter is NULL");}
     auto omega0 = static_cast<float> (getParameter());
-    evaluateTimeDomain(n, omega0, scale, daughter);
+    auto lnorm = normalize();
+    evaluateTimeDomain(n, omega0, scale, daughter, lnorm);
 }
 
 /// Clear
 void Morlet::clear() noexcept
 {
     pImpl->mOmega0 = 6;
+    pImpl->mNormalize = false;
 } 

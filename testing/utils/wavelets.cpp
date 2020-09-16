@@ -205,6 +205,7 @@ TEST(UtilitiesTransformsWavelets, morlet)
     const double scale = 4;
     EXPECT_NO_THROW(morlet.setParameter(omega0));
     EXPECT_NEAR(morlet.getParameter(), omega0, 1.e-14);
+    morlet.enableNormalization();
     //EXPECT_NEAR(morlet.computeConeOfInfluenceScalar(),
     //            0.55108811163349181, 1.e-14);
     auto n = static_cast<int> (wRef.size());
@@ -215,13 +216,15 @@ TEST(UtilitiesTransformsWavelets, morlet)
     for (int i=0; i<n; ++i)
     {
         // Normalize to conform with scipy
-        auto xnorm = 1./std::sqrt(scale);
-        error = std::max(error, std::abs(xnorm*daughter[i] - wRef[i]));
+        //auto xnorm = 1./std::sqrt(scale);
+        error = std::max(error, std::abs(daughter[i] - wRef[i]));
     }
     EXPECT_NEAR(error, 0, 1.e-14);
     
     Wavelets::Morlet mcopy(morlet);
     EXPECT_NEAR(mcopy.getParameter(), omega0, 1.e-14); 
+    EXPECT_TRUE(mcopy.normalize());
+    mcopy.disableNormalization();
     n = static_cast<int> (wRef8.size());
     dPtr = daughter.data();
     mcopy.evaluate(n, scale, &dPtr);

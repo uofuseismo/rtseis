@@ -8,6 +8,7 @@ namespace
 /// @param[in] alignment      The bit alignment.  This should be a power of 2.
 /// @result The padded length of a row of a row major matrix so
 ///         that the next row begins on the desired alignment.
+[[maybe_unused]]
 int padLength(const int n,
                      const size_t precisionSize = sizeof(double),
                      const int alignment=64)
@@ -25,6 +26,7 @@ int padLength(const int n,
 ///                       multiple of 8.
 /// @result The padded length of a row of a row major matrix so
 ///         that the next row begins on the desired alignment. 
+[[maybe_unused]]
 int padLength64f(const int n, const int alignment=64)
 {
     return padLength(n, sizeof(double), alignment);
@@ -35,6 +37,7 @@ int padLength64f(const int n, const int alignment=64)
 ///                       multiple of 8.
 /// @result The padded length of a row of a row major matrix so
 ///         that the next row begins on the desired alignment.
+[[maybe_unused]]
 int padLength32f(const int n, const int alignment=64)
 {
     return padLength(n, sizeof(float), alignment);

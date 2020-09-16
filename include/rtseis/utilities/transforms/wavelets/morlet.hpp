@@ -86,7 +86,22 @@ public:
     /*!
      * @result The nominal wavenumber.
      */
-    double getParameter() const noexcept;
+    [[nodiscard]] double getParameter() const noexcept;
+
+    /*!
+     * @brief This will normalize the wavelet by \f \frac{1}{\sqrt{s}} \f$.
+     *        where \f$ s \f$ is the scale.
+     */
+    void enableNormalization() noexcept;
+    /*!
+     * @brief Will not normalize the wavelet by the \f$ \frac{1}{\sqrt{s}} \f$. 
+     */
+    void disableNormalization() noexcept;
+    /*!
+     * @result True indicates that the wavelet will be normalized by 
+     *         \f$ \frac{1}{\sqrt{s}} \f$.
+     */
+    [[nodiscard]] bool normalize() const noexcept;
     /*! @} */
 
     /*!
@@ -103,7 +118,13 @@ public:
      *               e^{-\frac{1}{2} \left ( \frac{x}{s} \right )^2}
      *        \f ]  
      *        where \f$ x \f$ is the sample and \f$ \omega_0 \f$ is the 
-     *        center frequency (nominally 6).
+     *        center frequency (nominally 6) or
+     *        \f [
+     *           W = \frac{1}{\sqrt{s}} \pi^{-1/4}
+     *               e^{i \frac{\omega_0 x}{2 s} }
+     *               e^{-\frac{1}{2} \left ( \frac{x}{s} \right )^2}
+     *        \f ]
+     *        if \c normalize() is true.
      * @param[in] n       The number of samples at which to evalute the wavelet.
      * @param[in] scale   Nominally, this is the unitless scale.
      *                    However, you may find it more convenient to note that
