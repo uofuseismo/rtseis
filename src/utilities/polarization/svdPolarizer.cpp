@@ -6,7 +6,7 @@
 #include <ipps.h>
 #include <mkl.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include "rtseis/log.h"
 #include "private/throw.hpp"
 #include "rtseis/utilities/polarization/svdPolarizer.hpp"

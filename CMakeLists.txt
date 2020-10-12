@@ -88,6 +88,7 @@ SET(UTILS_SRCS
     #src/utilities/logger.cpp
     src/utilities/verbosity.cpp
     src/utilities/characteristicFunction/classicSTALTA.cpp
+    src/utilities/characteristicFunction/carlSTALTA.cpp
     src/utilities/deconvolution/instrumentResponse.cpp
     src/utilities/filterDesign/filterDesigner.cpp
     src/utilities/filterDesign/response.cpp

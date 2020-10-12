@@ -3,7 +3,6 @@
 #include <memory>
 #include <complex>
 #include "rtseis/utilities/transforms/enums.hpp"
-#include "rtseis/enums.h"
 
 namespace RTSeis::Utilities::Transforms 
 {

@@ -1,6 +1,6 @@
 #ifndef RTSEIS_UTILITIES_POLARIZATION_SVDPOLARIZER_HPP
 #define RTSEIS_UTILITIES_POLARIZATION_SVDPOLARIZER_HPP
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include <memory>
 namespace RTSeis::Utilities::Polarization
 {

@@ -1,7 +1,7 @@
 #ifndef RTSEIS_POSTPROCESSING_SC_TAPER
 #define RTSEIS_POSTPROCESSING_SC_TAPER 1
 #include <memory>
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 
 namespace RTSeis
 {

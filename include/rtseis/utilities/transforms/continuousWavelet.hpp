@@ -1,7 +1,6 @@
 #ifndef RTSEIS_UTILITIES_TRANSFORMS_CONTINUOUSWAVELET_HPP
 #define RTSEIS_UTILITIES_TRANSFORMS_CONTINUOUSWAVELET_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
 namespace RTSeis::Utilities::Transforms
 {
 namespace Wavelets

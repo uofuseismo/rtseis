@@ -6,7 +6,7 @@
 #include <vector>
 #include <mkl_lapacke.h>
 #include <ipps.h>
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include "private/throw.hpp"
 #include "rtseis/utilities/polarization/eigenPolarizer.hpp"
 #include "rtseis/utilities/rotate/utilities.hpp"

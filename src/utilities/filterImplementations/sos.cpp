@@ -2,7 +2,7 @@
 #include <cmath>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
 #include "rtseis/log.h"

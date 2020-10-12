@@ -2,7 +2,7 @@
 #define RTSEIS_UTILITIES_TRANSFORMS_SLIDINGWINDOWREALDFTPARAMETERS_HPP 1
 #include <memory>
 #include <vector>
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include "rtseis/utilities/transforms/enums.hpp"
 
 namespace RTSeis::Utilities::Transforms

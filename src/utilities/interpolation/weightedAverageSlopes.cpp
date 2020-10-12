@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cfloat>
 #include <mkl.h>
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "private/throw.hpp"

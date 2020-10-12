@@ -1,7 +1,7 @@
 #ifndef RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_DOWNSAMPLE_HPP
 #define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_DOWNSAMPLE_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 
 namespace RTSeis::Utilities::FilterImplementations
 {

@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <climits>
 #include <ipps.h>
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"

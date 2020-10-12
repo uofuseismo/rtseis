@@ -1,5 +1,5 @@
-#ifndef RTSEIS_ENUMS_H__
-#define RTSEIS_ENUMS_H__ 1
+#ifndef RTSEIS_ENUMS_HPP
+#define RTSEIS_ENUMS_HPP 1
 
 enum rtseisPrecision_enum
 {

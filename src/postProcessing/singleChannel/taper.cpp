@@ -10,7 +10,7 @@
 #include "private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 
 using namespace RTSeis::PostProcessing::SingleChannel;
 

@@ -1,8 +1,7 @@
 #ifndef RTSEIS_POSTPROCESSING_SC_DETREND
 #define RTSEIS_POSTPROCESSING_SC_DETREND 1
 #include <memory>
-#include "rtseis/enums.h"
-
+#include "rtseis/enums.hpp"
 namespace RTSeis
 {
 namespace PostProcessing

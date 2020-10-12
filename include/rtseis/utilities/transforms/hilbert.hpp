@@ -2,7 +2,6 @@
 #define RTSEIS_UTILITIES_TRANSFORMS_HILBERT_HPP 1
 #include <memory>
 #include <complex>
-#include "rtseis/enums.h"
 #include "rtseis/utilities/transforms/enums.hpp"
 
 namespace RTSeis::Utilities::Transforms

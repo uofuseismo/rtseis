@@ -1,8 +1,6 @@
 #ifndef RTSEIS_UTILITIES_TRANSFORMS_ENVELOPE_HPP
 #define RTSEIS_UTILITIES_TRANSFORMS_ENVELOPE_HPP 1
 #include <memory>
-#include "rtseis/enums.h"
-
 namespace RTSeis
 {
 namespace Utilities

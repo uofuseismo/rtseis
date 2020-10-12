@@ -1,6 +1,6 @@
 #ifndef RTSEIS_UTILITIES_POLARIZATION_EIGENPOLARIZER_HPP
 #define RTSEIS_UTILITIES_POLARIZATION_EIGENPOLARIZER_HPP
-#include "rtseis/enums.h"
+#include "rtseis/enums.hpp"
 #include <memory>
 namespace RTSeis::Utilities::Polarization
 {
