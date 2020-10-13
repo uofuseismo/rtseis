@@ -1,5 +1,6 @@
 #include <vector>
 #include <cmath>
+#include <cstring>
 #include <string>
 #include <algorithm>
 #include <ipps.h>
