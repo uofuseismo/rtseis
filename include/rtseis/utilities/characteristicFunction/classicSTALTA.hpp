@@ -11,8 +11,8 @@ namespace PostProcessing
  *        short-term-average to long-term-average
  *        (STA/LTA):
  *        \f[
- *          y[n] = \frac{\sum_{i=0}{N_{sta}-1} x[n-i]^2  }
- *                      {\sum_{i=0}{N_{lta}-1} x[n-i]^2 }
+ *          y[n] = \frac{\sum_{i=0}^{N_{sta}-1} x[n-i]^2  }
+ *                      {\sum_{i=0}^{N_{lta}-1} x[n-i]^2 }
  *        \f] 
  *       where \f$ N_{sta} \f$ is the number of samples in the short term
  *       average window and \f$ N_{lta} \f$ is the number of samples in the
@@ -143,8 +143,8 @@ namespace RealTime
  *        short-term-average to long-term-average
  *        (STA/LTA):
  *        \f[
- *          y[n] = \frac{\sum_{i=0}{N_{sta}-1} x[n-i]^2  }
- *                      {\sum_{i=0}{N_{lta}-1} x[n-i]^2 }
+ *          y[n] = \frac{\sum_{i=0}^{N_{sta}-1} x[n-i]^2  }
+ *                      {\sum_{i=0}^{N_{lta}-1} x[n-i]^2 }
  *        \f] 
  *       where \f$ N_{sta} \f$ is the number of samples in the short term
  *       average window and \f$ N_{lta} \f$ is the number of samples in the

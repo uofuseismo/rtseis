@@ -196,7 +196,7 @@ public:
         mInitialized = false;
         // Note: Do not touch mMode 
     }
-    /// Denominator initial condition length
+    /// Numerator and Denominator initial condition length
     std::pair<int, int> getInitialConditionLength() const
     {
         int nNum = mSTAFilter.getInitialConditionLength();
