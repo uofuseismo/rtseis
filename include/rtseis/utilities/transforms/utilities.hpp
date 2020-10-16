@@ -27,8 +27,8 @@ namespace RTSeis::Utilities::Transforms::DFTUtilities
  * @throws std::invalid_argument if the arguments are wrong.
  * @ingroup rtseis_utils_transforms_utils
  */
-std::vector<double> unwrap(const std::vector<double> &z,
-                           const double tol = M_PI);
+template<typename T>
+std::vector<T> unwrap(const std::vector<T> &z, T tol = M_PI);
 /*! 
  * @brief Unwraps the phase, p, by changing the absolute jumps
  *        greater than \f$ \pi \f$ to their \f$ 2 \pi \f$ 
@@ -44,8 +44,8 @@ std::vector<double> unwrap(const std::vector<double> &z,
  * @throws std::invalid_argument if the arguments are incorrect.
  * @ingroup rtseis_utils_transforms_utils
  */
-void unwrap(const int n, const double p[], double *q[], 
-            const double tol = M_PI);
+template<typename T>
+void unwrap(int n, const T p[], T *q[],  T tol = M_PI);
 /*! @} */
 
 /*! @name Phase
@@ -68,8 +68,9 @@ void unwrap(const int n, const double p[], double *q[],
  * @throws std::invalid_argument if the arguments are incorrect.
  * @ingroup rtseis_utils_transforms_utils
  */
-std::vector<double> phase(const std::vector<std::complex<double>> &z,
-                          const bool lwantDeg = false);
+template<typename T>
+std::vector<T> phase(const std::vector<std::complex<T>> &z,
+                     bool lwantDeg = false);
 /*!
  * @brief Computes the phase angle, i.e., the angle between the
  *        imaginary and real parts of z 
@@ -89,8 +90,9 @@ std::vector<double> phase(const std::vector<std::complex<double>> &z,
  * @throws std::invalid_argument if hte arguments are incorrect.
  * @ingroup rtseis_utils_transforms_utils
  */
-void phase(const int n, const std::complex<double> z[], double *phi[],
-           const bool lwantDeg = false);
+template<typename T>
+void phase(int n, const std::complex<T> z[], T *phi[],
+           bool lwantDeg = false);
 /*! @} */
 
 /*! @name Real to Complex DFT Frequencies
@@ -107,8 +109,9 @@ void phase(const int n, const std::complex<double> z[], double *phi[],
  * @throws std::invalid_argument if nSamples or samplingPeriod is not positive.
  * @sa DFTRealToComplex
  */
-std::vector<double>
-realToComplexDFTFrequencies(const int nSamples, const double samplingPeriod);
+template<typename T>
+std::vector<T>
+realToComplexDFTFrequencies(const int nSamples, const T samplingPeriod);
 /*!
  * @brief Computes the DFT sampling frequencies corresponding to the DFT of a
  *        a real time domain signal.
@@ -126,10 +129,11 @@ realToComplexDFTFrequencies(const int nSamples, const double samplingPeriod);
  *         lengthFreqs is too small, or freqs is NULL.
  * @sa DFTRealToComplex
  */
-void realToComplexDFTFrequencies(const int nSamples,
-                                 const double samplingPeriod,
-                                 const int lengthFreqs,
-                                 double *freqs[]);
+template<typename T>
+void realToComplexDFTFrequencies(int nSamples,
+                                 const T samplingPeriod,
+                                 int lengthFreqs,
+                                 T *freqs[]);
 /*! @} */
 
 
@@ -168,8 +172,7 @@ template<class T> std::vector<T> fftShift(const std::vector<T> &x);
  *                      element.  This is an array whose dimension is [n]. 
  * @throws std::invalid_argument if nSamples is not positive or x or y is NULL.
  */
-template<typename T>
-void fftShift(const int nSamples, const T x[], T *y[]);
+template<typename T> void fftShift(int nSamples, const T x[], T *y[]);
 /*! } */
 
 }
