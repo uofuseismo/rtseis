@@ -3,7 +3,6 @@
 #include <cmath>
 #include <complex>
 #include <vector>
-
 /*!
  * @defgroup rtseis_utils_transforms_utils Utility Functions
  * @brief Utility routines accompanying the DFT.
@@ -11,6 +10,34 @@
  */
 namespace RTSeis::Utilities::Transforms::DFTUtilities
 {
+/*! @name Magnitude 
+ * @{
+ */
+/*!
+ * @brief Computes the magnitude
+ *        \f$ M = \sqrt{ \Re \{z\}^2 + \Im \{z\}^2 } \f$.
+ * @param[in] z  The array of complex numbers of which to compute the magnitude.
+ * @result The magnitude of the complex valued array z.
+ *         This will have dimension [z.size()].
+ * @ingroup rtseis_utils_transforms_utils
+ */
+template<typename T>
+std::vector<T> magnitude(const std::vector<std::complex<T>> &z) noexcept;
+/*!
+ * @brief Computes the the magnitude
+ *        \f$ M = \sqrt{ \Re \{z\}^2 + \Im \{z\}^2 } \f$.
+ * @param[in] n   Number of points in array z.
+ * @param[in] z   The array of complex numbers of which to compute magnitude.
+ *                This is an array of dimension [n].
+ * @param[out] magnitude  The magnitude of each complex z.
+ *                        This is an array whose dimension is [n].
+ * @throws std::invalid_argument z or magnitude is NULL.
+ * @ingroup rtseis_utils_transforms_utils
+ */
+template<typename T>
+void magnitude(int n, const std::complex<T> z[], T *magnitude[]);
+/*! @} */
+
 /*! @name Unwrap
  * @{
  */
@@ -24,7 +51,7 @@ namespace RTSeis::Utilities::Transforms::DFTUtilities
  *                 must be positive.  The default is \f$ \pi \f$.
  * @result The unwrapped phase angles in radians.  This will have
  *         dimension [p.size()].
- * @throws std::invalid_argument if the arguments are wrong.
+ * @throws std::invalid_argument if tol is not positive.
  * @ingroup rtseis_utils_transforms_utils
  */
 template<typename T>
@@ -41,7 +68,7 @@ std::vector<T> unwrap(const std::vector<T> &z, T tol = M_PI);
  *                 has dimension [n].
  * @param[in] tol  The jump tolerance specified in radians which
  *                 must be positive.  The default is \f$ \pi \f$.
- * @throws std::invalid_argument if the arguments are incorrect.
+ * @throws std::invalid_argument if tol is not positive or p or q are NULL.
  * @ingroup rtseis_utils_transforms_utils
  */
 template<typename T>
@@ -65,12 +92,11 @@ void unwrap(int n, const T p[], T *q[],  T tol = M_PI);
  *         This will have dimension [z.size()].  By default the phase angle
  *         is in radians though, if lwantDeg is true, the phase angle
  *         would then be given in degrees.
- * @throws std::invalid_argument if the arguments are incorrect.
  * @ingroup rtseis_utils_transforms_utils
  */
 template<typename T>
 std::vector<T> phase(const std::vector<std::complex<T>> &z,
-                     bool lwantDeg = false);
+                     bool lwantDeg = false) noexcept;
 /*!
  * @brief Computes the phase angle, i.e., the angle between the
  *        imaginary and real parts of z 
@@ -87,7 +113,7 @@ std::vector<T> phase(const std::vector<std::complex<T>> &z,
  * @param[in] lwantDeg  If true then phi is given in degrees.  
  *                      If false then phi is given in radians.
  *                      This is the default.
- * @throws std::invalid_argument if hte arguments are incorrect.
+ * @throws std::invalid_argument if z or phi is NULL.
  * @ingroup rtseis_utils_transforms_utils
  */
 template<typename T>

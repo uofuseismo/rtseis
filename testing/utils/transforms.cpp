@@ -183,6 +183,31 @@ TEST(UtilitiesTransforms, Unwrap)
 }
 
 //int transforms_phase_test(void)
+TEST(UtilitiesTransforms, Magnitude)
+{
+    const int n = 7;
+    std::vector<double> tr({1.4142135623730951,
+                            2.23606797749979,
+                            3.1622776601683795,
+                            4.123105625617661,
+                            0.0,
+                            1.0,
+                            1.0});
+    std::vector<std::complex<double>> z(n);
+    z[0] = std::complex<double> (1, -1);
+    z[1] = std::complex<double> (2, +1);
+    z[2] = std::complex<double> (3, -1);
+    z[3] = std::complex<double> (4, +1);
+    z[4] = std::complex<double> (0, +0);
+    z[5] = std::complex<double> (0, +1);
+    z[6] = std::complex<double> (1, +0);
+    std::vector<double> mag(n);
+    EXPECT_NO_THROW(mag = DFTUtilities::magnitude(z));
+    double emax;
+    ippsNormDiff_Inf_64f(mag.data(), tr.data(), n, &emax);
+    ASSERT_LE(emax, 1.e-10);
+} 
+
 TEST(UtilitiesTransforms, Phase)
 {
     const int n = 7;

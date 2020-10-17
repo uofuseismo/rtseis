@@ -44,9 +44,47 @@ float getMin(const int n, const float p[])
 
 }
 
+/// Magnitude
+template<typename T>
+std::vector<T>
+DFTUtilities::magnitude(const std::vector<std::complex<T>> &z) noexcept
+{
+    std::vector<T> mag;
+    if (z.empty()){return mag;}
+    mag.resize(z.size());
+    auto magPtr = mag.data();
+    magnitude(static_cast<int> (z.size()), z.data(), &magPtr);
+    return mag;
+}
+
+template<>
+void DFTUtilities::magnitude(const int n, const std::complex<double> *z,
+                             double *magIn[])
+{
+    if (n < 1){return;}
+    auto mag = *magIn;
+    if (z == nullptr){throw std::invalid_argument("z is NULL");}
+    if (mag == nullptr){throw std::invalid_argument("magnitude is NULL");}
+    auto pSrc = reinterpret_cast<const Ipp64fc *> (z);
+    ippsMagnitude_64fc(pSrc, mag, n);
+}
+
+template<>
+void DFTUtilities::magnitude(const int n, const std::complex<float> *z,
+                             float *magIn[])
+{
+    if (n < 1){return;}
+    auto mag = *magIn;
+    if (z == nullptr){throw std::invalid_argument("z is NULL");}
+    if (mag == nullptr){throw std::invalid_argument("magnitude is NULL");}
+    auto pSrc = reinterpret_cast<const Ipp32fc *> (z);
+    ippsMagnitude_32fc(pSrc, mag, n);
+}
+
+/// Unwrap phase angle
 template<typename T>
 std::vector<T> DFTUtilities::unwrap(const std::vector<T> &p,
-                                    const T tol) 
+                                    const T tol)
 {
     std::vector<T> q;
     if (p.empty()){return q;}
@@ -103,7 +141,7 @@ void DFTUtilities::unwrap(const int n, const T p[], T *qIn[],
 template<typename T>
 std::vector<T>
 DFTUtilities::phase(const std::vector<std::complex<T>> &z, 
-                    const bool lwantDeg)
+                    const bool lwantDeg) noexcept
 {
     std::vector<T> phi;
     if (z.empty()){return phi;} 
@@ -302,6 +340,13 @@ void RTSeis::Utilities::Transforms::DFTUtilities::fftShift(
 ///--------------------------------------------------------------------------///
 ///                           Instantiate Templates                          ///
 ///--------------------------------------------------------------------------///
+template
+std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::magnitude(
+    const std::vector<std::complex<double>> &z);
+template
+std::vector<float> RTSeis::Utilities::Transforms::DFTUtilities::magnitude(
+    const std::vector<std::complex<float>> &z);
+
 template
 std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::unwrap(
     const std::vector<double> &z, const double tol);
