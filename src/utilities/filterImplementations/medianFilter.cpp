@@ -1,15 +1,13 @@
-#include <cstdio>
+#include <iostream>
 #include <ipps.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.hpp"
-#include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/medianFilter.hpp"
-#include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-template<class T>
-class MedianFilter<T>::MedianFilterImpl
+template<class T, RTSeis::ProcessingMode E>
+class MedianFilter<T, E>::MedianFilterImpl
 {
 public:
     /// Default constructor.
@@ -23,13 +21,13 @@ public:
     MedianFilterImpl& operator=(const MedianFilterImpl &median)
     {
         if (&median == this){return *this;}
-        if (!median.linit_){return *this;}
+        if (!median.mInitialized){return *this;}
         // Reinitialize the filter
-        int ierr = initialize(median.maskSize_, median.mode_,
-                              median.precision_);
+        int ierr = initialize(median.maskSize_);
         if (ierr != 0)
         {
-            RTSEIS_ERRMSG("%s", "Failed to initialize");
+            std::cerr << "Failed to initialize median filter in impl c'tor"
+                      << std::endl;
             clear();
             return *this;
         }
@@ -41,7 +39,7 @@ public:
         if (nwork_ > 0)
         {
             ippsCopy_64f(median.zi_, zi_, nwork_);
-            if (median.precision_ == RTSeis::Precision::DOUBLE)
+            if (mPrecision == RTSeis::Precision::DOUBLE)
             {
                 ippsCopy_64f(median.dlysrc64_, dlysrc64_, nwork_);
                 ippsCopy_64f(median.dlydst64_, dlydst64_, nwork_);
@@ -77,14 +75,10 @@ public:
         zi_ = nullptr;
         maskSize_ = 0;
         bufferSize_ = 0;
-        mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-        precision_ = RTSeis::Precision::DOUBLE;
-        linit_ = false;
+        mInitialized = false;
     }
     /// Initializes the filter
-    int initialize(const int n,
-                   const RTSeis::ProcessingMode mode,
-                   const RTSeis::Precision precision)
+    int initialize(const int n)
     {
         clear();
         maskSize_ = n; // This better be odd by this point
@@ -92,14 +86,14 @@ public:
         nwork_ = std::max(8, maskSize_ - 1);
         zi_ = ippsMalloc_64f(nwork_);
         ippsZero_64f(zi_, nwork_);
-        if (precision == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             IppStatus status = ippsFilterMedianGetBufferSize(maskSize_,
                                                              ipp64f,
                                                              &bufferSize_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error getting buffer size");
+                std::cerr << "Error getting double buffer size" << std::endl;
                 clear();
                 return -1;
             }
@@ -117,7 +111,7 @@ public:
                                                              &bufferSize_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error getting buffer size");
+                std::cerr << "Error getting float buffer size" << std::endl;
                 clear();
                 return -1;
             }
@@ -128,24 +122,17 @@ public:
             pBuf_ = ippsMalloc_8u(bufferSize_);
             ippsZero_8u(pBuf_, bufferSize_);
         }
-        precision_ = precision;
-        mode_ = mode;
-        linit_ = true;
+        mInitialized = true;
         return 0;
-    }
-    /// Determines if the module is initialized.
-    [[nodiscard]] bool isInitialized() const noexcept
-    {
-        return linit_;
     }
     /// Determines the length of the initial conditions.
     [[nodiscard]] int getInitialConditionLength() const
     {
-        int len = maskSize_ - 1;;
+        int len = maskSize_ - 1;
         return len;
     }
     /// Gets the group delay.
-    [[nodiscard]] int getGroupDelay() const
+    [[nodiscard]] [[maybe_unused]] int getGroupDelay() const
     {
         int grpDelay = maskSize_/2;
         return grpDelay;
@@ -155,9 +142,11 @@ public:
     {
         resetInitialConditions();
         int nzRef = getInitialConditionLength();
-        if (nzRef != nz){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+#ifndef NDEBUG
+        assert(nzRef == nz);
+#endif
         if (nzRef > 0){ippsCopy_64f(zi, zi_, nzRef);}
-        if (precision_ == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {   
             if (nzRef > 0){ippsCopy_64f(zi, dlysrc64_, nzRef);}
         }
@@ -170,7 +159,7 @@ public:
     /// Resets the initial conditions
     int resetInitialConditions()
     {
-        if (precision_ == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             if (nwork_ > 0){ippsCopy_64f(zi_, dlysrc64_, nwork_);}
         }
@@ -184,7 +173,7 @@ public:
     int apply(const int n, const double x[], double y[])
     {
         if (n <= 0){return 0;} // Nothing to do
-        if (precision_ == RTSeis::Precision::FLOAT)
+        if (mPrecision == RTSeis::Precision::FLOAT)
         {
             Ipp32f *x32 = ippsMalloc_32f(n);
             Ipp32f *y32 = ippsMalloc_32f(n);
@@ -193,7 +182,8 @@ public:
             ippsFree(x32);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to apply float filter in double"
+                          << std::endl;
                 ippsFree(y32);
                 return -1;
             }
@@ -202,13 +192,14 @@ public:
             return 0;
         }
         IppStatus status;
-        if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+        if (mMode == RTSeis::ProcessingMode::REAL_TIME)
         {
             status = ippsFilterMedian_64f(x, y, n, maskSize_,
                                           dlysrc64_, dlydst64_, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                std::cerr << "Failed to apply real-time filter in double"
+                          << std::endl;
                 return -1;
             }
             if (maskSize_ > 1)
@@ -222,7 +213,8 @@ public:
                                           dlysrc64_, nullptr, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                std::cerr << "Failed to apply post-processing filter in double"
+                          << std::endl;
                 return -1;
             }
         }
@@ -232,7 +224,7 @@ public:
     int apply(const int n, const float x[], float y[])
     {
         if (n <= 0){return 0;} // Nothing to do
-        if (precision_ == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             Ipp64f *x64 = ippsMalloc_64f(n);
             Ipp64f *y64 = ippsMalloc_64f(n);
@@ -241,7 +233,8 @@ public:
             ippsFree(x64);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to apply double filter in float"
+                          << std::endl;
                 ippsFree(y64);
                 return -1;
             }
@@ -250,13 +243,14 @@ public:
             return 0;
         }
         IppStatus status;
-        if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
+        if (mMode == RTSeis::ProcessingMode::REAL_TIME)
         {
             status = ippsFilterMedian_32f(x, y, n, maskSize_,
                                           dlysrc32_, dlydst32_, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                std::cerr << "Failed to apply real-time filter in float"
+                          << std::endl;
                 return -1;
             }
             if (maskSize_ > 1)
@@ -270,13 +264,14 @@ public:
                                           dlysrc32_, nullptr, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error applying real-time filter");
+                std::cerr << "Failed to apply post-processing filter in float"
+                          << std::endl;
                 return -1;
             }
         }
         return 0;
     }
-private:
+//private:
     /// Delay line source vector.  This has dimension [nwork_].
     Ipp64f *dlysrc64_ = nullptr;
     /// Delay line destination vector.  This has dimension [nwork_].
@@ -298,194 +293,165 @@ private:
     /// The size of the workspace buffer.
     int bufferSize_ = 0;
     /// By default the module does post-procesing.
-    RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
+    const RTSeis::ProcessingMode mMode = E; //RTSeis::ProcessingMode::POST_PROCESSING;
     /// The default module implementation.
-    RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+    const RTSeis::Precision mPrecision
+         = (sizeof(T) == sizeof(double)) ? RTSeis::Precision::DOUBLE :
+                                           RTSeis::Precision::FLOAT;
     /// Flag indicating the module is initialized.
-    bool linit_ = false;
+    bool mInitialized = false;
 };
 
 /// C'tor
-template<class T>
-MedianFilter<T>::MedianFilter() :
-    pMedian_(std::make_unique<MedianFilterImpl> ())
+template<class T, RTSeis::ProcessingMode E>
+MedianFilter<T, E>::MedianFilter() :
+    pImpl(std::make_unique<MedianFilterImpl> ())
 {
 }
 
 /// Copy c'tor
-template<class T>
-MedianFilter<T>::MedianFilter(const MedianFilter &median)
+template<class T, RTSeis::ProcessingMode E>
+MedianFilter<T, E>::MedianFilter(const MedianFilter &median)
 {
     *this = median;
 }
 
 /// Move c'tor
-template<class T>
-MedianFilter<T>::MedianFilter(MedianFilter &&median) noexcept
+template<class T, RTSeis::ProcessingMode E>
+[[maybe_unused]]
+MedianFilter<T, E>::MedianFilter(MedianFilter &&median) noexcept
 {
     *this = std::move(median);
 }
 
 /// Copy assignment
-template<class T>
-MedianFilter<T>& MedianFilter<T>::operator=(const MedianFilter &median)
+template<class T, RTSeis::ProcessingMode E>
+MedianFilter<T, E>& MedianFilter<T, E>::operator=(const MedianFilter &median)
 {
     if (&median == this){return *this;}
-    if (pMedian_){pMedian_->clear();}
-    pMedian_ = std::make_unique<MedianFilterImpl> (*median.pMedian_);
+    if (pImpl){pImpl->clear();}
+    pImpl = std::make_unique<MedianFilterImpl> (*median.pImpl);
     return *this;
 }
 
 /// Move assignment
-template<class T>
-MedianFilter<T>& MedianFilter<T>::operator=(MedianFilter &&median) noexcept
+template<class T, RTSeis::ProcessingMode E>
+MedianFilter<T, E>&
+MedianFilter<T, E>::operator=(MedianFilter &&median) noexcept
 {
     if (&median == this){return *this;}
-    pMedian_ = std::move(median.pMedian_);
+    pImpl = std::move(median.pImpl);
     return *this;
 }
 
 /// Destructor
-template<class T>
-MedianFilter<T>::~MedianFilter() = default;
+template<class T, RTSeis::ProcessingMode E>
+MedianFilter<T, E>::~MedianFilter() = default;
 
 /// Clears the class
-template<class T>
-void MedianFilter<T>::clear() noexcept
+template<class T, RTSeis::ProcessingMode E>
+void MedianFilter<T, E>::clear() noexcept
 {
-    pMedian_->clear();
+    pImpl->clear();
 }
 
 /// Initialization
-template<>
-void MedianFilter<double>::initialize(
-    const int n,
-    const RTSeis::ProcessingMode mode)
+template<class T, RTSeis::ProcessingMode E>
+void MedianFilter<T, E>::initialize(const int n)
 {
     clear();
     // Set the mask size
     if (n < 1)
     {
-        RTSEIS_THROW_IA("Mask size=%d must be postive", n);
+        auto errmsg = "Mask size = " + std::to_string(n)
+                    + " must be positive";
+        throw std::invalid_argument(errmsg);
     }
     int maskSize = n;
     if (maskSize%2 == 0)
     {
         maskSize = maskSize + 1;
-        RTSEIS_WARNMSG("n=%d should be odd; setting to maskSize=%d",
-                       n, maskSize);
+        std::cout << "n = " << n << " should be odd; setting maskSize to "
+                  << maskSize << std::endl;
     }
 #ifdef DEBUG
-    int ierr = pMedian_->initialize(maskSize, mode, RTSeis::Precision::DOUBLE);
+    int ierr = pImpl->initialize(maskSize);
     assert(ierr == 0);
 #else
-    pMedian_->initialize(maskSize, mode, RTSeis::Precision::DOUBLE);
+    pImpl->initialize(maskSize);
 #endif
 }
 
-template<>
-void MedianFilter<float>::initialize(
-    const int n,
-    const RTSeis::ProcessingMode mode)
+/// Sets the initial conditions
+template<class T, RTSeis::ProcessingMode E>
+void MedianFilter<T, E>::setInitialConditions(const int nz, const double zi[])
 {
-    clear();
-    // Set the mask size
-    if (n < 1)
-    {
-        RTSEIS_THROW_IA("Mask size=%d must be postive", n);
-    }
-    int maskSize = n;
-    if (maskSize%2 == 0)
-    {
-        maskSize = maskSize + 1;
-        RTSEIS_WARNMSG("n=%d should be odd; setting to maskSize=%d",
-                       n, maskSize);
-    }
-#ifdef DEBUG
-    int ierr = pMedian_->initialize(maskSize, mode, RTSeis::Precision::FLOAT);
-    assert(ierr == 0);
-#else
-    pMedian_->initialize(maskSize, mode, RTSeis::Precision::FLOAT);
-#endif
-}
-
-template<class T>
-void MedianFilter<T>::setInitialConditions(const int nz, const double zi[])
-{
-    if (!pMedian_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
-    int nzRef = pMedian_->getInitialConditionLength();
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    int nzRef = pImpl->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
-        RTSEIS_THROW_IA("%s", "zi is NULL");
+        if (nz != nzRef)
+        {
+            auto errmsg = "nz = " + std::to_string(nz) + " must equal "
+                        + std::to_string(nzRef);
+            throw std::invalid_argument(errmsg);
+        }
+        throw std::invalid_argument("zi is NULL");
     }
-    pMedian_->setInitialConditions(nz, zi);
+    pImpl->setInitialConditions(nz, zi);
 }
 
-template<class T>
-void MedianFilter<T>::resetInitialConditions()
+template<class T, RTSeis::ProcessingMode E>
+void MedianFilter<T, E>::resetInitialConditions()
 {
-    if (!pMedian_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
-    pMedian_->resetInitialConditions();
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    pImpl->resetInitialConditions();
 }
 
-template<class T>
-bool MedianFilter<T>::isInitialized() const noexcept
+template<class T, RTSeis::ProcessingMode E>
+bool MedianFilter<T, E>::isInitialized() const noexcept
 {
-    bool linit = pMedian_->isInitialized();
-    return linit;
+    return pImpl->mInitialized;
 }
 
-template<class T>
-int MedianFilter<T>::getInitialConditionLength() const
+template<class T, RTSeis::ProcessingMode E>
+int MedianFilter<T, E>::getInitialConditionLength() const
 {
-    if (!pMedian_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
-    int len = pMedian_->getInitialConditionLength();
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    auto len = pImpl->getInitialConditionLength();
     return len;
 }
 
-template<class T>
-void MedianFilter<T>::apply(const int n, const T x[], T *yIn[])
+/// Apply the filter
+template<class T, RTSeis::ProcessingMode E>
+void MedianFilter<T, E>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;} // Nothing to do
-    if (!pMedian_->isInitialized())
-    {   
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
-        RTSEIS_THROW_RTE("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
 #ifdef DEBUG
-    int ierr = pMedian_->apply(n, x, y);
+    int ierr = pImpl->apply(n, x, y);
     assert(ierr == 0);
 #else
-    pMedian_->apply(n, x, y);
+    pImpl->apply(n, x, y);
 #endif
 }
 
-template<class T>
-int MedianFilter<T>::getGroupDelay() const
+template<class T, RTSeis::ProcessingMode E>
+[[maybe_unused]]
+int MedianFilter<T, E>::getGroupDelay() const
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
-    int grpDelay = pMedian_->getGroupDelay();
-    return grpDelay;
+    if (!isInitialized()){throw std::runtime_error("Class not initialized\n");}
+    return pImpl->getGroupDelay();
 }
 
 /// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<double>;
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<float>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<double, RTSeis::ProcessingMode::POST_PROCESSING>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<double, RTSeis::ProcessingMode::REAL_TIME>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<float, RTSeis::ProcessingMode::POST_PROCESSING>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<float, RTSeis::ProcessingMode::REAL_TIME>;

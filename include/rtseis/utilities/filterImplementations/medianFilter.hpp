@@ -1,7 +1,7 @@
 #ifndef RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_MEDIAN_HPP
 #define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_MEDIAN_HPP 1
 #include <memory>
-
+#include "rtseis/enums.hpp"
 namespace RTSeis::Utilities::FilterImplementations
 {
 /*!
@@ -10,7 +10,8 @@ namespace RTSeis::Utilities::FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
-template<class T = double>
+template<class T = double,
+         RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST_PROCESSING>
 class MedianFilter
 {
 public:
@@ -59,6 +60,10 @@ public:
      * @brief Destructor.
      */
     ~MedianFilter();
+    /*!
+     * @brief Clears the module and releases all memory.
+     */
+    void clear() noexcept;
     /*! @} */
 
     /*!
@@ -66,12 +71,9 @@ public:
      * @param[in] n   The window size of the median filter.  This must
      *                be a positive and odd number.  If n is not odd
      *                then it's length will be increased by 1.
-     * @param[in] mode  The processing mode.  By default this
-     *                  is for post-processing.
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
-    void initialize(int n,
-                    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
+    void initialize(int n);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -119,13 +121,9 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      */ 
     void resetInitialConditions();
-    /*! 
-     * @brief Clears the module and resets all parameters.
-     */
-    void clear() noexcept;
  private:
     class MedianFilterImpl;
-    std::unique_ptr<MedianFilterImpl> pMedian_;
+    std::unique_ptr<MedianFilterImpl> pImpl;
 }; // End medianFilter 
 } // End RTSeis
 #endif
