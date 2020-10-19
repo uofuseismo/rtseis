@@ -1,6 +1,9 @@
 #include <iostream>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
+#ifndef NDEBUG
+#include <cassert>
+#endif
+
 #include "rtseis/enums.hpp"
 #include "rtseis/utilities/filterImplementations/medianFilter.hpp"
 
@@ -374,7 +377,7 @@ void MedianFilter<T, E>::initialize(const int n)
         std::cout << "n = " << n << " should be odd; setting maskSize to "
                   << maskSize << std::endl;
     }
-#ifdef DEBUG
+#ifndef NDEBUG
     int ierr = pImpl->initialize(maskSize);
     assert(ierr == 0);
 #else
@@ -434,7 +437,7 @@ void MedianFilter<T, E>::apply(const int n, const T x[], T *yIn[])
         if (x == nullptr){throw std::invalid_argument("x is NULL");}
         throw std::invalid_argument("y is NULL");
     }
-#ifdef DEBUG
+#ifndef NDEBUG
     int ierr = pImpl->apply(n, x, y);
     assert(ierr == 0);
 #else
