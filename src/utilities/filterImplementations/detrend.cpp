@@ -1,11 +1,6 @@
-#include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <ipps.h>
-#include <ippversion.h>
-#include <ippcore.h>
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 
 using namespace RTSeis::Utilities::FilterImplementations;
@@ -18,7 +13,7 @@ public:
     double mMean = 0;
     double mSlope = 0;
     double mIntercept = 0;
-    DetrendType mType=  DetrendType::LINEAR;
+    DetrendType mType = DetrendType::LINEAR;
     bool mInitialized = false;
 };
 
@@ -110,14 +105,11 @@ void Detrend<double>::apply(const int nx, const double x[], double *yin[])
     pImpl->mSlope = 0;
     pImpl->mIntercept = 0;
     if (nx <= 0){return;}
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not inititialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     if (pImpl->mType == DetrendType::LINEAR)
     {
@@ -138,14 +130,11 @@ void Detrend<float>::apply(const int nx, const float x[], float *yin[])
     pImpl->mSlope = 0;
     pImpl->mIntercept = 0;
     if (nx <= 0){return;}
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not inititialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     if (pImpl->mType == DetrendType::LINEAR)
     {
@@ -171,10 +160,10 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     if (length <= 0){return;}
     if (x == nullptr || *yin == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
-    // Handle an edge case - this is actually underdetermined
+    // Handle an edge case - this is actually under-determined
     if (length < 2)
     {
         *yin[0] = 0.f;
@@ -225,8 +214,8 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
     if (length <= 0){return;}
     if (x == nullptr || *yin == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Handle an edge case - this is actually underdetermined
     if (length < 2)
@@ -275,8 +264,8 @@ void RTSeis::Utilities::FilterImplementations::removeMean(
     if (nx <= 0){return;} 
     if (x == nullptr || *y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     double pMean;
     ippsMean_64f(x, nx, &pMean); // Compute mean of input
@@ -291,8 +280,8 @@ void RTSeis::Utilities::FilterImplementations::removeMean(
     if (nx <= 0){return;} 
     if (x == nullptr || *y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     float pMean;
     ippsMean_32f(x, nx, &pMean, ippAlgHintAccurate);

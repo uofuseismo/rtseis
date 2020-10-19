@@ -528,6 +528,7 @@ int IIRIIRFilter<T>::getInitialConditionLength() const
 
 /// Get filter order
 template<class T>
+[[maybe_unused]]
 int IIRIIRFilter<T>::getFilterOrder() const
 {
     if (!pIIRIIR_->isInitialized())
