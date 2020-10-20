@@ -1,11 +1,9 @@
-#include <cstdio>
+#include <iostream>
 #include <cmath>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
 #include "rtseis/enums.hpp"
 #include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
-#include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
@@ -14,9 +12,7 @@ class FIRFilter<T>::FIRImpl
 {
 public:
     /// Default constructor
-    FIRImpl()
-    {
-    }
+    FIRImpl() = default;
     /// Copy constructor
     FIRImpl(const FIRImpl &fir)
     {
@@ -37,7 +33,8 @@ public:
                               fir.implementation_);
         if (ierr != 0)
         {
-            RTSEIS_ERRMSG("%s", "Initialization failed");
+            std::cerr << "Initialization failed in impl copy assignment"
+                      << std::endl;
             clear();
             return *this;
         }
@@ -131,7 +128,7 @@ public:
                                                 &specSize_, &bufferSize_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error getting state size");
+                std::cerr << "Error getting double state size" << std::endl;
                 clear();
                 return -1; 
             }
@@ -142,7 +139,8 @@ public:
                                        algType, pSpec64_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error initializing state structure");
+                std::cerr << "Error initializing double state structure"
+                          << std::endl;
                 clear();
                 return -1; 
             }
@@ -159,7 +157,7 @@ public:
                                                 &specSize_, &bufferSize_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error getting state size");
+                std::cerr << "Error getting float state size" << std::endl;
                 clear();
                 return -1; 
             }
@@ -170,7 +168,8 @@ public:
                                        algType, pSpec32_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error initializing state structure");
+                std::cerr << "Error initializing float state structure"
+                          << std::endl;
                 clear();
                 return -1;
             }
@@ -195,7 +194,9 @@ public:
     int getInitialConditions(const int nz, double zi[]) const
     {
         int nzRef = getInitialConditionLength();
-        if (nz != nzRef){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+#ifndef NDEBUG
+        assert(nzRef == nz);
+#endif
         if (nzRef > 0){ippsCopy_64f(zi_, zi, nzRef);}
         return 0;
     }
@@ -204,7 +205,9 @@ public:
     {
         resetInitialConditions();
         int nzRef = getInitialConditionLength();
-        if (nz != nzRef){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+#ifndef NDEBUG
+        assert(nzRef == nz);
+#endif
         if (nzRef > 0)
         {
             ippsCopy_64f(zi, zi_, nzRef);
@@ -247,7 +250,8 @@ public:
             ippsFree(x32);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to apply float filter in double"
+                          << std::endl;
                 ippsFree(y32);
                 return -1; 
             }
@@ -259,7 +263,7 @@ public:
                                          dlysrc64_, dlydst64_, pBuf_);
         if (status != ippStsNoErr)
         {
-            RTSEIS_ERRMSG("%s", "Failed to apply FIR filter");
+            std::cerr << "Failed to apply double FIR filter" << std::endl;
             return -1; 
         }   
         if (mode_ == RTSeis::ProcessingMode::REAL_TIME && order_ > 0)
@@ -281,7 +285,8 @@ public:
             ippsFree(x64);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to apply double filter in float"
+                          << std::endl;
                 ippsFree(y64);
                 return -1; 
             }
@@ -293,7 +298,7 @@ public:
                                          dlysrc32_, dlydst32_, pBuf_);
         if (status != ippStsNoErr)
         {
-            RTSEIS_ERRMSG("%s", "Failed to apply FIR filter");
+            std::cerr << "Failed to apply float FIR filter" << std::endl;
             return -1;
         }
         if (mode_ == RTSeis::ProcessingMode::REAL_TIME && order_ > 0)
@@ -337,7 +342,7 @@ private:
     int order_ = 0;
     /// Implementation.
     FIRImplementation implementation_ = FIRImplementation::DIRECT;
-    /// By default the module does post-procesing.
+    /// Real-time or post-processing.
     RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
     /// The default module implementation.
     RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
@@ -402,11 +407,11 @@ void FIRFilter<double>::initialize(const int nb, const double b[],
     // Checks
     if (nb < 1 || b == nullptr)
     {
-        if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
-        RTSEIS_THROW_IA("%s", "b is NULL");
+        if (nb < 1){throw std::invalid_argument("No b coefficients");}
+        throw std::invalid_argument("b is NULL");
     }
     constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
-#ifdef DEBUG
+#ifndef NDEBUG
     int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
     assert(ierr == 0);
 #else
@@ -423,11 +428,11 @@ void FIRFilter<float>::initialize(const int nb, const double b[],
     // Checks
     if (nb < 1 || b == nullptr)
     {
-        if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
-        RTSEIS_THROW_IA("%s", "b is NULL");
+        if (nb < 1){throw std::invalid_argument("No b coefficients");}
+        throw std::invalid_argument("b is NULL");
     }
     constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
-#ifdef DEBUG
+#ifndef NDEBUG
     int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
     assert(ierr == 0);
 #else
@@ -445,15 +450,17 @@ void FIRFilter<T>::clear() noexcept
 template<class T>
 void FIRFilter<T>::setInitialConditions(const int nz, const double zi[])
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int nzRef = pFIR_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
-        RTSEIS_THROW_IA("%s", "zi is NULL");
+        if (nz != nzRef)
+        {
+            auto errmsg = "nz = " + std::to_string(nz)
+                        + " must equal " + std::to_string(nzRef);
+            throw std::invalid_argument(errmsg);
+        }
+        throw std::invalid_argument("zi is NULL");
     }
     pFIR_->setInitialConditions(nz, zi);
 }
@@ -461,10 +468,7 @@ void FIRFilter<T>::setInitialConditions(const int nz, const double zi[])
 template<class T>
 void FIRFilter<T>::resetInitialConditions()
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     pFIR_->resetInitialConditions();
 }
 
@@ -473,17 +477,14 @@ template<class T>
 void FIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;} // Nothing to do
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "Error x is NULL");}
-        RTSEIS_THROW_IA("%s", "Error y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
-#ifdef DEBUG
+#ifndef NDEBUG
     int ierr = pFIR_->apply(n, x, y);
     assert(ierr == 0);
 #else
@@ -495,21 +496,15 @@ void FIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 template<class T>
 int FIRFilter<T>::getInitialConditionLength() const
 {
-    if (!isInitialized())
-    {
-        RTSEIS_ERRMSG("%s", "Class is not yet initialized");
-        return -1;
-    }
-    int len = pFIR_->getInitialConditionLength();
-    return len;
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    return pFIR_->getInitialConditionLength();
 }
 
 /// Initialized?
 template<class T>
 bool FIRFilter<T>::isInitialized() const noexcept
 {
-    bool linit = pFIR_->isInitialized();
-    return linit;
+    return pFIR_->isInitialized();
 }
 
 /// Get initial conditions
@@ -517,15 +512,15 @@ template<class T>
 void FIRFilter<T>::getInitialConditions(const int nz, double *ziOut[]) const
 {
     auto zi = *ziOut;
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not yet initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int nzLen = getInitialConditionLength();
     if (nzLen > nz)
     {
-        RTSEIS_THROW_IA("nz = %d must be at least %d", nz, nzLen);
+        auto errmsg = "nz = " + std::to_string(nz) + " must be at least "
+                    + std::to_string(nzLen);
+        throw std::invalid_argument(errmsg);
     }
+    if (nzLen > 0 && zi == nullptr){throw std::invalid_argument("zi is NULL");}
     pFIR_->getInitialConditions(nz, zi);
 }
 

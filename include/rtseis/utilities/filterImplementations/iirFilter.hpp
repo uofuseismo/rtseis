@@ -12,7 +12,8 @@ namespace RTSeis::Utilities::FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
-template<class T = double>
+template<class T = double,
+    RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST_PROCESSING>
 class IIRFilter
 {
 public:
@@ -71,15 +72,12 @@ public:
      * @param[in] na     Number of denominator coefficients.
      * @param[in] a      The denominator coefficients.  This has
      *                   dimension [na].
-     * @param[in] mode   Defines whether the filter is for real-time
-     *                   or post-processing.
      * @param[in] implementation  Defines the algorithmic filter
      *                            implementation.
      * @throws std::invalid_argument if any arguments are invalid.
      */
     void initialize(int nb, const double b[],
                     int na, const double a[],
-                    RTSeis::ProcessingMode mode =  RTSeis::ProcessingMode::POST_PROCESSING,
                     IIRDFImplementation implementation = IIRDFImplementation::DF2_FAST);
     /*!
      * @brief Determines if the module is initialized.

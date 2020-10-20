@@ -1136,10 +1136,10 @@ void Waveform<T>::iirFilter(const Utilities::FilterRepresentations::BA &ba,
     // Initialize filter
     if (!lremovePhase)
     {
-        RTSeis::Utilities::FilterImplementations::IIRFilter<T> iirFilter;
+        RTSeis::Utilities::FilterImplementations::IIRFilter<T,
+            ProcessingMode::POST_PROCESSING> iirFilter;
         iirFilter.initialize(nb, b.data(),
-               na, a.data(),
-               ProcessingMode::POST_PROCESSING,
+                             na, a.data(),
                Utilities::FilterImplementations::IIRDFImplementation::DF2_FAST);
         pImpl->resizeOutputData(len);
         const T *x = pImpl->getInputDataPointer();

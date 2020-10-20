@@ -295,7 +295,7 @@ public:
     int nwork_ = 0;
     /// The size of the workspace buffer.
     int bufferSize_ = 0;
-    /// By default the module does post-procesing.
+    /// Real-time vs. post-processing.
     const RTSeis::ProcessingMode mMode = E; //RTSeis::ProcessingMode::POST_PROCESSING;
     /// The default module implementation.
     const RTSeis::Precision mPrecision

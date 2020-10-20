@@ -419,11 +419,10 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     std::vector<double> a = ba.getDenominatorCoefficients();
     int nb = static_cast<int> (b.size());
     int na = static_cast<int> (a.size());
-    Utilities::FilterImplementations::IIRFilter<double> iirFilt; 
+    Utilities::FilterImplementations::IIRFilter<double, ProcessingMode::POST_PROCESSING> iirFilt; 
     Utilities::FilterImplementations::IIRIIRFilter<double> iiriirFilt;
     std::vector<double> yiirRef(npts);
-    iirFilt.initialize(nb, b.data(), na, a.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING);
+    iirFilt.initialize(nb, b.data(), na, a.data());
     double *yptr = yiirRef.data();
     iirFilt.apply(npts, x.data(), &yptr); //yiirRef.data());
     iirFilt.clear();
@@ -561,8 +560,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     a = ba.getDenominatorCoefficients();
     nb = static_cast<int> (b.size());
     na = static_cast<int> (a.size());
-    iirFilt.initialize(nb, b.data(), na, a.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING);
+    iirFilt.initialize(nb, b.data(), na, a.data());
     yptr = ytemp.data();
     iirFilt.apply(npts, x.data(), &yptr); //ytemp.data());
     iirFilt.clear();

@@ -179,13 +179,11 @@ TEST(UtilitiesFilterImplementations, iir)
     EXPECT_EQ(ierr, 0);
     EXPECT_EQ(npts, npref);
     // Compute the zero-phase IIR filter alternative
-    IIRFilter<double> iir;
-    IIRFilter<double> iir_slow;
+    IIRFilter<double, RTSeis::ProcessingMode::POST_PROCESSING> iir;
+    IIRFilter<double, RTSeis::ProcessingMode::POST_PROCESSING> iir_slow;
     EXPECT_NO_THROW(iir.initialize(nb, b, na, a,
-                                   RTSeis::ProcessingMode::POST_PROCESSING,
                                    IIRDFImplementation::DF2_FAST));
     EXPECT_NO_THROW(iir_slow.initialize(nb, b, na, a,
-                                        RTSeis::ProcessingMode::POST_PROCESSING,
                                         IIRDFImplementation::DF2_SLOW));
     double *yref = new double[npts];
     double *yref_slow = new double[npts];
@@ -215,9 +213,8 @@ TEST(UtilitiesFilterImplementations, iir)
     std::copy(y2, y2+npts, yref_slow);
     // Try a lower order filter - Note the difference in accuracy.
     // I think the filter is a little unstable.
-    IIRFilter iir2;
+    IIRFilter<double, RTSeis::ProcessingMode::POST_PROCESSING> iir2;
     EXPECT_NO_THROW(iir2.initialize(nb2, b2, na2, a2,
-                                    RTSeis::ProcessingMode::POST_PROCESSING,
                                     IIRDFImplementation::DF2_FAST));
     timeStart = std::chrono::high_resolution_clock::now();
     EXPECT_NO_THROW(iir2.apply(npts, x, &y2));
@@ -229,11 +226,10 @@ TEST(UtilitiesFilterImplementations, iir)
     fprintf(stdout, "Fast reference solution 2 computation time %.8lf (s)\n",
             tdif.count());
     // Do a real-time test of high-order filter
-    IIRFilter iirrt;
-    EXPECT_NO_THROW(iirrt.initialize(nb, b, na, a,
-                                     RTSeis::ProcessingMode::REAL_TIME,
-                                     IIRDFImplementation::DF2_FAST));
-    iir = iirrt;
+    IIRFilter<double, RTSeis::ProcessingMode::REAL_TIME> iirrtInit;
+    EXPECT_NO_THROW(iirrtInit.initialize(nb, b, na, a,
+                                         IIRDFImplementation::DF2_FAST));
+    auto iirrt = iirrtInit;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (int job=0; job<2; job++)
@@ -252,10 +248,10 @@ TEST(UtilitiesFilterImplementations, iir)
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *y1Temp = &y1[nxloc];
-                EXPECT_NO_THROW(iir.apply(nptsPass, &x[nxloc], &y1Temp));//[nxloc]);
+                EXPECT_NO_THROW(iirrt.apply(nptsPass, &x[nxloc], &y1Temp));//[nxloc]);
                 nxloc = nxloc + nptsPass;
             }
-            iir.resetInitialConditions();
+            iirrt.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             ippsNormDiff_Inf_64f(yref, y1, npts, &error);
@@ -274,10 +270,10 @@ TEST(UtilitiesFilterImplementations, iir)
         }
     }
     // Retry this for the slow filter implementation
-    EXPECT_NO_THROW(iir_slow.initialize(nb, b, na, a,
-                                        RTSeis::ProcessingMode::REAL_TIME,
-                                        IIRDFImplementation::DF2_SLOW));
-    iir = iir_slow;
+    IIRFilter<double, RTSeis::ProcessingMode::REAL_TIME> iirrtSlowInit;
+    EXPECT_NO_THROW(iirrtSlowInit.initialize(nb, b, na, a,
+                                             IIRDFImplementation::DF2_SLOW));
+    iirrt = iirrtSlowInit;
     for (int job=0; job<2; job++)
     {    
         for (size_t ip=0; ip<packetSize.size(); ip++)
@@ -294,10 +290,10 @@ TEST(UtilitiesFilterImplementations, iir)
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *y1Temp = &y1[nxloc];
-                EXPECT_NO_THROW(iir.apply(nptsPass, &x[nxloc], &y1Temp)); //y1[nxloc]);
+                EXPECT_NO_THROW(iirrt.apply(nptsPass, &x[nxloc], &y1Temp)); //y1[nxloc]);
                 nxloc = nxloc + nptsPass;
             }
-            iir.resetInitialConditions();
+            iirrt.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             ippsNormDiff_Inf_64f(yref_slow, y1, npts, &error);
