@@ -1,5 +1,8 @@
 #include <iostream>
 #include <cmath>
+#ifndef NDEBUG
+#include <cassert>
+#endif
 #include <ipps.h>
 #include "rtseis/enums.hpp"
 #include "private/throw.hpp"
