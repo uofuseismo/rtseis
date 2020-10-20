@@ -12,7 +12,8 @@ namespace RTSeis::Utilities::FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
 */
-template<class T = double>
+template<RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST,
+         class T = double>
 class SOSFilter
 {
 public:
@@ -74,17 +75,12 @@ public:
      *                  dimension [3 x ns] with leading dimension 3. 
      *                  There is a further requirement that a[3*is]
      *                  for \f$ i_s=0,1,\cdots,n_s-1 \f$ not be zero.
-     * @param[in] mode  The processing mode.  By default this
-     *                  is for post-processing.
-     * @param[in] precision   The precision of the filter.  By default
-     *                        this is double precision.
      * @result 0 indicates success.
      * @throws std::invalid_argument if ns, bs, or as is invalid.
      */
     void initialize(int ns,
                     const double bs[],
-                    const double as[],
-                    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
+                    const double as[]);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
@@ -147,7 +143,7 @@ public:
 
 private:
     class SOSFilterImpl;
-    std::unique_ptr<SOSFilterImpl> pSOS_;
+    std::unique_ptr<SOSFilterImpl> pImpl;
 }; // sos
 } // rtseis
 #endif

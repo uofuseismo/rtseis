@@ -699,9 +699,8 @@ TEST(UtilitiesFilterImplementations, sos)
     double *y40 = new double[40]; 
     std::fill(impulse, impulse+40, 0);
     impulse[0] = 1;
-    SOSFilter<double> sos;
-    EXPECT_NO_THROW(sos.initialize(ns, bs7, as7,
-                                   RTSeis::ProcessingMode::POST_PROCESSING));
+    SOSFilter<RTSeis::ProcessingMode::POST, double> sos;
+    EXPECT_NO_THROW(sos.initialize(ns, bs7, as7));
     EXPECT_NO_THROW(sos.apply(40, impulse, &y40));
     double error;
     ippsNormDiff_Inf_64f(y40, yref40, 40, &error);
@@ -723,8 +722,7 @@ TEST(UtilitiesFilterImplementations, sos)
                            1.000000000000000, -1.704970593447777,  0.792206889942566,
                            1.000000000000000, -1.994269533089365,  0.994278822534674,
                            1.000000000000000, -1.997472946622339,  0.997483252685326};
-    EXPECT_NO_THROW(sos.initialize(ns, bs, as,
-                                   RTSeis::ProcessingMode::POST_PROCESSING));
+    EXPECT_NO_THROW(sos.initialize(ns, bs, as));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
     EXPECT_NO_THROW(sos.apply(npts, x, &y));
@@ -736,10 +734,9 @@ TEST(UtilitiesFilterImplementations, sos)
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Do packetized tests 
-    SOSFilter<double> sosrt;
-    EXPECT_NO_THROW(sosrt.initialize(ns, bs, as,
-                                     RTSeis::ProcessingMode::REAL_TIME));
-    sos = sosrt;
+    SOSFilter<RTSeis::ProcessingMode::REAL_TIME, double> sosrtTemp;
+    EXPECT_NO_THROW(sosrtTemp.initialize(ns, bs, as));
+    auto sosrt = sosrtTemp;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (auto job=0; job<2; job++)
@@ -758,10 +755,10 @@ TEST(UtilitiesFilterImplementations, sos)
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *yptr = &y[nxloc];
-                EXPECT_NO_THROW(sos.apply(nptsPass, &x[nxloc], &yptr)); //&y[nxloc]);
+                EXPECT_NO_THROW(sosrt.apply(nptsPass, &x[nxloc], &yptr)); //&y[nxloc]);
                 nxloc = nxloc + nptsPass;
             }
-            sos.resetInitialConditions();
+            sosrt.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             ippsNormDiff_Inf_64f(yref, y, npts, &error);
