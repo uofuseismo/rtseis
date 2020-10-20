@@ -103,7 +103,7 @@ SET(UTILS_SRCS
     src/utilities/filterImplementations/decimate.cpp
     src/utilities/filterImplementations/detrend.cpp
     src/utilities/filterImplementations/downsample.cpp
-    src/utilities/filterImplementations/firfilter.cpp
+    src/utilities/filterImplementations/firFilter.cpp
     src/utilities/filterImplementations/multiRateFIRFilter.cpp
     src/utilities/filterImplementations/iirFilter.cpp
     src/utilities/filterImplementations/iiriirFilter.cpp
