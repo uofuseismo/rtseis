@@ -81,9 +81,8 @@ classifyFIRWindow(const FIRWindow windowIn);
     const double *x = pImpl->getInputDataPointer(); \
     ippsCopy_64f(x, xtemp, len); \
     ippsZero_64f(&xtemp[len], npad - len); \
-    RTSeis::Utilities::FilterImplementations::FIRFilter<double> firFilter; \
+    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilter; \
     firFilter.initialize(nt, taps.data(), \
-                   ProcessingMode::POST_PROCESSING, \
                    Utilities::FilterImplementations::FIRImplementation::DIRECT); \
     firFilter.apply(npad, xtemp, &ytemp); \
     ippsFree(xtemp); \
@@ -617,11 +616,11 @@ void Waveform<T>::downsample(const int nq)
         RTSEIS_THROW_IA("Downsampling factor = %d must be at least 1", nq); 
     }
     // Initialize the downsampler
-    Utilities::FilterImplementations::Downsample<T> downsample;
+    Utilities::FilterImplementations::Downsample
+        <RTSeis::ProcessingMode::POST_PROCESSING, T> downsample;
     try
     {
-        downsample.initialize(nq, 
-                              RTSeis::ProcessingMode::POST_PROCESSING);
+        downsample.initialize(nq);
         // Space estimate
         int leny = downsample.estimateSpace(len);
         pImpl->resizeOutputData(leny);
@@ -662,12 +661,11 @@ void Waveform<T>::decimate(const int nq, const int filterLength)
     // Handle odd length so I can remove the phase shift from the FIR filter
     int nfir = filterLength;
     if (nfir%2 == 0){nfir = nfir + 1;}
-    Utilities::FilterImplementations::Decimate<T> decimate;
+    Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, T> decimate;
     try
     {
         constexpr bool lremovePhaseShift = true;
-        decimate.initialize(nq, nfir, lremovePhaseShift, 
-                            RTSeis::ProcessingMode::POST_PROCESSING);
+        decimate.initialize(nq, nfir, lremovePhaseShift);
         // Space estimate
         int leny = decimate.estimateSpace(len);
         pImpl->resizeOutputData(leny);
@@ -768,9 +766,8 @@ void Waveform<T>::firEnvelope(const int nfir)
     pImpl->resizeOutputData(nx);
     T *y = pImpl->getOutputDataPointer(); // Handle on output
     const T *x = pImpl->getInputDataPointer(); // Handle on input
-    Utilities::Transforms::FIREnvelope<T> envelope;
-    envelope.initialize(nfir,
-                        RTSeis::ProcessingMode::POST_PROCESSING);
+    Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, T>envelope;
+    envelope.initialize(nfir);
     envelope.transform(nx, x, &y);
     pImpl->lfirstFilter_ = false;
 }
@@ -1087,9 +1084,8 @@ void Waveform<double>::firFilter(
         RTSEIS_THROW_IA("%s", "No filter taps");
     }
     // Initialize filter
-    RTSeis::Utilities::FilterImplementations::FIRFilter<double> firFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilter;
     firFilter.initialize(nb, taps.data(),
-                   ProcessingMode::POST_PROCESSING,
                    Utilities::FilterImplementations::FIRImplementation::DIRECT);
     pImpl->resizeOutputData(len);
     // Standard FIR filtering 
@@ -1136,8 +1132,8 @@ void Waveform<T>::iirFilter(const Utilities::FilterRepresentations::BA &ba,
     // Initialize filter
     if (!lremovePhase)
     {
-        RTSeis::Utilities::FilterImplementations::IIRFilter<T,
-            ProcessingMode::POST_PROCESSING> iirFilter;
+        RTSeis::Utilities::FilterImplementations::IIRFilter
+            <ProcessingMode::POST, T> iirFilter;
         iirFilter.initialize(nb, b.data(),
                              na, a.data(),
                Utilities::FilterImplementations::IIRDFImplementation::DF2_FAST);

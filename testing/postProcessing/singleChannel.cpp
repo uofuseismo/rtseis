@@ -419,7 +419,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     std::vector<double> a = ba.getDenominatorCoefficients();
     int nb = static_cast<int> (b.size());
     int na = static_cast<int> (a.size());
-    Utilities::FilterImplementations::IIRFilter<double, ProcessingMode::POST_PROCESSING> iirFilt; 
+    Utilities::FilterImplementations::IIRFilter<ProcessingMode::POST, double> iirFilt; 
     Utilities::FilterImplementations::IIRIIRFilter<double> iiriirFilt;
     std::vector<double> yiirRef(npts);
     iirFilt.initialize(nb, b.data(), na, a.data());
@@ -616,10 +616,9 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
                                   Utilities::FilterDesign::FIRWindow::HAMMING);
     int ntaps = fir.getNumberOfFilterTaps();
     std::vector<double> b = fir.getFilterTaps();
-    Utilities::FilterImplementations::FIRFilter<double> firFilt;
+    Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilt;
     std::vector<double> yfirRef(npts);
-    firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING);
+    firFilt.initialize(ntaps, b.data());
     double *yptr = yfirRef.data();
     firFilt.apply(npts, x.data(), &yptr); //yfirRef.data());
     firFilt.clear();
@@ -665,8 +664,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     std::vector<double> xpad = x;
     xpad.resize(x.size()+nextra, 0);
     std::vector<double> ytemp(xpad.size());
-    firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING);
+    firFilt.initialize(ntaps, b.data());
     yptr = ytemp.data();
     firFilt.apply(npts+nextra, xpad.data(), &yptr);
     firFilt.clear();
@@ -710,8 +708,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
                               Utilities::FilterDesign::FIRWindow::HANN);
     ntaps = fir.getNumberOfFilterTaps();
     b = fir.getFilterTaps();
-    firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING);
+    firFilt.initialize(ntaps, b.data());
     xpad = x; 
     xpad.resize(x.size()+nextra, 0);
     ytemp.resize(xpad.size());
@@ -758,8 +755,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
                               Utilities::FilterDesign::FIRWindow::BARTLETT);
     ntaps = fir.getNumberOfFilterTaps();
     b = fir.getFilterTaps();
-    firFilt.initialize(ntaps, b.data(),
-                       RTSeis::ProcessingMode::POST_PROCESSING);
+    firFilt.initialize(ntaps, b.data());
     yptr = ytemp.data();
     firFilt.apply(npts, x.data(), &yptr);
     firFilt.clear();
@@ -871,9 +867,9 @@ int testDecimate(const std::vector<double> &x)
             return EXIT_FAILURE;
         }
         // Verify
-        RTSeis::Utilities::FilterImplementations::Decimate<double> decim;
-        decim.initialize(iq, firLen, removePhaseShift,
-                         RTSeis::ProcessingMode::POST_PROCESSING);
+        RTSeis::Utilities::FilterImplementations::Decimate
+          <RTSeis::ProcessingMode::POST, double> decim;
+        decim.initialize(iq, firLen, removePhaseShift);
         std::vector<double> yref(npts);
         double *yRefPtr = yref.data();
         int lenRef;

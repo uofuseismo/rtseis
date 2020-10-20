@@ -15,7 +15,8 @@ namespace RTSeis::Utilities::Transforms
  *       applying a high-pass filter.
  * @sa Envelope
  */
-template<class T = double>
+template<RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST,
+         class T = double>
 class FIREnvelope
 {
 public:
@@ -76,7 +77,7 @@ public:
      * @brief Checks if the class is initialized.
      * @result True indicates that the class is initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
 
     /*!
      * @brief Initializes the FIR-based envelope.
@@ -92,18 +93,16 @@ public:
      *                     transform filter are to be applied.  However,
      *                     this will better characterize the transformer
      *                     response at the Nyquist frequency. 
-     * @param[in] mode     The processing mode.
      * @throws std::invalid_argument if ntaps is not positive.
      */
-    void initialize(int ntaps,
-                    RTSeis::ProcessingMode mode=RTSeis::ProcessingMode::POST_PROCESSING);
+    void initialize(int ntaps);
 
     /*!
      * @brief Gets the length of the initital condition array.
      * @result The length of the initial condition array.
      * @throws std::runtime_error if the the class is not inititalized.
      */
-    int getInitialConditionLength() const;
+    [[nodiscard]] int getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions.
      * @param[in] nz   The length of the initial conditions.

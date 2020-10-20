@@ -1,12 +1,12 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 #include <cmath>
+#include <string>
+#ifndef NDEBUG
+#include <cassert>
+#endif
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
 #include "rtseis/enums.hpp"
-#include "private/throw.hpp"
 #include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
-#include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
@@ -37,11 +37,11 @@ public:
         if (!iiriir.linit_ ){return *this;}
         // Reinitialize the filter
         int ierr = initialize(iiriir.nbRef_, iiriir.bRef_,
-                              iiriir.naRef_, iiriir.aRef_,
-                              iiriir.precision_);
+                              iiriir.naRef_, iiriir.aRef_);
         if (ierr != 0)
         {
-            RTSEIS_ERRMSG("%s", "Failed to initialize filter");
+            std::cerr << "Failed to initialize filter in impl copy assignment"
+                      << std::endl;
             clear();
             return *this;
         }
@@ -54,7 +54,7 @@ public:
         if (nwork_ > 0)
         {
             ippsCopy_64f(iiriir.zi_, zi_, nwork_);
-            if (iiriir.precision_ == RTSeis::Precision::DOUBLE)
+            if (iiriir.mPrecision == RTSeis::Precision::DOUBLE)
             {
                 ippsCopy_64f(iiriir.dlysrc64_, dlysrc64_, nwork_);
             }
@@ -93,13 +93,12 @@ public:
         nbRef_ = 0;
         naRef_ = 0;
         lhaveZI_ = false;
-        precision_ = RTSeis::Precision::DOUBLE;
         linit_ = false;
     }
     /// Sets the initial conditions
+    [[nodiscard]]
     int initialize(const int nb, const double b[],
-                   const int na, const double a[],
-                   const RTSeis::Precision precision)
+                   const int na, const double a[])
     {
         clear();
         // Copy basics
@@ -113,14 +112,15 @@ public:
         ippsCopy_64f(a, aRef_, na);
         zi_ = ippsMalloc_64f(nwork_);
         ippsZero_64f(zi_, nwork_);
-        if (precision == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             // Workspace query 
             IppStatus status = ippsIIRIIRGetStateSize_64f(order_,
                                                           &bufferSize_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to get buffer size");
+                std::cerr << "Failed to get buffer size in double"
+                          << std::endl;
                 clear();
                 return -1;
             }
@@ -137,7 +137,8 @@ public:
                                         nullptr, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to initialize IIRIIR state");
+                std::cerr << "Failed to initialize IIRIIR state in double"
+                          << std::endl;
                 clear();
                 return -1;
             }
@@ -149,7 +150,7 @@ public:
                                                           &bufferSize_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to get buffer size");
+                std::cerr << "Failed to get buffer size in float" << std::endl;
                 clear();
                 return -1; 
             }
@@ -166,12 +167,12 @@ public:
                                         nullptr, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to initialize IIRIIR state");
+                std::cerr << "Failed to initialize IIRIIR state in float"
+                          << std::endl;
                 clear();
                 return -1; 
             }
         }
-        precision_ = precision;
         lhaveZI_ = false;
         linit_ = true;
         return 0;
@@ -187,18 +188,21 @@ public:
         return order_;
     }
     /// Gets the filter order
-    [[nodiscard]] int getFilterOrder() const
+    [[nodiscard]] [[maybe_unused]] int getFilterOrder() const
     {
         return order_;
     }
     /// Sets the intitial conditions length
-    int setInitialConditions(const int nz, const double zi[]) 
+    void setInitialConditions(const int nz, const double zi[])
     {
         resetInitialConditions();
         int nzRef = getInitialConditionLength();
-        if (nz != nzRef){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+#ifndef NDEBUG
+        assert(nz == nzRef);
+        //if (nz != nzRef){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+#endif
         ippsCopy_64f(zi, zi_, nzRef);
-        if (precision_ == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             ippsCopy_64f(zi, dlysrc64_, nzRef);
         }
@@ -207,20 +211,18 @@ public:
             ippsConvert_64f32f(zi, dlysrc32_, nzRef);
         }
         lhaveZI_ = true;
-        return 0;
     }
     /// Resets the initial conditions to those set in setInitialConditions.
     /// Note, the filter final coefficients are never extracted so the
     /// original filter initial conditions are already set.
-    int resetInitialConditions()
+    void resetInitialConditions() noexcept
     {
-        return 0;
     }
     /// Applies the filter
     int apply(const int n, const double x[], double y[])
     {
         if (n <= 0){return 0;}
-        if (precision_ == RTSeis::Precision::FLOAT)
+        if (mPrecision == RTSeis::Precision::FLOAT)
         {
             Ipp32f *x32 = ippsMalloc_32f(n);
             Ipp32f *y32 = ippsMalloc_32f(n);
@@ -229,7 +231,8 @@ public:
             ippsFree(x32);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to float apply filter in double"
+                          << std::endl;
                 ippsFree(y32);
                 return -1;
             }
@@ -245,7 +248,7 @@ public:
             status = ippsIIRIIRSetDlyLine_64f(pState64_, dlysrc64_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to set delay line");
+                std::cerr << "Failed to set delay line in double" << std::endl;
                 return -1;
             }
         }
@@ -253,7 +256,7 @@ public:
         status = ippsIIRIIR_64f(x, y, n, pState64_);
         if (status != ippStsNoErr)
         {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
+            std::cerr << "Failed to apply filter in double" << std::endl;
             return -1;
         }
         // Undo the action of setting a delay line
@@ -264,7 +267,7 @@ public:
     int apply(const int n, const float x[], float y[])
     {
         if (n <= 0){return 0;}
-        if (precision_ == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             Ipp64f *x64 = ippsMalloc_64f(n);
             Ipp64f *y64 = ippsMalloc_64f(n);
@@ -273,7 +276,8 @@ public:
             ippsFree(x64);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to double apply filter in float"
+                          << std::endl;
                 ippsFree(y64);
                 return -1;
             }
@@ -289,7 +293,7 @@ public:
             status = ippsIIRIIRSetDlyLine_32f(pState32_, dlysrc32_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to set delay line");
+                std::cerr << "Failed to set delay line in float" << std::endl;
                 return -1;
             }
         }
@@ -297,14 +301,14 @@ public:
         status = ippsIIRIIR_32f(x, y, n, pState32_);
         if (status != ippStsNoErr)
         {
-            RTSEIS_ERRMSG("%s", "Failed to apply filter");
+            std::cerr << "Failed to apply filter in double" << std::endl;
             return -1;
         }
         // Undo the action of setting a delay line
         if (lhaveZI_){ippsIIRIIRSetDlyLine_32f(pState32_, nullptr);}
         return 0;
     }
-private:
+//private:
     /// The IIR filter state. 
     IppsIIRState_64f *pState64_ = nullptr;
     /// The IIR filter taps.  This has dimension [2*(order_+1)].
@@ -340,7 +344,10 @@ private:
     /// Flag indicating that the initial conditions have been set.
     bool lhaveZI_ = false;
     /// The default module implementation.
-    RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+    /// Single or double precision.
+    const RTSeis::Precision mPrecision
+        = (sizeof(T) == sizeof(double)) ? RTSeis::Precision::DOUBLE :
+          RTSeis::Precision::FLOAT;
     /// The default processing mode is post-processing only.
     //const RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
     /// Flag indicating that the filter is initialized.
@@ -356,6 +363,7 @@ IIRIIRFilter<T>::IIRIIRFilter() :
 
 /// Copy c'tor
 template<class T>
+[[maybe_unused]]
 IIRIIRFilter<T>::IIRIIRFilter(const IIRIIRFilter &iiriir)
 {
     *this = iiriir;
@@ -363,6 +371,7 @@ IIRIIRFilter<T>::IIRIIRFilter(const IIRIIRFilter &iiriir)
 
 /// Move c'tor
 template<class T>
+[[maybe_unused]]
 IIRIIRFilter<T>::IIRIIRFilter(IIRIIRFilter &&iiriir) noexcept
 {
     *this = std::move(iiriir);
@@ -410,24 +419,22 @@ void IIRIIRFilter<double>::initialize(const int nb, const double b[],
     // Check inputs
     if (nb < 1 || na < 1 || b == nullptr || a == nullptr)
     {
-        if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
-        if (na < 1){RTSEIS_THROW_IA("%s", "No a coefficients");}
-        if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
-        RTSEIS_THROW_IA("%s", "a is NULL");
+        if (nb < 1){throw std::invalid_argument("No b coefficients");}
+        if (na < 1){throw std::invalid_argument("No a coefficients");}
+        if (b == nullptr){throw std::invalid_argument("b is NULL");}
+        throw std::invalid_argument("a is NULL");
     }
-    if (a[0] == 0)
-    {
-        RTSEIS_THROW_IA("%s", "a[0] cannot equal 0");
-    }
-    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
-#ifdef DEBUG
-    int ierr = pIIRIIR_->initialize(nb, b, na, a, precision);
+    if (a[0] == 0){throw std::invalid_argument("a[0] cannot equal 0");}
+#ifndef NDEBUG
+    int ierr = pIIRIIR_->initialize(nb, b, na, a);
     assert(ierr == 0);
 #else
-    pIIRIIR_->initialize(nb, b, na, a, precision);
+    int ierr = pIIRIIR_->initialize(nb, b, na, a);
+    if (ierr != 0){throw std::runtime_error("Failed to initialize filter");}
 #endif
 }
 
+/*
 /// Initialize the filter (float)
 template<>
 void IIRIIRFilter<float>::initialize(const int nb, const double b[],
@@ -440,34 +447,37 @@ void IIRIIRFilter<float>::initialize(const int nb, const double b[],
         if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
         if (na < 1){RTSEIS_THROW_IA("%s", "No a coefficients");}
         if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
-        RTSEIS_THROW_IA("%s", "a is NULL");
+        throw std::invalid_argument("a is NULL");
     }
     if (a[0] == 0)
     {
-        RTSEIS_THROW_IA("%s", "a[0] cannot equal 0");
+        throw std::invalid_argument("a[0] cannot equal 0");
     }
     constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
-#ifdef DEBUG
+#ifndef NDEBUG
     int ierr = pIIRIIR_->initialize(nb, b, na, a, precision);
     assert(ierr == 0);
 #else
     pIIRIIR_->initialize(nb, b, na, a, precision);
 #endif
 }
+*/
 
 /// Initial conditions
 template<class T>
 void IIRIIRFilter<T>::setInitialConditions(const int nz, const double zi[])
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int nzRef = pIIRIIR_->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
-        RTSEIS_THROW_IA("%s", "zi is NULL");
+        if (nz != nzRef)
+        {
+            auto errmsg = "nz = " + std::to_string(nz)
+                + " must equal " + std::to_string(nzRef);
+            throw std::invalid_argument(errmsg);
+        }
+        throw std::invalid_argument("zi is NULL");
     }
     pIIRIIR_->setInitialConditions(nz, zi);
 }
@@ -485,15 +495,12 @@ template<class T>
 void IIRIIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;}
-    if (!pIIRIIR_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
 #ifdef DEBUG
     int ierr = pIIRIIR_->apply(n, x, y);
@@ -507,10 +514,7 @@ void IIRIIRFilter<T>::apply(const int n, const T x[], T *yIn[])
 template<class T>
 void IIRIIRFilter<T>::resetInitialConditions()
 {
-    if (!pIIRIIR_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     pIIRIIR_->resetInitialConditions();
 }
 
@@ -518,10 +522,7 @@ void IIRIIRFilter<T>::resetInitialConditions()
 template<class T>
 int IIRIIRFilter<T>::getInitialConditionLength() const
 {
-    if (!pIIRIIR_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int len = pIIRIIR_->getInitialConditionLength();
     return len;
 }
@@ -531,10 +532,7 @@ template<class T>
 [[maybe_unused]]
 int IIRIIRFilter<T>::getFilterOrder() const
 {
-    if (!pIIRIIR_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int len = pIIRIIR_->getFilterOrder();
     return len;
 }

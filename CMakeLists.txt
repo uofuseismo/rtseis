@@ -143,7 +143,8 @@ SET(UTILS_SRCS
 SET(MODULES_SRCS
     src/modules/detrend.cpp
     src/modules/demean.cpp
-    src/modules/classicSTALTA.cpp)
+    #src/modules/classicSTALTA.cpp
+    )
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
     src/postProcessing/singleChannel/waveform.cpp

@@ -12,7 +12,7 @@ using namespace RTSeis::Utilities::CharacteristicFunction;
 
 namespace 
 {
-template<typename T>
+template<RTSeis::ProcessingMode E, typename T>
 void compute(const int n, const int mChunkSize,
              const T mRatio, const T mQuiet,
              const T *x, T *y,
@@ -20,10 +20,10 @@ void compute(const int n, const int mChunkSize,
              T *__attribute__((aligned(64))) yWork,
              T *__attribute__((aligned(64))) staSignal,
              T *__attribute__((aligned(64))) ltaSignal,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<T> &mSTAFilter,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<T> &mLTAFilter,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<T> &mSTARFilter,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<T> &mLTARFilter)
+             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mSTAFilter,
+             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mLTAFilter,
+             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mSTARFilter,
+             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mLTARFilter)
 {
     // Loop on chunks
     for (int i=0; i<n; i=i+mChunkSize)
@@ -147,17 +147,13 @@ public:
         std::vector<double> firCoeffs(mLTALength, 0.0);
         std::fill(firCoeffs.data(), firCoeffs.data() + mSTALength,
                   1./static_cast<double> (mSTALength));
-        mSTAFilter.initialize(mSTALength, firCoeffs.data(),
-                              RTSeis::ProcessingMode::REAL_TIME);
-        mSTARFilter.initialize(mSTALength, firCoeffs.data(),
-                               RTSeis::ProcessingMode::REAL_TIME);
+        mSTAFilter.initialize(mSTALength, firCoeffs.data());
+        mSTARFilter.initialize(mSTALength, firCoeffs.data());
 
         std::fill(firCoeffs.data(), firCoeffs.data() + mLTALength,
                   1./static_cast<double> (mLTALength));
-        mLTAFilter.initialize(mLTALength, firCoeffs.data(),
-                              RTSeis::ProcessingMode::REAL_TIME);
-        mLTARFilter.initialize(mLTALength, firCoeffs.data(),
-                               RTSeis::ProcessingMode::REAL_TIME);
+        mLTAFilter.initialize(mLTALength, firCoeffs.data());
+        mLTARFilter.initialize(mLTALength, firCoeffs.data());
 
         if (mDoublePrecision)
         {
@@ -205,13 +201,13 @@ public:
     /// Workspace for LTA signal in block.  This has dimension [mChunkSize].
     void *__attribute__((aligned(64))) mLTA = nullptr;
     /// STA FIR filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<T> mSTAFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mSTAFilter;
     /// LTA FIR filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<T> mLTAFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mLTAFilter;
     /// Rectified STA filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<T> mSTARFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mSTARFilter;
     /// Rectified LTA filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<T> mLTARFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mLTARFilter;
     /// Ratio - scales the rectified LTA
     T mRatio = 1;
     /// Shift to increase sensitifity of characteristic function

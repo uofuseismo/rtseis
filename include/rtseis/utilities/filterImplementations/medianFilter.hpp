@@ -10,8 +10,8 @@ namespace RTSeis::Utilities::FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
-template<class T = double,
-         RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST_PROCESSING>
+template<RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST,
+        class T = double>
 class MedianFilter
 {
 public:

@@ -710,8 +710,8 @@ TEST(UtilitiesTransforms, firEnvelope)
                                     3.594503058524673, 2.652854154751004,
                                     1.787936920537643};
     std::vector<double> ySimple(xSimple.size(), 0);
-    FIREnvelope<double> env;
-    EXPECT_NO_THROW(env.initialize(5, RTSeis::ProcessingMode::POST_PROCESSING));
+    FIREnvelope<RTSeis::ProcessingMode::POST, double> env;
+    EXPECT_NO_THROW(env.initialize(5));
     double *yPtr = ySimple.data();
     EXPECT_NO_THROW(env.transform(xSimple.size(),
                     xSimple.data(), &yPtr));
@@ -725,7 +725,7 @@ TEST(UtilitiesTransforms, firEnvelope)
                         ySimple.size(), &error);
     ASSERT_LE(error, tol);
 
-    EXPECT_NO_THROW(env.initialize(6, RTSeis::ProcessingMode::POST_PROCESSING));
+    EXPECT_NO_THROW(env.initialize(6));
     yPtr = ySimple.data();
     EXPECT_NO_THROW(env.transform(xSimple.size(), xSimple.data(), &yPtr));
     ippsNormDiff_L1_64f(ySimpleRef2.data(), ySimple.data(), 
@@ -738,9 +738,8 @@ TEST(UtilitiesTransforms, firEnvelope)
     ASSERT_EQ(static_cast<int> (upRef300.size()), 4000);
     ASSERT_EQ(static_cast<int> (upRef301.size()), 4000);
     // Create with copy constructor
-    FIREnvelope<double> env300;
-    EXPECT_NO_THROW(env300.initialize(300,
-                    RTSeis::ProcessingMode::POST_PROCESSING));
+    FIREnvelope<RTSeis::ProcessingMode::POST, double> env300;
+    EXPECT_NO_THROW(env300.initialize(300));
     env = env300;
     std::vector<double> up(x.size());
     yPtr = up.data();
@@ -748,9 +747,8 @@ TEST(UtilitiesTransforms, firEnvelope)
     ippsNormDiff_L1_64f(upRef300.data(), up.data(),  upRef300.size(), &error);
     ASSERT_LE(error/upRef300.size(), 1.e-8);
     // Test move constructor
-    FIREnvelope<double> env301;
-    EXPECT_NO_THROW(env301.initialize(301,
-                    RTSeis::ProcessingMode::POST_PROCESSING));
+    FIREnvelope<RTSeis::ProcessingMode::POST, double> env301;
+    EXPECT_NO_THROW(env301.initialize(301));
     env = std::move(env301);
     yPtr = up.data();
     env.transform(x.size(), x.data(), &yPtr);
@@ -761,19 +759,19 @@ TEST(UtilitiesTransforms, firEnvelope)
     ippsMean_64f(x.data(), x.size(), &mean);
     ippsSubC_64f_I(mean, x.data(), x.size());
     auto timeStart = std::chrono::high_resolution_clock::now();
-    env.initialize(300, RTSeis::ProcessingMode::POST_PROCESSING);
+    env.initialize(300);
     ippsZero_64f(upRef300.data(), upRef300.size()); 
     yPtr = upRef300.data();
     env.transform(x.size(), x.data(), &yPtr);
-    env.initialize(301, RTSeis::ProcessingMode::POST_PROCESSING);
+    env.initialize(301);
     ippsZero_64f(upRef301.data(), upRef301.size());
     yPtr = upRef301.data();
     env.transform(x.size(), x.data(), &yPtr);
     // Test the real-time component
-    FIREnvelope<double> envrt300, envrt301;
+    FIREnvelope<RTSeis::ProcessingMode::REAL_TIME, double> envrt300, envrt301;
     std::vector<double> up300(x.size()), up301(x.size());
-    envrt300.initialize(300, RTSeis::ProcessingMode::REAL_TIME);
-    envrt301.initialize(301, RTSeis::ProcessingMode::REAL_TIME);
+    envrt300.initialize(300);
+    envrt301.initialize(301);
     auto timeEnd = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> tdif = timeEnd - timeStart;
     fprintf(stdout, "Reference time: %.8e (s)\n", tdif.count());

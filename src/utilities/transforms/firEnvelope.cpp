@@ -11,8 +11,48 @@
 using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::Transforms;
 
-template<class T>
-class FIREnvelope<T>::FIREnvelopeImpl
+namespace
+{
+void ippsMean(const double x[], const int n, double *pMean)
+{
+    ippsMean_64f(x, n, pMean);
+}
+void ippsMean(const float x[], const int n, float *pMean)
+{
+    ippsMean_32f(x, n, pMean, ippAlgHintAccurate);
+}
+void ippsSubC(const double x[], const double pMean, double xPad[],
+              const int n)
+{
+    ippsSubC_64f(x, pMean, xPad, n);
+}
+void ippsSubC(const float x[], const float pMean, float xPad[],
+              const int n)
+{
+    ippsSubC_32f(x, pMean, xPad, n);
+}
+void ippsAddC_I(const double pMean, double y[], const int n)
+{
+    ippsAddC_64f_I(pMean, y, n);
+}
+void ippsAddC_I(const float pMean, float y[], const int n)
+{
+    ippsAddC_32f_I(pMean, y, n);
+}
+void ippsMagnitude(const double pSrcRe[], const double pSrcIm[],
+                   double pDst[], const int len)
+{
+    ippsMagnitude_64f(pSrcRe, pSrcIm, pDst, len);
+}
+void ippsMagnitude(const float pSrcRe[], const float pSrcIm[],
+                   float pDst[], const int len)
+{
+    ippsMagnitude_32f(pSrcRe, pSrcIm, pDst, len);
+}
+}
+
+template<RTSeis::ProcessingMode E, class T>
+class FIREnvelope<E, T>::FIREnvelopeImpl
 {
 public:
     FIREnvelopeImpl() = default;
@@ -32,45 +72,44 @@ public:
         mType3 = firEnvelope.mType3;
         mHaveInitialCondition = firEnvelope.mHaveInitialCondition;
         mInitialized = firEnvelope.mInitialized;
-        mMode = firEnvelope.mMode;
-        return *this; 
+        return *this;
     }
 
-    FilterImplementations::FIRFilter<T> mRealFIRFilter;
-    FilterImplementations::FIRFilter<T> mImagFIRFilter;
+    FilterImplementations::FIRFilter<E, T> mRealFIRFilter;
+    FilterImplementations::FIRFilter<E, T> mImagFIRFilter;
     double mMean = 0;
     int mNumberOfTaps = 0;
     bool mZeroPhase = true;
     bool mType3 = false;
     bool mHaveInitialCondition = false;
     bool mInitialized = false;
-    ProcessingMode mMode = ProcessingMode::POST_PROCESSING;
+    const ProcessingMode mMode = E;
 };
 
 /// Constructor
-template<class T>
-FIREnvelope<T>::FIREnvelope() :
+template<RTSeis::ProcessingMode E, class T>
+FIREnvelope<E, T>::FIREnvelope() :
     pImpl(std::make_unique<FIREnvelopeImpl> ())
 {
 }
 
 /// Copy constructor
-template<class T>
-FIREnvelope<T>::FIREnvelope(const FIREnvelope &firEnvelope)
+template<RTSeis::ProcessingMode E, class T>
+FIREnvelope<E, T>::FIREnvelope(const FIREnvelope &firEnvelope)
 {
     *this = firEnvelope;
 }
 
 /// Move constructor
-template<class T>
-FIREnvelope<T>::FIREnvelope(FIREnvelope &&firEnvelope) noexcept
+template<RTSeis::ProcessingMode E, class T>
+FIREnvelope<E, T>::FIREnvelope(FIREnvelope &&firEnvelope) noexcept
 {
     *this = std::move(firEnvelope);
 }
 
 /// Copy assignment
-template<class T>
-FIREnvelope<T>& FIREnvelope<T>::operator=(const FIREnvelope &firEnvelope)
+template<RTSeis::ProcessingMode E, class T>
+FIREnvelope<E, T>& FIREnvelope<E, T>::operator=(const FIREnvelope &firEnvelope)
 {
     if (&firEnvelope == this){return *this;}
     pImpl = std::make_unique<FIREnvelopeImpl> (*firEnvelope.pImpl);
@@ -78,8 +117,9 @@ FIREnvelope<T>& FIREnvelope<T>::operator=(const FIREnvelope &firEnvelope)
 }
 
 /// Move assignment
-template<class T>
-FIREnvelope<T>& FIREnvelope<T>::operator=(FIREnvelope &&firEnvelope) noexcept
+template<RTSeis::ProcessingMode E, class T>
+FIREnvelope<E, T>&
+FIREnvelope<E, T>::operator=(FIREnvelope &&firEnvelope) noexcept
 {
     if (&firEnvelope == this){return *this;}
     pImpl = std::move(firEnvelope.pImpl);
@@ -87,12 +127,12 @@ FIREnvelope<T>& FIREnvelope<T>::operator=(FIREnvelope &&firEnvelope) noexcept
 }
 
 /// Destructor
-template<class T>
-FIREnvelope<T>::~FIREnvelope() = default;
+template<RTSeis::ProcessingMode E, class T>
+FIREnvelope<E, T>::~FIREnvelope() = default;
 
 /// Clear the filter
-template<class T>
-void FIREnvelope<T>::clear() noexcept
+template<RTSeis::ProcessingMode E, class T>
+void FIREnvelope<E, T>::clear() noexcept
 {
     pImpl->mRealFIRFilter.clear();
     pImpl->mImagFIRFilter.clear();
@@ -102,27 +142,24 @@ void FIREnvelope<T>::clear() noexcept
     pImpl->mType3 = false;
     pImpl->mHaveInitialCondition = false;
     pImpl->mInitialized = false;
-    pImpl->mMode = ProcessingMode::POST_PROCESSING;
 }
 
 /// Check if initialized
-template<class T>
-bool FIREnvelope<T>::isInitialized() const noexcept
+template<RTSeis::ProcessingMode E, class T>
+bool FIREnvelope<E, T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Initialize
-template<class T>
-void FIREnvelope<T>::initialize(const int ntaps,
-                                const RTSeis::ProcessingMode mode)
+template<RTSeis::ProcessingMode E, class T>
+void FIREnvelope<E, T>::initialize(const int ntaps)
 {
     clear();
     if (ntaps < 1)
     {
         RTSEIS_THROW_IA("ntaps = %d must be positive", ntaps);
     }
-    pImpl->mMode = mode;
     pImpl->mType3 = false;
     if (ntaps%2 == 1){pImpl->mType3 = true;}
     pImpl->mNumberOfTaps = ntaps;
@@ -134,11 +171,9 @@ void FIREnvelope<T>::initialize(const int ntaps,
     {
         auto zfir = FilterDesign::FIR::HilbertTransformer(ntaps - 1, beta);
         auto rfir = zfir.first.getFilterTaps();
-        pImpl->mRealFIRFilter.initialize(rfir.size(), rfir.data(),
-                                         mode, direct);
+        pImpl->mRealFIRFilter.initialize(rfir.size(), rfir.data(), direct);
         auto cfir = zfir.second.getFilterTaps();
-        pImpl->mImagFIRFilter.initialize(cfir.size(), cfir.data(),
-                                         mode, direct);
+        pImpl->mImagFIRFilter.initialize(cfir.size(), cfir.data(), direct);
     }
     catch (const std::exception &e) 
     {
@@ -150,8 +185,8 @@ void FIREnvelope<T>::initialize(const int ntaps,
 }
 
 /// Get the initial condition length
-template<class T>
-int FIREnvelope<T>::getInitialConditionLength() const
+template<RTSeis::ProcessingMode E, class T>
+int FIREnvelope<E, T>::getInitialConditionLength() const
 {
     if (!isInitialized())
     {
@@ -161,8 +196,8 @@ int FIREnvelope<T>::getInitialConditionLength() const
 }
 
 /// Sets the initial conditions
-template<class T>
-void FIREnvelope<T>::setInitialConditions(const int nz, const double zi[])
+template<RTSeis::ProcessingMode E, class T>
+void FIREnvelope<E, T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized())
     {
@@ -179,8 +214,8 @@ void FIREnvelope<T>::setInitialConditions(const int nz, const double zi[])
 }
 
 /// Resets the initial conditions
-template<class T>
-void FIREnvelope<T>::resetInitialConditions()
+template<RTSeis::ProcessingMode E, class T>
+void FIREnvelope<E, T>::resetInitialConditions()
 {
     if (!isInitialized())
     {
@@ -191,65 +226,63 @@ void FIREnvelope<T>::resetInitialConditions()
 }
 
 /// Perform transform
-template<>
-void FIREnvelope<double>::transform(const int n, const double x[], double *yIn[])
+template<RTSeis::ProcessingMode E, class T>
+void FIREnvelope<E, T>::transform(const int n, const T x[], T *yIn[])
 {
     pImpl->mMean = 0;
     if (n < 1){return;} // Nothing to do
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Failed to initialize");
-    }
-    double *y = *yIn;
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    auto y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        throw std::invalid_argument("y is NULL");
     }
     // Post-processing removes the phase shift
     if (pImpl->mMode == RTSeis::ProcessingMode::POST_PROCESSING)
     {
         // Compute the mean
-        double pMean;
-        ippsMean_64f(x, n, &pMean);
+        T pMean;
+        ippsMean(x, n, &pMean);
         pImpl->mMean = pMean;
         // Remove the mean and pad out the signal
         // N.B. The group delay is actually + 1 but C wants to shift relative to
         // a base address so we subtract the one.  Hence, n/2 instead of n/2+1.
         int groupDelay = pImpl->mNumberOfTaps/2;
         int npad = n + groupDelay;
-        double *xPad = ippsMalloc_64f(npad);
-        ippsSubC_64f(x, pMean, xPad, n);
-        ippsZero_64f(&xPad[n], groupDelay); // Post-pad with zeros
+        auto xPad = reinterpret_cast<T *> (ippsMalloc_8u(npad*sizeof(T))); // ippsMalloc_64f(npad);
+        ippsSubC(x, pMean, xPad, n);
+        std::fill(xPad + n, xPad + n  + groupDelay, 0); // Post-pad with zeros
+        //ippsZero_64f(&xPad[n], groupDelay); // Post-pad with zeros
         // Now apply the filter and compute absolute value - Type III
         if (pImpl->mType3)
         {
-            double *yPadr = xPad;
-            double *yPadi = ippsMalloc_64f(npad);
+            T *yPadr = xPad;
+            auto yPadi = reinterpret_cast<T *>(ippsMalloc_8u(npad*sizeof(T)));// ippsMalloc_64f(npad);
             pImpl->mImagFIRFilter.apply(npad, xPad, &yPadi); 
-            ippsMagnitude_64f(yPadr, &yPadi[groupDelay], y, n);
+            ippsMagnitude(yPadr, &yPadi[groupDelay], y, n);
             ippsFree(yPadi);
         }
         else
         {
-            double *yPadr = ippsMalloc_64f(npad);
+            auto yPadr = reinterpret_cast<T *>(ippsMalloc_8u(npad*sizeof(T))); //ippsMalloc_64f(npad);
             pImpl->mRealFIRFilter.apply(npad, xPad, &yPadr);
-            double *yPadi = ippsMalloc_64f(npad);
+            auto yPadi = reinterpret_cast<T *>(ippsMalloc_8u(npad*sizeof(T))); //ippsMalloc_64f(npad);
             pImpl->mImagFIRFilter.apply(npad, xPad, &yPadi);
-            ippsMagnitude_64f(&yPadr[groupDelay], &yPadi[groupDelay], y, n);
+            ippsMagnitude(&yPadr[groupDelay], &yPadi[groupDelay], y, n);
             ippsFree(yPadr);
             ippsFree(yPadi);
         }
         ippsFree(xPad);
         // Reconstitute the mean
-        ippsAddC_64f_I(pMean, y, n);
+        ippsAddC_I(pMean, y, n);
     }
     else
     {
         // TODO - add a sparse FIR filter for the type III case
         constexpr int chunkSize = 1024;
-        std::array<double, chunkSize> yrTemp;
-        std::array<double, chunkSize> yiTemp;
+        std::array<T, chunkSize> yrTemp;
+        std::array<T, chunkSize> yiTemp;
         for (auto ic=0; ic<n; ic=ic+chunkSize)
         {
             auto npfilt = std::min(n - ic, chunkSize);
@@ -257,11 +290,12 @@ void FIREnvelope<double>::transform(const int n, const double x[], double *yIn[]
             auto yiTempDataPtr = yiTemp.data();
             pImpl->mRealFIRFilter.apply(npfilt, &x[ic], &yrTempDataPtr); //yrTemp.data());
             pImpl->mImagFIRFilter.apply(npfilt, &x[ic], &yiTempDataPtr); //yiTemp.data());
-            ippsMagnitude_64f(yrTemp.data(), yiTemp.data(), &y[ic], npfilt);
+            ippsMagnitude(yrTemp.data(), yiTemp.data(), &y[ic], npfilt);
         }
     }
 }
 
+/*
 template<>
 void FIREnvelope<float>::transform(const int n, const float x[], float *yIn[])
 {
@@ -282,7 +316,7 @@ void FIREnvelope<float>::transform(const int n, const float x[], float *yIn[])
     {
         // Compute the mean
         float pMean;
-        ippsMean_32f(x, n, &pMean, ippAlgHintAccurate);
+        ippsMean(x, n, &pMean, ippAlgHintAccurate);
         pImpl->mMean = pMean;
         // Remove the mean and pad out the signal
         // N.B. The group delay is actually + 1 but C wants to shift relative to
@@ -290,15 +324,16 @@ void FIREnvelope<float>::transform(const int n, const float x[], float *yIn[])
         int groupDelay = pImpl->mNumberOfTaps/2;
         int npad = n + groupDelay;
         float *xPad = ippsMalloc_32f(npad);
-        ippsSubC_32f(x, pMean, xPad, n);
-        ippsZero_32f(&xPad[n], groupDelay); // Post-pad with zeros
+        ippsSubC(x, pMean, xPad, n);
+        //ippsZero_32f(&xPad[n], groupDelay);
+        std::fill(xPad + n, xPad + n  + groupDelay, 0); // Post-pad with zeros
         // Now apply the filter and compute absolute value - Type III
         if (pImpl->mType3)
         {
             float *yPadr = xPad;
             float *yPadi = ippsMalloc_32f(npad);
             pImpl->mImagFIRFilter.apply(npad, xPad, &yPadi);
-            ippsMagnitude_32f(yPadr, &yPadi[groupDelay], y, n);
+            ippsMagnitude(yPadr, &yPadi[groupDelay], y, n);
             ippsFree(yPadi);
         }
         else
@@ -307,13 +342,13 @@ void FIREnvelope<float>::transform(const int n, const float x[], float *yIn[])
             pImpl->mRealFIRFilter.apply(npad, xPad, &yPadr);
             float *yPadi = ippsMalloc_32f(npad);
             pImpl->mImagFIRFilter.apply(npad, xPad, &yPadi);
-            ippsMagnitude_32f(&yPadr[groupDelay], &yPadi[groupDelay], y, n);
+            ippsMagnitude(&yPadr[groupDelay], &yPadi[groupDelay], y, n);
             ippsFree(yPadr);
             ippsFree(yPadi);
         }
         ippsFree(xPad);
         // Reconstitute the mean
-        ippsAddC_32f_I(pMean, y, n);
+        ippsAddC_I(pMean, y, n);
     }
     else
     {
@@ -328,11 +363,14 @@ void FIREnvelope<float>::transform(const int n, const float x[], float *yIn[])
             auto yiTempDataPtr = yiTemp.data();
             pImpl->mRealFIRFilter.apply(npfilt, &x[ic], &yrTempDataPtr); //yrTemp.data());
             pImpl->mImagFIRFilter.apply(npfilt, &x[ic], &yiTempDataPtr); //yiTemp.data());
-            ippsMagnitude_32f(yrTemp.data(), yiTemp.data(), &y[ic], npfilt);
+            ippsMagnitude(yrTemp.data(), yiTemp.data(), &y[ic], npfilt);
         }
     }
 }
+*/
 
 /// Template instantiation
-template class RTSeis::Utilities::Transforms::FIREnvelope<double>;
-template class RTSeis::Utilities::Transforms::FIREnvelope<float>;
+template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::REAL_TIME, float>;

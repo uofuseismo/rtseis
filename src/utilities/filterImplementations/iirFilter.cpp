@@ -12,8 +12,8 @@
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-template<class T, RTSeis::ProcessingMode E>
-class IIRFilter<T, E>::IIRFilterImpl
+template<RTSeis::ProcessingMode E, class T>
+class IIRFilter<E, T>::IIRFilterImpl
 {
 public:
     /// Default constructor
@@ -465,7 +465,7 @@ public:
             #pragma omp simd
             for (int j=0; j<=order_; j++){vi[j] = v[j];}
         }
-        if (mMode == RTSeis::ProcessingMode::POST_PROCESSING)
+        if (mMode == RTSeis::ProcessingMode::POST)
         {
             #pragma omp simd
             for (int j=0; j<=order_; j++){vi[j] = 0;}
@@ -498,7 +498,7 @@ public:
             #pragma omp simd
             for (int j=0; j<=order_; j++){vi[j] = v[j];}
         }   
-        if (mMode == RTSeis::ProcessingMode::POST_PROCESSING)
+        if (mMode == RTSeis::ProcessingMode::POST)
         {   
             #pragma omp simd
             for (int j=0; j<=order_; j++){vi[j] = 0;} 
@@ -576,64 +576,64 @@ private:
 //============================================================================//
 
 /// C'tor
-template<class T, RTSeis::ProcessingMode E>
-IIRFilter<T, E>::IIRFilter() :
-    pIIR_(std::make_unique<IIRFilterImpl> ())
+template<RTSeis::ProcessingMode E, class T>
+IIRFilter<E, T>::IIRFilter() :
+    pImpl(std::make_unique<IIRFilterImpl> ())
 {
 }
 
 /// Copy c'tor
-template<class T, RTSeis::ProcessingMode E>
+template<RTSeis::ProcessingMode E, class T>
 [[maybe_unused]]
-IIRFilter<T, E>::IIRFilter(const IIRFilter &iir)
+IIRFilter<E, T>::IIRFilter(const IIRFilter &iir)
 {
     *this = iir;
 }
 
 /// Move c'tor
-template<class T, RTSeis::ProcessingMode E>
+template<RTSeis::ProcessingMode E, class T>
 [[maybe_unused]]
-IIRFilter<T, E>::IIRFilter(IIRFilter &&iir) noexcept
+IIRFilter<E, T>::IIRFilter(IIRFilter &&iir) noexcept
 {
     *this = std::move(iir);
 }
 
 /// Copy assignment
-template<class T, RTSeis::ProcessingMode E>
-IIRFilter<T, E>& IIRFilter<T, E>::operator=(const IIRFilter &iir)
+template<RTSeis::ProcessingMode E, class T>
+IIRFilter<E, T>& IIRFilter<E, T>::operator=(const IIRFilter &iir)
 {
     if (&iir == this){return *this;}
-    if (pIIR_){pIIR_->clear();}
-    pIIR_ = std::make_unique<IIRFilterImpl> (*iir.pIIR_);
+    if (pImpl){pImpl->clear();}
+    pImpl = std::make_unique<IIRFilterImpl> (*iir.pImpl);
     return *this;
 }
 
 /// Move assignment
-template<class T, RTSeis::ProcessingMode E>
-IIRFilter<T, E>& IIRFilter<T, E>::operator=(IIRFilter &&iir) noexcept
+template<RTSeis::ProcessingMode E, class T>
+IIRFilter<E, T>& IIRFilter<E, T>::operator=(IIRFilter &&iir) noexcept
 {
     if (&iir == this){return  *this;}
-    pIIR_ = std::move(iir.pIIR_);
+    pImpl = std::move(iir.pImpl);
     return *this;
 }
 
 /// Destructor
-template<class T, RTSeis::ProcessingMode E>
-IIRFilter<T, E>::~IIRFilter()
+template<RTSeis::ProcessingMode E, class T>
+IIRFilter<E, T>::~IIRFilter()
 {
     clear();
 }
 
 /// Resets the class
-template<class T, RTSeis::ProcessingMode E>
-void IIRFilter<T, E>::clear() noexcept
+template<RTSeis::ProcessingMode E, class T>
+void IIRFilter<E, T>::clear() noexcept
 {
-    pIIR_->clear();
+    pImpl->clear();
 }
 
 /// Initialization
-template<class T, RTSeis::ProcessingMode E>
-void IIRFilter<T, E>::initialize(const int nb, const double b[],
+template<RTSeis::ProcessingMode E, class T>
+void IIRFilter<E, T>::initialize(const int nb, const double b[],
                                  const int na, const double a[],
                                  const IIRDFImplementation implementation)
 {
@@ -650,55 +650,26 @@ void IIRFilter<T, E>::initialize(const int nb, const double b[],
     }
     if (a[0] == 0){throw std::invalid_argument("a[0] cannot be zero");}
 #ifndef NDEBUG
-    int ierr = pIIR_->initialize(nb, b, na, a, implementation);
+    int ierr = pImpl->initialize(nb, b, na, a, implementation);
     assert(ierr == 0);
 #else
-    pIIR_->initialize(nb, b, na, a, implementation);
+    pImpl->initialize(nb, b, na, a, implementation);
 #endif
 }
-
-/*
-template<class T, RTSeis::ProcessingMode E>
-void IIRFilter<float, E>::initialize(const int nb, const double b[],
-                                  const int na, const double a[],
-                                  const RTSeis::ProcessingMode mode,
-                                  const IIRDFImplementation implementation)
-{
-    clear();
-    if (nb < 1 || b == nullptr || na < 1 || a == nullptr)
-    {
-        if (nb < 1){throw std::invalid_argument("No numerator coefficients");}
-        if (na < 1)
-        {
-            throw std::invalid_argument("No denominator coefficients");
-        }
-        if (b == nullptr){throw std::invalid_argument("b is NULL");}
-        throw std::invalid_argument("a is NULL");
-    }
-    if (a[0] == 0){throw std::invalid_argument("a[0] cannot be zero");}
-    constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
-#ifndef NDEBUG
-    int ierr = pIIR_->initialize(nb, b, na, a, mode, precision, implementation);
-    assert(ierr == 0);
-#else
-    pIIR_->initialize(nb, b, na, a, mode, precision, implementation);
-#endif
-}
-*/
 
 /// Initial conditions
-template<class T, RTSeis::ProcessingMode E>
-int IIRFilter<T, E>::getInitialConditionLength() const
+template<RTSeis::ProcessingMode E, class T>
+int IIRFilter<E, T>::getInitialConditionLength() const
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    return pIIR_->getInitialConditionLength();
+    return pImpl->getInitialConditionLength();
 }
 
-template<class T, RTSeis::ProcessingMode E>
-void IIRFilter<T, E>::setInitialConditions(const int nz, const double zi[])
+template<RTSeis::ProcessingMode E, class T>
+void IIRFilter<E, T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    int nzRef = pIIR_->getInitialConditionLength();
+    int nzRef = pImpl->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
         if (nz != nzRef)
@@ -709,18 +680,18 @@ void IIRFilter<T, E>::setInitialConditions(const int nz, const double zi[])
         }
         throw std::invalid_argument("zi is NULL");
     }
-    pIIR_->setInitialConditions(nz, zi);
+    pImpl->setInitialConditions(nz, zi);
 }
 
-template<class T, RTSeis::ProcessingMode E>
-void IIRFilter<T, E>::resetInitialConditions()
+template<RTSeis::ProcessingMode E, class T>
+void IIRFilter<E, T>::resetInitialConditions()
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    pIIR_->resetInitialConditions();
+    pImpl->resetInitialConditions();
 }
 
-template<class T, RTSeis::ProcessingMode E>
-void IIRFilter<T, E>::apply(const int n, const T x[], T *yIn[])
+template<RTSeis::ProcessingMode E, class T>
+void IIRFilter<E, T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;} // Nothing to do
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
@@ -731,10 +702,10 @@ void IIRFilter<T, E>::apply(const int n, const T x[], T *yIn[])
         throw std::invalid_argument("y is NULL");
     } 
 #ifndef NDEBUG
-    int ierr = pIIR_->apply(n, x, y);
+    int ierr = pImpl->apply(n, x, y);
     assert(ierr == 0);
 #else
-    auto error = pIIR_->apply(n, x, y);
+    auto error = pImpl->apply(n, x, y);
     if (error != 0)
     {
         throw std::runtime_error("Failed to apply filter");
@@ -742,14 +713,14 @@ void IIRFilter<T, E>::apply(const int n, const T x[], T *yIn[])
 #endif
 }
 
-template<class T, RTSeis::ProcessingMode E>
-bool IIRFilter<T, E>::isInitialized() const noexcept
+template<RTSeis::ProcessingMode E, class T>
+bool IIRFilter<E, T>::isInitialized() const noexcept
 {
-    return pIIR_->isInitialized();
+    return pImpl->isInitialized();
 }
 
 /// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<double, RTSeis::ProcessingMode::POST_PROCESSING>;
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<double, RTSeis::ProcessingMode::REAL_TIME>;
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<float, RTSeis::ProcessingMode::POST_PROCESSING>;
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<float, RTSeis::ProcessingMode::REAL_TIME>;
+template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::REAL_TIME, float>;

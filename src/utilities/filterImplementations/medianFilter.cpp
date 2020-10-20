@@ -9,8 +9,8 @@
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-template<class T, RTSeis::ProcessingMode E>
-class MedianFilter<T, E>::MedianFilterImpl
+template<RTSeis::ProcessingMode E, class T>
+class MedianFilter<E, T>::MedianFilterImpl
 {
 public:
     /// Default constructor.
@@ -296,7 +296,7 @@ public:
     /// The size of the workspace buffer.
     int bufferSize_ = 0;
     /// Real-time vs. post-processing.
-    const RTSeis::ProcessingMode mMode = E; //RTSeis::ProcessingMode::POST_PROCESSING;
+    const RTSeis::ProcessingMode mMode = E;
     /// The default module implementation.
     const RTSeis::Precision mPrecision
          = (sizeof(T) == sizeof(double)) ? RTSeis::Precision::DOUBLE :
@@ -306,30 +306,30 @@ public:
 };
 
 /// C'tor
-template<class T, RTSeis::ProcessingMode E>
-MedianFilter<T, E>::MedianFilter() :
+template<RTSeis::ProcessingMode E, class T>
+MedianFilter<E, T>::MedianFilter() :
     pImpl(std::make_unique<MedianFilterImpl> ())
 {
 }
 
 /// Copy c'tor
-template<class T, RTSeis::ProcessingMode E>
-MedianFilter<T, E>::MedianFilter(const MedianFilter &median)
+template<RTSeis::ProcessingMode E, class T>
+MedianFilter<E, T>::MedianFilter(const MedianFilter &median)
 {
     *this = median;
 }
 
 /// Move c'tor
-template<class T, RTSeis::ProcessingMode E>
+template<RTSeis::ProcessingMode E, class T>
 [[maybe_unused]]
-MedianFilter<T, E>::MedianFilter(MedianFilter &&median) noexcept
+MedianFilter<E, T>::MedianFilter(MedianFilter &&median) noexcept
 {
     *this = std::move(median);
 }
 
 /// Copy assignment
-template<class T, RTSeis::ProcessingMode E>
-MedianFilter<T, E>& MedianFilter<T, E>::operator=(const MedianFilter &median)
+template<RTSeis::ProcessingMode E, class T>
+MedianFilter<E, T>& MedianFilter<E, T>::operator=(const MedianFilter &median)
 {
     if (&median == this){return *this;}
     if (pImpl){pImpl->clear();}
@@ -338,9 +338,9 @@ MedianFilter<T, E>& MedianFilter<T, E>::operator=(const MedianFilter &median)
 }
 
 /// Move assignment
-template<class T, RTSeis::ProcessingMode E>
-MedianFilter<T, E>&
-MedianFilter<T, E>::operator=(MedianFilter &&median) noexcept
+template<RTSeis::ProcessingMode E, class T>
+MedianFilter<E, T>&
+MedianFilter<E, T>::operator=(MedianFilter &&median) noexcept
 {
     if (&median == this){return *this;}
     pImpl = std::move(median.pImpl);
@@ -348,19 +348,19 @@ MedianFilter<T, E>::operator=(MedianFilter &&median) noexcept
 }
 
 /// Destructor
-template<class T, RTSeis::ProcessingMode E>
-MedianFilter<T, E>::~MedianFilter() = default;
+template<RTSeis::ProcessingMode E, class T>
+MedianFilter<E, T>::~MedianFilter() = default;
 
 /// Clears the class
-template<class T, RTSeis::ProcessingMode E>
-void MedianFilter<T, E>::clear() noexcept
+template<RTSeis::ProcessingMode E, class T>
+void MedianFilter<E, T>::clear() noexcept
 {
     pImpl->clear();
 }
 
 /// Initialization
-template<class T, RTSeis::ProcessingMode E>
-void MedianFilter<T, E>::initialize(const int n)
+template<RTSeis::ProcessingMode E, class T>
+void MedianFilter<E, T>::initialize(const int n)
 {
     clear();
     // Set the mask size
@@ -386,8 +386,8 @@ void MedianFilter<T, E>::initialize(const int n)
 }
 
 /// Sets the initial conditions
-template<class T, RTSeis::ProcessingMode E>
-void MedianFilter<T, E>::setInitialConditions(const int nz, const double zi[])
+template<RTSeis::ProcessingMode E, class T>
+void MedianFilter<E, T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int nzRef = pImpl->getInitialConditionLength();
@@ -404,21 +404,21 @@ void MedianFilter<T, E>::setInitialConditions(const int nz, const double zi[])
     pImpl->setInitialConditions(nz, zi);
 }
 
-template<class T, RTSeis::ProcessingMode E>
-void MedianFilter<T, E>::resetInitialConditions()
+template<RTSeis::ProcessingMode E, class T>
+void MedianFilter<E, T>::resetInitialConditions()
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     pImpl->resetInitialConditions();
 }
 
-template<class T, RTSeis::ProcessingMode E>
-bool MedianFilter<T, E>::isInitialized() const noexcept
+template<RTSeis::ProcessingMode E, class T>
+bool MedianFilter<E, T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
-template<class T, RTSeis::ProcessingMode E>
-int MedianFilter<T, E>::getInitialConditionLength() const
+template<RTSeis::ProcessingMode E, class T>
+int MedianFilter<E, T>::getInitialConditionLength() const
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     auto len = pImpl->getInitialConditionLength();
@@ -426,8 +426,8 @@ int MedianFilter<T, E>::getInitialConditionLength() const
 }
 
 /// Apply the filter
-template<class T, RTSeis::ProcessingMode E>
-void MedianFilter<T, E>::apply(const int n, const T x[], T *yIn[])
+template<RTSeis::ProcessingMode E, class T>
+void MedianFilter<E, T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;} // Nothing to do
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
@@ -445,16 +445,16 @@ void MedianFilter<T, E>::apply(const int n, const T x[], T *yIn[])
 #endif
 }
 
-template<class T, RTSeis::ProcessingMode E>
+template<RTSeis::ProcessingMode E, class T>
 [[maybe_unused]]
-int MedianFilter<T, E>::getGroupDelay() const
+int MedianFilter<E, T>::getGroupDelay() const
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized\n");}
     return pImpl->getGroupDelay();
 }
 
 /// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<double, RTSeis::ProcessingMode::POST_PROCESSING>;
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<double, RTSeis::ProcessingMode::REAL_TIME>;
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<float, RTSeis::ProcessingMode::POST_PROCESSING>;
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<float, RTSeis::ProcessingMode::REAL_TIME>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::REAL_TIME, float>;

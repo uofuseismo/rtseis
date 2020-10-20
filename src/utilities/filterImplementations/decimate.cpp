@@ -1,5 +1,9 @@
 #include <cstdio>
 #include <climits>
+#include <string>
+#ifndef NDEBBUG
+#include <cassert>
+#endif
 #include <ipps.h>
 #include "rtseis/enums.hpp"
 #include "private/throw.hpp"
@@ -12,46 +16,136 @@
 using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterImplementations;
 
-template<class T>
-class Decimate<T>::DecimateImpl
+template<RTSeis::ProcessingMode E, class T>
+class Decimate<E, T>::DecimateImpl
 {
 public:
-    //class MultiRateFIRFilter mMRFIRFilter; // TODO implementaiton is slow!
-    class FIRFilter<T> mFIRFilter;
-    class Downsample<T> mDownsampler; 
+    void initialize(const int downFactor,
+                    const int filterLength,
+                    const bool lRemovePhaseShift)
+    {
+        mDownFactor = downFactor;
+        int nfir = filterLength;
+        // Postprocessing is a little trickier - may have to extend filter length
+        if (mMode == RTSeis::ProcessingMode::POST_PROCESSING &&
+            lRemovePhaseShift)
+        {
+            bool lfail = true;
+            for (auto k=0; k<INT_MAX-1; ++k)
+            {
+                int groupDelay = (nfir-1)/2;
+                if (groupDelay%downFactor == 0 && nfir%2 == 1)
+                {
+                    lfail = false;
+                    break;
+                }
+                nfir = nfir + 1;
+            }
+#ifndef NDEBUG
+            assert(!lfail);
+#endif
+            if (lfail)
+            {
+                throw std::runtime_error("Padding algorithmic failure");
+            }
+            mGroupDelay = nfir/2;
+            mRemovePhaseShift = true;
+        }
+        // Create a hamming filter.
+        mFIRLength = nfir;
+        int order = nfir - 1;
+        auto r = 1.0/static_cast<double> (downFactor);
+        auto fir = FilterDesign::FIR::FIR1Lowpass(order, r,
+                                                  FilterDesign::FIRWindow::HAMMING);
+        // Set the multirate FIR filter
+        auto b = fir.getFilterTaps();
+        int ntaps = b.size();
+        try
+        {
+            mFIRFilter.initialize(ntaps, b.data());
+            mDownsampler.initialize(downFactor);
+        }
+        catch (std::exception &e)
+        {
+            auto errmsg = std::string("FIR filter initialization failed with: ")
+                        + e.what();
+            throw std::runtime_error(errmsg);
+        }
+        mInitialized = true;
+    }
+    void apply(const int nx, const T x[],
+               const int ny, int *nyDown, T y[])
+    {
+        if (mRemovePhaseShift)
+        {
+#ifndef NDEBUG
+            assert(mGroupDelay%mDownFactor == 0);
+#endif
+            // Postpend zeros so that the filter delay pushes our desired
+            // output to the end of the temporary array
+            int npad = nx + mGroupDelay;
+            auto xpad = reinterpret_cast<T *> (ippsMalloc_8u(npad*sizeof(T)));
+            std::copy(x, x + nx, xpad);
+            std::fill(xpad + nx, xpad + nx + mGroupDelay, 0);
+            //ippsCopy_64f(x, xpad, nx);
+            //ippsZero_64f(&xpad[nx], mGroupDelay);
+            // The FIR filter seems to perform better than the multirate FIR
+            // filter.  So don't fight it.
+            //double *yfilt = ippsMalloc_64f(npad);
+            auto yfilt = reinterpret_cast<T *> (ippsMalloc_8u(npad*sizeof(T)));
+            mFIRFilter.apply(npad, xpad, &yfilt);
+            mDownsampler.apply(nx, &yfilt[mGroupDelay],
+                               ny, nyDown, &y);
+            ippsFree(xpad);
+            ippsFree(yfilt);
+        }
+        else
+        {
+            // Just apply the downsampler
+            //pImpl->mMRFIRFilter.apply(nx, x, ny, nyDown, &y);
+            //double *yfilt = ippsMalloc_64f(nx);
+            auto yfilt = reinterpret_cast<T *> (ippsMalloc_8u(nx*sizeof(T)));
+            mFIRFilter.apply(nx, x, &yfilt);
+            mDownsampler.apply(nx, yfilt, ny, nyDown, &y);
+            ippsFree(yfilt);
+        }
+    }
+    //class MultiRateFIRFilter mMRFIRFilter; // TODO implementation is slow!
+    class FIRFilter<E, T> mFIRFilter;
+    class Downsample<E, T> mDownsampler; 
     int mDownFactor = 1;
     int mGroupDelay = 0;
     int mFIRLength = 0;
-    RTSeis::ProcessingMode mMode = RTSeis::ProcessingMode::POST_PROCESSING;
+    const RTSeis::ProcessingMode mMode = E;
     //RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
     bool mRemovePhaseShift = false;
     bool mInitialized = false;
 };
 
 /// C'tor
-template<class T>
-Decimate<T>::Decimate() :
+template<RTSeis::ProcessingMode E, class T>
+Decimate<E, T>::Decimate() :
     pImpl(std::make_unique<DecimateImpl> ())
 {
 }
 
 /// Copy c'tor
-template<class T>
-Decimate<T>::Decimate(const Decimate &decimate)
+template<RTSeis::ProcessingMode E, class T>
+Decimate<E, T>::Decimate(const Decimate &decimate)
 {
     *this = decimate;
 }
 
 /// Move c'tor
-template<class T>
-Decimate<T>::Decimate(Decimate &&decimate) noexcept
+template<RTSeis::ProcessingMode E, class T>
+Decimate<E, T>::Decimate(Decimate &&decimate) noexcept
 {
    *this = std::move(decimate);
 }
 
 /// Copy assignment
-template<class T>
-Decimate<T>& Decimate<T>::operator=(const Decimate &decimate)
+template<RTSeis::ProcessingMode E, class T>
+Decimate<E, T>& Decimate<E, T>::operator=(const Decimate &decimate)
 {
     if (&decimate == this){return *this;}
     if (pImpl){pImpl.reset();}
@@ -60,8 +154,8 @@ Decimate<T>& Decimate<T>::operator=(const Decimate &decimate)
 }
 
 /// Move assignemnt
-template<class T>
-Decimate<T>& Decimate<T>::operator=(Decimate &&decimate) noexcept
+template<RTSeis::ProcessingMode E, class T>
+Decimate<E, T>& Decimate<E, T>::operator=(Decimate &&decimate) noexcept
 {
     if (&decimate == this){return *this;}
     pImpl = std::move(decimate.pImpl);
@@ -69,17 +163,17 @@ Decimate<T>& Decimate<T>::operator=(Decimate &&decimate) noexcept
 }
 
 /// Destructor
-template<class T>
-Decimate<T>::~Decimate() = default;
+template<RTSeis::ProcessingMode E, class T>
+Decimate<E, T>::~Decimate() = default;
 
 /// Clears the class
-template<class T>
-void Decimate<T>::clear() noexcept
+template<RTSeis::ProcessingMode E, class T>
+void Decimate<E, T>::clear() noexcept
 {
     //pImpl->mMRFIRFilter.clear();
     pImpl->mFIRFilter.clear();
     pImpl->mDownsampler.clear();
-    pImpl->mMode = RTSeis::ProcessingMode::POST_PROCESSING;
+    //pImpl->mMode = RTSeis::ProcessingMode::POST_PROCESSING;
     //pImpl->mPrecision = RTSeis::Precision::DOUBLE;
     pImpl->mDownFactor = 1;
     pImpl->mGroupDelay = 0;
@@ -89,37 +183,39 @@ void Decimate<T>::clear() noexcept
 }
 
 /// Initilalization
-template<>
-void Decimate<double>::initialize(const int downFactor,
-                                  const int filterLength,
-                                  const bool lremovePhaseShift,
-                                  const RTSeis::ProcessingMode mode)
+template<RTSeis::ProcessingMode E, class T>
+void Decimate<E, T>::initialize(const int downFactor,
+                                const int filterLength,
+                                const bool lRemovePhaseShift)
 {
-    //constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
     clear();
-    if (downFactor < 1)
+    if (downFactor < 2)
     {
-        RTSEIS_THROW_IA("Downsampling factor = %d must be at least 2",
-                        downFactor);
+        auto errmsg = "Downsampling factor = " + std::to_string(downFactor)
+                    + " must be at least 2";
+        throw std::invalid_argument(errmsg);
     }
     if (filterLength < 5)
     {
-        RTSEIS_THROW_IA("Filter length = %d must be greater than 5",
-                        filterLength);
+        auto errmsg = "Filter length = " + std::to_string(filterLength)
+            + " must be at least 5";
     }
+    pImpl->initialize(downFactor, filterLength, lRemovePhaseShift);
+    /*
     // Set some properties
     pImpl->mDownFactor = downFactor;
     //pImpl->mPrecision = precision;
-    pImpl->mMode = mode;
+    //pImpl->mMode = mode;
     int nfir = filterLength;
     // Postprocessing is a little trickier - may have to extend filter length
-    if (mode == RTSeis::ProcessingMode::POST_PROCESSING && lremovePhaseShift)
+    if (pImpl->mode == RTSeis::ProcessingMode::POST_PROCESSING &&
+        lremovePhaseShift)
     {
         // N.B.  The idea is that we think of decimation as filtering then
         // downsampling.  The filter will introduce a group delay of
         // groupDelay = nfir/2 where nfir is odd (i.e., a unit impulse
         // introduce 1/2 = 0 delay).  The delay is then removed by
-        // extracing the filtered signal at yfiltered[groupDelay].
+        // extracting the filtered signal at yfiltered[groupDelay].
         // However, we have downsampled, so we really want
         // yfiltered[groupDelay/downFactor].  Therefore, our padding
         // has 2 conditions:
@@ -136,10 +232,10 @@ void Decimate<double>::initialize(const int downFactor,
             }
             nfir = nfir + 1;
         }
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(!lfail);
 #endif
-        if (lfail){RTSEIS_THROW_RTE("%s", "Algorithmic failure");}
+        if (lfail){throw std::runtime_error("Algorithmic failure");}
         pImpl->mGroupDelay = nfir/2;
         pImpl->mRemovePhaseShift = true;
     } 
@@ -149,55 +245,56 @@ void Decimate<double>::initialize(const int downFactor,
     auto r = 1.0/static_cast<double> (downFactor);
     auto fir = FilterDesign::FIR::FIR1Lowpass(order, r,
                                               FilterDesign::FIRWindow::HAMMING);
-    // Set the multirate FIR filter
+    // Set the FIR filter
     auto b = fir.getFilterTaps();
     int ntaps = b.size();
     try
     {
-        /*
         //constexpr int upFactor = 1;
-        pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
-                                       ntaps, b.data(),
-                                       mode, precision);
-        */
-        pImpl->mFIRFilter.initialize(ntaps, b.data(),
-                                     mode);
+        ////pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
+        ////                               ntaps, b.data(),
+        ////                               mode, precision);
+        pImpl->mFIRFilter.initialize(ntaps, b.data());
         pImpl->mDownsampler.initialize(downFactor,
                                        mode);
     }
     catch (std::exception &e)
     {
-        RTSEIS_THROW_RTE("%sFIR filter initialization failed",
-                         e.what());
+        auto errmsg = "FIR filter initialization failed with: "
+                    + std::to_string(e.what());
+        throw std::runtime_error(errmsg);
     }
     pImpl->mInitialized = true;
+     */
 }
 
-template<>
-void Decimate<float>::initialize(const int downFactor,
-                                 const int filterLength,
-                                 const bool lremovePhaseShift,
-                                 const RTSeis::ProcessingMode mode)
+/*
+template<RTSeis::ProcessingMode E, class T>
+void Decimate<E, T>::initialize(const int downFactor,
+                                const int filterLength,
+                                const bool lRemovePhaseShift)
 {
     //constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
     clear();
     if (downFactor < 2)
     {
-        RTSEIS_THROW_IA("Downsampling factor = %d must be at least 2",
-                        downFactor);
+        auto errmsg = "Downsampling factor = " + std::to_string(downFactor)
+                    + " must be at least 2";
+        throw std::invalid_argument(errmsg);
     }
     if (filterLength < 5)
     {
-        RTSEIS_THROW_IA("Filter length = %d must be greater than 5",
-                        filterLength);
+        auto errmsg = "Filter length = " + std::to_string(filterLength)
+                    + " must be at least 5";
     }
     // Set some properties
     pImpl->mDownFactor = downFactor;
     //pImpl->mPrecision = precision;
-    pImpl->mMode = mode;
+    //pImpl->mMode = mode;
     int nfir = filterLength;
     // Postprocessing is a little trickier - may have to extend filter length
-    if (mode == RTSeis::ProcessingMode::POST_PROCESSING && lremovePhaseShift)
+    if (pImpl->mMode == RTSeis::ProcessingMode::POST_PROCESSING &&
+        lRemovePhaseShift)
     {
         bool lfail = true;
         for (auto k=0; k<INT_MAX-1; ++k)
@@ -210,7 +307,7 @@ void Decimate<float>::initialize(const int downFactor,
             }
             nfir = nfir + 1;
         }
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(!lfail);
 #endif
         if (lfail){RTSEIS_THROW_RTE("%s", "Algorithmic failure");}
@@ -228,37 +325,35 @@ void Decimate<float>::initialize(const int downFactor,
     int ntaps = b.size();
     try
     {
-        /*
         //constexpr int upFactor = 1;
-        pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
-                                       ntaps, b.data(),
-                                       mode, precision);
-        */
-        pImpl->mFIRFilter.initialize(ntaps, b.data(),
-                                     mode);
+        ////pImpl->mMRFIRFilter.initialize(upFactor, downFactor,
+        ////                               ntaps, b.data());
+        pImpl->mFIRFilter.initialize(ntaps, b.data());
         pImpl->mDownsampler.initialize(downFactor,
                                        mode);
     }
     catch (std::exception &e)
     {
-        RTSEIS_THROW_RTE("%sFIR filter initialization failed",
-                         e.what());
+        auto errmsg = "FIR filter initialization failed with: "
+            + std::to_string(e.what());
+        throw std::runtime_error(errmsg);
     }
     pImpl->mInitialized = true;
 }
+*/
 
 /// Initialized?
-template<class T>
-bool Decimate<T>::isInitialized() const noexcept
+template<RTSeis::ProcessingMode E, class T>
+bool Decimate<E, T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Estimate output space
-template<class T>
-int Decimate<T>::estimateSpace(const int n) const
+template<RTSeis::ProcessingMode E, class T>
+int Decimate<E, T>::estimateSpace(const int n) const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
     return pImpl->mDownsampler.estimateSpace(n);
 }
@@ -286,63 +381,63 @@ int Decimate::estimateSpace(const int n) const
 */
 
 /// Get initial conditions length
-template<class T>
-int Decimate<T>::getInitialConditionLength() const
+template<RTSeis::ProcessingMode E, class T>
+int Decimate<E, T>::getInitialConditionLength() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mFIRFilter.getInitialConditionLength();
-    //return pImpl->mMRFIRFilter.getInitialConditionLength(); 
 }
 
 /// Set initial conditions
-template<class T>
-void Decimate<T>::setInitialConditions(const int nz,const double zi[])
+template<RTSeis::ProcessingMode E, class T>
+void Decimate<E, T>::setInitialConditions(const int nz,const double zi[])
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int nzref = getInitialConditionLength();
     if (nz != nzref)
     {
         RTSEIS_THROW_IA("nz = %d must equal %d", nz, nzref);
     }
-    if (nz > 0 && zi == nullptr)
-    {
-        RTSEIS_THROW_IA("%s", "zi cannot be NULL");
-    }
+    if (nz > 0 && zi == nullptr){throw std::invalid_argument("zi is NULL");}
     //pImpl->mMRFIRFilter.setInitialConditions(nz, zi);
     pImpl->mFIRFilter.setInitialConditions(nz, zi);
     pImpl->mDownsampler.resetInitialConditions();
 }
 
 /// Reset initial conditions
-template<class T>
-void Decimate<T>::resetInitialConditions()
+template<RTSeis::ProcessingMode E, class T>
+void Decimate<E, T>::resetInitialConditions()
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     //pImpl->mMRFIRFilter.resetInitialConditions();
     pImpl->mFIRFilter.resetInitialConditions();
     pImpl->mDownsampler.resetInitialConditions();
 }
 
-/// Apply decimator (float)
-template<>
-void Decimate<double>::apply(const int nx, const double x[],
-                             const int ny, int *nyDown, double *yIn[])
+/// Apply decimator (double)
+template<RTSeis::ProcessingMode E, class T>
+void Decimate<E, T>::apply(const int nx, const T x[],
+                           const int ny, int *nyDown, T *yIn[])
 {
     *nyDown = 0;
     if (nx <= 0){return;}
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
     int nyref = estimateSpace(nx);
-    if (ny < nyref){RTSEIS_THROW_IA("ny = %d must be at least %d", ny, nyref);}
-    double *y = *yIn;
-    if (y == nullptr)
-    {   
-        RTSEIS_THROW_IA("%s", "y is NULL");
-    }   
+    if (ny < nyref)
+    {
+        auto errmsg = "ny = " + std::to_string(ny) + " must be at least "
+                    + std::to_string(nyref);
+        throw std::invalid_argument(errmsg);
+    }
+    auto y = *yIn;
+    if (y == nullptr){throw std::invalid_argument("y is NULL");}
+    pImpl->apply(nx, x, ny, nyDown, y);
+    /*
     // Special case
     if (pImpl->mRemovePhaseShift)
     {   
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(pImpl->mGroupDelay%pImpl->mDownFactor == 0); 
 #endif
         // Postpend zeros so that the filter delay pushes our desired
@@ -369,12 +464,14 @@ void Decimate<double>::apply(const int nx, const double x[],
         pImpl->mDownsampler.apply(nx, yfilt, ny, nyDown, &y); 
         ippsFree(yfilt);
     }
+    */
 }
 
+/*
 /// Apply decimator (float)
-template<>
-void Decimate<float>::apply(const int nx, const float x[],
-                            const int ny, int *nyDown, float *yIn[])
+template<RTSeis::ProcessingMode E>
+void Decimate<E, float>::apply(const int nx, const float x[],
+                               const int ny, int *nyDown, float *yIn[])
 {
     *nyDown = 0;
     if (nx <= 0){return;}
@@ -418,6 +515,7 @@ void Decimate<float>::apply(const int nx, const float x[],
         ippsFree(yfilt);
     }
 }
+*/
 
 /*
 void Decimate::apply(const int nx, const double x[],
@@ -480,23 +578,25 @@ void Decimate::apply(const int nx, const double x[],
 */
 
 /// Get downsampling factor
-template<class T>
-int Decimate<T>::getDownsamplingFactor() const
+template<RTSeis::ProcessingMode E, class T>
+int Decimate<E, T>::getDownsamplingFactor() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mDownFactor; 
 }
 
 /// Get FIR filter length
-template<class T>
-int Decimate<T>::getFIRFilterLength() const
+template<RTSeis::ProcessingMode E, class T>
+int Decimate<E, T>::getFIRFilterLength() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mFIRLength;
 }
 
 ///--------------------------------------------------------------------------///
 ///                         Template instantiation                           ///
 ///--------------------------------------------------------------------------///
-template class RTSeis::Utilities::FilterImplementations::Decimate<double>;
-template class RTSeis::Utilities::FilterImplementations::Decimate<float>;
+template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::REAL_TIME, float>;

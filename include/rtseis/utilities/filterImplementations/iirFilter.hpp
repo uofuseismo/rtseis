@@ -12,8 +12,8 @@ namespace RTSeis::Utilities::FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
-template<class T = double,
-    RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST_PROCESSING>
+template<RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST,
+         class T = double>
 class IIRFilter
 {
 public:
@@ -128,7 +128,7 @@ public:
     void clear() noexcept;
 private:
     class IIRFilterImpl;
-    std::unique_ptr<IIRFilterImpl> pIIR_;
+    std::unique_ptr<IIRFilterImpl> pImpl;
 }; // IIR
 } // rtseis
 #endif

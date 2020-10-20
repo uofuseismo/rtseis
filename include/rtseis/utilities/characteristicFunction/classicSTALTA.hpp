@@ -1,9 +1,10 @@
 #ifndef RTSEIS_UTILITIES_CHARATERISTICFUNCTION_CLASSICSTALTA_HPP
 #define RTSEIS_UTILITIES_CHARATERISTICFUNCTION_CLASSICSTALTA_HPP
 #include <memory>
+#include "rtseis/enums.hpp"
 namespace RTSeis::Utilities::CharacteristicFunction
 {
-template<class T> class ClassicSTALTAImpl;
+template<RTSeis::ProcessingMode E, class T> class ClassicSTALTAImpl;
 namespace PostProcessing
 {
 /*!
@@ -91,7 +92,7 @@ public:
      * @brief Determines if the class is initialized.
      * @result True indicates that the class is initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Gets the initial condition length.
      * @result The initial condition lengths.  Here, result.first corresponds
@@ -101,7 +102,7 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      * @sa \c isInitialized()
      */
-    std::pair<int, int> getInitialConditionLength() const;
+    [[nodiscard]] std::pair<int, int> getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions.
      * @param[in] nzNum   The length of the numerator initial conditions
@@ -132,7 +133,7 @@ public:
      */
     void apply(int nx, const T x[], T *y[]);
 private:
-    std::unique_ptr<ClassicSTALTAImpl<T>> pImpl;
+    std::unique_ptr<ClassicSTALTAImpl<RTSeis::ProcessingMode::POST, T>> pImpl;
 };
 }
 
@@ -223,7 +224,7 @@ public:
      * @brief Determines if the class is initialized.
      * @result True indicates that the class is initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Gets the initial condition length.
      * @result The initial condition lengths.  Here, result.first corresponds
@@ -233,7 +234,7 @@ public:
      * @throws std::runtime_error if the class is not initialized.
      * @sa \c isInitialized()
      */
-    std::pair<int, int> getInitialConditionLength() const;
+    [[nodiscard]] std::pair<int, int> getInitialConditionLength() const;
     /*!
      * @brief Sets the initial conditions.
      * @param[in] nzNum   The length of the numerator initial conditions
@@ -272,7 +273,7 @@ public:
      */
     void resetInitialConditions();
 private:
-    std::unique_ptr<ClassicSTALTAImpl<T>> pImpl;
+    std::unique_ptr<ClassicSTALTAImpl<RTSeis::ProcessingMode::REAL_TIME, T>> pImpl;
 };
 }
 }

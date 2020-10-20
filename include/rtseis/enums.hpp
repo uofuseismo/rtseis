@@ -41,12 +41,13 @@ enum class LogLevel
                      messages will be printed. */
 };
 /*!
- * @brief Defines a classes's processing mode.
+ * @brief Defines the class's processing mode.
  */
 enum class ProcessingMode
 {
-    POST_PROCESSING = 1, /*!< Indicates the module is to be used for post-processing. */
-    REAL_TIME = 2        /*!< Indicates the mdoule is to be used for real-time processing. */
+    POST = 0,      /*!< Indicates the module is to be used for post-processing. */
+    REAL_TIME = 1, /*!< Indicates the module is to be used for real-time processing. */
+    POST_PROCESSING = 0 /*!< Indicates the module is to be used for post-processing.   This is deprecated.  */
 };
 /*!
  * @brief Defines a classes precision.

@@ -65,16 +65,12 @@ void ippsCalloc(const int n, T **result)
 
 }
 
-template<class T>
+template<RTSeis::ProcessingMode E, class T>
 class RTSeis::Utilities::CharacteristicFunction::ClassicSTALTAImpl
 {
 public:
     /// Default c'tor
-    ClassicSTALTAImpl(const bool lRealTime)
-    {
-        mMode = RTSeis::ProcessingMode::POST_PROCESSING;
-        if (lRealTime){mMode = RTSeis::ProcessingMode::REAL_TIME;}
-    }
+    ClassicSTALTAImpl() = default;
     /// Copy c'tor
     ClassicSTALTAImpl(const ClassicSTALTAImpl &stalta)
     {
@@ -94,7 +90,6 @@ public:
         mChunkSize = stalta.mChunkSize;
         mSta = stalta.mSta;
         mLta = stalta.mLta;
-        mMode = stalta.mMode;
         mInitialized = stalta.mInitialized;
         if (mChunkSize > 0)
         {
@@ -131,7 +126,6 @@ public:
         double div =  1/static_cast<double> (nSta);
         ippsSet(nSta, div, filterCoeffs.data());
         mSTAFilter.initialize(nSta, filterCoeffs.data(),
-           RTSeis::ProcessingMode::REAL_TIME,
            RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
         // Set the numerator's initial conditions to 0 
         ippsSet(nSta-1, 0, filterCoeffs.data());
@@ -141,7 +135,6 @@ public:
         div = 1/static_cast<double> (nLta);
         ippsSet(nLta, div, filterCoeffs.data());
         mLTAFilter.initialize(nLta, filterCoeffs.data(),
-           RTSeis::ProcessingMode::REAL_TIME,
            RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
 
         // Set the denominator's initial conditions to a large number.  This
@@ -218,15 +211,17 @@ public:
         mLTAFilter.setInitialConditions(nzDen, zDen);
     }
 ///private:
-    RTSeis::Utilities::FilterImplementations::FIRFilter<T> mSTAFilter;
-    RTSeis::Utilities::FilterImplementations::FIRFilter<T> mLTAFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<
+        RTSeis::ProcessingMode::REAL_TIME, T> mSTAFilter;
+    RTSeis::Utilities::FilterImplementations::FIRFilter<
+        RTSeis::ProcessingMode::REAL_TIME, T> mLTAFilter;
     T *mX2 = nullptr;
     T *mYNum = nullptr;
     T *mYDen = nullptr;
     int mChunkSize = CHUNK_SIZE;
     int mSta = 0;
     int mLta = 0;
-    RTSeis::ProcessingMode mMode = RTSeis::ProcessingMode::POST_PROCESSING;
+    const RTSeis::ProcessingMode mMode = E;
     bool mInitialized = false; 
 };
 
@@ -236,7 +231,8 @@ public:
 /// Constructor
 template<class T>
 PostProcessing::ClassicSTALTA<T>::ClassicSTALTA() :
-    pImpl(std::make_unique<ClassicSTALTAImpl<T>> (false))
+    pImpl(std::make_unique<
+             ClassicSTALTAImpl<RTSeis::ProcessingMode::POST, T>> ())
 {
 }
 
@@ -260,7 +256,8 @@ PostProcessing::ClassicSTALTA<T>&
 PostProcessing::ClassicSTALTA<T>::operator=(const ClassicSTALTA &stalta)
 {
     if (&stalta == this){return *this;}
-    pImpl = std::make_unique<ClassicSTALTAImpl<T>> (*stalta.pImpl); 
+    pImpl = std::make_unique<ClassicSTALTAImpl
+                             <RTSeis::ProcessingMode::POST, T>> (*stalta.pImpl);
     return *this;
 }
 
@@ -366,7 +363,8 @@ void PostProcessing::ClassicSTALTA<T>::apply(
 /// Constructor
 template<class T>
 RealTime::ClassicSTALTA<T>::ClassicSTALTA() :
-    pImpl(std::make_unique<ClassicSTALTAImpl<T>> (false))
+    pImpl(std::make_unique<ClassicSTALTAImpl<
+            RTSeis::ProcessingMode::REAL_TIME, T>> ())
 {
 }
 
@@ -390,7 +388,8 @@ RealTime::ClassicSTALTA<T>&
 RealTime::ClassicSTALTA<T>::operator=(const ClassicSTALTA &stalta)
 {
     if (&stalta == this){return *this;}
-    pImpl = std::make_unique<ClassicSTALTAImpl<T>> (*stalta.pImpl);
+    pImpl = std::make_unique<ClassicSTALTAImpl<
+                 RTSeis::ProcessingMode::REAL_TIME, T>> (*stalta.pImpl);
     return *this;
 }
 
@@ -444,7 +443,7 @@ template<class T>
 std::pair<int, int>
 RealTime::ClassicSTALTA<T>::getInitialConditionLength() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->getInitialConditionLength();
 }
 
@@ -494,7 +493,7 @@ void RealTime::ClassicSTALTA<T>::apply(
 template<class T>
 void RealTime::ClassicSTALTA<T>::resetInitialConditions()
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     pImpl->resetInitialConditions();
 }
 

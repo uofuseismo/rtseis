@@ -179,8 +179,8 @@ TEST(UtilitiesFilterImplementations, iir)
     EXPECT_EQ(ierr, 0);
     EXPECT_EQ(npts, npref);
     // Compute the zero-phase IIR filter alternative
-    IIRFilter<double, RTSeis::ProcessingMode::POST_PROCESSING> iir;
-    IIRFilter<double, RTSeis::ProcessingMode::POST_PROCESSING> iir_slow;
+    IIRFilter<RTSeis::ProcessingMode::POST, double> iir;
+    IIRFilter<RTSeis::ProcessingMode::POST, double> iir_slow;
     EXPECT_NO_THROW(iir.initialize(nb, b, na, a,
                                    IIRDFImplementation::DF2_FAST));
     EXPECT_NO_THROW(iir_slow.initialize(nb, b, na, a,
@@ -213,7 +213,7 @@ TEST(UtilitiesFilterImplementations, iir)
     std::copy(y2, y2+npts, yref_slow);
     // Try a lower order filter - Note the difference in accuracy.
     // I think the filter is a little unstable.
-    IIRFilter<double, RTSeis::ProcessingMode::POST_PROCESSING> iir2;
+    IIRFilter<RTSeis::ProcessingMode::POST_PROCESSING, double> iir2;
     EXPECT_NO_THROW(iir2.initialize(nb2, b2, na2, a2,
                                     IIRDFImplementation::DF2_FAST));
     timeStart = std::chrono::high_resolution_clock::now();
@@ -226,7 +226,7 @@ TEST(UtilitiesFilterImplementations, iir)
     fprintf(stdout, "Fast reference solution 2 computation time %.8lf (s)\n",
             tdif.count());
     // Do a real-time test of high-order filter
-    IIRFilter<double, RTSeis::ProcessingMode::REAL_TIME> iirrtInit;
+    IIRFilter<RTSeis::ProcessingMode::REAL_TIME, double> iirrtInit;
     EXPECT_NO_THROW(iirrtInit.initialize(nb, b, na, a,
                                          IIRDFImplementation::DF2_FAST));
     auto iirrt = iirrtInit;
@@ -270,7 +270,7 @@ TEST(UtilitiesFilterImplementations, iir)
         }
     }
     // Retry this for the slow filter implementation
-    IIRFilter<double, RTSeis::ProcessingMode::REAL_TIME> iirrtSlowInit;
+    IIRFilter<RTSeis::ProcessingMode::REAL_TIME, double> iirrtSlowInit;
     EXPECT_NO_THROW(iirrtSlowInit.initialize(nb, b, na, a,
                                              IIRDFImplementation::DF2_SLOW));
     iirrt = iirrtSlowInit;
@@ -594,9 +594,8 @@ TEST(UtilitiesFilterImplementations, fir)
     EXPECT_EQ(ierr, 0);
     EXPECT_EQ(npts, npref);
     // Make a post-processing solution
-    FIRFilter<double> fir;
+    FIRFilter<RTSeis::ProcessingMode::POST, double> fir;
     EXPECT_NO_THROW(fir.initialize(nb, b,
-                                   RTSeis::ProcessingMode::POST_PROCESSING,
                                    FIRImplementation::DIRECT));
     double *y = new double[npts];
     auto timeStart = std::chrono::high_resolution_clock::now();
@@ -610,11 +609,10 @@ TEST(UtilitiesFilterImplementations, fir)
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Do packetized tests
-    FIRFilter firrt;
+    FIRFilter<RTSeis::ProcessingMode::REAL_TIME, double> firrt;
     EXPECT_NO_THROW(firrt.initialize(nb, b,
-                                     RTSeis::ProcessingMode::REAL_TIME,
                                      FIRImplementation::DIRECT));
-    fir = firrt;
+    //fir = firrt;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (int job=0; job<2; job++)
@@ -633,10 +631,10 @@ TEST(UtilitiesFilterImplementations, fir)
                 }
                 nptsPass = std::min(nptsPass, npts - nxloc);
                 double *yptr = &y[nxloc];
-                EXPECT_NO_THROW(fir.apply(nptsPass, &x[nxloc], &yptr));
+                EXPECT_NO_THROW(firrt.apply(nptsPass, &x[nxloc], &yptr));
                 nxloc = nxloc + nptsPass;
             }
-            fir.resetInitialConditions();
+            firrt.resetInitialConditions();
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
             ippsNormDiff_Inf_64f(yref, y, npts, &error);
@@ -799,7 +797,7 @@ TEST(UtilitiesFilterImplementations, medianFilter)
     double y8[8];
     double yref3[8] = {1, 2, 4, 5, 4, 5, 7, 7}; // Matlab soln; IPP has edge effect
     double yref5[8] = {1, 2, 4, 4, 5, 5, 5, 0};
-    MedianFilter<double, RTSeis::ProcessingMode::POST_PROCESSING> median;
+    MedianFilter<RTSeis::ProcessingMode::POST, double> median;
     EXPECT_NO_THROW(median.initialize(3));
     double *yptr = &y8[0];
     EXPECT_TRUE(median.isInitialized());
@@ -830,8 +828,9 @@ TEST(UtilitiesFilterImplementations, medianFilter)
     fprintf(stdout, "Reference solution computation time %.8lf (s)\n",
             tdif.count());
     // Now do the packetized tests
-    MedianFilter<double, RTSeis::ProcessingMode::REAL_TIME> medianrt; // = median;
-    EXPECT_NO_THROW(medianrt.initialize(11));
+    MedianFilter<RTSeis::ProcessingMode::REAL_TIME, double> medianrtTemp; // = median;
+    EXPECT_NO_THROW(medianrtTemp.initialize(11));
+    auto medianrt = medianrtTemp;
     std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                  1000, 1024, 1200, 2048, 4000, 4096, 5000});
     for (auto job=0; job<2; job++)
@@ -886,7 +885,7 @@ TEST(UtilitiesFilterImplementations, downsample)
     const int nq = 7;
     // Call this in post-processing for a couple different decimation rates
     srand(10245);
-    Downsample downsample;
+    Downsample<RTSeis::ProcessingMode::POST, double> downsample;
     double *y = static_cast<double *>
                 (calloc(static_cast<size_t> (npts), sizeof(double)));
     double *yref = static_cast<double *>
@@ -896,9 +895,7 @@ TEST(UtilitiesFilterImplementations, downsample)
         // Do a post-processing test
         memset(y, 0, static_cast<size_t> (npts)*sizeof(double));
         memset(yref, 0, static_cast<size_t> (npts)*sizeof(double));
-        EXPECT_NO_THROW(
-            downsample.initialize(iq,
-                                  RTSeis::ProcessingMode::POST_PROCESSING));
+        EXPECT_NO_THROW(downsample.initialize(iq));
         auto timeStart = std::chrono::high_resolution_clock::now();
         int ny;
         EXPECT_NO_THROW(downsample.apply(npts, x, npts, &ny, &y));
@@ -923,9 +920,8 @@ TEST(UtilitiesFilterImplementations, downsample)
         std::copy(y, y+ny, yref);
         //for (auto iy=0; iy<ny; iy++){yref[iy] = y[iy];}
         // Do a real-time test
-        EXPECT_NO_THROW(
-            downsample.initialize(iq,
-                                  RTSeis::ProcessingMode::REAL_TIME));
+        Downsample<RTSeis::ProcessingMode::REAL_TIME, double> downsamplert;
+        EXPECT_NO_THROW(downsamplert.initialize(iq));
         std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512,
                                      1000, 1024, 1200, 2048, 4000, 4096, 5000});
         for (auto ip=0; ip<static_cast<int> (packetSize.size()); ip++)
@@ -939,15 +935,15 @@ TEST(UtilitiesFilterImplementations, downsample)
                 int nyDec = 0;
                 double *yptr = &y[nyloc];
                 EXPECT_NO_THROW(
-                    downsample.apply(nptsPass, &x[nxloc],
-                                     npts+1-nyloc, &nyDec, &yptr)
+                    downsamplert.apply(nptsPass, &x[nxloc],
+                                       npts+1-nyloc, &nyDec, &yptr)
                 );
                 nxloc = nxloc + nptsPass;
                 nyloc = nyloc + nyDec;
             }
             auto timeEnd = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> tdif = timeEnd - timeStart;
-            downsample.resetInitialConditions();
+            downsamplert.resetInitialConditions();
             EXPECT_EQ(nyloc, nyref);
             ippsNormDiff_Inf_64f(y, yref, nyref, &error);
             EXPECT_LE(error, 1.e-10);
@@ -968,8 +964,8 @@ TEST(UtilitiesFilterImplementations, downsample)
             int nptsPass = std::min(packetLen, npts - nxloc);
             int nyDec = 0;
             double *yptr = &y[nyloc];
-            EXPECT_NO_THROW(downsample.apply(nptsPass, &x[nxloc],
-                                             npts+1-nyloc, &nyDec, &yptr));
+            EXPECT_NO_THROW(downsamplert.apply(nptsPass, &x[nxloc],
+                                                npts+1-nyloc, &nyDec, &yptr));
             nxloc = nxloc + nptsPass;
             nyloc = nyloc + nyDec;
             packetLen = std::max(1, packetLen + rand()%50 - 25);
@@ -986,7 +982,7 @@ TEST(UtilitiesFilterImplementations, downsample)
                     iq, tdif.count());
         }
         // Loop 
-        downsample.clear();
+        downsamplert.clear();
     }
     free(y);
     free(yref);
@@ -1004,7 +1000,7 @@ TEST(UtilitiesFilterImplementations, decimate)
     std::vector<double> xpad;
     std::vector<double> ylpds;
     // Decimate by some default factors
-    Decimate<double> decimate;
+    Decimate<RTSeis::ProcessingMode::POST, double> decimate;
     //int downFactor = 5;
     int filterLength = 95;
     bool lremovePhaseShift = true;
@@ -1016,8 +1012,8 @@ TEST(UtilitiesFilterImplementations, decimate)
         // Now do the decimation
         EXPECT_NO_THROW(decimate.initialize(downFactor,
                                             filterLength,
-                                            lremovePhaseShift,
-                                            RTSeis::ProcessingMode::POST_PROCESSING));
+                                            lremovePhaseShift));
+        //                                    RTSeis::ProcessingMode::POST_PROCESSING));
         EXPECT_TRUE(decimate.isInitialized());
         int ndecim = decimate.estimateSpace(npts);
         int nyDecim = 0;
@@ -1039,12 +1035,12 @@ TEST(UtilitiesFilterImplementations, decimate)
         fprintf(stdout, "Reference solution time for nq=%d in %.8e (s)\n",
                 downFactor, tdif.count());
         // Now do a real time solution
-        Decimate rtDecim;
+        Decimate<RTSeis::ProcessingMode::REAL_TIME, double> rtDecim;
         EXPECT_NO_THROW(rtDecim.initialize(downFactor,
                                            nfir, //filterLength,
-                                           false,
-                                           RTSeis::ProcessingMode::REAL_TIME));
-        decimate = rtDecim; // Test copy assignent
+                                           false));
+        //                                   RTSeis::ProcessingMode::REAL_TIME));
+        //decimate = rtDecim; // Test copy assignent
         std::fill(y.begin(), y.end(), 0.0);
         std::vector<int> packetSize({1, 2, 3, 16, 64, 100, 200, 512, 
                                      1000, 1024, 1200, 2048, 4000, 4096, 5000});
@@ -1065,7 +1061,7 @@ TEST(UtilitiesFilterImplementations, decimate)
                     }
                     int nyDec = 0;
                     double *yptr = &y[nyloc];
-                    EXPECT_NO_THROW(decimate.apply(nptsPass, &x[nxloc],
+                    EXPECT_NO_THROW(rtDecim.apply(nptsPass, &x[nxloc],
                                                    npts+1-nyloc, &nyDec, &yptr));
                     if (nptsPass <= 0){continue;}
                     nxloc = nxloc + nptsPass;
@@ -1073,7 +1069,7 @@ TEST(UtilitiesFilterImplementations, decimate)
                 }
                 auto timeEnd = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> tdif = timeEnd - timeStart;
-                decimate.resetInitialConditions();
+                rtDecim.resetInitialConditions();
                 EXPECT_EQ(nyloc, nyDecim);
                 int groupDelay = nfir/2;
                 int ncomp = std::min(nyloc, nyDecim) - groupDelay/downFactor;
@@ -1137,12 +1133,10 @@ void lowpassFilterThenDownsample(const int npts, const int nfir,
     // Initialize the lowpass single rate filter and filter the signal
     FIRFilter firFilter;
     auto taps = fir.getFilterTaps();
-    firFilter.initialize(taps.size(), taps.data(),
-                         RTSeis::ProcessingMode::POST_PROCESSING);
+    firFilter.initialize(taps.size(), taps.data());
     // Create a downsampler
-    Downsample downsample;
-    downsample.initialize(downFactor,
-                          RTSeis::ProcessingMode::POST_PROCESSING);
+    Downsample<RTSeis::ProcessingMode::POST, double> downsample;
+    downsample.initialize(downFactor);
     if (lremovePhase)
     {
         int groupDelay = static_cast<int> (taps.size()/2);

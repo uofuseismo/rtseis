@@ -2,7 +2,6 @@
 #define RTSEIS_UTILITIES_FILTERIMPLEMENTATIONS_DOWNSAMPLE_HPP 1
 #include <memory>
 #include "rtseis/enums.hpp"
-
 namespace RTSeis::Utilities::FilterImplementations
 {
 /*!
@@ -19,7 +18,8 @@ namespace RTSeis::Utilities::FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
-template<class T = double>
+template<RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST,
+         class T = double>
 class Downsample
 {
 public:
@@ -74,14 +74,13 @@ public:
      *                        is for post-processing.
      * @throws std::invalid_argument if downFactor is invalid.
      */
-    void initialize(const int downFactor,
-                    const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING);
+    void initialize(int downFactor);
     /*!
      * @brief Determines if the module is initialized.
      * @retval True indicates that the module is initialized.
      * @retval False indicates that the module is not initialized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Estimates the space required to hold the downsampled signal.
      * @param[in] n   The length of the signal to downsample.  This must
@@ -90,12 +89,12 @@ public:
      * @throws std::runtime_error if the module is not initialized.
      * @throws std::invalid_argument if n is negative.
      */
-    int estimateSpace(const int n) const;
+    [[nodiscard]] int estimateSpace(int n) const;
     /*!
      * @brief Gets the downsampling factor.
      * @result The downsampling factor.
      */
-    int getDownsampleFactor() const noexcept;
+    [[nodiscard]] int getDownsampleFactor() const noexcept;
     /*!
      * @brief Sets the initial conditions of the downsampler which is the phase.
      * @param[in] phase  Phase of downsampler.  This must be in the 
@@ -103,7 +102,7 @@ public:
      * @throws std::invalid_argument if phase is out of range.
      * @throws std::runtime_error if the class is not initialized.
      */
-    void setInitialConditions(const int phase);
+    void setInitialConditions(int phase);
     /*!
      * @brief Applies the downsampler to the data.
      * @param[in] nx       The number data points in x.
@@ -118,8 +117,8 @@ public:
      * @throws std::invalid_argument if x or y is NULL.
      * @throws std::runtime_error if the module is not initialized.
      */
-    void apply(const int nx, const T x[],
-               const int ny, int *nyDown, T *y[]);
+    void apply(int nx, const T x[],
+               int ny, int *nyDown, T *y[]);
     /*!
      * @brief Resets the initial conditions to the phase set in 
      *        setInitialConditions.  If setInitialConditions was not
@@ -133,7 +132,7 @@ public:
     void clear() noexcept;
 private:
     class DownsampleImpl;
-    std::unique_ptr<DownsampleImpl> pDownsample_; 
+    std::unique_ptr<DownsampleImpl> pImpl;
 }; // End downsample
 } // End RTSeis
 #endif

@@ -10,8 +10,8 @@
 
 using namespace RTSeis::Utilities::FilterImplementations;
 
-template<class T>
-class FIRFilter<T>::FIRImpl
+template<RTSeis::ProcessingMode E, class T>
+class FIRFilter<E, T>::FIRImpl
 {
 public:
     /// Default constructor
@@ -30,9 +30,8 @@ public:
     FIRImpl& operator=(const FIRImpl &fir)
     {
         if (&fir == this){return *this;}
-        if (!fir.linit_){return *this;}
+        if (!fir.mInitialized){return *this;}
         int ierr = initialize(fir.tapsLen_, fir.tapsRef_,
-                              fir.mode_, fir.precision_,
                               fir.implementation_);
         if (ierr != 0)
         {
@@ -50,7 +49,7 @@ public:
         if (order_ > 0){ippsCopy_64f(fir.zi_, zi_, order_);}
         if (nwork_ > 0)
         {
-            if (precision_ == RTSeis::Precision::DOUBLE)
+            if (mPrecision == RTSeis::Precision::DOUBLE)
             {
                 ippsCopy_64f(fir.dlysrc64_, dlysrc64_, nwork_); 
                 ippsCopy_64f(fir.dlydst64_, dlydst64_, nwork_);
@@ -94,15 +93,11 @@ public:
         specSize_ = 0;
         order_ = 0;
         implementation_ = FIRImplementation::DIRECT;
-        precision_ = RTSeis::Precision::DOUBLE;
-        mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-        linit_ = false;
+        mInitialized = false;
     }
     //========================================================================//
     /// Initializes the filter 
     int initialize(const int nb, const double b[],
-                   const RTSeis::ProcessingMode mode,
-                   const RTSeis::Precision precision,
                    const FIRImplementation implementation)
     {
         clear();
@@ -119,7 +114,7 @@ public:
         if (implementation == FIRImplementation::FFT){algType = ippAlgFFT;}
         if (implementation == FIRImplementation::AUTO){algType = ippAlgAuto;}
         // Initialize FIR filter
-        if (precision == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             dlysrc64_ = ippsMalloc_64f(nwork_);
             ippsZero_64f(dlysrc64_, nwork_);
@@ -178,15 +173,8 @@ public:
             }
         }
         implementation_ = implementation;
-        precision_ = precision;
-        mode_ = mode;
-        linit_ = true;
+        mInitialized = true;
         return 0;
-    }
-    /// Determines if the module is initialized.
-    [[nodiscard]] bool isInitialized() const
-    {
-        return linit_;
     }
     /// Determines the length of the initial conditions.
     [[nodiscard]] int getInitialConditionLength() const
@@ -214,7 +202,7 @@ public:
         if (nzRef > 0)
         {
             ippsCopy_64f(zi, zi_, nzRef);
-            if (precision_ == RTSeis::Precision::DOUBLE)
+            if (mPrecision == RTSeis::Precision::DOUBLE)
             {
                 ippsCopy_64f(zi_, dlysrc64_, nzRef);
             }
@@ -230,7 +218,7 @@ public:
     {
         if (order_ > 0)
         {   
-            if (precision_ == RTSeis::Precision::DOUBLE)
+            if (mPrecision == RTSeis::Precision::DOUBLE)
             {
                 ippsCopy_64f(zi_, dlysrc64_, order_);
             }
@@ -244,7 +232,7 @@ public:
     int apply(const int n, const double x[], double y[])
     {
         if (n <= 0){return 0;} // Nothing to do
-        if (precision_ == RTSeis::Precision::FLOAT)
+        if (mPrecision == RTSeis::Precision::FLOAT)
         {
             Ipp32f *x32 = ippsMalloc_32f(n);
             Ipp32f *y32 = ippsMalloc_32f(n);
@@ -269,7 +257,7 @@ public:
             std::cerr << "Failed to apply double FIR filter" << std::endl;
             return -1; 
         }   
-        if (mode_ == RTSeis::ProcessingMode::REAL_TIME && order_ > 0)
+        if (mMode == RTSeis::ProcessingMode::REAL_TIME && order_ > 0)
         {
             ippsCopy_64f(dlydst64_, dlysrc64_, order_);
         }
@@ -279,7 +267,7 @@ public:
     int apply(const int n, const float x[], float y[])
     {
         if (n <= 0){return 0;} // Nothing to do
-        if (precision_ == RTSeis::Precision::DOUBLE)
+        if (mPrecision == RTSeis::Precision::DOUBLE)
         {
             Ipp64f *x64 = ippsMalloc_64f(n);
             Ipp64f *y64 = ippsMalloc_64f(n);
@@ -304,13 +292,13 @@ public:
             std::cerr << "Failed to apply float FIR filter" << std::endl;
             return -1;
         }
-        if (mode_ == RTSeis::ProcessingMode::REAL_TIME && order_ > 0)
+        if (mMode == RTSeis::ProcessingMode::REAL_TIME && order_ > 0)
         {
             ippsCopy_32f(dlydst32_, dlysrc32_, order_);
         }
         return 0;
     }
-private:
+//private:
     /// The filter state.
     IppsFIRSpec_64f *pSpec64_ = nullptr;
     /// The filter taps.  This has dimension [tapsLen_].
@@ -346,65 +334,66 @@ private:
     /// Implementation.
     FIRImplementation implementation_ = FIRImplementation::DIRECT;
     /// Real-time or post-processing.
-    RTSeis::ProcessingMode mode_ = RTSeis::ProcessingMode::POST_PROCESSING;
-    /// The default module implementation.
-    RTSeis::Precision precision_ = RTSeis::Precision::DOUBLE;
+    const RTSeis::ProcessingMode mMode = E;
+    /// Single or double precision.
+    const RTSeis::Precision mPrecision
+        = (sizeof(T) == sizeof(double)) ? RTSeis::Precision::DOUBLE :
+          RTSeis::Precision::FLOAT;
     /// Flag indicating the module is initialized.
-    bool linit_ = false;
+    bool mInitialized = false;
 };
 
 //============================================================================//
 
 /// C'tor
-template<class T>
-FIRFilter<T>::FIRFilter() :
-    pFIR_(std::make_unique<FIRImpl> ())
+template<RTSeis::ProcessingMode E, class T>
+FIRFilter<E, T>::FIRFilter() :
+    pImpl(std::make_unique<FIRImpl> ())
 {
 }
 
 /// Copy c'tor
-template<class T>
-FIRFilter<T>::FIRFilter(const FIRFilter &fir)
+template<RTSeis::ProcessingMode E, class T>
+FIRFilter<E, T>::FIRFilter(const FIRFilter &fir)
 {
     *this = fir;
 }
 
 /// Move c'tor
-template<class T>
-FIRFilter<T>::FIRFilter(FIRFilter &&fir) noexcept
+template<RTSeis::ProcessingMode E, class T>
+FIRFilter<E, T>::FIRFilter(FIRFilter &&fir) noexcept
 {
     *this = std::move(fir);
 }
 
 /// Destructor
-template<class T>
-FIRFilter<T>::~FIRFilter() = default;
+template<RTSeis::ProcessingMode E, class T>
+FIRFilter<E, T>::~FIRFilter() = default;
 
 /// Copy assignment
-template<class T>
-FIRFilter<T>& FIRFilter<T>::operator=(const FIRFilter &fir)
+template<RTSeis::ProcessingMode E, class T>
+FIRFilter<E, T>& FIRFilter<E, T>::operator=(const FIRFilter &fir)
 {
     if (&fir == this){return *this;}
-    if (pFIR_){pFIR_->clear();}
-    pFIR_ = std::make_unique<FIRImpl> (*fir.pFIR_);
+    if (pImpl){pImpl->clear();}
+    pImpl = std::make_unique<FIRImpl> (*fir.pImpl);
     return *this;
 }
 
 /// Move assignment
-template<class T>
-FIRFilter<T>& FIRFilter<T>::operator=(FIRFilter &&fir) noexcept
+template<RTSeis::ProcessingMode E, class T>
+FIRFilter<E, T>& FIRFilter<E, T>::operator=(FIRFilter &&fir) noexcept
 {
     if (&fir == this){return *this;}
-    if (pFIR_){pFIR_->clear();}
-    pFIR_ = std::move(fir.pFIR_);
+    if (pImpl){pImpl->clear();}
+    pImpl = std::move(fir.pImpl);
     return *this;
 }
 
 /// Initialization
-template<>
-void FIRFilter<double>::initialize(const int nb, const double b[],
-                                   const RTSeis::ProcessingMode mode,
-                                   FIRImplementation implementation)
+template<RTSeis::ProcessingMode E, class T>
+void FIRFilter<E, T>::initialize(const int nb, const double b[],
+                                 FIRImplementation implementation)
 {
     clear();
     // Checks
@@ -413,18 +402,17 @@ void FIRFilter<double>::initialize(const int nb, const double b[],
         if (nb < 1){throw std::invalid_argument("No b coefficients");}
         throw std::invalid_argument("b is NULL");
     }
-    constexpr RTSeis::Precision precision = RTSeis::Precision::DOUBLE;
 #ifndef NDEBUG
-    int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
+    int ierr = pImpl->initialize(nb, b, implementation);
     assert(ierr == 0);
 #else
-    pFIR_->initialize(nb, b, mode, precision, implementation);
+    pImpl->initialize(nb, b, implementation);
 #endif
 }
 
+/*
 template<>
 void FIRFilter<float>::initialize(const int nb, const double b[],
-                                  const RTSeis::ProcessingMode mode,
                                   FIRImplementation implementation)
 {
     clear();
@@ -436,25 +424,26 @@ void FIRFilter<float>::initialize(const int nb, const double b[],
     }
     constexpr RTSeis::Precision precision = RTSeis::Precision::FLOAT;
 #ifndef NDEBUG
-    int ierr = pFIR_->initialize(nb, b, mode, precision, implementation);
+    int ierr = pImpl->initialize(nb, b, mode, precision, implementation);
     assert(ierr == 0);
 #else
-    pFIR_->initialize(nb, b, mode, precision, implementation);
+    pImpl->initialize(nb, b, mode, precision, implementation);
 #endif
 }
+*/
 
-template<class T>
-void FIRFilter<T>::clear() noexcept
+template<RTSeis::ProcessingMode E, class T>
+void FIRFilter<E, T>::clear() noexcept
 {
-    pFIR_->clear();
+    pImpl->clear();
 }
  
 /// Initial conditions
-template<class T>
-void FIRFilter<T>::setInitialConditions(const int nz, const double zi[])
+template<RTSeis::ProcessingMode E, class T>
+void FIRFilter<E, T>::setInitialConditions(const int nz, const double zi[])
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    int nzRef = pFIR_->getInitialConditionLength();
+    int nzRef = pImpl->getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
         if (nz != nzRef)
@@ -465,19 +454,19 @@ void FIRFilter<T>::setInitialConditions(const int nz, const double zi[])
         }
         throw std::invalid_argument("zi is NULL");
     }
-    pFIR_->setInitialConditions(nz, zi);
+    pImpl->setInitialConditions(nz, zi);
 }
 
-template<class T>
-void FIRFilter<T>::resetInitialConditions()
+template<RTSeis::ProcessingMode E, class T>
+void FIRFilter<E, T>::resetInitialConditions()
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    pFIR_->resetInitialConditions();
+    pImpl->resetInitialConditions();
 }
 
 /// Filter application
-template<class T>
-void FIRFilter<T>::apply(const int n, const T x[], T *yIn[])
+template<RTSeis::ProcessingMode E, class T>
+void FIRFilter<E, T>::apply(const int n, const T x[], T *yIn[])
 {
     if (n <= 0){return;} // Nothing to do
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
@@ -488,31 +477,31 @@ void FIRFilter<T>::apply(const int n, const T x[], T *yIn[])
         throw std::invalid_argument("y is NULL");
     }
 #ifndef NDEBUG
-    int ierr = pFIR_->apply(n, x, y);
+    int ierr = pImpl->apply(n, x, y);
     assert(ierr == 0);
 #else
-    pFIR_->apply(n, x, y);
+    pImpl->apply(n, x, y);
 #endif
 }
 
 /// Utility routine for initial conditon length
-template<class T>
-int FIRFilter<T>::getInitialConditionLength() const
+template<RTSeis::ProcessingMode E, class T>
+int FIRFilter<E, T>::getInitialConditionLength() const
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    return pFIR_->getInitialConditionLength();
+    return pImpl->getInitialConditionLength();
 }
 
 /// Initialized?
-template<class T>
-bool FIRFilter<T>::isInitialized() const noexcept
+template<RTSeis::ProcessingMode E, class T>
+bool FIRFilter<E, T>::isInitialized() const noexcept
 {
-    return pFIR_->isInitialized();
+    return pImpl->mInitialized;
 }
 
 /// Get initial conditions
-template<class T>
-void FIRFilter<T>::getInitialConditions(const int nz, double *ziOut[]) const
+template<RTSeis::ProcessingMode E, class T>
+void FIRFilter<E, T>::getInitialConditions(const int nz, double *ziOut[]) const
 {
     auto zi = *ziOut;
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
@@ -524,9 +513,11 @@ void FIRFilter<T>::getInitialConditions(const int nz, double *ziOut[]) const
         throw std::invalid_argument(errmsg);
     }
     if (nzLen > 0 && zi == nullptr){throw std::invalid_argument("zi is NULL");}
-    pFIR_->getInitialConditions(nz, zi);
+    pImpl->getInitialConditions(nz, zi);
 }
 
 /// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::FIRFilter<double>;
-template class RTSeis::Utilities::FilterImplementations::FIRFilter<float>;
+template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, float>;

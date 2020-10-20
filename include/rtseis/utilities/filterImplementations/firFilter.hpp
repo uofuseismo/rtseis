@@ -12,7 +12,8 @@ namespace RTSeis::Utilities::FilterImplementations
  * @copyright Ben Baker distributed under the MIT license.
  * @ingroup rtseis_utils_filters
  */
-template<class T = double>
+template<RTSeis::ProcessingMode E = RTSeis::ProcessingMode::POST,
+         class T = double>
 class FIRFilter
 {
 public:
@@ -76,7 +77,6 @@ public:
      * @throws std::invalid_argument if any of the arguments are invalid.
      */
     void initialize(int nb, const double b[],
-                    RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING,
                     FIRImplementation implementation = FIRImplementation::DIRECT);
     /*!
      * @brief Determines if the module is initialized.
@@ -136,7 +136,7 @@ public:
     void clear() noexcept;
 private:
     class FIRImpl;
-    std::unique_ptr<FIRImpl> pFIR_;
+    std::unique_ptr<FIRImpl> pImpl;
 }; // FIR
 } // rtseis
 #endif
