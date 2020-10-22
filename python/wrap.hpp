@@ -55,13 +55,19 @@ public:
                            double ripple,
                            bool zeroPhase);
     /// Normalization
-    void normalizeMinMax(const std::pair<double, double> targetRange);
+    void normalizeMinMax(const std::pair<double, double> &targetRange);
     void normalizeSignBit();
     void normalizeZScore();
     /// Taper
     void taper(double pct, const std::string &taperName); 
+    /// Set/get sampling period
+    void setSamplingPeriod(double dt);
+    double getSamplingPeriod() const; 
     /// Set data
     void setData(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> &x);
+    /// Interpolate
+    void interpolate(double newSamplingPeriod,
+                     RTSeis::PostProcessing::SingleChannel::InterpolationMethod method);
     /// Get data
     pybind11::array_t<double> getData();
     /// Checks if class is initialized

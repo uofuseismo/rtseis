@@ -661,7 +661,7 @@ public:
      *       care to lowpass the signal prior to calling this as a downsampler.
      */
     void interpolate(double newSamplingPeriod,
-                     const InterpolationMethod method = InterpolationMethod::DFT);
+                     InterpolationMethod method = InterpolationMethod::DFT);
     /*! @} */
 
     /*! @name Envelope 

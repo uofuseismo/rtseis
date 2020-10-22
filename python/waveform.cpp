@@ -231,7 +231,7 @@ void Waveform::sosBandstopFilter(const std::pair<double,double> fc,
 }
 
 /// Normalization
-void Waveform::normalizeMinMax(const std::pair<double, double> targetRange)
+void Waveform::normalizeMinMax(const std::pair<double, double> &targetRange)
 {
     try
     {
@@ -354,6 +354,37 @@ py::array_t<double> Waveform::getData()
     return py::array(y.size(), y.data());
 */
 }
+
+void Waveform::setSamplingPeriod(const double dt)
+{
+    if (dt <= 0)
+    {
+        throw std::invalid_argument("Sampling period = "
+                                  + std::to_string(dt)
+                                  + " must be positive");
+    }
+    waveform_->setSamplingPeriod(dt);
+}
+
+double Waveform::getSamplingPeriod() const
+{
+    return waveform_->getSamplingPeriod();
+}
+
+/// Interpolate a signal
+void Waveform::interpolate(
+    const double newSamplingPeriod,
+    const RTSeis::PostProcessing::SingleChannel::InterpolationMethod method) 
+{
+    if (newSamplingPeriod <= 0)
+    {
+        throw std::invalid_argument("New sampling period = "
+                                  + std::to_string(newSamplingPeriod)
+                                  + " must be positive");
+    }
+    waveform_->interpolate(newSamplingPeriod, method);
+}
+
 /// Checks if initialized
 bool Waveform::isInitialized() const
 {
@@ -408,6 +439,12 @@ void init_pp_waveform(py::module &m)
                               "Sets the signal to process on the class");
     singleChannelWaveform.def("get_data", &PBPostProcessing::Waveform::getData,
                               "Gets the filtered data as a NumPy array");
+    singleChannelWaveform.def("set_sampling_period", 
+                              &PBPostProcessing::Waveform::setSamplingPeriod,
+                              "Sets the sampling period (seconds)");
+    singleChannelWaveform.def("get_sampling_period",
+                              &PBPostProcessing::Waveform::getSamplingPeriod,
+                              "Gets the sampling period (seconds).");
     singleChannelWaveform.def("convolve",  &PBPostProcessing::Waveform::convolve,
                               "Convolves the time series with the input signal",
                               py::arg("s"),
@@ -427,7 +464,10 @@ void init_pp_waveform(py::module &m)
     singleChannelWaveform.def("fir_envelope", &PBPostProcessing::Waveform::firEnvelope,
                               "Computes the envelope using a FIR-based Hilbert transformer",
                               py::arg("nfir") = 301);
-
+    singleChannelWaveform.def("interpolate", &PBPostProcessing::Waveform::interpolate,
+                              "Interpolates a signal",
+                              py::arg("new_sampling_period"),
+                              py::arg("method") = RTSeis::PostProcessing::SingleChannel::InterpolationMethod::DFT);
 
     singleChannelWaveform.def("sos_lowpass_filter", &PBPostProcessing::Waveform::sosLowpassFilter,
                               "Lowpass filters a signal using a biquadratic (second-order-section) filter",
@@ -471,4 +511,10 @@ void init_pp_waveform(py::module &m)
     singleChannelWaveform.def("is_initialized", &PBPostProcessing::Waveform::isInitialized,
                               "Checks if the class is initialized");
 
+    // Add some enums
+    pybind11::enum_<RTSeis::PostProcessing::SingleChannel::InterpolationMethod> (m, "InterpolationType")
+        .value("dft", RTSeis::PostProcessing::SingleChannel::InterpolationMethod::DFT,
+               "Interpolates using Fourier interpolation - i.e., zero stuffing in the frequency domain.")
+        .value("weighted_average_slopes", RTSeis::PostProcessing::SingleChannel::InterpolationMethod::WEIGHTED_AVERAGE_SLOPES,
+               "Interpolates using the weighted-average slopes method of Wiggins.  This is the algorithm used in SAC.");
 }
