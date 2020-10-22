@@ -36,22 +36,22 @@ public:
     /// Generic IIR filter data using biquad second-order sections
     /// IIR lowpass filter using second order sections
     void sosLowpassFilter(double fc, int order,
-                          const std::string &prototype,
+                          RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
                           double ripple,
                           bool zeroPhase);
     /// IIR highpass filter using second order sections
     void sosHighpassFilter(double fc, int order,
-                           const std::string &prototype,
+                           RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
                            double ripple,
                            bool zeroPhase); 
     /// IIR bandpass filter using second order sections
     void sosBandpassFilter(const std::pair<double,double> fc, int order,
-                           const std::string &prototype,
+                           RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
                            double ripple,
                            bool zeroPhase);
     /// IIR bandstop filter using second order sections
     void sosBandstopFilter(const std::pair<double,double> fc, int order,
-                           const std::string &prototype,
+                           RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
                            double ripple,
                            bool zeroPhase);
     /// Normalization

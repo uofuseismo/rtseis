@@ -87,7 +87,7 @@ tsum = 0
 for i in range(niter):
     trace.set_data(a)
     start = time.time()
-    trace.sos_lowpass_filter(0.2, order=3, prototype="butterworth", zero_phase=False) #True) 
+    trace.sos_lowpass_filter(0.2, order=3, prototype=trace.IIRPrototype.butterworth, zero_phase=False) #True) 
     tsum = tsum + time.time() - start
 avgLPSosFilter = tsum/niter
 
@@ -95,7 +95,7 @@ tsum = 0
 for i in range(niter):
     trace.set_data(a)
     start = time.time()
-    trace.sos_bandpass_filter([0.1, 0.4], order=4, prototype="butterworth", zero_phase=True)
+    trace.sos_bandpass_filter([0.1, 0.4], order=4, prototype=trace.IIRPrototype.butterworth, zero_phase=True)
     tsum = tsum + time.time() - start
 avgBPSosFilter = tsum/niter
 

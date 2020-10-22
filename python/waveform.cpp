@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include <memory>
 #include <exception>
@@ -14,16 +15,13 @@
 namespace py = pybind11;
 using namespace PBPostProcessing;
 
-static RTSeis::PostProcessing::SingleChannel::IIRPrototype
-stringToAnalogPrototype(const std::string &prototype);
-
-Waveform::Waveform(void) :
+Waveform::Waveform() :
     waveform_(new RTSeis::PostProcessing::SingleChannel::Waveform())
 {
    return;
 }
 
-Waveform::~Waveform(void){return;}
+Waveform::~Waveform() = default;
 
 /// Convolve
 void Waveform::convolve(
@@ -153,16 +151,15 @@ void Waveform::firFilter(py::array_t<double, py::array::c_style | py::array::for
     return;
 }
 
-void Waveform::sosLowpassFilter(const double fc, const int order,
-                                const std::string &prototype,
-                                const double ripple,
-                                const bool zeroPhase)
+void Waveform::sosLowpassFilter(
+    const double fc, const int order,
+    RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
+    const double ripple,
+    const bool zeroPhase)
 {
-    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype; 
-    ptype = stringToAnalogPrototype(prototype);
     try
     {
-        waveform_->sosLowpassFilter(order, fc, ptype, ripple, zeroPhase);
+        waveform_->sosLowpassFilter(order, fc, prototype, ripple, zeroPhase);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -172,16 +169,15 @@ void Waveform::sosLowpassFilter(const double fc, const int order,
     return;    
 }
 
-void Waveform::sosHighpassFilter(const double fc, const int order,
-                                 const std::string &prototype,
-                                 const double ripple,
-                                 const bool zeroPhase)
+void Waveform::sosHighpassFilter(
+    const double fc, const int order,
+    const RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
+    const double ripple,
+    const bool zeroPhase)
 {
-    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype;
-    ptype = stringToAnalogPrototype(prototype);
     try
     {
-        waveform_->sosHighpassFilter(order, fc, ptype, ripple, zeroPhase);
+        waveform_->sosHighpassFilter(order, fc, prototype, ripple, zeroPhase);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -191,17 +187,16 @@ void Waveform::sosHighpassFilter(const double fc, const int order,
     return;
 }
 
-void Waveform::sosBandpassFilter(const std::pair<double,double> fc,
-                                 const int order,
-                                 const std::string &prototype,
-                                 const double ripple,
-                                 const bool zeroPhase)
+void Waveform::sosBandpassFilter(
+    const std::pair<double,double> fc,
+    const int order,
+    const RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
+    const double ripple,
+    const bool zeroPhase)
 {
-    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype;
-    ptype = stringToAnalogPrototype(prototype);
     try
     {
-        waveform_->sosBandpassFilter(order, fc, ptype, ripple, zeroPhase);
+        waveform_->sosBandpassFilter(order, fc, prototype, ripple, zeroPhase);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -211,17 +206,16 @@ void Waveform::sosBandpassFilter(const std::pair<double,double> fc,
     return;
 }
 
-void Waveform::sosBandstopFilter(const std::pair<double,double> fc, 
-                                 const int order,
-                                 const std::string &prototype,
-                                 const double ripple,
-                                 const bool zeroPhase)
+void Waveform::sosBandstopFilter(
+    const std::pair<double,double> fc, 
+    const int order,
+    RTSeis::PostProcessing::SingleChannel::IIRPrototype prototype,
+    const double ripple,
+    const bool zeroPhase)
 {
-    RTSeis::PostProcessing::SingleChannel::IIRPrototype ptype;
-    ptype = stringToAnalogPrototype(prototype);
     try
     {
-        waveform_->sosBandstopFilter(order, fc, ptype, ripple, zeroPhase);
+        waveform_->sosBandstopFilter(order, fc, prototype, ripple, zeroPhase);
     }
     catch (const std::invalid_argument &ia)
     {
@@ -395,6 +389,7 @@ bool Waveform::isInitialized() const
 ///                          Private Functions                               ///
 ///==========================================================================///
 
+/*
 RTSeis::PostProcessing::SingleChannel::IIRPrototype
 stringToAnalogPrototype(const std::string &prototype)
 {
@@ -420,8 +415,8 @@ stringToAnalogPrototype(const std::string &prototype)
         throw std::invalid_argument("Unknown prototype " + prototype);
     }
     return ptype;
-
 }
+*/
 
 ///==========================================================================///
 ///                          Python Bindings                                 ///
@@ -432,9 +427,26 @@ void init_pp_waveform(py::module &m)
     m.doc() = "Utilities for post-processing waveforms";
 
     py::class_<PBPostProcessing::Waveform> singleChannelWaveform(m, "Waveform");
-
     singleChannelWaveform.def(py::init<>());
     singleChannelWaveform.doc() = "Single channel waveform post-processing";
+    // Add some enums
+    pybind11::enum_<RTSeis::PostProcessing::SingleChannel::IIRPrototype> (singleChannelWaveform, "IIRPrototype")
+        .value("butterworth", RTSeis::PostProcessing::SingleChannel::IIRPrototype::BUTTERWORTH,
+               "These have maximally flat filter magnitudes in the passband")
+        .value("bessel", RTSeis::PostProcessing::SingleChannel::IIRPrototype::BESSEL, 
+               "These have maximally flat group/phase delays in the passband")
+        .value("chebyshev1", RTSeis::PostProcessing::SingleChannel::IIRPrototype::CHEBYSHEV1,
+               "A substantially more efficient filter than Butterworth or Bessel filters but these have ripples in the passband")
+        .value("chebyshev2", RTSeis::PostProcessing::SingleChannel::IIRPrototype::CHEBYSHEV2,
+               "A substantially more efficient filter than Butterworth or Bessel filters but these have ripples in the stopband");
+ 
+    pybind11::enum_<RTSeis::PostProcessing::SingleChannel::InterpolationMethod> (singleChannelWaveform, "InterpolationType")
+        .value("dft", RTSeis::PostProcessing::SingleChannel::InterpolationMethod::DFT,
+               "Interpolates using Fourier interpolation - i.e., zero stuffing in the frequency domain.")
+        .value("weighted_average_slopes", RTSeis::PostProcessing::SingleChannel::InterpolationMethod::WEIGHTED_AVERAGE_SLOPES,
+               "Interpolates using the weighted-average slopes method of Wiggins.  This is the algorithm used in SAC.");
+
+    // Define methods
     singleChannelWaveform.def("set_data", &PBPostProcessing::Waveform::setData,
                               "Sets the signal to process on the class");
     singleChannelWaveform.def("get_data", &PBPostProcessing::Waveform::getData,
@@ -468,33 +480,32 @@ void init_pp_waveform(py::module &m)
                               "Interpolates a signal",
                               py::arg("new_sampling_period"),
                               py::arg("method") = RTSeis::PostProcessing::SingleChannel::InterpolationMethod::DFT);
-
     singleChannelWaveform.def("sos_lowpass_filter", &PBPostProcessing::Waveform::sosLowpassFilter,
                               "Lowpass filters a signal using a biquadratic (second-order-section) filter",
                               py::arg("fc"),
                               py::arg("order") = 2,
-                              py::arg("prototype") = "butterworth",
+                              py::arg("prototype") = RTSeis::PostProcessing::SingleChannel::IIRPrototype::BUTTERWORTH,
                               py::arg("ripple") = 5,
                               py::arg("zero_phase") = false);
     singleChannelWaveform.def("sos_highpass_filter", &PBPostProcessing::Waveform::sosHighpassFilter,
                               "Highpass filters a signal using a biquadratic (second-order-section) filter",
                               py::arg("fc"),
                               py::arg("order") = 2,
-                              py::arg("prototype") = "butterworth",
+                              py::arg("prototype") = RTSeis::PostProcessing::SingleChannel::IIRPrototype::BUTTERWORTH,
                               py::arg("ripple") = 5,
                               py::arg("zero_phase") = false);
     singleChannelWaveform.def("sos_bandpass_filter", &PBPostProcessing::Waveform::sosBandpassFilter,
                               "Bandpass filters a signal using a biquadratic (second-order-section) filter",
                               py::arg("fc"),
                               py::arg("order") = 2,
-                              py::arg("prototype") = "butterworth",
+                              py::arg("prototype") = RTSeis::PostProcessing::SingleChannel::IIRPrototype::BUTTERWORTH,
                               py::arg("ripple") = 5,
                               py::arg("zero_phase") = false);
     singleChannelWaveform.def("sos_bandstop_filter", &PBPostProcessing::Waveform::sosBandstopFilter,
                               "Lowpass filters a signal using a biquadratic (second-order-section) filter",
                               py::arg("fc"),
                               py::arg("order") = 2,
-                              py::arg("prototype") = "butterworth",
+                              py::arg("prototype") = RTSeis::PostProcessing::SingleChannel::IIRPrototype::BUTTERWORTH,
                               py::arg("ripple") = 5,
                               py::arg("zero_phase") = false);
     singleChannelWaveform.def("normalize_min_max", &PBPostProcessing::Waveform::normalizeMinMax,
@@ -511,10 +522,4 @@ void init_pp_waveform(py::module &m)
     singleChannelWaveform.def("is_initialized", &PBPostProcessing::Waveform::isInitialized,
                               "Checks if the class is initialized");
 
-    // Add some enums
-    pybind11::enum_<RTSeis::PostProcessing::SingleChannel::InterpolationMethod> (m, "InterpolationType")
-        .value("dft", RTSeis::PostProcessing::SingleChannel::InterpolationMethod::DFT,
-               "Interpolates using Fourier interpolation - i.e., zero stuffing in the frequency domain.")
-        .value("weighted_average_slopes", RTSeis::PostProcessing::SingleChannel::InterpolationMethod::WEIGHTED_AVERAGE_SLOPES,
-               "Interpolates using the weighted-average slopes method of Wiggins.  This is the algorithm used in SAC.");
 }
