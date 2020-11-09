@@ -69,7 +69,7 @@ public:
      *        [xInterval.first, xInterval.second] with regularly spaced
      *        function values \f$ y(x) \f$.
      * @param[in] npts       The number of data points in y.  This must be at
-     *                       least 4.
+     *                       least 2.
      * @param[in] xInterval  The closed interval which begins at xInterval.first
      *                       and ends at xInterval.second.  xInterval.first must
      *                       be less than xInterval.second.
@@ -80,6 +80,19 @@ public:
     void initialize(int npts,
                     const std::pair<T, T> xInterval,
                     const T y[]);
+    /*!
+     * @brief Initializes the weighted average at abscissas defined by x 
+     *        with function values \f$ y(x) \f$.
+     * @param[in] npts  The number of data points in y.  This must be at
+     *                  least 2.
+     * @param[in] x     The abscissas at which the values y are evaluated.
+     *                  This is an array whose dimension is [npts].
+     *                  This must be sorted in increasing order.
+     * @param[in] y     The function values.  This is an array of dimension
+     *                  [npts].
+     * @throws std::invalid_argument if any of the arguments are invalid.
+     */
+    void initialize(int npts, const T x[], const T y[]);
     /*!
      * @brief Determines if the class has been initialized yet.
      * @result True indicates that the class was inititalized.

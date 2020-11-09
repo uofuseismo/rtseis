@@ -47,7 +47,8 @@ void computeUniformSlopes(const int npts, const T dx,
                           T *__restrict__ slopes,
                           T *__restrict__ splineCoeffs)
 {
-    T dxi = 1/dx;
+    const T one = 1;
+    T dxi = one/dx;
     // Handle the initial conditions
     slopes[0] = (y[1] - y[0])/dx;
     #pragma omp simd
@@ -68,7 +69,7 @@ void computeUniformSlopes(const int npts, const T dx,
     slopes[npts-1] = (y[npts-1] - y[npts-2])/dx;
     // Compute the spline coefficients: Eqn 4 from
     // Monotone Piecewise Cubic Interpolation - Fritsch and Carlson 1980
-    auto dxi2 = (1/(dx*dx));
+    auto dxi2 = one/(dx*dx);
     for (int i=0; i<npts-1; ++i)
     {
         auto di = slopes[i];
@@ -79,6 +80,53 @@ void computeUniformSlopes(const int npts, const T dx,
         auto c3 = (-2*di - di1 + 3*delta)*dxi;
         auto c4 = (di + di1 - 2*delta)*dxi2;
         splineCoeffs[4*i+0] = c1; 
+        splineCoeffs[4*i+1] = c2;
+        splineCoeffs[4*i+2] = c3;
+        splineCoeffs[4*i+3] = c4;
+    }
+}
+
+template<typename T>
+void computeUniformSlopes(const int npts,
+                          const T *__restrict__ x,
+                          const T *__restrict__ y,
+                          T *__restrict__ slopes,
+                          T *__restrict__ splineCoeffs)
+{
+    // Handle the initial conditions
+    slopes[0] = (y[1] - y[0])/(x[1] - x[0]);
+    #pragma omp simd
+    for (int i=1; i<npts-1; ++i)
+    {
+        T mi  = (y[i] - y[i-1])/(x[i] - x[i-1]);
+        T mi1 = (y[i+1] - y[i])/(x[i+1] - x[i]);
+        // w_i and w_i m_i = 1/max(|m_i|, epsilon)*m_i
+        T wi, wimi;
+        computeWiWiMi(mi, &wi, &wimi);
+        // w_{i+1} and w_{i+1} m_{i+1} = 1/(max(|m_{i+1}|, epsilon)*m_{i+1}
+        T wi1, wi1mi1;
+        computeWiWiMi(mi1, &wi1, &wi1mi1);
+        // s_i = (w_i*m_i + w_{i+1}*m_{i+1})/(w_{i} + w_{i+1})
+        slopes[i] = (wimi + wi1mi1)/(wi + wi1);
+    }
+    // Handle the final conditions
+    slopes[npts-1] = (y[npts-1] - y[npts-2])/(x[npts-1] - x[npts-2]);
+    // Compute the spline coefficients: Eqn 4 from
+    // Monotone Piecewise Cubic Interpolation - Fritsch and Carlson 1980
+    const T one = 1;
+    for (int i=0; i<npts-1; ++i)
+    {
+        T dx = x[i+1] - x[i]; 
+        T dxi = one/dxi; 
+        auto dxi2 = dxi*dxi;
+        auto di = slopes[i];
+        auto di1 = slopes[i+1];
+        auto delta = (y[i+1] - y[i])*dxi;
+        auto c1 = y[i];
+        auto c2 = di;
+        auto c3 = (-2*di - di1 + 3*delta)*dxi;
+        auto c4 = (di + di1 - 2*delta)*dxi2;
+        splineCoeffs[4*i+0] = c1;
         splineCoeffs[4*i+1] = c2;
         splineCoeffs[4*i+2] = c3;
         splineCoeffs[4*i+3] = c4;
@@ -104,6 +152,7 @@ public:
         mRange = slopes.mRange;
         mCoeffs = slopes.mCoeffs;
         mSites = slopes.mSites;
+        mUniformPartition = slopes.mUniformPartition;
         mPrecision = slopes.mPrecision;
         mInitialized = slopes.mInitialized; 
         if (mCoeffs > 0)
@@ -119,6 +168,19 @@ public:
                 mSplineCoeffs32f = ippsMalloc_32f(mCoeffs);
                 ippsCopy_32f(slopes.mSplineCoeffs32f, mSplineCoeffs32f,
                              mCoeffs);
+            }
+        }
+        if (!mUniformPartition && mSites > 0)
+        {
+            if (mPrecision == RTSeis::Precision::DOUBLE)
+            {
+                mXi64f = ippsMalloc_64f(mSites);
+                ippsCopy_64f(slopes.mXi64f, mXi64f, mSites);
+            } 
+            else
+            {
+                mXi32f = ippsMalloc_32f(mSites);
+                ippsCopy_32f(slopes.mXi32f, mXi32f, mSites);
             }
         }
         return *this;
@@ -151,6 +213,7 @@ public:
         mCoeffs = 0;
         mSites = 0;
         mPrecision = RTSeis::Precision::DOUBLE;
+        mUniformPartition = true;
         mHaveTask64f = false;
         mHaveTask32f = false;
         mInitialized = false;        
@@ -180,8 +243,13 @@ public:
     const MKL_INT splineOrder = 4;
     /// Notes the precision of the module
     RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
+    /// Using a uniform partition 
+    bool mUniformPartition = true;
+    /// Have the double MKL task.
     bool mHaveTask64f = false;
+    /// Have the float MKL task.
     bool mHaveTask32f = false;
+    /// Class is initialized.
     bool mInitialized = false;
 };
 
@@ -256,14 +324,16 @@ void WeightedAverageSlopes<double>::initialize(
     clear();
     if (npts < 2)
     {
-        RTSEIS_THROW_IA("npts = %d must be at least 2", npts);
+        throw std::invalid_argument("npts = " + std::to_string(npts)
+                                  + " must be at least 2");
     }
     if (x.first >= x.second)
     {
-        RTSEIS_THROW_IA("x.first = %lf must be less than x.second = %lf",
-                        x.first, x.second);
+        throw std::invalid_argument("x.first = " + std::to_string(x.first)
+                                  + " must be less than x.second = "
+                                  + std::to_string(x.second));
     }
-    if (y == nullptr){RTSEIS_THROW_IA("%s", "y is NULL\n");}
+    if (y == nullptr){throw std::invalid_argument("y is NULL");}
     // Compute the spline coefficients
     auto dx = (x.second - x.first)/static_cast<double> (npts - 1);
     pImpl->mSites = npts;
@@ -297,6 +367,62 @@ void WeightedAverageSlopes<double>::initialize(
     pImpl->mInitialized = true;
 }
 
+/// Initialize the class
+template<>
+void WeightedAverageSlopes<double>::initialize(
+    const int npts,
+    const double x[],
+    const double y[])
+{
+    clear();
+    if (npts < 2)
+    {
+        throw std::invalid_argument("npts = " + std::to_string(npts)
+                                  + " must be at least 2");
+    }
+    if (x == nullptr || y == nullptr)
+    {
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
+    }
+    if (!std::is_sorted(x, x+npts))
+    {
+        throw std::invalid_argument("x is not sorted");
+    }
+    pImpl->mSites = npts;
+    pImpl->mCoeffs = pImpl->splineOrder*(pImpl->mSites - 1);
+    pImpl->mSplineCoeffs64f = ippsMalloc_64f(pImpl->mCoeffs);
+    auto slopes = ippsMalloc_64f(npts); // Workspace
+    computeUniformSlopes(npts, x, y, slopes, pImpl->mSplineCoeffs64f);
+    ippsFree(slopes);
+    // Create a custom piecewise 4th order spline
+    pImpl->mTask64f = nullptr;
+    pImpl->mRange.first = x[0];
+    pImpl->mRange.second = x[npts-1];
+    pImpl->mXiEqual64f[0] = x[0];
+    pImpl->mXiEqual64f[1] = x[npts-1];
+    pImpl->mXi64f = ippsMalloc_64f(npts);
+    ippsCopy_64f(x, pImpl->mXi64f, npts);
+    auto status = dfdNewTask1D(&pImpl->mTask64f, npts, pImpl->mXi64f,
+                               DF_NON_UNIFORM_PARTITION, 1, y, DF_NO_HINT);
+    if (status != DF_STATUS_OK)
+    {
+        dfDeleteTask(&pImpl->mTask64f);
+        throw std::runtime_error("Failed to create task\n");
+    }
+    status = dfdEditPPSpline1D(pImpl->mTask64f, pImpl->splineOrder,
+                               DF_PP_DEFAULT, DF_NO_BC, NULL, DF_NO_IC, NULL,
+                               pImpl->mSplineCoeffs64f, DF_NO_HINT);
+    if (status != DF_STATUS_OK)
+    {
+        dfDeleteTask(&pImpl->mTask64f);
+        throw std::runtime_error("Failed to edit spline pipeline\n");
+    }
+    pImpl->mHaveTask64f = true;
+    pImpl->mInitialized = true;
+}
+
+
 // Interpolate
 template<>
 void WeightedAverageSlopes<double>::interpolate(
@@ -309,15 +435,19 @@ void WeightedAverageSlopes<double>::interpolate(
     double *yq = *yqIn;
     if (xq == nullptr || yq == nullptr)
     {
-        if (xq == nullptr){RTSEIS_THROW_IA("%s", "xq is NULL");}
-        RTSEIS_THROW_IA("%s", "yq is NULL");
+        if (xq == nullptr){throw std::invalid_argument("xq is NULL");}
+        throw std::invalid_argument("yq is NULL");
     }
     double xqMin, xqMax;
     ippsMinMax_64f(xq, nq, &xqMin, &xqMax);
     if (xqMin < xMin || xqMax > xMax)
     {
-        RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
-                        xqMin, xqMax, xMin, xMax);
+        throw std::invalid_argument("Min/max of xq = ("
+                                  + std::to_string(xqMin) + ","
+                                  + std::to_string(xqMax) 
+                                  + ") Must be in range ["
+                                  + std::to_string(xMin) + ","
+                                  + std::to_string(xMax) + "]");
     }
     // Check this is sorted
     bool lsorted = Math::VectorMath::isSorted(nq, xq);
@@ -334,7 +464,7 @@ void WeightedAverageSlopes<double>::interpolate(
                                    DF_MATRIX_STORAGE_ROWS, NULL);
     if (status != DF_STATUS_OK)
     {
-        RTSEIS_THROW_RTE("%s", "Interpolation failed\n");
+        throw std::runtime_error("Interpolation failed");
     }
 }
 
@@ -375,7 +505,7 @@ void WeightedAverageSlopes<double>::interpolate(
                                    DF_MATRIX_STORAGE_ROWS, NULL);
     if (status != DF_STATUS_OK)
     {
-        RTSEIS_THROW_RTE("%s", "Interpolation failed\n");
+        throw std::runtime_error("Interpolation failed");
     }
 }
 
