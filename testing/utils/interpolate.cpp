@@ -314,12 +314,14 @@ TEST(UtilitiesInterpolation, weighedAverageSlopes)
     std::ifstream textFile(dataFile);
     std::string line;
     int i = 0;
-    std::vector<double> y;
+    std::vector<double> x, y;
     y.reserve(12000);
+    x.reserve(y.size());
     while (std::getline(textFile, line))
     {
         double yval;
         std::sscanf(line.c_str(), "%lf\n", &yval);
+        x.push_back(dt*i);
         y.push_back(yval);
         i = i + 1;
     }
@@ -365,6 +367,16 @@ TEST(UtilitiesInterpolation, weighedAverageSlopes)
     slopes.interpolate(nq, xIntervalNew, &yIntPtr);
     ippsNormDiff_Inf_64f(yIntRef.data(), yInt.data(), nq, &error);
     EXPECT_LE(error, 1.e-8);
+
+    // Try the non-uniform test.  This is a weak test because I don't
+    // have a reference solution for the non-uniform test.  But, at the
+    // very least, the uniform case must be a subset of the more general
+    // case and this verifies that assumption.
+    slopes.clear();
+    EXPECT_NO_THROW(slopes.initialize(y.size(), x.data(), y.data()));
+    slopes.interpolate(nq, xq.data(), &yIntPtr);
+    ippsNormDiff_Inf_64f(yIntRef.data(), yInt.data(), nq, &error);
+    EXPECT_LE(error, 1.e-8); 
 }
 
 /*
