@@ -70,6 +70,7 @@ void computeUniformSlopes(const int npts, const T dx,
     // Compute the spline coefficients: Eqn 4 from
     // Monotone Piecewise Cubic Interpolation - Fritsch and Carlson 1980
     auto dxi2 = one/(dx*dx);
+    #pragma omp simd
     for (int i=0; i<npts-1; ++i)
     {
         auto di = slopes[i];
@@ -114,10 +115,11 @@ void computeUniformSlopes(const int npts,
     // Compute the spline coefficients: Eqn 4 from
     // Monotone Piecewise Cubic Interpolation - Fritsch and Carlson 1980
     const T one = 1;
+    #pragma omp simd
     for (int i=0; i<npts-1; ++i)
     {
         T dx = x[i+1] - x[i]; 
-        T dxi = one/dxi; 
+        auto dxi = one/dx; 
         auto dxi2 = dxi*dxi;
         auto di = slopes[i];
         auto di1 = slopes[i+1];
