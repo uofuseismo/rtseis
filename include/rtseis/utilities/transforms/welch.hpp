@@ -116,7 +116,7 @@ public:
      * @brief Flag indicating whether or not the class is initialized.
      * @result True indicates that the class is inititalized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Returns the expected number of time domain samples in the signal
      *        to transform.
@@ -124,7 +124,7 @@ public:
      *         contain.
      * @throws std::runtime_error if the class is not inititalized.
      */
-    int getNumberOfSamples() const;
+    [[nodiscard]] int getNumberOfSamples() const;
     /*!
      * @brief Computes the Welch transform of a signal.
      * @param[in] nSamples   The number of samples in the signal.  This must
@@ -139,13 +139,13 @@ public:
      * @brief Returns whether or not the transform has been computed.
      * @retval True indicates that the transform has been computed.
      */
-    bool haveTransform() const noexcept;
+    [[nodiscard]] bool haveTransform() const noexcept;
     /*!
      * @brief Returns the number of frequencies.
      * @result The number of frequencies.
      * @throws std::runtime_error if the class is not intitialized.
      */
-    int getNumberOfFrequencies() const;
+    [[nodiscard]] int getNumberOfFrequencies() const;
     /*!
      * @brief Gets the frequencies at which the power spectral density was
      *        estimated. 

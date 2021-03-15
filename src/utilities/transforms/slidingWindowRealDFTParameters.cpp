@@ -25,7 +25,7 @@ public:
     /// Describes the detrend strategy
     SlidingWindowDetrendType mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
     /// Defines the precision
-    RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
+    //RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
 };
 
 /// Constructor
@@ -80,7 +80,7 @@ void SlidingWindowRealDFTParameters::clear() noexcept
     pImpl->mSamplesInOverlap = 0;
     pImpl->mWindowType = SlidingWindowType::BOXCAR;
     pImpl->mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
-    pImpl->mPrecision = RTSeis::Precision::DOUBLE;
+    //pImpl->mPrecision = RTSeis::Precision::DOUBLE;
 }
 
 /// Set number of samples
@@ -257,6 +257,7 @@ SlidingWindowRealDFTParameters::getDetrendType() const noexcept
 }
 
 /// Gets/sets the precision
+/*
 void SlidingWindowRealDFTParameters::setPrecision(
     const RTSeis::Precision precision) noexcept 
 {
@@ -267,6 +268,7 @@ RTSeis::Precision SlidingWindowRealDFTParameters::getPrecision() const noexcept
 {
     return pImpl->mPrecision;
 }
+*/
 
 /// Check if class is usable
 bool SlidingWindowRealDFTParameters::isValid() const noexcept

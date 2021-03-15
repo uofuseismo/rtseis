@@ -35,7 +35,7 @@ double computeDensityScaling(const int npts, const double window[])
 class Welch::WelchImpl
 {
 public:
-    class SlidingWindowRealDFT mSlidingWindowRealDFT;
+    class SlidingWindowRealDFT<double> mSlidingWindowRealDFT;
     class SlidingWindowRealDFTParameters mParameters;
     std::vector<double> mSumSpectrum;
     double mSpectrumScaling = 1;
@@ -174,7 +174,7 @@ void Welch::transform(const int nSamples, const double x[])
     auto nWindows = pImpl->mSlidingWindowRealDFT.getNumberOfTransformWindows();
     // Initialize the summation
     double *pSumSpectrum = pImpl->mSumSpectrum.data();
-    auto cPtr = pImpl->mSlidingWindowRealDFT.getTransform64f(0);
+    auto cPtr = pImpl->mSlidingWindowRealDFT.getTransform(0);
     auto pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
     #pragma omp simd
     for (auto k=0; k<nFrequencies; ++k)
@@ -185,7 +185,7 @@ void Welch::transform(const int nSamples, const double x[])
     // And sum the other windows
     for (auto i=1; i<nWindows; ++i)
     {
-        cPtr = pImpl->mSlidingWindowRealDFT.getTransform64f(i);
+        cPtr = pImpl->mSlidingWindowRealDFT.getTransform(i);
         pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
         #pragma omp simd
         for (auto k=0; k<nFrequencies; ++k)

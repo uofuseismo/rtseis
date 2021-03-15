@@ -150,25 +150,25 @@ public:
       * @result The length of the inverse DFT or FFT.
       * @throws std::invalid_argument if the class is not initialized.
       */
-     int getInverseTransformLength() const;
+     [[nodiscard]] int getInverseTransformLength() const;
      /*!
       * @brief Gets the length of the transform.
       * @result The length of the DFT or FFT.
       * @throws std::runtime_error if the class is not initialized.
       */
-     int getTransformLength() const;
+     [[nodiscard]] int getTransformLength() const;
      /*!
       * @brief Gets the maximum length of the input signal.
       * @result The maximum length of the input signal.
       * @throws std::invalid_argument if the class is not initialized.
       */
-     int getMaximumInputSignalLength() const;
+     [[nodiscard]] int getMaximumInputSignalLength() const;
      /*!
       * @brief Returns whether or not the class is initialized.
       * @retval True indicates the class is initialized.
       * @retval False indicates the class is not-initialized.
       */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Releases the memory on the module and resets the
      *        defaults.  The class must be reinitialized before

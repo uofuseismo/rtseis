@@ -845,14 +845,14 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_NO_THROW(parameters.setDFTLength(dftLength));
     EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(overlapLength));
     EXPECT_NO_THROW(parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_MEAN));
-    EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::FLOAT));
+    //EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::FLOAT));
  
     EXPECT_EQ(parameters.getNumberOfSamples(), nSamples);
     EXPECT_EQ(parameters.getWindowType(), SlidingWindowType::HANN);
     EXPECT_EQ(parameters.getWindowLength(), windowLength); 
     EXPECT_EQ(parameters.getNumberOfSamplesInOverlap(), overlapLength);
     EXPECT_EQ(parameters.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
-    EXPECT_EQ(parameters.getPrecision(), RTSeis::Precision::FLOAT);
+    //EXPECT_EQ(parameters.getPrecision(), RTSeis::Precision::FLOAT);
     window = parameters.getWindow();
     double *windowData = windowRef.data();
     RTSeis::Utilities::WindowFunctions::hann(windowLength, &windowData);
@@ -880,7 +880,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_EQ(pcopy.getWindowLength(), windowLength);
     EXPECT_EQ(pcopy.getNumberOfSamplesInOverlap(), overlapLength);
     EXPECT_EQ(pcopy.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
-    EXPECT_EQ(pcopy.getPrecision(), RTSeis::Precision::FLOAT);
+    //EXPECT_EQ(pcopy.getPrecision(), RTSeis::Precision::FLOAT);
     window = pcopy.getWindow();
     ippsNormDiff_Inf_64f(window.data(), windowRef.data(),
                          windowLength, &emax);
@@ -889,7 +889,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
 
 TEST(UtilitiesTransforms, Spectrogram)
 {
-    SlidingWindowRealDFT sdft;
+    SlidingWindowRealDFT<double> sdft;
     // Load the chirp
     const std::string signalFileName = "data/spectrogramNoisyChirpSignal.txt";
     const std::string specFileName = "data/spectrogramNoisyChirp.txt";
@@ -944,7 +944,7 @@ TEST(UtilitiesTransforms, Spectrogram)
     EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(nSamplesInOverlap));
     EXPECT_NO_THROW(
        parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_NONE));
-    EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::DOUBLE));
+    //EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::DOUBLE));
     EXPECT_TRUE(parameters.isValid());
     // Check the outputs
     EXPECT_EQ(parameters.getNumberOfSamples(), nSamples);
@@ -957,7 +957,7 @@ TEST(UtilitiesTransforms, Spectrogram)
     EXPECT_EQ(parameters.getDFTLength(), dftLength);
     EXPECT_EQ(parameters.getNumberOfSamplesInOverlap(), nSamplesInOverlap);
     EXPECT_EQ(parameters.getDetrendType(), SlidingWindowDetrendType::REMOVE_NONE);
-    EXPECT_EQ(parameters.getPrecision(), RTSeis::Precision::DOUBLE);
+    //EXPECT_EQ(parameters.getPrecision(), RTSeis::Precision::DOUBLE);
     // Initialize
     EXPECT_NO_THROW(sdft.initialize(parameters));
 /*
@@ -979,7 +979,7 @@ TEST(UtilitiesTransforms, Spectrogram)
     for (auto i=0; i<sdft.getNumberOfTransformWindows(); ++i)
     {
         const std::complex<double> *cptr = nullptr;
-        EXPECT_NO_THROW(cptr = sdft.getTransform64f(i));
+        EXPECT_NO_THROW(cptr = sdft.getTransform(i));
         for (auto j=0; j<sdft.getNumberOfFrequencies(); j++)
         {
             int indx = sdft.getNumberOfTransformWindows()*j + i;

@@ -19,6 +19,7 @@ class SlidingWindowRealDFTParameters;
  * @copyright Ben Baker distributed under the MIT license.
  * @date May 2019.
  */
+template<class T = double>
 class SlidingWindowRealDFT
 {
 public:
@@ -88,13 +89,13 @@ public:
      * @brief Flag indicating whether or not the class is initialized.
      * @result True indicates that the class is inititalized.
      */
-    bool isInitialized() const noexcept;
+    [[nodiscard]] bool isInitialized() const noexcept;
     /*!
      * @brief Returns the number of frequencies.
      * @result The number of frequencies.
      * @throws std::runtime_error if the class is not intitialized.
      */
-    int getNumberOfFrequencies() const;
+    [[nodiscard]] int getNumberOfFrequencies() const;
     /*!
      * @brief Returns the number of sliding time windows for which a
      *        DFT was computed.  This is the number of columns in the
@@ -102,19 +103,13 @@ public:
      * @result The number of windows.
      * @throws std::runtime_error if the class is not intitialized.
      */
-    int getNumberOfTransformWindows() const;
+    [[nodiscard]] int getNumberOfTransformWindows() const;
     /*!
      * @brief Returns the expected number of samples in the time series.
      * @result The expected number of samples.
      * @throws std::runtime_error if the class is not initialized.
      */
-    int getNumberOfSamples() const;
-    /*!
-     * @brief Gets the precision of the underlying Fourier transform.
-     * @result The precision of the underlying transform.
-     * @throws std::runtime_error if the class is not initialized.
-     */
-    RTSeis::Precision getPrecision() const;
+    [[nodiscard]] int getNumberOfSamples() const;
 
     /*!
      * @brief Computes the sliding window DFT of the real signal.
@@ -127,7 +122,7 @@ public:
      * @throws std::runtime_error if the class is not initalized.
      * @sa \c getNumberOfTransformWindow(), \c getNumberOfFrequencies()
      */
-    void transform(const int nSamples, const double x[]);
+    void transform(int nSamples, const T x[]);
 
     /*!
      * @brief Gets a pointer to the transform in the iWindow'th window.
@@ -135,11 +130,11 @@ public:
      *                     be in the range 
      *                     [0, \c getNumberOfTransformWidnwos()-1]. 
      * @throws std::invalid_argument if iWindow is out of bounds.
-     * @throws std::runtime_error if the class precision is FLOAT 
-     *         or the \c transform() has not yet been called. 
-     * @sa \c transform(), \c getNumberOfTransformWindows(), \c getPrecision()
+     * @throws std::runtime_error if \c transform() has not yet been called. 
+     * @sa \c transform(), \c getNumberOfTransformWindows()
      */
-    const std::complex<double> *getTransform64f(const int iWindow) const;
+    [[nodiscard]]
+    const std::complex<T> *getTransform(int iWindow) const;
     /*! 
      * @brief Gets a pointer to the transform in the iWindow'th window.
      * @param[in] iWindow  The window of the given transform.  This must
@@ -150,7 +145,8 @@ public:
      *         or the \c transform() has not yet been called. 
      * @sa \c transform(), \c getNumberOfTransformWindows(), \c getPrecision()
      */
-    const std::complex<float> *getTransform32f(const int iWindow) const;
+    //[[nodiscard]]
+    //const std::complex<float> *getTransform32f(const int iWindow) const;
 private:
     class SlidingWindowRealDFTImpl;
     std::unique_ptr<SlidingWindowRealDFTImpl> pImpl;

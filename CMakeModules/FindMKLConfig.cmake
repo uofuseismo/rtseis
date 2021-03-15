@@ -18,7 +18,8 @@ find_path(MKL_INCLUDE_DIR
           NAMES mkl.h
           HINTS $ENV{MKL_INC_DIR}
                 $ENV{MKL_ROOT}/include
-                /opt/intel/mkl/include)
+                /opt/intel/mkl/include
+                /opt/intel/oneapi/mkl/latest/include/)
 # Find the library components
 find_library(MKL_INTEL_LIBRARY
              NAMES ${INTEL}
@@ -27,14 +28,16 @@ find_library(MKL_INTEL_LIBRARY
                    $ENV{MKL_ROOT}/lib/
                    $ENV{MKL_LIB_DIR}
                    /opt/intel/mkl/lib/intel64
-                   /opt/intel/mkl/lib)
+                   /opt/intel/mkl/lib
+                   /opt/intel/oneapi/mkl/latest/lib/intel64)
 find_library(MKL_SEQUENTIAL_LIBRARY
              NAMES ${SEQUENTIAL}
              PATHS $ENV{MKL_LIB_DIR}
                    $ENV{MKL_ROOT}/lib/intel64
                    $ENV{MKL_ROOT}/lib/
                    /opt/intel/mkl/lib/intel64
-                   /opt/intel/mkl/lib)
+                   /opt/intel/mkl/lib
+                   /opt/intel/oneapi/mkl/latest/lib/intel64)
 find_library(MKL_CORE_LIBRARY
              NAMES ${CORE}
              PATHS $ENV{MKL_LIB_DIR}
@@ -42,12 +45,13 @@ find_library(MKL_CORE_LIBRARY
                    $ENV{MKL_ROOT}/lib/
                    $ENV{MKL_LIB_DIR}
                    /opt/intel/mkl/lib/intel64
-                   /opt/intel/mkl/lib)
+                   /opt/intel/mkl/lib
+                   /opt/intel/oneapi/mkl/latest/lib/intel64)
 
 set(MKL_LIBRARY ${MKL_INTEL_LIBRARY} ${MKL_SEQUENTIAL_LIBRARY} ${MKL_CORE_LIBRARY})
 
 # Handle the QUIETLY and REQUIRED arguments and set MKL_FOUND to TRUE if
 # all listed variables are TRUE.
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(MKL DEFAULT_MSG MKL_INCLUDE_DIR MKL_LIBRARY MKL_INTEL_LIBRARY MKL_SEQUENTIAL_LIBRARY MKL_CORE_LIBRARY)
+find_package_handle_standard_args(FindMKL DEFAULT_MSG MKL_INCLUDE_DIR MKL_LIBRARY MKL_INTEL_LIBRARY MKL_SEQUENTIAL_LIBRARY MKL_CORE_LIBRARY)
 mark_as_advanced(MKL_INCLUDE_DIR MKL_LIBRARY)

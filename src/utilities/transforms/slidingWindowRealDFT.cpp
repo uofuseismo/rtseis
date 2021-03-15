@@ -41,7 +41,8 @@ inline int padLength32f(const int n, const int alignment=64)
 }
 */
 
-class SlidingWindowRealDFT::SlidingWindowRealDFTImpl
+template<class T>
+class SlidingWindowRealDFT<T>::SlidingWindowRealDFTImpl
 {
 public:
     /// Constructor
@@ -79,7 +80,7 @@ public:
         mNumberOfColumns = 0;
         mDataOffset = 0;
         mFTOffset = 0;
-        mPrecision = RTSeis::Precision::DOUBLE;
+        //mPrecision = RTSeis::Precision::DOUBLE;
         mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
         mHaveDoublePlan = false;
         mHaveFloatPlan = false;
@@ -136,7 +137,9 @@ public:
     /// The number of samples in a segment
     int mSamplesPerSegment = 0; 
     /// The precision of the module
-    RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
+    const RTSeis::Precision mPrecision
+        = (sizeof(T) == sizeof(double)) ?
+          RTSeis::Precision::DOUBLE : RTSeis::Precision::FLOAT;
     /// The detrend strategy
     SlidingWindowDetrendType mDetrendType
        = SlidingWindowDetrendType::REMOVE_NONE;
@@ -153,27 +156,31 @@ public:
 };
 
 /// Constructor
-SlidingWindowRealDFT::SlidingWindowRealDFT() :
+template<class T>
+SlidingWindowRealDFT<T>::SlidingWindowRealDFT() :
     pImpl(std::make_unique<SlidingWindowRealDFTImpl> ())
 {
 }
 
 /// Copy constructor
-SlidingWindowRealDFT::SlidingWindowRealDFT(const SlidingWindowRealDFT &swdft)
+template<class T>
+SlidingWindowRealDFT<T>::SlidingWindowRealDFT(const SlidingWindowRealDFT &swdft)
 {
     *this = swdft;
 }
 
 /// Move constructor
-SlidingWindowRealDFT::SlidingWindowRealDFT(
+template<class T>
+SlidingWindowRealDFT<T>::SlidingWindowRealDFT(
     SlidingWindowRealDFT &&swdft) noexcept
 {
     *this = std::move(swdft);
 }
 
 /// Move assignment operator
-SlidingWindowRealDFT&
-SlidingWindowRealDFT::operator=(SlidingWindowRealDFT &&swdft) noexcept
+template<class T>
+SlidingWindowRealDFT<T>&
+SlidingWindowRealDFT<T>::operator=(SlidingWindowRealDFT &&swdft) noexcept
 {
     if (&swdft == this){return *this;}
     pImpl = std::move(swdft.pImpl);
@@ -181,8 +188,9 @@ SlidingWindowRealDFT::operator=(SlidingWindowRealDFT &&swdft) noexcept
 }
 
 /// Copy assignment operator
-SlidingWindowRealDFT&
-SlidingWindowRealDFT::operator=(const SlidingWindowRealDFT &swdft)
+template<class T>
+SlidingWindowRealDFT<T>&
+SlidingWindowRealDFT<T>::operator=(const SlidingWindowRealDFT &swdft)
 {
     if (&swdft == this){return *this;}
     if (pImpl){pImpl.reset();}
@@ -221,15 +229,19 @@ SlidingWindowRealDFT::operator=(const SlidingWindowRealDFT &swdft)
 }
 
 /// Destructor
-SlidingWindowRealDFT::~SlidingWindowRealDFT() = default;
+template<class T>
+SlidingWindowRealDFT<T>::~SlidingWindowRealDFT() = default;
 
-void SlidingWindowRealDFT::clear() noexcept
+// Release memory
+template<class T>
+void SlidingWindowRealDFT<T>::clear() noexcept
 {
     pImpl->clear();
 }
 
 /// Initialize - this will fire up the FFTw engine
-void SlidingWindowRealDFT::initialize(
+template<class T>
+void SlidingWindowRealDFT<T>::initialize(
     const SlidingWindowRealDFTParameters &parameters)
 {
     clear();
@@ -258,7 +270,7 @@ void SlidingWindowRealDFT::initialize(
     pImpl->mDFTLength = dftLength;
     pImpl->mNumberOfFrequencies = dftLength/2 + 1;
     pImpl->mNumberOfColumns = ncols;
-    pImpl->mPrecision = parameters.getPrecision();
+    //pImpl->mPrecision = parameters.getPrecision();
     pImpl->mDetrendType = parameters.getDetrendType();
     if (luseWindow)
     {
@@ -469,41 +481,50 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
 */
 
 /// Gets number of frequencies
-int SlidingWindowRealDFT::getNumberOfFrequencies() const
+template<class T>
+int SlidingWindowRealDFT<T>::getNumberOfFrequencies() const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");} 
     return pImpl->mNumberOfFrequencies;
 }
 
 /// Gets number of time samples
-int SlidingWindowRealDFT::getNumberOfTransformWindows() const
+template<class T>
+int SlidingWindowRealDFT<T>::getNumberOfTransformWindows() const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     return pImpl->mNumberOfColumns;
 }
 
 /// Gets number of samples
-int SlidingWindowRealDFT::getNumberOfSamples() const
+template<class T>
+int SlidingWindowRealDFT<T>::getNumberOfSamples() const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     return pImpl->mSamples;
 }
 
 /// Determines if the class is intitialized
-bool SlidingWindowRealDFT::isInitialized() const noexcept
+template<class T>
+bool SlidingWindowRealDFT<T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Gets the precision
-RTSeis::Precision SlidingWindowRealDFT::getPrecision() const
+/*
+template<class T>
+RTSeis::Precision SlidingWindowRealDFT<T>::getPrecision() const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     return pImpl->mPrecision;
 }
+*/
 
 /// Actually perform the transform
-void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
+template<>
+void SlidingWindowRealDFT<double>::transform(const int nSamples,
+                                             const double x[])
 {
     pImpl->mHaveTransform = false;
     // Check the class is initialized and that the inputs are as expected
@@ -514,11 +535,6 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
                         nSamples, getNumberOfSamples());
     }
     if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-    // Handle the float case
-    if (pImpl->mPrecision != RTSeis::Precision::DOUBLE)
-    {
-        RTSEIS_THROW_RTE("%s", "Float precision not yet implemented");
-    }
     // Loop over the windows
     //#pragma omp parallel shared(inData, window) default(None)
     {
@@ -566,18 +582,76 @@ void SlidingWindowRealDFT::transform(const int nSamples, const double x[])
     pImpl->mHaveTransform = true;
 }
 
+/// Actually perform the transform
+template<>
+void SlidingWindowRealDFT<float>::transform(const int nSamples,
+                                            const float x[])
+{
+    pImpl->mHaveTransform = false;
+    // Check the class is initialized and that the inputs are as expected
+    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (nSamples != getNumberOfSamples())
+    {   
+        RTSEIS_THROW_IA("Number of samples = %d must equal %d",
+                        nSamples, getNumberOfSamples());
+    }   
+    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    // Loop over the windows
+    //#pragma omp parallel shared(inData, window) default(None)
+    {   
+    auto *window = pImpl->mWindow32f;
+    auto *inData = pImpl->mInData32f;
+    int nDataOffset = pImpl->mDataOffset;
+    int nPtsPerSeg = pImpl->mSamplesPerSegment;
+    int nOverlap   = pImpl->mSamplesInOverlap;
+    int shift = nPtsPerSeg - nOverlap;
+    auto lwindow = pImpl->mApplyWindow;
+    SlidingWindowDetrendType detrendType = pImpl->mDetrendType;
+    //#pragma omp for
+    for (auto icol=0; icol<pImpl->mNumberOfColumns; ++icol)
+    {   
+        auto xIndex = icol*shift; // Extract x
+        auto dataIndex = icol*nDataOffset;
+        auto xptr = &x[xIndex];
+        auto dptr = &inData[dataIndex];
+#ifdef DEBUG
+        assert(xIndex < nSamples);
+#endif
+        auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
+        // Zero and copy
+        std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(float));
+        std::copy(xptr, xptr + ncopy, dptr); //dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
+        // Demean?
+        if (detrendType == SlidingWindowDetrendType::REMOVE_MEAN)
+        {
+            float mean;
+            FilterImplementations::removeMean(ncopy, xptr, &dptr, &mean);
+        }
+        else if (detrendType == SlidingWindowDetrendType::REMOVE_TREND)
+        {
+            float intercept;
+            float slope;
+            FilterImplementations::removeTrend(ncopy, xptr, &dptr,
+                                               &intercept, &slope);
+        }
+        // Window
+        if (lwindow){ippsMul_32f_I(window, dptr, nPtsPerSeg);}
+    }
+    } // End parallel
+    // Transform
+    fftwf_execute(pImpl->mFloatPlan);
+    pImpl->mHaveTransform = true;
+}
+
 /// Returns a pointer to the transform in the i'th window
-const std::complex<double> *
-SlidingWindowRealDFT::getTransform64f(const int iWindow) const
+template<class T>
+const std::complex<T> *
+SlidingWindowRealDFT<T>::getTransform(const int iWindow) const
 {
     if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
     if (!pImpl->mHaveTransform)
     {
         RTSEIS_THROW_RTE("%s", "Transform not yet applied");
-    }
-    if (pImpl->mPrecision != RTSeis::Precision::DOUBLE)
-    {
-        RTSEIS_THROW_RTE("%s", "Precision is FLOAT - call getTransform32f");
     }
     if (iWindow < 0 || iWindow >= pImpl->mNumberOfColumns)
     {
@@ -585,11 +659,21 @@ SlidingWindowRealDFT::getTransform64f(const int iWindow) const
                         iWindow, pImpl->mNumberOfColumns);
     }
     int indx = pImpl->mFTOffset*iWindow;
-    auto ptr = reinterpret_cast<const std::complex<double> *>
-               (pImpl->mOutData64f + indx);
+    const std::complex<T> *ptr = nullptr;
+    if (pImpl->mPrecision == RTSeis::Precision::DOUBLE)
+    {
+        ptr = reinterpret_cast<const std::complex<T> *>
+              (pImpl->mOutData64f + indx);
+    }
+    else
+    {
+        ptr = reinterpret_cast<const std::complex<T> *>
+              (pImpl->mOutData64f + indx);
+    }
     return ptr; 
 } 
 
+/*
 const std::complex<float> *
 SlidingWindowRealDFT::getTransform32f(const int iWindow) const
 {
@@ -612,3 +696,10 @@ SlidingWindowRealDFT::getTransform32f(const int iWindow) const
                (pImpl->mOutData32f + indx);
     return ptr;
 }
+*/
+///--------------------------------------------------------------------------///
+///                            Template instantiation                        ///
+///--------------------------------------------------------------------------///
+template class RTSeis::Utilities::Transforms::SlidingWindowRealDFT<double>;
+template class RTSeis::Utilities::Transforms::SlidingWindowRealDFT<float>;
+

@@ -86,7 +86,7 @@ public:
      * @result The number of samples in the signal.
      * @throws std::runtime_error if this was not set.
      */
-    int getNumberOfSamples() const;
+    [[nodiscard]] int getNumberOfSamples() const;
     /*! @} */
 
     /*! @name Window function
@@ -125,20 +125,20 @@ public:
      *         samples in each segment.
      * @throws std::invalid_argument if the window was not set.
      */
-    int getWindowLength() const;
+    [[nodiscard]] int getWindowLength() const;
     /*!
      * @brief Gets a copy of the window function.
      * @result The window function.
      * @throws std::runtime_error if the window function was not set.
      * @sa \c haveWindow()
      */
-    std::vector<double> getWindow() const;
+    [[nodiscard]] std::vector<double> getWindow() const;
     /*!
      * @brief Gets the window type.
      * @result The type of window function.
      * @throws std::runtime_error if the window was not set.
      */
-    SlidingWindowType getWindowType() const; 
+    [[nodiscard]] SlidingWindowType getWindowType() const; 
     /*! @} */
     /*! @} */
 
@@ -164,7 +164,7 @@ public:
      * @brief Gets the number of samples in the overlap.
      * @result The number of samples in the overlap.
      */
-    int getNumberOfSamplesInOverlap() const noexcept;
+    [[nodiscard]] int getNumberOfSamplesInOverlap() const noexcept;
     /*! @}*/
 
     /*! @name The segment-wise detrend strategy
@@ -181,7 +181,7 @@ public:
      *        the sliding DFT.
      * @result The detrend type to apply to each segment.
      */
-    SlidingWindowDetrendType getDetrendType() const noexcept; 
+    [[nodiscard]] SlidingWindowDetrendType getDetrendType() const noexcept; 
     /*! @} */ 
     /*!
      * @brief Sets the DFT length.  This is useful when the window function
@@ -202,19 +202,19 @@ public:
      * @sa \c setWindow()
      * @sa \c setDFTLength()
      */
-    int getDFTLength() const;
+    [[nodiscard]] int getDFTLength() const;
     /*!
      * @brief Defines the precision of the underlying computation.
      * @param[in] precision  The precision of the underlying computations.
      * @note By default this is double precision. 
      */
-    void setPrecision(RTSeis::Precision mPrecision) noexcept;
+    //void setPrecision(RTSeis::Precision mPrecision) noexcept;
     /*!
      * @brief Returns the precision of the underlying computations.
      * @result The precision of the underlying sliding window real DFT 
      *         computation.
      */  
-    RTSeis::Precision getPrecision() const noexcept;
+    //[[nodiscard]] RTSeis::Precision getPrecision() const noexcept;
     /*! @} */
 
     /*! @name Valid
@@ -225,7 +225,7 @@ public:
      * @result True indicates that the class is a valid set of parameters
      *         for the sliding window DFT.
      */
-    bool isValid() const noexcept;
+    [[nodiscard]] bool isValid() const noexcept;
     /*! @} */
 private:
     class SlidingWindowRealDFTParametersImpl;
