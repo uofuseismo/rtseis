@@ -26,7 +26,7 @@ void ippsThreshold_LTValGTVal(const double *pSrc,
                                  levelLT, valueLT,
                                  levelGT, valueGT);
 #ifndef NDEBUG
-    cassert(status == ippStsNoErr);
+    assert(status == ippStsNoErr);
 #endif
 }
 
