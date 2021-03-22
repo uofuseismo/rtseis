@@ -1,8 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
 #include "rtseis/log.h"
 #include "rtseis/utilities/normalization/signBit.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
@@ -77,7 +75,7 @@ void SignBit::setInitialConditions()
 {
     if (!isInitialized())
     {
-        RTSEIS_THROW_RTE("%s", "signBit not initialized");
+        throw std::runtime_error("signBit not initialized");
     }
 }
 
@@ -86,7 +84,7 @@ void SignBit::resetInitialConditions()
 {
     if (!isInitialized())
     {
-        RTSEIS_THROW_RTE("%s", "signBit not initialized");
+        throw std::runtime_error("signBit not initialized");
     }
 }
 
@@ -97,13 +95,13 @@ void SignBit::apply(const int nx, const U x[], U *yIn[])
     if (nx <= 0){return;}
     if (!isInitialized())
     {
-        RTSEIS_THROW_RTE("%s", "signBit not initialized");
+        throw std::runtime_error("signBit not initialized");
     }
     U *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
 #ifdef __INTEL_COMPILER
     #pragma forceinline

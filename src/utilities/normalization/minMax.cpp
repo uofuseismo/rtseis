@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 #include <algorithm>
 #include <ipps.h>
-#include "private/throw.hpp"
 #include "rtseis/utilities/normalization/minMax.hpp"
 
 
@@ -81,8 +81,10 @@ void MinMax<T>::initialize(const std::pair<T, T> dataMinMax,
     clear();
     if (dataMinMax.first == dataMinMax.second)
     {
-        RTSEIS_THROW_IA("dataMin = %lf cannot equal dataMax == %lf", 
-                        dataMinMax.first, dataMinMax.second);
+        auto errmsg = "dataMin = " + std::to_string(dataMinMax.first)
+                    + " cannot equal dataMax = "
+                    + std::to_string(dataMinMax.second);
+        throw std::invalid_argument(errmsg);
     }
     pImpl->mDataMin = dataMinMax.first;
     pImpl->mDataMax = dataMinMax.second;
@@ -104,8 +106,12 @@ void MinMax<T>::initialize(const int npts, const T x[],
     clear();
     if (npts < 2 || x == nullptr)
     {
-        if (npts < 2){RTSEIS_THROW_IA("npts = %d must be at least 2", npts);}
-        RTSEIS_THROW_IA("%s", "x cannot be NULL");
+        if (npts < 2)
+        {
+            throw std::invalid_argument("npts = " + std::to_string(npts)
+                                      + " must be at least 2");
+        }
+        throw std::invalid_argument("x cannot be NULL");
     }
     // Find the min and max
     const auto [dataMin, dataMax] = std::minmax_element(x, x+npts);
@@ -115,7 +121,7 @@ void MinMax<T>::initialize(const int npts, const T x[],
     */
     if (*dataMin == *dataMax)
     {
-        RTSEIS_THROW_IA("%s", "All elements of x are identical");
+        throw std::invalid_argument("All elements of x are identical");
     }
     std::pair<T, T> dataMinMax(*dataMin, *dataMax);
     initialize(dataMinMax, targetMinMax);
@@ -127,15 +133,12 @@ void MinMax<double>::apply(const int npts,
                            const double x[], double *yIn[]) const
 {
     if (npts < 1){return;}
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Rescale
     if (pImpl->mRescaleToUnitInterval)
@@ -163,15 +166,12 @@ template<>
 void MinMax<float>::apply(const int npts, const float *x, float *yIn[]) const
 {
     if (npts < 1){return;}
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Rescale
     if (pImpl->mRescaleToUnitInterval)

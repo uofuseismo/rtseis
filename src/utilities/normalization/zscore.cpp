@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 #include <ipps.h>
-#include "private/throw.hpp"
 #include "rtseis/utilities/normalization/zscore.hpp"
 
 using namespace RTSeis::Utilities::Normalization;
@@ -69,7 +69,8 @@ void ZScore::initialize(const double mean,
     clear();
     if (std <= 0)
     {
-        RTSEIS_THROW_IA("standard deviation = %lf must be positive", std);
+        throw std::invalid_argument("standard deviation = "
+                                  + std::to_string(std) + " must be positive");
     }
     pImpl->mMean64f = mean;
     pImpl->mStd64f = std;
@@ -84,14 +85,18 @@ void ZScore::initialize(const int nx, const double x[])
     clear();
     if (nx < 2 || x == nullptr)
     {
-        if (nx < 2){RTSEIS_THROW_IA("nx = %d must be at least 2", nx);}
-        RTSEIS_THROW_IA("%s", "x is NULL");
+        if (nx < 2)
+        {
+            throw std::invalid_argument("nx = " + std::to_string(nx)
+                                     + " must be at least 2");
+        }
+        throw std::invalid_argument("x is NULL");
     }
     double pMean, pStdDev;
     ippsMeanStdDev_64f(x, nx, &pMean, &pStdDev);
     if (pStdDev == 0)
     {
-        RTSEIS_THROW_IA("%s", "x cannot be all the same values");
+        throw std::invalid_argument("x cannot be all the same values");
     }
     initialize(pMean, pStdDev); 
 }
@@ -106,15 +111,12 @@ bool ZScore::isInitialized() const noexcept
 void ZScore::apply(const int npts, const double x[], double *yIn[])
 {
     if (npts < 1){return;}
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     ippsNormalize_64f(x, y, npts, pImpl->mMean64f, pImpl->mStd64f);
 }
@@ -122,15 +124,12 @@ void ZScore::apply(const int npts, const double x[], double *yIn[])
 void ZScore::apply(const int npts, const float x[], float *yIn[])
 {
     if (npts < 1){return;}
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     ippsNormalize_32f(x, y, npts, pImpl->mMean32f, pImpl->mStd32f);
 }
