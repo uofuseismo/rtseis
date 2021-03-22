@@ -118,6 +118,7 @@ SET(UTILS_SRCS
     src/utilities/math/vectorMath.cpp
     src/utilities/normalization/minMax.cpp
     src/utilities/normalization/signBit.cpp
+    src/utilities/normalization/winsorize.cpp
     src/utilities/normalization/zscore.cpp
     src/utilities/polarization/eigenPolarizer.cpp
     src/utilities/polarization/svdPolarizer.cpp

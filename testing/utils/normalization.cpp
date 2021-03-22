@@ -3,10 +3,12 @@
 #include <string>
 #include <cmath>
 #include <vector>
+#include <numeric>
 #include <chrono>
 #include <ipps.h>
 #include "rtseis/utilities/normalization/minMax.hpp"
 #include "rtseis/utilities/normalization/signBit.hpp"
+#include "rtseis/utilities/normalization/winsorize.hpp"
 #include "rtseis/utilities/normalization/zscore.hpp"
 #include <gtest/gtest.h>
 
@@ -180,6 +182,62 @@ TEST(UtilitiesNormalization, minMax)
          error = std::max(error, std::abs(y[i] - yr));
     }
     EXPECT_LE(error, 1.e-14);
+}
+
+TEST(UtilitiesNormalization, winsor)
+{
+    Winsorize winsor;
+    std::vector<double> x;
+    x.resize(100);
+    std::iota(x.begin(), x.end(), 1); // 1, 2, ..., 100
+    std::vector<double> xRefInclusive{
+                   10., 10., 10., 10., 10., 10., 10., 10., 10., 10., 11.,
+                   12., 13., 14., 15., 16., 17., 18., 19., 20., 21., 22.,
+                   23., 24., 25., 26., 27., 28., 29., 30., 31., 32., 33.,
+                   34., 35., 36., 37., 38., 39., 40., 41., 42., 43., 44.,
+                   45., 46., 47., 48., 49., 50., 51., 52., 53., 54., 55.,
+                   56., 57., 58., 59., 60., 61., 62., 63., 64., 65., 66.,
+                   67., 68., 69., 70., 71., 72., 73., 74., 75., 76., 77.,
+                   78., 79., 80., 81., 82., 83., 84., 85., 86., 87., 88.,
+                   89., 90., 91., 91., 91., 91., 91., 91., 91., 91., 91.,
+                   91.}; 
+    std::vector<double> xRefExclusive{
+                   11., 11., 11., 11., 11., 11., 11., 11., 11., 11., 11.,
+                   12., 13., 14., 15., 16., 17., 18., 19., 20., 21., 22.,
+                   23., 24., 25., 26., 27., 28., 29., 30., 31., 32., 33.,
+                   34., 35., 36., 37., 38., 39., 40., 41., 42., 43., 44.,
+                   45., 46., 47., 48., 49., 50., 51., 52., 53., 54., 55.,
+                   56., 57., 58., 59., 60., 61., 62., 63., 64., 65., 66.,
+                   67., 68., 69., 70., 71., 72., 73., 74., 75., 76., 77.,
+                   78., 79., 80., 81., 82., 83., 84., 85., 86., 87., 88.,
+                   89., 90., 90., 90., 90., 90., 90., 90., 90., 90., 90.,
+                   90.};
+    std::pair<double, double> limits{9.97, 100 - 9.97};
+    bool inclusive = true;
+    bool lowMemory = false;
+    EXPECT_NO_THROW(winsor.initialize(limits, inclusive, lowMemory));
+    EXPECT_TRUE(winsor.isInitialized());
+    std::vector<double> xw(x.size(), 0);
+    auto xwPtr = xw.data();
+    EXPECT_NO_THROW(winsor.apply(x.size(), x.data(), &xwPtr));
+    double error = 0;
+    for (int i = 0; i < static_cast<int> (x.size()); ++i)
+    {
+        error = std::max(error, std::abs(xRefInclusive[i] - xw[i]));
+    }
+    EXPECT_NEAR(error, 0, 1.e-14);
+    EXPECT_NO_THROW(winsor.clear());
+
+    inclusive = false;
+    EXPECT_NO_THROW(winsor.initialize(limits, inclusive, lowMemory));
+    EXPECT_TRUE(winsor.isInitialized());
+    EXPECT_NO_THROW(winsor.apply(x.size(), x.data(), &xwPtr));
+    error = 0;
+    for (int i = 0; i < static_cast<int> (x.size()); ++i)
+    {
+        error = std::max(error, std::abs(xRefExclusive[i] - xw[i]));
+    }
+    EXPECT_NEAR(error, 0, 1.e-14);
 }
 
 }
