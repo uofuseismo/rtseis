@@ -127,103 +127,100 @@ enum class ConvolutionImplementation
 {
     AUTO,   /*!< Let the implementation decide. */
     DIRECT, /*!< Time domain implementation. */
-    FFT     /*!< Frequency domain implementaiton. */
+    FFT     /*!< Frequency domain implementation. */
 };
-/*!
- * @class Waveform Waveform "include/rtseis/processing/singleChannel/postProcessing.hpp"
- * @brief This class is to be used for single-channel post-processing
- *        applications.
- * @ingroup rtseis_postprocessing_sc
- */
+/// @class Waveform Waveform "include/rtseis/processing/singleChannel/postProcessing.hpp"
+/// @brief This class is to be used for single-channel post-processing
+///        applications.
+/// @copyright Ben Baker (University of Utah) distributed under the MIT license.
+/// @ingroup rtseis_postprocessing_sc
 template <class T = double>
 class Waveform
 {
 public:
-    /*!
-     * @name Constructors
-     * @{
-     */
-    /*!
-     * @brief Default constructor.  The sampling period defaults to unity.
-     */
+    /// @name Constructors
+    /// @{
+    /// @brief Default constructor.  The sampling period defaults to unity.
     Waveform(); //const double dt = 1);
-    /*!
-     * @brief Constructs a waveform from time series data.  The sampling
-     *        period will be unity.
-     * @param[in] x   Signal from which to construct time series.
-     * @throws std::invalid_argument if x is empty or the sampling period
-     *         is not positive.
-     */
+    /// @brief Copy constructor.
+    /// @param[in] waveform  The waveform from which to initialize this class.
+    Waveform(const Waveform &waveform);
+    /// @brief Move constructor.
+    /// @param[in,out] waveform  The class from which  to initialize this
+    ///                          class.  On exit, waveform's behavior is
+    ///                          undefined.
+    Waveform(Waveform &&waveform) noexcept;
+    /// @brief Constructs a waveform from time series data.  The sampling
+    ///        period will be unity.
+    /// @param[in] x   Signal from which to construct time series.
+    /// @throws std::invalid_argument if x is empty or the sampling period
+    ///         is not positive.
     //explicit Waveform(const std::vector<double> &x); //, const double dt = 1);
-    /*!
-     * @brief Constructs a waveform from time series data.
-     * @param[in] dt   Sampling period in seconds.  This must be positive.
-     * @param[in] x    Signal from which to construct time series.
-     * @throws std::invalid_argument if the sampling period is not positive
-     *         or x is empty.
-     */
+    /// @brief Constructs a waveform from time series data.
+    /// @param[in] dt   Sampling period in seconds.  This must be positive.
+    /// @param[in] x    Signal from which to construct time series.
+    /// @throws std::invalid_argument if the sampling period is not positive
+    ///         or x is empty.
     //Waveform(const double dt, const std::vector<double> &x);
-    /*! @} */
+    /// @}
 
-    /*!
-     * @name Destructors
-     * @{
-     */
-    /*!
-     * @brief Default destructor.
-     */ 
+    /// @name Operators
+    /// @{
+    /// @brief Copy assignment operator.
+    /// @param[in,out] waveform  The waveform to copy to this.
+    /// @result A deep copy of the input waveform.
+    Waveform& operator=(const Waveform &waveform);
+    /// @brief Move assignment operator.
+    /// @param[in,out] waveform  The waveform whose memory will be moved to
+    ///                          this.  On exit, waveform's behavior is
+    ///                          undefined.
+    /// @result The memory from waveform moved to this. 
+    Waveform& operator=(Waveform &&waveform) noexcept;
+    /// @}
+
+    /// @name Destructors
+    /// @{
+    /// @brief Default destructor.
     ~Waveform();
-    /*! @} */
+    /// @}
 
-    /*!
-     * @brief Sets a signal on waveform class.
-     * @throws std::invalid_argument If x is empty.
-     */
+    /// @name Data
+    /// @{
+    /// @brief Sets a signal on waveform class.
+    /// @param[in] x   The signal to set.
+    /// @throws std::invalid_argument if x is empty.
     void setData(const std::vector<T> &x);
-    /*!
-     * @brief Sets a waveform on the module.
-     * @param[in] n   The number of points in the signal.
-     * @param[in] x   The signal to set.  This is an array of dimension [n].
-     * @throws std::invalid_argument if x is null or n is less than 1.
-     */
+    /// @brief Sets a waveform on the module.
+    /// @param[in] n   The number of points in the signal.
+    /// @param[in] x   The signal to set.  This is an array of dimension [n].
+    /// @throws std::invalid_argument if x is null or n is less than 1.
     void setData(size_t n, const T x[]);
-    /*!
-     * @brief Sets a pointer to the input data on the module.
-     * @param[in] n   The number of points in the signal.
-     * @param[in] x   The signal to set.  This is a unique pointer to an
-     *                array of dimension [n].  This class will own this
-     *                reference until it is released or the class goes out
-     *                of scope.
-     * @note This class will own x's reference until it is released
-     *       with \c releaseDataPointer().
-     * @sa \c releaseDataPointer()
-     */
+    /// @brief Sets a pointer to the input data on the module.
+    /// @param[in] n   The number of points in the signal.
+    /// @param[in] x   The signal to set.  This is a unique pointer to an
+    ///                array of dimension [n].  This class will own this
+    ///                reference until it is released or the class goes out
+    ///                of scope.
+    /// @note This class will own x's reference until it is released
+    ///       with \c releaseDataPointer().
+    /// @sa \c releaseDataPointer()
     void setDataPointer(size_t n, const T *x);
-    /*!
-     * @brief Releases the data pointer back to the owner.
-     * @note This will reset the number of data points to 0. 
-     * @sa \c setDataPointer()
-     */
+    /// @brief Releases the data pointer back to the owner.
+    /// @note This will reset the number of data points to 0. 
+    /// @sa \c setDataPointer()
     void releaseDataPointer() noexcept;
-    /*!
-     * @brief Gets the processed waveform data.
-     * @result The processed waveform data.
-     */
+    /// @result The processed waveform data.
     std::vector<T> getData() const;
-    /*!
-     * @brief Gets the prcoessed waveform data.
-     * @param[in] nwork  Max number of points allocated to y.
-     * @param[out] y     The output time series.  This has dimension [nwork]
-     *                   however only the first \c getOutputLength() samples
-     *                   are accessed.
-     * @throws std::invalid_argument if y is NULL or nwork is too small.
-     */
+    /// @brief Gets the prcoessed waveform data.
+    /// @param[in] nwork  Max number of points allocated to y.
+    /// @param[out] y     The output time series.  This has dimension [nwork]
+    ///                   however only the first \c getOutputLength() samples
+    ///                   are accessed.
+    /// @throws std::invalid_argument if y is NULL or nwork is too small.
     void getData(size_t nwork, T *y[]) const;
-    /*!
-     * @brief Gets the length of the output signal.
-     * @result The length of the output signal, y.
-     */
+    /// @result The length of the output signal, y.
     size_t getOutputLength() const;
+    /// @}
 
     /*! @name Convolution and Correlation
      * @{
@@ -626,30 +623,25 @@ public:
                const TaperParameters::Type window = TaperParameters::Type::HAMMING);
     /*! @} */
 
-    /*! @name Resampling
-     * @{
-     */
-    /*!
-     * @brief Downsamples a signal.
-     * @param[in] nq  The downsampling factor.  Every (nq - 1)'th sample will
-     *                be retained.  This must be positive.
-     * @throws std::invalid_argument if nq is negative.
-     */
+    /// @name Resampling
+    /// @{
+    /// @brief Downsamples a signal.
+    /// @param[in] nq  The downsampling factor.  Every (nq - 1)'th sample will
+    ///                be retained.  This must be positive.
+    /// @throws std::invalid_argument if nq is negative.
     void downsample(int nq);
-    /*!
-     * @brief Decimates a signal.
-     * @param[in] nq  The downsampling factor.  Every (nq - 1)'th sample will
-     *                be retained.  This must be at least 2.  Moreover, for 
-     *                downsampling factors greater than 13 it may be better
-     *                to break this operation into decimation stages.
-     * @param[in] nfir   The length of the FIR filter.  Note, that if this even
-     *                   then it will be increased by one sample to better 
-     *                   correct the FIR filter's group delay.  This must at
-     *                   least length 5.
-     * @throws std::invalid_argument if any arguments are incorrect.
-     * @note This will design a Hamming window-based filter whose cutoff
-     *        frequency is 1/nq.
-     */
+    /// @brief Decimates a signal.
+    /// @param[in] nq  The downsampling factor.  Every (nq - 1)'th sample will
+    ///                be retained.  This must be at least 2.  Moreover, for 
+    ///                downsampling factors greater than 13 it may be better
+    ///                to break this operation into decimation stages.
+    /// @param[in] nfir   The length of the FIR filter.  Note, that if this even
+    ///                   then it will be increased by one sample to better 
+    ///                   correct the FIR filter's group delay.  This must at
+    ///                   least length 5.
+    /// @throws std::invalid_argument if any arguments are incorrect.
+    /// @note This will design a Hamming window-based filter whose cutoff
+    ///        frequency is 1/nq.
     void decimate(int nq, int nfir);
     /*!
      * @brief Resamples a signal using the Fourier transform.
@@ -662,54 +654,36 @@ public:
      */
     void interpolate(double newSamplingPeriod,
                      InterpolationMethod method = InterpolationMethod::DFT);
-    /*! @} */
+    /// @}
 
-    /*! @name Envelope 
-     * @{
-     */
-    /*!
-     * @brief Computes the envelope of the signal using an FIR Hilbert
-     *        transformer.
-     * @param[in] nfir  The number of FIR coefficients in the Hilbert
-     *                  transformer.  This must be positive.
-     * @throws std::invalid_argument if nfir is not positive.
-     */
+    /// @name Envelope 
+    /// @{
+    /// @brief Computes the envelope of the signal using an FIR Hilbert
+    ///        transformer.
+    /// @param[in] nfir  The number of FIR coefficients in the Hilbert
+    ///                  transformer.  This must be positive.
+    /// @throws std::invalid_argument if nfir is not positive.
     void firEnvelope(int nfir);
-    /*!
-     * @brief Computes the envelope of the signal by computing the absolute
-     *        value of the analytic signal.
-     */
+    /// @brief Computes the envelope of the signal by computing the absolute
+    ///        value of the analytic signal.
     void envelope();
-    /*! @} */
+    /// @}
 
-    /*! @name Utilities
-     * @{
-     */ 
-    /*!
-     * @brief Sets the sampling period.
-     * @param[in] dt  The signal sampling period in seconds.
-     *                This must be positive.
-     * @throws std::invalid_argument if dt is not positive.
-     */
-    void setSamplingPeriod( double dt);
-    /*!
-     * @brief Gets the sampling period.
-     * @result The signal sampling period in seconds.
-     */
+    /// @name Utilities
+    /// @{
+    /// @brief Sets the sampling period.
+    /// @param[in] dt  The signal sampling period in seconds.
+    ///                This must be positive.
+    /// @throws std::invalid_argument if dt is not positive.
+    void setSamplingPeriod(double dt);
+    /// @result The signal sampling period in seconds.
     double getSamplingPeriod() const noexcept;
-    /*!
-     * @brief Gets the Nyquist frequency of the signal.
-     * @result The Nyquist freuqency in Hz.
-     */
+    /// @result The Nyquist freuqency in Hz.
     double getNyquistFrequency() const noexcept;
-    /*! @} */
+    /// @}
 private:
     class WaveformImpl;
     std::unique_ptr<WaveformImpl> pImpl;
 }; // end waveform
-
-//}; // End SingleChannel
-//}; // End PostProcessing
 } // End RTSeis
-
-# endif
+#endif

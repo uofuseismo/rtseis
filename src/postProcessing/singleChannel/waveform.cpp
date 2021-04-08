@@ -113,20 +113,35 @@ class Waveform<double>::WaveformImpl
 public:
     /// Default constructor
     WaveformImpl() = default;
-/*
-    /// Copy constructor
+    /// Copy c'tor
     WaveformImpl(const WaveformImpl &waveform)
     {
         *this = waveform;
-        return;
     }
-    /// Move constructor
-    WaveformImpl(WaveformImpl &&waveform)
+    /// Copy assignment
+    WaveformImpl& operator=(const WaveformImpl &waveform)
     {
-        *this = std::move(waveform);
-        return;
+        filterDesigner = waveform.filterDesigner;
+        xptr_ = waveform.xptr_;
+        dt0_ = waveform.dt0_;
+        dt_ = waveform.dt_;
+        maxx_ = waveform.maxx_;
+        maxy_ = waveform.maxy_;
+        nx_ = waveform.nx_;
+        ny_ = waveform.ny_;
+        lfirstFilter_ = true; 
+        if (maxx_ > 0)
+        {
+            x_ = ippsMalloc_64f(maxx_);
+            if (waveform.x_ != nullptr){ippsCopy_64f(waveform.x_, x_, maxx_);}
+        }
+        if (maxy_ > 0)
+        {
+            y_ = ippsMalloc_64f(maxy_);
+            if (waveform.y_ != nullptr){ippsCopy_64f(waveform.y_, y_, maxy_);}
+        }
+        return *this;
     }
-*/
     /// Default destructor
     ~WaveformImpl()
     {
@@ -265,14 +280,48 @@ public:
     bool lfirstFilter_ = true; 
 };
 
+/// C'tor
 template<class T>
 Waveform<T>::Waveform() :
     pImpl(std::make_unique<WaveformImpl>())
 {
 }
 
+/// Copy c'tor
+template<class T>
+Waveform<T>::Waveform(const Waveform<T> &waveform)
+{
+    *this = waveform;
+}
+
+/// Move c'tor
+template<class T>
+Waveform<T>::Waveform(Waveform<T> &&waveform) noexcept
+{
+    *this = std::move(waveform);
+}
+
+/// Destructor
 template<class T>
 Waveform<T>::~Waveform() = default;
+
+/// Move assignment
+template<class T>
+Waveform<T>& Waveform<T>::operator=(Waveform &&waveform) noexcept
+{
+    if (&waveform == this){return *this;}
+    pImpl = std::move(waveform.pImpl);
+    return *this;
+}
+
+/// Copy assignment
+template<class T>
+Waveform<T>& Waveform<T>::operator=(const Waveform &waveform)
+{
+    if (&waveform == this){return *this;}
+    pImpl = std::make_unique<WaveformImpl> (*waveform.pImpl);
+    return *this;
+}
 
 template<class T>
 void Waveform<T>::setData(const std::vector<T> &x)
