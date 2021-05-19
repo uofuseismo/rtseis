@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cassert>
 #include <ipps.h>
 #include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
