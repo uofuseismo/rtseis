@@ -147,8 +147,11 @@ void SlidingWindowRealDFTParameters::setWindow(
         ippsSet_64f(1.0, windowPtr, windowLength);
     }
 #ifndef NDEBUG
-    std::cerr << "Impossible location" << std::endl;
-    assert(false);
+    else
+    {
+        std::cerr << "Impossible location" << std::endl;
+        assert(false);
+    }
 #endif
 }
 
