@@ -845,6 +845,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_NO_THROW(parameters.setDFTLength(dftLength));
     EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(overlapLength));
     EXPECT_NO_THROW(parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_MEAN));
+    EXPECT_TRUE(parameters == parameters);
     //EXPECT_NO_THROW(parameters.setPrecision(RTSeis::Precision::FLOAT));
  
     EXPECT_EQ(parameters.getNumberOfSamples(), nSamples);
@@ -852,7 +853,6 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_EQ(parameters.getWindowLength(), windowLength); 
     EXPECT_EQ(parameters.getNumberOfSamplesInOverlap(), overlapLength);
     EXPECT_EQ(parameters.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
-    //EXPECT_EQ(parameters.getPrecision(), RTSeis::Precision::FLOAT);
     window = parameters.getWindow();
     double *windowData = windowRef.data();
     RTSeis::Utilities::WindowFunctions::hann(windowLength, &windowData);
@@ -860,6 +860,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     ippsNormDiff_Inf_64f(window.data(), windowRef.data(),
                          windowLength, &emax);
     EXPECT_LE(emax, 1.e-15);
+    auto pOri = parameters;
     // set a custom window
     EXPECT_NO_THROW(parameters.setWindow(windowLength, window.data()));
     EXPECT_EQ(parameters.getWindowType(), SlidingWindowType::CUSTOM);
@@ -874,17 +875,22 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     // Test copy operator
     parameters.setNumberOfSamplesInOverlap(overlapLength);
     parameters.setDFTLength(dftLength);
-    SlidingWindowRealDFTParameters pcopy(parameters); 
-    EXPECT_EQ(pcopy.getNumberOfSamples(), nSamples);
-    EXPECT_EQ(pcopy.getWindowType(), SlidingWindowType::CUSTOM);
-    EXPECT_EQ(pcopy.getWindowLength(), windowLength);
-    EXPECT_EQ(pcopy.getNumberOfSamplesInOverlap(), overlapLength);
-    EXPECT_EQ(pcopy.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
-    //EXPECT_EQ(pcopy.getPrecision(), RTSeis::Precision::FLOAT);
-    window = pcopy.getWindow();
+    SlidingWindowRealDFTParameters pCopy(parameters); 
+
+    EXPECT_TRUE(pCopy == parameters);
+    EXPECT_EQ(pCopy.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(pCopy.getWindowType(), SlidingWindowType::CUSTOM);
+    EXPECT_EQ(pCopy.getWindowLength(), windowLength);
+    EXPECT_EQ(pCopy.getNumberOfSamplesInOverlap(), overlapLength);
+    EXPECT_EQ(pCopy.getDetrendType(), SlidingWindowDetrendType::REMOVE_MEAN);
+    window = pCopy.getWindow();
     ippsNormDiff_Inf_64f(window.data(), windowRef.data(),
                          windowLength, &emax);
     EXPECT_LE(emax, 1.e-15);
+
+    // Change pCopy's window
+    pCopy.setWindow(windowLength,SlidingWindowType::BLACKMAN);
+    EXPECT_TRUE(pOri != pCopy);
 }
 
 TEST(UtilitiesTransforms, Spectrogram)

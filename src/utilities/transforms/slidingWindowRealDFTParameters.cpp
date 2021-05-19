@@ -1,8 +1,7 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
+#include <string>
 #include <vector>
 #include <ipps.h>
-#include "private/throw.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/transforms/enums.hpp"
@@ -24,8 +23,6 @@ public:
     SlidingWindowType mWindowType = SlidingWindowType::BOXCAR;
     /// Describes the detrend strategy
     SlidingWindowDetrendType mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
-    /// Defines the precision
-    //RTSeis::Precision mPrecision = RTSeis::Precision::DOUBLE;
 };
 
 /// Constructor
@@ -80,7 +77,6 @@ void SlidingWindowRealDFTParameters::clear() noexcept
     pImpl->mSamplesInOverlap = 0;
     pImpl->mWindowType = SlidingWindowType::BOXCAR;
     pImpl->mDetrendType = SlidingWindowDetrendType::REMOVE_NONE;
-    //pImpl->mPrecision = RTSeis::Precision::DOUBLE;
 }
 
 /// Set number of samples
@@ -89,7 +85,9 @@ void SlidingWindowRealDFTParameters::setNumberOfSamples(const int nSamples)
     pImpl->mSamples = 0;
     if (nSamples < 1)
     {
-        RTSEIS_THROW_IA("nSamples = %d must be positive", nSamples);
+        throw std::invalid_argument("Number of samples = " 
+                                  + std::to_string(nSamples)
+                                  + " must be positive");
     }
     pImpl->mSamples = nSamples; 
 }
@@ -99,7 +97,7 @@ int SlidingWindowRealDFTParameters::getNumberOfSamples() const
 {
     if (pImpl->mSamples < 1)
     {
-        RTSEIS_THROW_IA("%s", "nSamples not yet set");
+        throw std::runtime_error("Number of samples not yet set");
     }
     return pImpl->mSamples;
 }
@@ -115,11 +113,11 @@ void SlidingWindowRealDFTParameters::setWindow(
     pImpl->mWindow.clear();
     if (windowLength < 1)
     {
-        RTSEIS_THROW_IA("%s", "windowLength must be positive");
+        throw std::invalid_argument("Window length must be positive");
     }
     if (windowType == SlidingWindowType::CUSTOM)
     {
-        RTSEIS_THROW_IA("%s", "window type cannot be custom");
+        throw std::invalid_argument("Predefined window type cannot be custom");
     } 
     // Resize 
     pImpl->mDFTLength = windowLength; 
@@ -147,10 +145,10 @@ void SlidingWindowRealDFTParameters::setWindow(
     {
         ippsSet_64f(1.0, windowPtr, windowLength);
     }
-    else
-    {
-        RTSEIS_THROW_RTE("%s", "How did I get here?"); 
-    }
+#ifndef NDEBUG
+    std::cerr << "Impossible location" << std::endl;
+    assert(false);
+#endif
 }
 
 void SlidingWindowRealDFTParameters::setWindow(
@@ -162,11 +160,11 @@ void SlidingWindowRealDFTParameters::setWindow(
     pImpl->mWindow.clear();
     if (windowLength < 1)
     {
-        RTSEIS_THROW_IA("%s", "windowLength must be positive");
+        throw std::invalid_argument("Window length must be positive");
     }
     if (window == nullptr)
     {
-        RTSEIS_THROW_IA("%s", "window cannot be NULL");
+        throw std::invalid_argument("window cannot be NULL");
     }
     // Resize and copy
     pImpl->mDFTLength = windowLength;
@@ -177,28 +175,19 @@ void SlidingWindowRealDFTParameters::setWindow(
 
 std::vector<double> SlidingWindowRealDFTParameters::getWindow() const
 {
-    if (pImpl->mWindow.empty())
-    {
-        RTSEIS_THROW_RTE("%s", "window not yet set");
-    }
+    if (pImpl->mWindow.empty()){throw std::runtime_error("Window not yet set");}
     return pImpl->mWindow;
 }
 
 int SlidingWindowRealDFTParameters::getWindowLength() const
 {
-    if (pImpl->mWindow.empty())
-    {
-        RTSEIS_THROW_RTE("%s", "window not set");
-    }
+    if (pImpl->mWindow.empty()){throw std::runtime_error("Window not yet set");}
     return static_cast<int> (pImpl->mWindow.size());
 }
 
 SlidingWindowType SlidingWindowRealDFTParameters::getWindowType() const
 {
-    if (pImpl->mWindow.empty())
-    {
-        RTSEIS_THROW_RTE("%s", "window not set");
-    }
+    if (pImpl->mWindow.empty()){throw std::runtime_error("Window not yet set");}
     return pImpl->mWindowType;
 }
 
@@ -209,18 +198,16 @@ void SlidingWindowRealDFTParameters::setDFTLength(const int dftLength)
     pImpl->mDFTLength = windowLength;
     if (dftLength < windowLength)
     {
-        RTSEIS_THROW_IA("dftLength = %d must be at least %d",
-                        dftLength, windowLength);
+        throw std::invalid_argument("dftLength = " + std::to_string(dftLength)
+                                  + " cannot be less than window length = "
+                                  + std::to_string(windowLength));
     }
     pImpl->mDFTLength = dftLength;
 } 
 
 int SlidingWindowRealDFTParameters::getDFTLength() const
 {
-    if (pImpl->mWindow.empty())
-    {
-        RTSEIS_THROW_RTE("%s", "winddow not set");
-    }
+    if (pImpl->mWindow.empty()){throw std::runtime_error("Window not yet set");}
     return pImpl->mDFTLength;
 }
 
@@ -232,8 +219,10 @@ void SlidingWindowRealDFTParameters::setNumberOfSamplesInOverlap(
     int windowLength = getWindowLength(); // Will throw
     if (nSamplesInOverlap < 0 || nSamplesInOverlap >= windowLength)
     {
-        RTSEIS_THROW_IA("nSamplesInOverlap = %d must be in range [0,%d]",
-                        nSamplesInOverlap, windowLength - 1);
+        throw std::invalid_argument("nSamplesInOverlap = "
+                                  + std::to_string(nSamplesInOverlap)
+                                  + " must be in range [0,"
+                                  + std::to_string(windowLength - 1) + "]");
     }
     pImpl->mSamplesInOverlap = nSamplesInOverlap;
 }
@@ -276,4 +265,36 @@ bool SlidingWindowRealDFTParameters::isValid() const noexcept
     if (pImpl->mSamples < 1){return false;}
     if (pImpl->mWindow.empty()){return false;}
     return true;
+}
+
+/// Check for equality
+bool RTSeis::Utilities::Transforms::operator==(
+    const SlidingWindowRealDFTParameters &lhs,
+    const SlidingWindowRealDFTParameters &rhs)
+{
+    if (lhs.isValid() != rhs.isValid()){return false;}
+    // Do the no except checks
+    if (lhs.getDetrendType() != rhs.getDetrendType()){return false;}
+    if (lhs.getNumberOfSamplesInOverlap() != rhs.getNumberOfSamplesInOverlap())
+    {
+        return false;
+    }
+    // Do the checks that would throw exceptions
+    if (lhs.isValid() == false && rhs.isValid() == false){return true;}
+    // This is valid so we can safely call these
+    if (lhs.getNumberOfSamples() != rhs.getNumberOfSamples()){return false;}
+    auto v1 = lhs.getWindow();
+    auto v2 = rhs.getWindow();
+    if (v1.size() != v2.size()){return false;}
+    double error = 0;
+    ippsNormDiff_Inf_64f(v1.data(), v2.data(), v1.size(), &error);
+    if (error > 0){return false;}
+    return true;
+}
+
+bool RTSeis::Utilities::Transforms::operator!=(
+    const SlidingWindowRealDFTParameters &lhs,
+    const SlidingWindowRealDFTParameters &rhs)
+{
+    return !(lhs == rhs);
 }

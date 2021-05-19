@@ -156,5 +156,12 @@ private:
     class SlidingWindowRealDFTParametersImpl;
     std::unique_ptr<SlidingWindowRealDFTParametersImpl> pImpl;
 };
+/// @result True indicates that the left hand side equals the right hand side.
+[[nodiscard]] bool operator==(const SlidingWindowRealDFTParameters &lhs,
+                              const SlidingWindowRealDFTParameters &rhs);
+/// @result True indicates that the left hand side does not equal the right
+///         hand side.
+[[nodiscard]] bool operator!=(const SlidingWindowRealDFTParameters &lhs,
+                              const SlidingWindowRealDFTParameters &rhs);
 }
 #endif
