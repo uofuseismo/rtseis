@@ -1,13 +1,9 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstdint>
+#include <string>
 #include <cassert>
 #include <cmath>
 #include <algorithm>
 #include <valarray>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
 #include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/log.h"
 
@@ -102,10 +98,14 @@ void DFTUtilities::unwrap(const int n, const T p[], T *qIn[],
     auto q = *qIn;
     if (p == nullptr || q == nullptr)
     {
-        if (p == nullptr){RTSEIS_THROW_IA("%s", "p is NULL");}
-        RTSEIS_THROW_IA("%s", "q is NULL");
+        if (p == nullptr){throw std::invalid_argument("p is NULL");}
+        throw std::invalid_argument("q is NULL");
     }
-    if (tol < 0){RTSEIS_THROW_IA("Tolerance = %lf cannot be negative", tol);}
+    if (tol < 0)
+    {
+         throw std::invalid_argument("Tolerance = " + std::to_string(tol)
+                                   + " cannot be negative");
+    }
     auto pmin = getMin(n, p);
     const T twopi = static_cast<T> (2*M_PI);
     #pragma omp simd
@@ -161,8 +161,8 @@ void DFTUtilities::phase(const int n, const std::complex<double> z[],
     auto phi = *phiIn;
     if (z == nullptr || phi == nullptr)
     {
-        if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
-        RTSEIS_THROW_IA("%s", "phi is NULL");
+        if (z == nullptr){throw std::invalid_argument("z is NULL");}
+        throw std::invalid_argument("phi is NULL");
     }
     auto pSrc = reinterpret_cast<const Ipp64fc *> (z);
 #ifdef DEBUG
@@ -183,8 +183,8 @@ void DFTUtilities::phase(const int n, const std::complex<float> z[],
     auto phi = *phiIn;
     if (z == nullptr || phi == nullptr)
     {
-        if (z == nullptr){RTSEIS_THROW_IA("%s", "z is NULL");}
-        RTSEIS_THROW_IA("%s", "phi is NULL");
+        if (z == nullptr){throw std::invalid_argument("z is NULL");}
+        throw std::invalid_argument("phi is NULL");
     }
     auto pSrc = reinterpret_cast<const Ipp32fc *> (z);
 #ifdef DEBUG
@@ -207,10 +207,12 @@ DFTUtilities::realToComplexDFTFrequencies(const int nSamples,
     {
         if (nSamples < 1)
         {
-            RTSEIS_THROW_IA("nSamples = %d must be positive", nSamples);
+            throw std::invalid_argument("nSamples = " + std::to_string(nSamples)
+                                      + " must be positive");
         }
-        RTSEIS_THROW_IA("samplingPeriod = %lf must be positive",
-                        samplingPeriod);
+        throw std::invalid_argument("samplingPeriod = "
+                                  + std::to_string(samplingPeriod)
+                                  + " must be positive");
     }
     int nbins = nSamples/2 + 1;
     std::vector<T> freqs(nbins);
@@ -229,21 +231,22 @@ void DFTUtilities::realToComplexDFTFrequencies(const int nSamples,
     {
         if (nSamples < 1)
         {
-            RTSEIS_THROW_IA("nSamples = %d must be positive", nSamples);
+            throw std::invalid_argument("nSamples = " + std::to_string(nSamples)
+                                      + " must be positive");
         }
-        RTSEIS_THROW_IA("samplingPeriod = %lf must be positive",
-                        samplingPeriod);
+        throw std::invalid_argument("samplingPeriod = "
+                                  + std::to_string(samplingPeriod)
+                                  + " must be positive");
     }
     auto freqs = *freqsIn;
-    if (freqs == nullptr)
-    {
-        RTSEIS_THROW_IA("%s", "freqs is NULL");
-    } 
+    if (freqs == nullptr){throw std::invalid_argument("freqs is NULL");}
     int nbins = nSamples/2 + 1;
     if (lengthFreqs < nbins)
     {
-        RTSEIS_THROW_IA("lengthFreqs = %d must be at least = %d",
-                        lengthFreqs, nbins);
+        throw std::invalid_argument("lengthFreqs = "
+                                  + std::to_string(lengthFreqs)
+                                  + " must be at least "
+                                  + std::to_string(nbins));
     }  
     // Edge case
     if (nbins == 1)
@@ -264,7 +267,8 @@ int DFTUtilities::nextPowerOfTwo(const int n)
 {
     if (n < 0)
     {
-        RTSEIS_THROW_IA("n=%d must be positive", n);
+        throw std::invalid_argument("n = " + std::to_string(n)
+                                 + " must be positive");
     }
     // Simple base cases
     if (n == 0){return 1;}
@@ -279,7 +283,7 @@ int DFTUtilities::nextPowerOfTwo(const int n)
     // Catch any overflow problems associated with int32_t and uint64_t
     if (n2t != static_cast<uint64_t> (n2))
     {
-        RTSEIS_THROW_RTE("%s", "Overflow error");
+        throw std::runtime_error("Overflow error in nextPowerOf2");
     }
     return n2;
 }
