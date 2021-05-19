@@ -1,11 +1,10 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 #include <cstring>
+#include <string>
 #include <cassert>
 #include <complex> // Put this before fftw
 #include <fftw/fftw3.h>
 #include <ipps.h>
-#include "private/throw.hpp"
 #include "private/pad.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
@@ -204,7 +203,7 @@ SlidingWindowRealDFT<T>::operator=(const SlidingWindowRealDFT &swdft)
     catch (const std::exception &e)
     {
         clear();
-        RTSEIS_THROW_RTE("%s", "Failed to initialize class");
+        throw std::runtime_error("Failed to initialize class");
     }
     // Copy the workspace
     if (pImpl->mPrecision == RTSeis::Precision::DOUBLE)
@@ -247,7 +246,7 @@ void SlidingWindowRealDFT<T>::initialize(
     clear();
     if (!parameters.isValid())
     {
-        RTSEIS_THROW_IA("%s", "parameters are not valid");
+        throw std::invalid_argument("Parameters are not valid");
     }
     // Extract the parameters 
     int nSamples = parameters.getNumberOfSamples();
@@ -484,7 +483,7 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
 template<class T>
 int SlidingWindowRealDFT<T>::getNumberOfFrequencies() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");} 
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mNumberOfFrequencies;
 }
 
@@ -492,7 +491,7 @@ int SlidingWindowRealDFT<T>::getNumberOfFrequencies() const
 template<class T>
 int SlidingWindowRealDFT<T>::getNumberOfTransformWindows() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mNumberOfColumns;
 }
 
@@ -500,7 +499,7 @@ int SlidingWindowRealDFT<T>::getNumberOfTransformWindows() const
 template<class T>
 int SlidingWindowRealDFT<T>::getNumberOfSamples() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mSamples;
 }
 
@@ -528,13 +527,14 @@ void SlidingWindowRealDFT<double>::transform(const int nSamples,
 {
     pImpl->mHaveTransform = false;
     // Check the class is initialized and that the inputs are as expected
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (nSamples != getNumberOfSamples())
     {
-        RTSEIS_THROW_IA("Number of samples = %d must equal %d",
-                        nSamples, getNumberOfSamples());
+        throw std::invalid_argument("Number of samples = "
+                                  + std::to_string(nSamples) + " must equal "
+                                  + std::to_string(getNumberOfSamples()));
     }
-    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
     // Loop over the windows
     //#pragma omp parallel shared(inData, window) default(None)
     {
@@ -589,13 +589,14 @@ void SlidingWindowRealDFT<float>::transform(const int nSamples,
 {
     pImpl->mHaveTransform = false;
     // Check the class is initialized and that the inputs are as expected
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (nSamples != getNumberOfSamples())
-    {   
-        RTSEIS_THROW_IA("Number of samples = %d must equal %d",
-                        nSamples, getNumberOfSamples());
-    }   
-    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    {
+        throw std::invalid_argument("Number of samples = "
+                                  + std::to_string(nSamples) + " must equal "
+                                  + std::to_string(getNumberOfSamples()));
+    }
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
     // Loop over the windows
     //#pragma omp parallel shared(inData, window) default(None)
     {   
@@ -648,15 +649,17 @@ template<class T>
 const std::complex<T> *
 SlidingWindowRealDFT<T>::getTransform(const int iWindow) const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (!pImpl->mHaveTransform)
     {
-        RTSEIS_THROW_RTE("%s", "Transform not yet applied");
+        throw std::runtime_error("Transform not yet computed");
     }
     if (iWindow < 0 || iWindow >= pImpl->mNumberOfColumns)
     {
-        RTSEIS_THROW_IA("iWindow = %d must be in range [0,%d]",
-                        iWindow, pImpl->mNumberOfColumns);
+        throw std::invalid_argument("iWindow = " + std::to_string(iWindow)
+                                  + " must be in the range [0,"
+                                  + std::to_string(pImpl->mNumberOfColumns)
+                                  + "]");
     }
     int indx = pImpl->mFTOffset*iWindow;
     const std::complex<T> *ptr = nullptr;
@@ -668,7 +671,7 @@ SlidingWindowRealDFT<T>::getTransform(const int iWindow) const
     else
     {
         ptr = reinterpret_cast<const std::complex<T> *>
-              (pImpl->mOutData64f + indx);
+              (pImpl->mOutData32f + indx);
     }
     return ptr; 
 } 
