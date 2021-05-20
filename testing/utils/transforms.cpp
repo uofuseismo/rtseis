@@ -19,6 +19,7 @@
 #include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
+#include "rtseis/utilities/transforms/spectrogram.hpp"
 #include "rtseis/utilities/transforms/welch.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
@@ -893,7 +894,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_TRUE(pOri != pCopy);
 }
 
-TEST(UtilitiesTransforms, Spectrogram)
+TEST(UtilitiesTransforms, SlidingWindowRealDFT)
 {
     SlidingWindowRealDFT<double> sdft;
     // Load the chirp
@@ -932,6 +933,7 @@ TEST(UtilitiesTransforms, Spectrogram)
     EXPECT_EQ(jc, 129);
     EXPECT_EQ(static_cast<int> (spec.size()), 129*199);
     // Create a Kaiser window
+    double samplingRate = 1024;
     int nSamples = 2048;
     int nSamplesPerSegment = 63;
     int windowLength = nSamplesPerSegment;
@@ -1000,6 +1002,133 @@ TEST(UtilitiesTransforms, Spectrogram)
         }
     }
     ASSERT_LE(resmax, 1.e-7);
+    // Check the computed times
+    std::vector<double> times;
+    EXPECT_NO_THROW(times = sdft.getTimeWindows(samplingRate));
+    for (size_t i = 0; i < times.size() - 1; ++i)
+    {
+        auto tRef = static_cast<double>
+                    (i*(nSamplesPerSegment - nSamplesInOverlap)/samplingRate);
+        auto tDiff = std::abs(times[i] -  tRef);
+        EXPECT_NEAR(tDiff, 0, 1.e-10);
+    }
+    // The last time is a little funky.  This is the last computed sample 
+    // assuming a sampling rate of 1024 Hz.
+    EXPECT_NEAR(1.994140625, times.back(), 1.e-10);
+}
+
+TEST(UtilitiesTransforms, Spectrogram)
+{
+    // Load the chirp
+    const std::string signalFileName = "data/spectrogramNoisyChirpSignal.txt";
+    const std::string specFileName = "data/spectrogramNoisyChirp.txt";
+    std::ifstream signalFile(signalFileName);
+    std::string line;
+    std::vector<double> sig;
+    sig.reserve(2048);
+    while (std::getline(signalFile, line))
+    {
+        double sample;
+        std::sscanf(line.c_str(), "%lf\n", &sample);
+        sig.push_back(sample);
+    }
+    EXPECT_EQ(static_cast<int> (sig.size()), 2048);
+    // Load the spectrogram
+    std::ifstream specFile(specFileName);
+    std::vector<std::complex<double>> spec;
+    spec.reserve(129*199);
+    int ic = 0;
+    int jc = 0;
+    while (std::getline(specFile, line))
+    {
+        ic = ic + 1;
+        if (ic == 200)
+        {
+            jc = jc + 1;
+            ic = 0;
+            continue;
+        }
+        double re, im;
+        std::sscanf(line.c_str(), "%lf %lf\n", &re, &im);
+        spec.push_back(std::complex<double> (re, im));
+    }
+    EXPECT_EQ(jc, 129);
+    EXPECT_EQ(static_cast<int> (spec.size()), 129*199);
+    // Create a Kaiser window
+    double samplingRate = 1024;
+    int nSamples = 2048;
+    int nSamplesPerSegment = 63;
+    int windowLength = nSamplesPerSegment;
+    int dftLength = 256;
+    int nSamplesInOverlap = windowLength - 10;
+    std::vector<double> window(windowLength);
+    const double beta = 17;
+    double *kdata = window.data();
+    EXPECT_NO_THROW(
+       RTSeis::Utilities::WindowFunctions::kaiser(windowLength, &kdata, beta));
+    // Set the parameters
+    SlidingWindowRealDFTParameters parameters;
+    EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
+    EXPECT_NO_THROW(parameters.setWindow(windowLength, window.data()));
+    EXPECT_NO_THROW(parameters.setDFTLength(dftLength));
+    EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(nSamplesInOverlap));
+    EXPECT_NO_THROW(
+       parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_NONE));
+    // Initialize the transformer
+    Spectrogram<double> spectrogram;
+    EXPECT_NO_THROW(spectrogram.initialize(parameters, samplingRate));
+    EXPECT_EQ(spectrogram.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(spectrogram.getNumberOfFrequencies(), 129); // Number of rows
+    EXPECT_EQ(spectrogram.getNumberOfTransformWindows(), 199); // Number of columns
+    EXPECT_NO_THROW(spectrogram.transform(sig.size(), sig.data()));
+    std::vector<double> amplitude, phase;
+    EXPECT_NO_THROW(amplitude = spectrogram.getAmplitude());
+    EXPECT_NO_THROW(phase = spectrogram.getPhase());
+    // Loop on the windows and compute largest magnitude difference
+    double ampMax = 0; 
+    double phaseMax = 0;
+    for (int i = 0; i < spectrogram.getNumberOfTransformWindows(); ++i) 
+    {    
+        for (int j = 0; j < spectrogram.getNumberOfFrequencies(); j++) 
+        {
+            int indx = spectrogram.getNumberOfTransformWindows()*j + i; 
+            int jndx = spectrogram.getNumberOfFrequencies()*i + j;
+            double ampRes = std::abs(amplitude[jndx] - std::abs(spec[indx]));
+            auto phaseRes = std::abs(phase[jndx] - std::arg(spec[indx]));
+            ampMax = std::max(ampMax, ampRes); 
+            phaseRes = std::max(phaseMax, phaseRes); 
+            if (ampRes > 1.e-7)
+            {
+                fprintf(stderr, "%d %+lf %+lfi, %+lf %+lfi, %lf\n",
+                        indx,
+                        std::real(amplitude[jndx]), std::imag(amplitude[jndx]),
+                        std::real(spec[indx]), std::imag(spec[indx]), ampRes);
+            }
+        }
+    }
+    EXPECT_NEAR(ampMax, 0, 1.e-7);
+    EXPECT_NEAR(phaseMax, 0, 1.e-7);
+    // Get the frequencies
+    auto freqs = spectrogram.getFrequencies();
+    auto freqsRef = DFTUtilities::realToComplexDFTFrequencies(dftLength,
+                                                              1/samplingRate);
+    double resMax = 0;
+    EXPECT_EQ(freqs.size(), freqsRef.size());
+    ippsNormDiff_Inf_64f(freqs.data(), freqs.data(), freqs.size(), &resMax);
+    EXPECT_NEAR(resMax, 0, 1.e-15);
+    // Check the computed times
+    std::vector<double> times;
+    EXPECT_NO_THROW(times = spectrogram.getTimeWindows());
+    for (size_t i = 0; i < times.size() - 1; ++i) 
+    {    
+        auto tRef = static_cast<double>
+                    (i*(nSamplesPerSegment - nSamplesInOverlap)/samplingRate);
+        auto tDiff = std::abs(times[i] -  tRef);
+        EXPECT_NEAR(tDiff, 0, 1.e-10);
+    }    
+    // The last time is a little funky.  This is the last computed sample 
+    // assuming a sampling rate of 1024 Hz.
+    EXPECT_NEAR(1.994140625, times.back(), 1.e-10);
 }
 
 TEST(UtilitiesTransforms, Welch)
@@ -1040,9 +1169,7 @@ TEST(UtilitiesTransforms, Welch)
     int nFrequencies = welch.getNumberOfFrequencies(); 
     EXPECT_EQ(nFrequencies, fftLength/2 + 1); //nWindowLength/2 + 1);
     // Check the frequencies
-    std::vector<double> frequencies(nFrequencies);
-    double *freqPtr = frequencies.data();
-    welch.getFrequencies(nFrequencies, &freqPtr);
+    auto frequencies = welch.getFrequencies();
     EXPECT_EQ(fRef1.size(), frequencies.size());
     double error = 0;
     ippsNormDiff_Inf_64f(fRef1.data(), frequencies.data(), nFrequencies,
@@ -1052,12 +1179,14 @@ TEST(UtilitiesTransforms, Welch)
     EXPECT_NO_THROW(welch.transform(nSamples, xSineSignal.data()));
     // Get and compare results
     std::vector<double> spectrum(nFrequencies); 
-    double *sPtr = spectrum.data();
-    EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    //double *sPtr = spectrum.data();
+    //EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectralDensity());
     ippsNormDiff_Inf_64f(powerRef1.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
-    EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    //EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectrum());
     ippsNormDiff_Inf_64f(psdRef1.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
@@ -1076,20 +1205,21 @@ TEST(UtilitiesTransforms, Welch)
     nFrequencies = welch.getNumberOfFrequencies();
     frequencies.resize(nFrequencies);
     EXPECT_EQ(fRef2.size(), frequencies.size());
-    freqPtr = frequencies.data();
-    welch.getFrequencies(nFrequencies, &freqPtr);
+    frequencies = welch.getFrequencies();
     ippsNormDiff_Inf_64f(fRef2.data(), frequencies.data(), nFrequencies,
                          &error);
     EXPECT_LE(error, 1.e-7);
     // Transform
     EXPECT_NO_THROW(welch.transform(nSamples, xSineSignal.data()));
     spectrum.resize(nFrequencies);
-    sPtr = spectrum.data();
-    EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    //sPtr = spectrum.data();
+    //EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectralDensity());
     ippsNormDiff_Inf_64f(powerRef2.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
-    EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    //EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectrum());
     ippsNormDiff_Inf_64f(psdRef2.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
