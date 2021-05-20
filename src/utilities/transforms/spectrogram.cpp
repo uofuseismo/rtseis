@@ -116,6 +116,8 @@ template<class T>
 void Spectrogram<T>::transform(const int nSamples, const T x[])
 {
     pImpl->mHaveTransform = false;
+    pImpl->mHavePhase = false;
+    pImpl->mHaveAmplitude = false;
     // Check the class is initialized and that the inputs are as expected
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (nSamples != getNumberOfSamples())
@@ -123,12 +125,11 @@ void Spectrogram<T>::transform(const int nSamples, const T x[])
         throw std::invalid_argument("Number of samples = "
                                   + std::to_string(nSamples) + " must equal "
                                   + std::to_string(getNumberOfSamples()));
-    }   
+    }
     if (x == nullptr){throw std::invalid_argument("x is NULL");}
     pImpl->mSlidingWindowRealDFT.transform(nSamples, x);
-
+    pImpl->mHaveTransform = true;
 }
-
 
 /// Get frequencies
 template<class T>
@@ -143,6 +144,13 @@ void Spectrogram<T>::getFrequencies(const int nFrequencies, T *freqsIn[]) const
 {
     pImpl->mSlidingWindowRealDFT.getFrequencies(pImpl->mSamplingRate,
                                                 nFrequencies, freqsIn);
+}
+
+/// Get the number of transform windows
+template<class T>
+int Spectrogram<T>::getNumberOfTransformWindows() const
+{
+    return pImpl->mSlidingWindowRealDFT.getNumberOfTransformWindows();
 }
 
 /// Initialized?
@@ -175,6 +183,62 @@ int Spectrogram<T>::getNumberOfSamples() const
     return pImpl->mSlidingWindowRealDFT.getNumberOfSamples();
 }
 
+/// Get the time domain windows
+template<class T>
+std::vector<T> Spectrogram<T>::getTimeWindows() const
+{
+    if (!isInitialized()){throw std::invalid_argument("Class not initialized");}
+    return pImpl->mSlidingWindowRealDFT.getTimeWindows(pImpl->mSamplingRate);
+}
+
+/// Get the time domain windows
+template<class T>
+void Spectrogram<T>::getTimeWindows(const int nSamples, T *times[]) const
+{
+    if (!isInitialized()){throw std::invalid_argument("Class not initialized");}
+    pImpl->mSlidingWindowRealDFT.getTimeWindows(pImpl->mSamplingRate,
+                                                nSamples, times);
+}
+
+/// Gets the amplitude spectrum
+template<class T>
+std::vector<T> Spectrogram<T>::getAmplitude() const
+{
+    if (!haveTransform())
+    {
+        throw std::runtime_error("Transform not yet computed");
+    }
+    auto nFrequencies = getNumberOfFrequencies();
+    auto nWindows = getNumberOfTransformWindows();
+    std::vector<T> result(nFrequencies*nWindows);
+    // Compute the amplitude spectrogram (or just get a pointer)
+    auto ampPtr = getAmplitudePointer(); 
+    std::copy(ampPtr, ampPtr + result.size(), result.data());
+    return result;    
+}
+
+/// Gets the amplitude spectrum
+template<class T>
+const T *Spectrogram<T>::getAmplitudePointer() const
+{
+    if (!haveTransform())
+    {
+        throw std::runtime_error("Transform not yet computed");
+    }
+    if (!pImpl->mHaveAmplitude)
+    {
+        auto nFrequencies = getNumberOfFrequencies();
+        auto nWindows = getNumberOfTransformWindows();
+        pImpl->mAmplitude.resize(nWindows*nFrequencies, 0);
+        for (int iw = 0; iw < nWindows; ++iw)
+        {
+            auto spectraPtr = pImpl->mSlidingWindowRealDFT.getTransform(iw);
+            auto ampPtr = pImpl->mAmplitude.data() + iw*nFrequencies;
+            DFTUtilities::magnitude(nFrequencies, spectraPtr, &ampPtr);
+        }
+    }
+    return pImpl->mAmplitude.data();
+}
 
 
 ///--------------------------------------------------------------------------///

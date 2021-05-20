@@ -3,7 +3,6 @@
 #include <complex>
 #include <ipps.h>
 #include "rtseis/utilities/transforms/welch.hpp"
-#include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 

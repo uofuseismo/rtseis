@@ -76,9 +76,9 @@ public:
     /// @result The number of frequencies.
     /// @throws std::runtime_error if the class is not intitialized.
     [[nodiscard]] int getNumberOfFrequencies() const;
-    /// @result The number of time windows.
+    /// @result The number of windowsin which a transform was computed.
     /// @throws std::runtime_error if the class is not intitialized.
-    [[nodiscard]] int getNumberOfWindows() const;
+    [[nodiscard]] int getNumberOfTransformWindows() const;
     /// @result The frequencies (Hz) at which the power spectral density
     ///         was estimated.
     /// @throws std::runtime_error if \c isInitialized() is false.
@@ -95,16 +95,21 @@ public:
     /// @throws std::runtime_error if \c isInitialized() is false.
     /// @sa \c getNumberOfFrequencies()
     void getFrequencies(int nFrequencies, T *frequencies[]) const;
-    /// @result The time windows of each bin.
+    /// @result The time windows (seconds) of each transform.  For example,
+    ///         the it'th transform was computed for a time window given by
+    ///         [times[it], times[it+1]).
     /// @throws std::runtime_error if \c isInitialized() is false.
+    /// @throws std::invalid_argument if samplingRate is not positive.
     [[nodiscard]] std::vector<T> getTimeWindows() const;
-    /// @param[in] nWindows  The number of windows.
-    /// @param[out] windows  The time window defining each segment.  This
-    ///                      is an array of length of dimension [nWindows].
-    /// @throws std::invalid_argument if nWindows does not equal 
-    ///         \c getNumberOfWindows() or windows is NULL.
+    /// @brief Gets the time windows in which each transform was computed.
+    /// @param[in] nTimes        The number of times.  This should be equal
+    ///                          to \c getNumberTransformWindows() + 1.
+    /// @param[out] times        The times (seconds) defining each bin.
+    ///                          This is an array of dimension [nTimes].
+    /// @throws std::invalid_argument if the sampling rate is not positive,
+    ///         nTimes is incorrect, or times is NULL.
     /// @throws std::runtime_error if \c isInitialized() is false.
-    void getTimeWindows(const int nWindows, T *windows[]) const;
+    void getTimeWindows(int nTimes, T *times[]) const;
     /// @}
 
     /// @name Step 2: Transform
@@ -124,10 +129,15 @@ public:
     /// @name Step 3: Get Results
     /// @{
     /// @result The amplitude spectrogram.  This is an 
-    ///         [\c getNumberOfWindows () x \c getNumberOfFrequencies() ]
+    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencie) ]
     ///         matrix with leading dimension \c getNumberOfFrequencies().
     /// @throws std::runtime_error if \c haveTransform() is false.
     std::vector<T> getAmplitude() const;
+    /// @result A pointer to the amplitude spectrum.  This is an
+    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencies ]
+    ///         matrix with leading dimension \c getNumberOfFrequenies().
+    /// @throws std::runtime_error if \c haveTransform() is false.
+    const T *getAmplitudePointer() const;
     /// @}
 private:
     class SpectrogramImpl;
