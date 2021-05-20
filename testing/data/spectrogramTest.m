@@ -31,12 +31,14 @@ function spectrogramTest()
    nlap = nwin-10;
    nfft = 256;
    
-   x = spectrogram(sig, wind, nlap, nfft, Fs);
-   xshape = size(x);
+   [S,F,T] = spectrogram(sig, wind, nlap, nfft, Fs);
+   %F
+   %T
+   sShape = size(S);
    fileID = fopen("spectrogramNoisyChirp.txt", "w");
-   for i=1:xshape(1)
-       for j=1:xshape(2)
-           fprintf(fileID, "%.8e %.8e\n", real(x(i,j)), imag(x(i,j)));
+   for i=1:sShape(1)
+       for j=1:sShape(2)
+           fprintf(fileID, "%.8e %.8e\n", real(S(i,j)), imag(S(i,j)));
        end
        fprintf(fileID, "\n");
    end
