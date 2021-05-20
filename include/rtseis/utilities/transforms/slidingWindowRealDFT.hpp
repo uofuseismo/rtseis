@@ -1,6 +1,7 @@
 #ifndef RTSEIS_UTILITIES_TRANSFORMS_SLIDINGWINDOWREALDFT_HPP
 #define RTSEIS_UTILITIES_TRANSFORMS_SLIDINWINDOWGREALDFT_HPP 1
 #include <memory>
+#include <vector>
 #include <complex>
 #include "rtseis/enums.hpp"
 namespace RTSeis::Utilities::Transforms
@@ -49,6 +50,41 @@ public:
     ///                       undefined.
     /// @result The memory that was moved from swdft to this.
     SlidingWindowRealDFT& operator=(SlidingWindowRealDFT &&swdft) noexcept;
+    /// @result The frequencies (Hz) at which the transform is computed.
+    /// @param[in] samplingRate  The sampling rate (Hz) of the signal.
+    /// @throws std::runtime_error if \c isInitialized() is false.
+    /// @throws std::invalid_argument if samplingRate is not positive.
+    [[nodiscard]] std::vector<T> getFrequencies(double samplingRate) const;
+    /// @brief Gets the frequencies at which the power spectral density was
+    ///        estimated. 
+    /// @param[in] samplingRate  The sampling rate (Hz) of the signal.
+    /// @param[in] nFrequencies  The number of frequencies.  This must match the
+    ///                          result of \c getNumberOfFrequencies().
+    /// @param[out] frequencies  The frequencies (Hz) at which the spectral
+    ///                          density was estimated.  This is an array of
+    ///                          dimension [nFrequencies].
+    /// @throws std::invalid_argument if the sampling rate is not positive,
+    ///         nFrequencies is invalid or frequencies is NULL.
+    /// @throws std::runtime_error if \c isInitialized() is false.
+    /// @sa \c getNumberOfFrequencies()
+    void getFrequencies(double samplingRate, int nFrequencies, T *frequencies[]) const;
+    /// @param[in] samplingRate  The sampling rate in Hz.
+    /// @result The time windows (seconds) of each transform.  For example,
+    ///         the it'th transform was computed for a time window given by
+    ///         [times[it], times[it+1]).
+    /// @throws std::runtime_error if \c isInitialized() is false.
+    /// @throws std::invalid_argument if samplingRate is not positive.
+    [[nodiscard]] std::vector<T> getTimeWindows(double samplingRate) const;
+    /// @brief Gets the time windows in which each transform was computed.
+    /// @param[in] samplingRate  The sampling rate (Hz) of the signal.
+    /// @param[in] nTimes        The number of times.  This should be equal
+    ///                          to \c getNumberOfTransformWindows() + 1.
+    /// @param[out] times        The times (seconds) defining each bin.
+    ///                          This is an array of dimension [nTimes].
+    /// @throws std::invalid_argument if the sampling rate is not positive,
+    ///         nTimes is incorrect, or times is NULL.
+    /// @throws std::runtime_error if \c isInitialized() is false.
+    void getTimeWindows(double samplingRate, int nTimes, T *times[]) const;
     /// @}
 
     /// @name Destructors

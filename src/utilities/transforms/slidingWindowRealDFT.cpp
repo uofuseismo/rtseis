@@ -8,6 +8,7 @@
 #include "private/pad.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
+#include "rtseis/utilities/transforms/utilities.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 
 
@@ -284,6 +285,8 @@ void SlidingWindowRealDFT<T>::initialize(
         }
         pImpl->mApplyWindow = true;
     }
+    // Copy the parameters
+    pImpl->mParameters = parameters;
     // Initialize the Fourier transform
     constexpr int rank = 1;
     int nForward[1] = {pImpl->mDFTLength};
@@ -553,10 +556,10 @@ void SlidingWindowRealDFT<double>::transform(const int nSamples,
         auto dataIndex = icol*nDataOffset;
         auto xptr = &x[xIndex];
         auto dptr = &inData[dataIndex];
-#ifdef DEBUG
-        assert(xIndex < nSamples);
-#endif
         auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
+#ifndef NDEBUG
+        assert(xIndex + ncopy <= nSamples);
+#endif
         // Zero and copy
         //std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(double));
         std::copy(xptr, xptr + ncopy, dptr); //dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
@@ -607,22 +610,23 @@ void SlidingWindowRealDFT<float>::transform(const int nSamples,
     int nPtsPerSeg = pImpl->mSamplesPerSegment;
     int nOverlap   = pImpl->mSamplesInOverlap;
     int shift = nPtsPerSeg - nOverlap;
+    int nColumns = pImpl->mNumberOfColumns;
     auto lwindow = pImpl->mApplyWindow;
     SlidingWindowDetrendType detrendType = pImpl->mDetrendType;
     //#pragma omp for
-    for (auto icol=0; icol<pImpl->mNumberOfColumns; ++icol)
+    for (int icol = 0; icol < nColumns; ++icol)
     {   
         auto xIndex = icol*shift; // Extract x
         auto dataIndex = icol*nDataOffset;
         auto xptr = &x[xIndex];
         auto dptr = &inData[dataIndex];
-#ifdef DEBUG
-        assert(xIndex < nSamples);
-#endif
         auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
+#ifndef NDEBUG
+        assert(xIndex + ncopy <= nSamples);
+#endif
         // Zero and copy
         //std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(float));
-        std::copy(xptr, xptr + ncopy, dptr); //dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
+        std::copy(xptr, xptr + ncopy, dptr);
         std::fill(dptr + ncopy, dptr + nDataOffset, 0); // Zero end
         // Demean?
         if (detrendType == SlidingWindowDetrendType::REMOVE_MEAN)
@@ -702,6 +706,116 @@ SlidingWindowRealDFT::getTransform32f(const int iWindow) const
     return ptr;
 }
 */
+
+/// Get frequencies
+template<class T>
+std::vector<T> SlidingWindowRealDFT<T>::getFrequencies(
+    const double samplingRate) const
+{
+    if (samplingRate <= 0)
+    {
+        throw std::invalid_argument("Sampling rate must be positive");
+    }
+    auto nFrequencies = getNumberOfFrequencies(); // Will throw init error
+    std::vector<T> frequencies(nFrequencies);
+    auto freqsPtr = frequencies.data();
+    getFrequencies(samplingRate, frequencies.size(), &freqsPtr); 
+    return frequencies;
+}
+
+/// Get frequencies
+template<class T>
+void SlidingWindowRealDFT<T>::getFrequencies(const double samplingRate,
+                                             const int nFrequencies,
+                                             T *freqsIn[]) const
+{
+    auto nFreqs = getNumberOfFrequencies(); // Will throw initialization error
+    if (nFrequencies != nFreqs)
+    {
+        throw std::invalid_argument("nFrequencies = "
+                                  + std::to_string(nFrequencies)
+                                  + " must equal " + std::to_string(nFreqs));
+    }
+    if (samplingRate <= 0)
+    {
+        throw std::invalid_argument("Sampling rate must be positive");
+    }
+    T *freqs = *freqsIn;
+    if (freqs == nullptr){throw std::invalid_argument("frequencies is NULL");}
+    int nSamples = pImpl->mDFTLength;
+    try
+    {
+        auto dt = static_cast<T> (1./samplingRate);
+        DFTUtilities::realToComplexDFTFrequencies(nSamples,
+                                                  dt,
+                                                  nFreqs,
+                                                  freqsIn);
+    }
+    catch (const std::exception &e)
+    {
+#ifdef DEBUG
+        assert(false);
+#else
+        throw std::runtime_error("Failed to call realToComplexDFTFrequencies");
+#endif
+    }
+}
+
+/// Get the time windows
+template<class T>
+std::vector<T> SlidingWindowRealDFT<T>::getTimeWindows(
+    const double samplingRate) const
+{
+    if (samplingRate <= 0)
+    {
+        throw std::invalid_argument("Sampling rate must be positive");
+    }
+    // Will throw initialization error
+    auto nTimes = getNumberOfTransformWindows() + 1;
+    std::vector<T> times(nTimes);
+    auto tPtr = times.data();
+    getTimeWindows(samplingRate, times.size(), &tPtr);
+    return times;
+}
+
+/// Get the time windows
+template<class T>
+void SlidingWindowRealDFT<T>::getTimeWindows(const double samplingRate,
+                                             const int nTimes,
+                                             T *times[]) const
+{
+    // Will throw initialization error
+    auto nWindows = getNumberOfTransformWindows();
+    if (nTimes != nWindows + 1)
+    {
+        throw std::invalid_argument("nTimes = " 
+                                  + std::to_string(nTimes)
+                                  + " must equal "
+                                  + std::to_string(nWindows + 1));
+    }
+    if (samplingRate <= 0)
+    {
+        throw std::invalid_argument("Sampling rate must be positive");
+    }
+    double dt = 1/samplingRate;
+    T *t = *times;
+    if (t == nullptr){throw std::invalid_argument("times is NULL");}
+    int nSamples = getNumberOfSamples();
+    int nPtsPerSeg = pImpl->mSamplesPerSegment;
+    int nOverlap   = pImpl->mSamplesInOverlap;
+    int hop = nPtsPerSeg - nOverlap;
+    for (int iw = 0; iw < nWindows; ++iw)
+    {
+        auto xIndex = iw*hop;
+        t[iw] = static_cast<T> (xIndex*dt);
+    }
+    // Last time sample is the time of the last accessed piece of signal.
+    auto nLastCopy = std::min(nPtsPerSeg, nSamples - (nWindows - 1)*hop);
+    auto lastSample = std::max(0, (nWindows - 1)*hop + nLastCopy - 1);
+    auto lastTime = static_cast<T> ((nSamples - 1)*dt);
+    t[nWindows] = std::min(lastTime, static_cast<T> (lastSample*dt));
+}
+
 ///--------------------------------------------------------------------------///
 ///                            Template instantiation                        ///
 ///--------------------------------------------------------------------------///

@@ -132,6 +132,7 @@ SET(UTILS_SRCS
     src/utilities/transforms/firEnvelope.cpp
     src/utilities/transforms/slidingWindowRealDFT.cpp
     src/utilities/transforms/slidingWindowRealDFTParameters.cpp
+    src/utilities/transforms/spectrogram.cpp
     src/utilities/transforms/welch.cpp
     src/utilities/transforms/wavelets/morlet.cpp
     src/utilities/trigger/waterLevel.cpp)

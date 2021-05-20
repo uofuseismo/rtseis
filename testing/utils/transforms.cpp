@@ -893,7 +893,7 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFTParameters)
     EXPECT_TRUE(pOri != pCopy);
 }
 
-TEST(UtilitiesTransforms, Spectrogram)
+TEST(UtilitiesTransforms, SlidingWindowRealDFT)
 {
     SlidingWindowRealDFT<double> sdft;
     // Load the chirp
@@ -932,6 +932,7 @@ TEST(UtilitiesTransforms, Spectrogram)
     EXPECT_EQ(jc, 129);
     EXPECT_EQ(static_cast<int> (spec.size()), 129*199);
     // Create a Kaiser window
+    double samplingRate = 1024;
     int nSamples = 2048;
     int nSamplesPerSegment = 63;
     int windowLength = nSamplesPerSegment;
@@ -1000,6 +1001,19 @@ TEST(UtilitiesTransforms, Spectrogram)
         }
     }
     ASSERT_LE(resmax, 1.e-7);
+    // Check the computed times
+    std::vector<double> times;
+    EXPECT_NO_THROW(times = sdft.getTimeWindows(samplingRate));
+    for (size_t i = 0; i < times.size() - 1; ++i)
+    {
+        auto tRef = static_cast<double>
+                    (i*(nSamplesPerSegment - nSamplesInOverlap)/samplingRate);
+        auto tDiff = std::abs(times[i] -  tRef);
+        EXPECT_NEAR(tDiff, 0, 1.e-10);
+    }
+    // The last time is a little funky.  This is the last computed sample 
+    // assuming a sampling rate of 1024 Hz.
+    EXPECT_NEAR(1.994140625, times.back(), 1.e-10);
 }
 
 TEST(UtilitiesTransforms, Welch)
@@ -1040,9 +1054,7 @@ TEST(UtilitiesTransforms, Welch)
     int nFrequencies = welch.getNumberOfFrequencies(); 
     EXPECT_EQ(nFrequencies, fftLength/2 + 1); //nWindowLength/2 + 1);
     // Check the frequencies
-    std::vector<double> frequencies(nFrequencies);
-    double *freqPtr = frequencies.data();
-    welch.getFrequencies(nFrequencies, &freqPtr);
+    auto frequencies = welch.getFrequencies();
     EXPECT_EQ(fRef1.size(), frequencies.size());
     double error = 0;
     ippsNormDiff_Inf_64f(fRef1.data(), frequencies.data(), nFrequencies,
@@ -1052,12 +1064,14 @@ TEST(UtilitiesTransforms, Welch)
     EXPECT_NO_THROW(welch.transform(nSamples, xSineSignal.data()));
     // Get and compare results
     std::vector<double> spectrum(nFrequencies); 
-    double *sPtr = spectrum.data();
-    EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    //double *sPtr = spectrum.data();
+    //EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectralDensity());
     ippsNormDiff_Inf_64f(powerRef1.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
-    EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    //EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectrum());
     ippsNormDiff_Inf_64f(psdRef1.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
@@ -1076,20 +1090,21 @@ TEST(UtilitiesTransforms, Welch)
     nFrequencies = welch.getNumberOfFrequencies();
     frequencies.resize(nFrequencies);
     EXPECT_EQ(fRef2.size(), frequencies.size());
-    freqPtr = frequencies.data();
-    welch.getFrequencies(nFrequencies, &freqPtr);
+    frequencies = welch.getFrequencies();
     ippsNormDiff_Inf_64f(fRef2.data(), frequencies.data(), nFrequencies,
                          &error);
     EXPECT_LE(error, 1.e-7);
     // Transform
     EXPECT_NO_THROW(welch.transform(nSamples, xSineSignal.data()));
     spectrum.resize(nFrequencies);
-    sPtr = spectrum.data();
-    EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    //sPtr = spectrum.data();
+    //EXPECT_NO_THROW(welch.getPowerSpectralDensity(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectralDensity());
     ippsNormDiff_Inf_64f(powerRef2.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);
-    EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    //EXPECT_NO_THROW(welch.getPowerSpectrum(nFrequencies, &sPtr));
+    EXPECT_NO_THROW(spectrum = welch.getPowerSpectrum());
     ippsNormDiff_Inf_64f(psdRef2.data(), spectrum.data(),
                          nFrequencies, &error);
     EXPECT_LE(error, 1.e-5);

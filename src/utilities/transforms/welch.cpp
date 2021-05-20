@@ -231,6 +231,36 @@ void Welch<double>::transform(const int nSamples, const double x[])
     pImpl->mHaveTransform = true;
 }
 
+/// Get the power spectrum
+template<class T>
+std::vector<T> Welch<T>::getPowerSpectrum() const
+{
+    auto nFreqs = getNumberOfFrequencies(); // Will throw initializaiton error
+    if (!haveTransform())
+    {
+        throw std::runtime_error("welch transform not yet computed");
+    }
+    std::vector<T> spectrum(nFreqs);
+    auto sPtr = spectrum.data();
+    getPowerSpectrum(spectrum.size(), &sPtr);
+    return spectrum;
+}
+
+/// Get the power spectrum density
+template<class T>
+std::vector<T> Welch<T>::getPowerSpectralDensity() const
+{
+    auto nFreqs = getNumberOfFrequencies(); // Will throw initializaiton error
+    if (!haveTransform())
+    {
+        throw std::runtime_error("welch transform not yet computed");
+    }
+    std::vector<T> spectrum(nFreqs);
+    auto sPtr = spectrum.data();
+    getPowerSpectralDensity(spectrum.size(), &sPtr);
+    return spectrum;
+}
+
 /// Get power spectrum
 template<class T>
 void Welch<T>::getPowerSpectrum(const int nFrequencies,
@@ -291,43 +321,15 @@ void Welch<T>::getPowerSpectralDensity(const int nFrequencies,
 template<class T>
 std::vector<T> Welch<T>::getFrequencies() const
 {
-    auto nFrequencies = getNumberOfFrequencies(); // Will throw init error
-    std::vector<T> frequencies(nFrequencies);
-    auto freqsPtr = frequencies.data();
-    getFrequencies(frequencies.size(), &freqsPtr); 
-    return frequencies;
+    return pImpl->mSlidingWindowRealDFT.getFrequencies(pImpl->mSamplingRate);
 }
 
 /// Get frequencies
 template<class T>
 void Welch<T>::getFrequencies(const int nFrequencies, T *freqsIn[]) const
 {
-    auto nFreqs = getNumberOfFrequencies(); // Will throw initialization error
-    if (nFrequencies != nFreqs)
-    {
-        throw std::invalid_argument("nFrequencies = "
-                                  + std::to_string(nFrequencies)
-                                  + " must equal " + std::to_string(nFreqs));
-    }
-    T *freqs = *freqsIn;
-    if (freqs == nullptr){throw std::invalid_argument("frequencies is NULL");}
-    int nSamples = pImpl->mParameters.getDFTLength();
-    try
-    {
-        auto dt = static_cast<T> (1./pImpl->mSamplingRate);
-        DFTUtilities::realToComplexDFTFrequencies(nSamples,
-                                                  dt,
-                                                  nFreqs,
-                                                  freqsIn); 
-    }
-    catch (const std::exception &e)
-    {
-#ifdef DEBUG
-        assert(false);
-#else
-        throw std::runtime_error("Failed to call realToComplexDFTFrequencies");
-#endif
-    }
+    pImpl->mSlidingWindowRealDFT.getFrequencies(pImpl->mSamplingRate,
+                                                nFrequencies, freqsIn);
 }
 
 ///--------------------------------------------------------------------------///
