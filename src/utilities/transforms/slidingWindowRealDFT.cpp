@@ -558,8 +558,9 @@ void SlidingWindowRealDFT<double>::transform(const int nSamples,
 #endif
         auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
         // Zero and copy
-        std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(double));
+        //std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(double));
         std::copy(xptr, xptr + ncopy, dptr); //dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
+        std::fill(dptr + ncopy, dptr + nDataOffset, 0); // Zero end
         // Demean?
         if (detrendType == SlidingWindowDetrendType::REMOVE_MEAN)
         {
@@ -620,8 +621,9 @@ void SlidingWindowRealDFT<float>::transform(const int nSamples,
 #endif
         auto ncopy = std::min(nPtsPerSeg, nSamples - xIndex);
         // Zero and copy
-        std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(float));
+        //std::memset(dptr, 0, static_cast<size_t> (nDataOffset)*sizeof(float));
         std::copy(xptr, xptr + ncopy, dptr); //dptr, xptr, static_cast<size_t> (ncopy)*sizeof(double));
+        std::fill(dptr + ncopy, dptr + nDataOffset, 0); // Zero end
         // Demean?
         if (detrendType == SlidingWindowDetrendType::REMOVE_MEAN)
         {

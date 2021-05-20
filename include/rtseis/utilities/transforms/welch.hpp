@@ -1,6 +1,7 @@
 #ifndef RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP
 #define RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP 1
 #include <memory>
+#include <vector>
 #include "rtseis/utilities/transforms/enums.hpp"
 
 namespace RTSeis::Utilities::Transforms
@@ -11,9 +12,10 @@ class SlidingWindowRealDFTParameters;
 ///        This amounts to first dividing the data into overlapping segments.
 ///        Next, a modified periodogram is computed in each segment. 
 ///        Finally, the modified periodogram for all segments are averaged. 
-/// @author Ben Baker, University of Utah
-/// @copyright Ben Baker distributed under the MIT license.
+/// @author Ben Baker
+/// @copyright Ben Baker (University of Utah) distributed under the MIT license.
 /// @date July 2019
+template<class T = double>
 class Welch
 {
 public:
@@ -70,6 +72,25 @@ public:
     ///         contain.
     /// @throws std::runtime_error if the class is not inititalized.
     [[nodiscard]] int getNumberOfSamples() const;
+    /// @result The number of frequencies.
+    /// @throws std::runtime_error if the class is not intitialized.
+    [[nodiscard]] int getNumberOfFrequencies() const;
+    /// @result The frequencies (Hz) at which the power spectral density
+    ///         was estimated.
+    /// @throws std::runtime_error if \c isInitialized() is false.
+    [[nodiscard]] std::vector<T> getFrequencies() const;
+    /// @brief Gets the frequencies at which the power spectral density was
+    ///        estimated. 
+    /// @param[in] nFrequencies  The number of frequencies.  This must match the
+    ///                          result of \c getNumberOfFrequencies().
+    /// @param[out] frequencies  The frequencies (Hz) at which the spectral
+    ///                          density was estimated.  This is an array of
+    ///                          dimension [nFrequencies].
+    /// @throws std::invalid_argument if nFrequencies is invalid or frequencies
+    ///         is NULL.
+    /// @throws std::runtime_error if \c isInitialized() is false.
+    /// @sa \c getNumberOfFrequencies()
+    void getFrequencies(int nFrequencies, T *frequencies[]) const;
     /// @}
 
     /// @name Step 2: Transform
@@ -88,22 +109,11 @@ public:
 
     /// @name Step 3: Get Results
     /// @{
-    /// @result The number of frequencies.
-    /// @throws std::runtime_error if the class is not intitialized.
-    [[nodiscard]] int getNumberOfFrequencies() const;
-    /// @brief Gets the frequencies at which the power spectral density was
-    ///        estimated. 
-    /// @param[in] nFrequencies  The number of frequencies.  This must match the
-    ///                          result of \c getNumberOfFrequencies().
-    /// @param[out] frequencies  The frequencies (Hz) at which the spectral
-    ///                          density was estimated.  This is an array of
-    ///                          dimensino [nFrequencies].
-    /// @throws std::invalid_argument if nFrequencies is invalid or frequencies
-    ///         is NULL.
-    /// @throws std::runtime_error if the class is not initialized.
-    /// @sa \c getNumberOfFrequencies()
-    /// @sa \c isInitialized()
-    void getFrequencies(int nFrequencies, double *frequencies[]) const;
+    /// @result The power spectral density estimate at each frequency.  If
+    ///         the input signal has units of \f$ Volts \f$ then this
+    ///         has units of \f$ \frac{Volts^2}{Hz} \f$.
+    /// @throws std::runtime_error if \c haveTransform() is false.
+    std::vector<T> getPowerSpectralDensity() const; 
     /// @brief Gets the power spectral density estimate.
     /// @param[in] nFrequencies  The number of frequencies. This must match the
     ///                          result of \c getNumberOfFrequencies().
@@ -117,7 +127,12 @@ public:
     /// @sa \c getNumberOfFrequencies()
     /// @sa \c isInitialized()
     /// @sa \c haveTransform()
-    void getPowerSpectralDensity(int nFrequencies, double *psd[]) const;
+    void getPowerSpectralDensity(int nFrequencies, T *psd[]) const;
+    /// @result The power spectrum at each frequency.  If the input signal
+    ///         signal has units of \f$ Volts \f$ then this has units of
+    ///         \f$ Volts^2 \f$.
+    /// @throws std::runtime_error if \c haveTransform() is false.
+    std::vector<T> getPowerSpectrum() const;
     /// @brief Gets the power spectrum.
     /// @param[in] nFrequencies    The number of frequencies. This must match the
     ///                            result of \c getNumberOfFrequencies().
@@ -132,7 +147,7 @@ public:
     /// @sa \c getNumberOfFrequencies()
     /// @sa \c isInitialized()
     /// @sa \c haveTransform()
-    void getPowerSpectrum(int nFrequencies, double *powerSpectrum[]) const;
+    void getPowerSpectrum(int nFrequencies, T *powerSpectrum[]) const;
     /// @}
 private:
     class WelchImpl;

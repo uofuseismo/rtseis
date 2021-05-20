@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <complex>
 #include <ipps.h>
-#include "private/throw.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/hilbert.hpp"
 
@@ -233,10 +232,7 @@ bool Envelope<T>::isInitialized() const noexcept
 template<class T>
 int Envelope<T>::getTransformLength() const
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mEnvelopeLength;
 }
 
@@ -245,7 +241,11 @@ template<class T>
 void Envelope<T>::initialize(const int n)
 {
     clear();
-    if (n < 1){RTSEIS_THROW_IA("n = %d must be positive", n);}
+    if (n < 1)
+    {
+        throw std::invalid_argument("n = " + std::to_string(n)
+                                  + " must be positive");
+    }
     pImpl->initialize(n);
 }
 
@@ -257,10 +257,8 @@ void Envelope<double>::transform(const int n, const double x[],
     if (pImpl){pImpl->mMean = 0;}
     double *ylower = *ylowerIn;
     double *yupper = *yupperIn;
-    if (ylower == nullptr)
-    {
-        RTSEIS_THROW_IA("%s", "ylower is NULL");
-    }
+    if (ylower == nullptr){throw std::invalid_argument("ylower is NULL");}
+    if (yupper == nullptr){throw std::invalid_argument("yupper is NULL");}
     // Compute the upper envelope
     transform(n, x, &yupper); // will throw
     // Special case
@@ -287,10 +285,8 @@ void Envelope<float>::transform(const int n, const float x[],
     if (pImpl){pImpl->mMean = 0;}
     float *ylower = *ylowerIn;
     float *yupper = *yupperIn;
-    if (ylower == nullptr)
-    {
-        RTSEIS_THROW_IA("%s", "ylower is NULL");
-    }
+    if (ylower == nullptr){throw std::invalid_argument("ylower is NULL");}
+    if (yupper == nullptr){throw std::invalid_argument("yupper is NULL");}
     // Compute the upper envelope
     transform(n, x, &yupper); // will throw
     // Special case
@@ -316,19 +312,18 @@ template<class T>
 void Envelope<T>::transform(const int n, const T x[], T *yIn[])
 {
     pImpl->mMean = 0;
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::invalid_argument("Class not initialized");}
     if (n != pImpl->mEnvelopeLength)
     {
-        RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mEnvelopeLength);
+        throw std::invalid_argument("n = " + std::to_string(n)
+                                  + " must equal "
+                                  + std::to_string(pImpl->mEnvelopeLength));
     }
     T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     pImpl->transform(n, x, y);
 /*

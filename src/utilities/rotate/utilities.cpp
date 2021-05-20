@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <stdexcept>
-#include "private/throw.hpp"
 #include "rtseis/utilities/rotate/utilities.hpp"
 
 /// Convert north/east to radial/transverse
@@ -22,10 +21,10 @@ void RTSeis::Utilities::Rotate::northEastToRadialTransverse(
     if (north == nullptr || east == nullptr || 
         radial == nullptr || transverse == nullptr)
     {
-        if (north == nullptr){RTSEIS_THROW_IA("%s", "north is NULL");}
-        if (east == nullptr){RTSEIS_THROW_IA("%s", "east is NULL");}
-        if (radial == nullptr){RTSEIS_THROW_IA("%s", "radial is NULL");}
-        RTSEIS_THROW_IA("%s", "transverse is NULL"); 
+        if (north == nullptr){throw std::invalid_argument("north is NULL");}
+        if (east == nullptr){throw std::invalid_argument("east is NULL");}
+        if (radial == nullptr){throw std::invalid_argument("radial is NULL");}
+        throw std::invalid_argument("transverse is NULL"); 
     }
     // Use a counterclockwise rotation matrix.  Flip back-azimuth to
     // theta and make it increase negatively.  Comparing with
@@ -76,10 +75,10 @@ void RTSeis::Utilities::Rotate::radialTransverseToNorthEast(
     if (north == nullptr || east == nullptr ||
         radial == nullptr || transverse == nullptr)
     {
-        if (north == nullptr){RTSEIS_THROW_IA("%s", "north is NULL");}
-        if (east == nullptr){RTSEIS_THROW_IA("%s", "east is NULL");}
-        if (radial == nullptr){RTSEIS_THROW_IA("%s", "radial is NULL");}
-        RTSEIS_THROW_IA("%s", "transverse is NULL");
+        if (north == nullptr){throw std::invalid_argument("north is NULL");}
+        if (east == nullptr){throw std::invalid_argument("east is NULL");}
+        if (radial == nullptr){throw std::invalid_argument("radial is NULL");}
+        throw std::invalid_argument("transverse is NULL");
     }
     // Compute Inverse of pg 95 Haskov 4.19 - 4.20
     T cb = std::cos(backAzimuth);
@@ -116,15 +115,18 @@ void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse(
     if (vertical == nullptr || north == nullptr || east == nullptr ||
         longitudinal == nullptr || radial == nullptr || transverse == nullptr)
     {
-        if (vertical == nullptr){RTSEIS_THROW_IA("%s", "vertical is NULL");}
-        if (north == nullptr){RTSEIS_THROW_IA("%s", "north is NULL");}
-        if (east == nullptr){RTSEIS_THROW_IA("%s", "east is NULL");}
+        if (vertical == nullptr)
+        {
+            throw std::invalid_argument("vertical is NULL");
+        }
+        if (north == nullptr){throw std::invalid_argument("north is NULL");}
+        if (east == nullptr){throw std::invalid_argument("east is NULL");}
         if (longitudinal == nullptr)
         {
-            RTSEIS_THROW_IA("%s", "longitudinal is NULL");
+            throw std::invalid_argument("longitudinal is NULL");
         }
-        if (radial == nullptr){RTSEIS_THROW_IA("%s", "radial is NULL");}
-        RTSEIS_THROW_IA("%s", "transverse is NULL");
+        if (radial == nullptr){throw std::invalid_argument("radial is NULL");}
+        throw std::invalid_argument("transverse is NULL");
     }
     T ci = std::cos(incidenceAngle);
     T si = std::sin(incidenceAngle);
@@ -165,15 +167,18 @@ void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast(
     if (vertical == nullptr || north == nullptr || east == nullptr ||
         longitudinal == nullptr || radial == nullptr || transverse == nullptr)
     {
-        if (vertical == nullptr){RTSEIS_THROW_IA("%s", "vertical is NULL");}
-        if (north == nullptr){RTSEIS_THROW_IA("%s", "north is NULL");}
-        if (east == nullptr){RTSEIS_THROW_IA("%s", "east is NULL");}
+        if (vertical == nullptr)
+        {
+            throw std::invalid_argument("vertical is NULL");
+        }
+        if (north == nullptr){throw std::invalid_argument("north is NULL");}
+        if (east == nullptr){throw std::invalid_argument("east is NULL");}
         if (longitudinal == nullptr)
         {
-            RTSEIS_THROW_IA("%s", "longitudinal is NULL");
+            throw std::invalid_argument("longitudinal is NULL");
         }
-        if (radial == nullptr){RTSEIS_THROW_IA("%s", "radial is NULL");}
-        RTSEIS_THROW_IA("%s", "transverse is NULL");
+        if (radial == nullptr){throw std::invalid_argument("radial is NULL");}
+        throw std::invalid_argument("transverse is NULL");
     }
     T ci = std::cos(incidenceAngle);
     T si = std::sin(incidenceAngle);
