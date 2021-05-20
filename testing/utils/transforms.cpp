@@ -19,6 +19,7 @@
 #include "rtseis/utilities/transforms/hilbert.hpp"
 #include "rtseis/utilities/transforms/envelope.hpp"
 #include "rtseis/utilities/transforms/firEnvelope.hpp"
+#include "rtseis/utilities/transforms/spectrogram.hpp"
 #include "rtseis/utilities/transforms/welch.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
@@ -1011,6 +1012,120 @@ TEST(UtilitiesTransforms, SlidingWindowRealDFT)
         auto tDiff = std::abs(times[i] -  tRef);
         EXPECT_NEAR(tDiff, 0, 1.e-10);
     }
+    // The last time is a little funky.  This is the last computed sample 
+    // assuming a sampling rate of 1024 Hz.
+    EXPECT_NEAR(1.994140625, times.back(), 1.e-10);
+}
+
+TEST(UtilitiesTransforms, Spectrogram)
+{
+    // Load the chirp
+    const std::string signalFileName = "data/spectrogramNoisyChirpSignal.txt";
+    const std::string specFileName = "data/spectrogramNoisyChirp.txt";
+    std::ifstream signalFile(signalFileName);
+    std::string line;
+    std::vector<double> sig;
+    sig.reserve(2048);
+    while (std::getline(signalFile, line))
+    {
+        double sample;
+        std::sscanf(line.c_str(), "%lf\n", &sample);
+        sig.push_back(sample);
+    }
+    EXPECT_EQ(static_cast<int> (sig.size()), 2048);
+    // Load the spectrogram
+    std::ifstream specFile(specFileName);
+    std::vector<std::complex<double>> spec;
+    spec.reserve(129*199);
+    int ic = 0;
+    int jc = 0;
+    while (std::getline(specFile, line))
+    {
+        ic = ic + 1;
+        if (ic == 200)
+        {
+            jc = jc + 1;
+            ic = 0;
+            continue;
+        }
+        double re, im;
+        std::sscanf(line.c_str(), "%lf %lf\n", &re, &im);
+        spec.push_back(std::complex<double> (re, im));
+    }
+    EXPECT_EQ(jc, 129);
+    EXPECT_EQ(static_cast<int> (spec.size()), 129*199);
+    // Create a Kaiser window
+    double samplingRate = 1024;
+    int nSamples = 2048;
+    int nSamplesPerSegment = 63;
+    int windowLength = nSamplesPerSegment;
+    int dftLength = 256;
+    int nSamplesInOverlap = windowLength - 10;
+    std::vector<double> window(windowLength);
+    const double beta = 17;
+    double *kdata = window.data();
+    EXPECT_NO_THROW(
+       RTSeis::Utilities::WindowFunctions::kaiser(windowLength, &kdata, beta));
+    // Set the parameters
+    SlidingWindowRealDFTParameters parameters;
+    EXPECT_NO_THROW(parameters.setNumberOfSamples(nSamples));
+    EXPECT_NO_THROW(parameters.setWindow(windowLength, window.data()));
+    EXPECT_NO_THROW(parameters.setDFTLength(dftLength));
+    EXPECT_NO_THROW(parameters.setNumberOfSamplesInOverlap(nSamplesInOverlap));
+    EXPECT_NO_THROW(
+       parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_NONE));
+    // Initialize the transformer
+    Spectrogram<double> spectrogram;
+    EXPECT_NO_THROW(spectrogram.initialize(parameters, samplingRate));
+    EXPECT_EQ(spectrogram.getNumberOfSamples(), nSamples);
+    EXPECT_EQ(spectrogram.getNumberOfFrequencies(), 129); // Number of rows
+    EXPECT_EQ(spectrogram.getNumberOfTransformWindows(), 199); // Number of columns
+    EXPECT_NO_THROW(spectrogram.transform(sig.size(), sig.data()));
+    std::vector<double> amplitude, phase;
+    EXPECT_NO_THROW(amplitude = spectrogram.getAmplitude());
+    EXPECT_NO_THROW(phase = spectrogram.getPhase());
+    // Loop on the windows and compute largest magnitude difference
+    double ampMax = 0; 
+    double phaseMax = 0;
+    for (int i = 0; i < spectrogram.getNumberOfTransformWindows(); ++i) 
+    {    
+        for (int j = 0; j < spectrogram.getNumberOfFrequencies(); j++) 
+        {
+            int indx = spectrogram.getNumberOfTransformWindows()*j + i; 
+            int jndx = spectrogram.getNumberOfFrequencies()*i + j;
+            double ampRes = std::abs(amplitude[jndx] - std::abs(spec[indx]));
+            auto phaseRes = std::abs(phase[jndx] - std::arg(spec[indx]));
+            ampMax = std::max(ampMax, ampRes); 
+            phaseRes = std::max(phaseMax, phaseRes); 
+            if (ampRes > 1.e-7)
+            {
+                fprintf(stderr, "%d %+lf %+lfi, %+lf %+lfi, %lf\n",
+                        indx,
+                        std::real(amplitude[jndx]), std::imag(amplitude[jndx]),
+                        std::real(spec[indx]), std::imag(spec[indx]), ampRes);
+            }
+        }
+    }
+    EXPECT_NEAR(ampMax, 0, 1.e-7);
+    EXPECT_NEAR(phaseMax, 0, 1.e-7);
+    // Get the frequencies
+    auto freqs = spectrogram.getFrequencies();
+    auto freqsRef = DFTUtilities::realToComplexDFTFrequencies(dftLength,
+                                                              1/samplingRate);
+    double resMax = 0;
+    EXPECT_EQ(freqs.size(), freqsRef.size());
+    ippsNormDiff_Inf_64f(freqs.data(), freqs.data(), freqs.size(), &resMax);
+    EXPECT_NEAR(resMax, 0, 1.e-15);
+    // Check the computed times
+    std::vector<double> times;
+    EXPECT_NO_THROW(times = spectrogram.getTimeWindows());
+    for (size_t i = 0; i < times.size() - 1; ++i) 
+    {    
+        auto tRef = static_cast<double>
+                    (i*(nSamplesPerSegment - nSamplesInOverlap)/samplingRate);
+        auto tDiff = std::abs(times[i] -  tRef);
+        EXPECT_NEAR(tDiff, 0, 1.e-10);
+    }    
     // The last time is a little funky.  This is the last computed sample 
     // assuming a sampling rate of 1024 Hz.
     EXPECT_NEAR(1.994140625, times.back(), 1.e-10);

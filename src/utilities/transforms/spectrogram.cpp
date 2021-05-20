@@ -236,8 +236,52 @@ const T *Spectrogram<T>::getAmplitudePointer() const
             auto ampPtr = pImpl->mAmplitude.data() + iw*nFrequencies;
             DFTUtilities::magnitude(nFrequencies, spectraPtr, &ampPtr);
         }
+        pImpl->mHaveAmplitude = true;
     }
     return pImpl->mAmplitude.data();
+}
+
+/// Gets the phase spectrum
+template<class T>
+std::vector<T> Spectrogram<T>::getPhase() const
+{
+    if (!haveTransform())
+    {
+        throw std::runtime_error("Transform not yet computed");
+    }
+    auto nFrequencies = getNumberOfFrequencies();
+    auto nWindows = getNumberOfTransformWindows();
+    std::vector<T> result(nFrequencies*nWindows);
+    // Compute the amplitude spectrogram (or just get a pointer)
+    auto phasePtr = getPhasePointer(); 
+    std::copy(phasePtr, phasePtr + result.size(), result.data());
+    return result;    
+}
+
+/// Gets the phase spectrum
+template<class T>
+const T *Spectrogram<T>::getPhasePointer() const
+{
+    if (!haveTransform())
+    {
+        throw std::runtime_error("Transform not yet computed");
+    }
+    if (!pImpl->mHavePhase)
+    {
+        constexpr bool wantDegrees = false;
+        auto nFrequencies = getNumberOfFrequencies();
+        auto nWindows = getNumberOfTransformWindows();
+        pImpl->mPhase.resize(nWindows*nFrequencies, 0); 
+        for (int iw = 0; iw < nWindows; ++iw)
+        {
+            auto spectraPtr = pImpl->mSlidingWindowRealDFT.getTransform(iw);
+            auto phasePtr = pImpl->mPhase.data() + iw*nFrequencies;
+            DFTUtilities::phase(nFrequencies, spectraPtr,
+                                &phasePtr, wantDegrees);
+        }
+        pImpl->mHavePhase = true;
+    }
+    return pImpl->mPhase.data();
 }
 
 

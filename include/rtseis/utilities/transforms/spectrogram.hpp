@@ -135,9 +135,19 @@ public:
     std::vector<T> getAmplitude() const;
     /// @result A pointer to the amplitude spectrum.  This is an
     ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencies ]
-    ///         matrix with leading dimension \c getNumberOfFrequenies().
+    ///         matrix with leading dimension \c getNumberOfFrequencies().
     /// @throws std::runtime_error if \c haveTransform() is false.
     const T *getAmplitudePointer() const;
+    /// @result The phase spectrogram in radians.  This is an 
+    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencie) ]
+    ///         matrix with leading dimension \c getNumberOfFrequencies().
+    /// @throws std::runtime_error if \c haveTransform() is false.
+    std::vector<T> getPhase() const;
+    /// @result A pointer to the phase spectrum in radians.  This is an
+    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencies ]
+    ///         matrix with leading dimension \c getNumberOfFrequencies().
+    /// @throws std::runtime_error if \c haveTransform() is false.
+    const T *getPhasePointer() const;
     /// @}
 private:
     class SpectrogramImpl;
