@@ -116,7 +116,7 @@ public:
     /// @throws std::invalid_argument if nSamples or x is invalid.
     /// @throws std::runtime_error if the class is not initialized.
     /// @sa \c isInitialized(), \c getNumberOfSamples()
-    void transform(int nSamples, const double x[]);
+    void transform(int nSamples, const T x[]);
     /// @retval True indicates that the transform has been computed.
     [[nodiscard]] bool haveTransform() const noexcept;
     /// @}

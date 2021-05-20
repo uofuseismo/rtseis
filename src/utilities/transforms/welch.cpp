@@ -189,8 +189,8 @@ int Welch<T>::getNumberOfSamples() const
 }
 
 /// Actually compute welch transform
-template<>
-void Welch<double>::transform(const int nSamples, const double x[])
+template<class T>
+void Welch<T>::transform(const int nSamples, const T x[])
 {
     pImpl->mHaveTransform = true;
     int nSamplesRef = getNumberOfSamples(); // Throws if not inittialized
@@ -206,26 +206,32 @@ void Welch<double>::transform(const int nSamples, const double x[])
     auto nFrequencies = getNumberOfFrequencies();
     auto nWindows = pImpl->mSlidingWindowRealDFT.getNumberOfTransformWindows();
     // Initialize the summation
-    double *pSumSpectrum = pImpl->mSumSpectrum.data();
+    T *__restrict__ pSumSpectrum = pImpl->mSumSpectrum.data();
     auto cPtr = pImpl->mSlidingWindowRealDFT.getTransform(0);
-    auto pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
+    //auto pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
     #pragma omp simd
     for (auto k=0; k<nFrequencies; ++k)
     {
-        pSumSpectrum[k] = pDFT[k].re*pDFT[k].re
-                        + pDFT[k].im*pDFT[k].im;
+        auto cr = std::real(cPtr[k]);
+        auto ci = std::imag(cPtr[k]);
+        pSumSpectrum[k] = cr*cr + ci*ci;
+        //pSumSpectrum[k] = pDFT[k].re*pDFT[k].re
+        //                + pDFT[k].im*pDFT[k].im;
     }
     // And sum the other windows
     for (auto i=1; i<nWindows; ++i)
     {
         cPtr = pImpl->mSlidingWindowRealDFT.getTransform(i);
-        pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
+        //pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
         #pragma omp simd
         for (auto k=0; k<nFrequencies; ++k)
         {
-            pSumSpectrum[k] = pSumSpectrum[k]
-                            + pDFT[k].re*pDFT[k].re
-                            + pDFT[k].im*pDFT[k].im;
+            auto cr = std::real(cPtr[k]);
+            auto ci = std::imag(cPtr[k]);
+            pSumSpectrum[k] = pSumSpectrum[k] + cr*cr + ci*ci;
+            //pSumSpectrum[k] = pSumSpectrum[k]
+            //                + pDFT[k].re*pDFT[k].re
+            //                + pDFT[k].im*pDFT[k].im;
         }
     }
     pImpl->mHaveTransform = true;

@@ -111,6 +111,25 @@ void Spectrogram<T>::initialize(
     pImpl->mInitialized = true;
 }
 
+/// Actually perform the transform
+template<class T>
+void Spectrogram<T>::transform(const int nSamples, const T x[])
+{
+    pImpl->mHaveTransform = false;
+    // Check the class is initialized and that the inputs are as expected
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    if (nSamples != getNumberOfSamples())
+    {
+        throw std::invalid_argument("Number of samples = "
+                                  + std::to_string(nSamples) + " must equal "
+                                  + std::to_string(getNumberOfSamples()));
+    }   
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
+    pImpl->mSlidingWindowRealDFT.transform(nSamples, x);
+
+}
+
+
 /// Get frequencies
 template<class T>
 std::vector<T> Spectrogram<T>::getFrequencies() const
@@ -125,7 +144,6 @@ void Spectrogram<T>::getFrequencies(const int nFrequencies, T *freqsIn[]) const
     pImpl->mSlidingWindowRealDFT.getFrequencies(pImpl->mSamplingRate,
                                                 nFrequencies, freqsIn);
 }
-
 
 /// Initialized?
 template<class T>
