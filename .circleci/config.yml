@@ -37,7 +37,7 @@ jobs:
       - run:
            name: Build the code
            command: |
-            cd build 
+            cd build
             make
       - run:
            name: Test the code
