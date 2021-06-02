@@ -2,11 +2,11 @@
 #include <cstdlib>
 #include <cmath>
 #include <stdexcept>
-#include "rtseis/utilities/rotate/utilities.hpp"
+#include "rtseis/rotate/utilities.hpp"
 
 /// Convert north/east to radial/transverse
 template<typename T>
-void RTSeis::Utilities::Rotate::northEastToRadialTransverse(
+void RTSeis::Rotate::northEastToRadialTransverse(
     const int nSamples,
     const T backAzimuth,
     const T north[],
@@ -60,7 +60,7 @@ void RTSeis::Utilities::Rotate::northEastToRadialTransverse(
 
 /// Convert radial/transverse to north/east
 template<typename T>
-void RTSeis::Utilities::Rotate::radialTransverseToNorthEast(
+void RTSeis::Rotate::radialTransverseToNorthEast(
     const int nSamples,
     const T backAzimuth,
     const T radial[],
@@ -95,7 +95,7 @@ void RTSeis::Utilities::Rotate::radialTransverseToNorthEast(
 
 /// Convert vertical/north/east to longitudinal/radial/transverse
 template<typename T>
-void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse(
+void RTSeis::Rotate::verticalNorthEastToLongitudinalRadialTransverse(
     const int nSamples,
     const T backAzimuth,
     const T incidenceAngle,
@@ -147,7 +147,7 @@ void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse(
 
 /// Convert longitudinal/radial/transverse to vertical/north/east
 template<typename T>
-void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast(
+void RTSeis::Rotate::longitudinalRadialTransverseToVerticalNorthEast(
     const int nSamples,
     const T backAzimuth,
     const T incidenceAngle,
@@ -197,9 +197,11 @@ void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast(
     }
 }
 
-/// Template function instantiation
+///--------------------------------------------------------------------------///
+///                    Template function instantiation                       ///
+///--------------------------------------------------------------------------///
 template
-void RTSeis::Utilities::Rotate::northEastToRadialTransverse<double>(
+void RTSeis::Rotate::northEastToRadialTransverse<double>(
     const int nSamples,
     const double backAzimuth,
     const double north[],
@@ -207,7 +209,7 @@ void RTSeis::Utilities::Rotate::northEastToRadialTransverse<double>(
     double *radial[],
     double *transverse[]);
 template
-void RTSeis::Utilities::Rotate::northEastToRadialTransverse<float>(
+void RTSeis::Rotate::northEastToRadialTransverse<float>(
     const int nSamples,
     const float backAzimuth,
     const float north[],
@@ -216,7 +218,7 @@ void RTSeis::Utilities::Rotate::northEastToRadialTransverse<float>(
     float *transverse[]);
 
 template
-void RTSeis::Utilities::Rotate::radialTransverseToNorthEast<double>(
+void RTSeis::Rotate::radialTransverseToNorthEast<double>(
     const int nSamples,
     const double backAzimuth,
     const double radial[],
@@ -224,7 +226,7 @@ void RTSeis::Utilities::Rotate::radialTransverseToNorthEast<double>(
     double *north[],
     double *east[]);
 template
-void RTSeis::Utilities::Rotate::radialTransverseToNorthEast<float>(
+void RTSeis::Rotate::radialTransverseToNorthEast<float>(
     const int nSamples,
     const float backAzimuth,
     const float radial[],
@@ -233,7 +235,7 @@ void RTSeis::Utilities::Rotate::radialTransverseToNorthEast<float>(
     float *east[]);
 
 template
-void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse<double>(
+void RTSeis::Rotate::verticalNorthEastToLongitudinalRadialTransverse<double>(
     const int nSamples,
     const double backAzimuth,
     const double incidenceAngle,
@@ -245,7 +247,7 @@ void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse<
     double *transverseIn[]
     );
 template
-void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse<float>(
+void RTSeis::Rotate::verticalNorthEastToLongitudinalRadialTransverse<float>(
     const int nSamples,
     const float backAzimuth,
     const float incidenceAngle,
@@ -258,7 +260,7 @@ void RTSeis::Utilities::Rotate::verticalNorthEastToLongitudinalRadialTransverse<
     );
 
 template
-void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast<double>(
+void RTSeis::Rotate::longitudinalRadialTransverseToVerticalNorthEast<double>(
     const int nSamples,
     const double backAzimuth,
     const double incidenceAngle,
@@ -270,7 +272,7 @@ void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast<
     double *eastIn[]
     );
 template
-void RTSeis::Utilities::Rotate::longitudinalRadialTransverseToVerticalNorthEast<float>(
+void RTSeis::Rotate::longitudinalRadialTransverseToVerticalNorthEast<float>(
     const int nSamples,
     const float backAzimuth,
     const float incidenceAngle,

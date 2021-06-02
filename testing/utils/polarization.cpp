@@ -7,14 +7,14 @@
 #include <ipps.h>
 #include "rtseis/utilities/polarization/eigenPolarizer.hpp"
 #include "rtseis/utilities/polarization/svdPolarizer.hpp"
-#include "rtseis/utilities/rotate/utilities.hpp"
+#include "rtseis/rotate/utilities.hpp"
 #include <gtest/gtest.h> 
 
 namespace
 {
 
 using namespace RTSeis::Utilities::Polarization;
-namespace Rotate = RTSeis::Utilities::Rotate;
+namespace Rotate = RTSeis::Rotate;
 
 void load3C(const std::string &fileName,
             std::vector<double> &z, std::vector<double> &n, 

@@ -9,7 +9,7 @@
 #include "rtseis/enums.hpp"
 #include "private/throw.hpp"
 #include "rtseis/utilities/polarization/eigenPolarizer.hpp"
-#include "rtseis/utilities/rotate/utilities.hpp"
+//#include "rtseis/rotate/utilities.hpp"
 
 using namespace RTSeis::Utilities::Polarization;
 

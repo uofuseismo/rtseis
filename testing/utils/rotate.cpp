@@ -5,12 +5,12 @@
 #include <vector>
 #include <fstream>
 #include <ipps.h>
-#include "rtseis/utilities/rotate/utilities.hpp"
+#include "rtseis/rotate/utilities.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
-namespace Rotate = RTSeis::Utilities::Rotate;
+namespace Rotate = RTSeis::Rotate;
 
 int loadData(const std::string &fileName, // = "data/rotate_zne_rt_lqt.txt",
              std::vector<double> *verticalRef,

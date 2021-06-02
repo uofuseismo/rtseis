@@ -122,7 +122,7 @@ SET(UTILS_SRCS
     src/utilities/normalization/zscore.cpp
     src/utilities/polarization/eigenPolarizer.cpp
     src/utilities/polarization/svdPolarizer.cpp
-    src/utilities/rotate/utilities.cpp
+    src/rotate/utilities.cpp
     src/transforms/continuousWavelet.cpp
     src/transforms/dft.cpp
     src/transforms/dftRealToComplex.cpp
