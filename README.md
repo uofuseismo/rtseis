@@ -38,3 +38,4 @@ you would instead do something like,
     Filter<processingmode, precision> filter;
 
 Again, if you use the high-level API you won't know this switch was made.  Therefore, I'd recommend sticking with the high-level API since it is considerably less likely to change in any significant way.
+
