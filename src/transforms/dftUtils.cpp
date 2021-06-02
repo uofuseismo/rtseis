@@ -4,11 +4,11 @@
 #include <algorithm>
 #include <valarray>
 #include <ipps.h>
-#include "rtseis/utilities/transforms/utilities.hpp"
+#include "rtseis/transforms/utilities.hpp"
 #include "rtseis/log.h"
 
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 namespace
 {
@@ -290,7 +290,7 @@ int DFTUtilities::nextPowerOfTwo(const int n)
 
 /// fftshift
 template<typename T> std::vector<T> 
-RTSeis::Utilities::Transforms::DFTUtilities::fftShift(const std::vector<T> &x)
+RTSeis::Transforms::DFTUtilities::fftShift(const std::vector<T> &x)
 {
     std::vector<T> y;
     if (x.empty()){return y;}
@@ -302,7 +302,7 @@ RTSeis::Utilities::Transforms::DFTUtilities::fftShift(const std::vector<T> &x)
 }
 
 template<typename T>
-void RTSeis::Utilities::Transforms::DFTUtilities::fftShift(
+void RTSeis::Transforms::DFTUtilities::fftShift(
     const int n, const T x[], T *yIn[])
 {
     T *y = *yIn; 
@@ -345,81 +345,81 @@ void RTSeis::Utilities::Transforms::DFTUtilities::fftShift(
 ///                           Instantiate Templates                          ///
 ///--------------------------------------------------------------------------///
 template
-std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::magnitude(
+std::vector<double> RTSeis::Transforms::DFTUtilities::magnitude(
     const std::vector<std::complex<double>> &z);
 template
-std::vector<float> RTSeis::Utilities::Transforms::DFTUtilities::magnitude(
+std::vector<float> RTSeis::Transforms::DFTUtilities::magnitude(
     const std::vector<std::complex<float>> &z);
 
 template
-std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::unwrap(
+std::vector<double> RTSeis::Transforms::DFTUtilities::unwrap(
     const std::vector<double> &z, const double tol);
 template
-std::vector<float> RTSeis::Utilities::Transforms::DFTUtilities::unwrap(
+std::vector<float> RTSeis::Transforms::DFTUtilities::unwrap(
     const std::vector<float> &z, const float tol);
 
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::unwrap(
+void RTSeis::Transforms::DFTUtilities::unwrap(
     const int n, const double p[], double *qIn[], const double tol);
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::unwrap(
+void RTSeis::Transforms::DFTUtilities::unwrap(
     const int n, const float p[], float *qIn[], const float tol);
 
 template
-std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::phase(
+std::vector<double> RTSeis::Transforms::DFTUtilities::phase(
     const std::vector<std::complex<double>> &z, const bool lwantDeg);
 template
-std::vector<float> RTSeis::Utilities::Transforms::DFTUtilities::phase(
+std::vector<float> RTSeis::Transforms::DFTUtilities::phase(
     const std::vector<std::complex<float>> &z, const bool lwantDeg);
 
 template
-std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::realToComplexDFTFrequencies(
+std::vector<double> RTSeis::Transforms::DFTUtilities::realToComplexDFTFrequencies(
     const int nSamples, const double samplingPeriod);
 template
-std::vector<float> RTSeis::Utilities::Transforms::DFTUtilities::realToComplexDFTFrequencies(
+std::vector<float> RTSeis::Transforms::DFTUtilities::realToComplexDFTFrequencies(
     const int nSamples, const float samplingPeriod);
 
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::realToComplexDFTFrequencies(
+void RTSeis::Transforms::DFTUtilities::realToComplexDFTFrequencies(
     const int nSamples, const double samplingPeriod,
     const int lengthFreqs, double *freqsIn[]);
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::realToComplexDFTFrequencies(
+void RTSeis::Transforms::DFTUtilities::realToComplexDFTFrequencies(
     const int nSamples, const float samplingPeriod,
     const int lengthFreqs, float *freqsIn[]);
 
 template
-std::vector<double> RTSeis::Utilities::Transforms::DFTUtilities::fftShift<double>
+std::vector<double> RTSeis::Transforms::DFTUtilities::fftShift<double>
     (const std::vector<double> &x);
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<double>
+void RTSeis::Transforms::DFTUtilities::fftShift<double>
     (const int n, const double x[], double *yIn[]);
 
 template
-std::vector<float> RTSeis::Utilities::Transforms::DFTUtilities::fftShift<float>
+std::vector<float> RTSeis::Transforms::DFTUtilities::fftShift<float>
     (const std::vector<float> &x);
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<float>
+void RTSeis::Transforms::DFTUtilities::fftShift<float>
     (const int n, const float x[], float *yIn[]);
 
 template std::vector<std::complex<double>> 
-RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<double>>
+RTSeis::Transforms::DFTUtilities::fftShift<std::complex<double>>
     (const std::vector<std::complex<double>> &x);
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<double>>
+void RTSeis::Transforms::DFTUtilities::fftShift<std::complex<double>>
     (const int n, const std::complex<double> x[], std::complex<double> *yIn[]);
 
 template std::vector<std::complex<float>>
-RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<float>>
+RTSeis::Transforms::DFTUtilities::fftShift<std::complex<float>>
     (const std::vector<std::complex<float>> &x);
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<std::complex<float>>
+void RTSeis::Transforms::DFTUtilities::fftShift<std::complex<float>>
     (const int n, const std::complex<float> x[], std::complex<float> *yIn[]);
 
 template std::vector<int>
-RTSeis::Utilities::Transforms::DFTUtilities::fftShift<int>
+RTSeis::Transforms::DFTUtilities::fftShift<int>
     (const std::vector<int> &x);
 template
-void RTSeis::Utilities::Transforms::DFTUtilities::fftShift<int>
+void RTSeis::Transforms::DFTUtilities::fftShift<int>
     (const int n, const int x[], int *yIn[]);
 

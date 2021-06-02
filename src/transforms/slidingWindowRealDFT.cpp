@@ -6,13 +6,13 @@
 #include <fftw/fftw3.h>
 #include <ipps.h>
 #include "private/pad.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
-#include "rtseis/utilities/transforms/utilities.hpp"
+#include "rtseis/transforms/slidingWindowRealDFT.hpp"
+#include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"
+#include "rtseis/transforms/utilities.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 
-
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Utilities;
+using namespace RTSeis::Transforms;
 
 /*
 namespace
@@ -365,21 +365,21 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
     clear();
     if (nSamples < 1)
     {
-        RTSEIS_THROW_IA("nSamples = %d must be positive", nSamples);
+        throw std::invalid_argument("nSamples = %d must be positive", nSamples);
     }
     if (nSamplesPerSegment < 1)
     {
-        RTSEIS_THROW_IA("Samples per segement = %d must be positive",
+        throw std::invalid_argument("Samples per segement = %d must be positive",
                         nSamplesPerSegment);
     }
     if (dftLength < nSamplesPerSegment)
     {
-        RTSEIS_THROW_IA("DFT length = %d must be at least = %d",
+        throw std::invalid_argument("DFT length = %d must be at least = %d",
                         dftLength, nSamplesPerSegment);
     }
     if (nSamplesInOverlap < 0 || nSamplesInOverlap >= nSamplesPerSegment)
     {
-        RTSEIS_THROW_IA("Overlap size = %d must be in range [0,%d]",
+        throw std::invalid_argument("Overlap size = %d must be in range [0,%d]",
                         nSamplesInOverlap, nSamplesPerSegment-1);
     }
     bool luseWindow = false;
@@ -387,10 +387,10 @@ void SlidingWindowRealDFT::initialize(const int nSamples,
     {
         if (windowLength != nSamplesPerSegment)
         {
-            RTSEIS_THROW_IA("Window length = %d must equal %d",
+            throw std::invalid_argument("Window length = %d must equal %d",
                             windowLength, nSamplesPerSegment);
         }
-        if (window == nullptr){RTSEIS_THROW_IA("%s", "Window is NULL");}
+        if (window == nullptr){throw std::invalid_argument("Window is NULL");}
         luseWindow = true;
     }
     // Compute the sizes
@@ -518,7 +518,7 @@ bool SlidingWindowRealDFT<T>::isInitialized() const noexcept
 template<class T>
 RTSeis::Precision SlidingWindowRealDFT<T>::getPrecision() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mPrecision;
 }
 */
@@ -686,18 +686,18 @@ SlidingWindowRealDFT<T>::getTransform(const int iWindow) const
 const std::complex<float> *
 SlidingWindowRealDFT::getTransform32f(const int iWindow) const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (!pImpl->mHaveTransform)
     {
-        RTSEIS_THROW_RTE("%s", "Transform not yet applied");
+        throw std::runtime_error(Transform not yet applied");
     }
     if (pImpl->mPrecision != RTSeis::Precision::FLOAT)
     {
-        RTSEIS_THROW_RTE("%s", "Precision is DOUBLE - call getTransform64f");
+        throw std::runtime_error("Precision is DOUBLE - call getTransform64f");
     }
     if (iWindow < 0 || iWindow >= pImpl->mNumberOfColumns)
     {
-        RTSEIS_THROW_IA("iWindow = %d must be in range [0,%d]",
+        throw std::invalid_argument("iWindow = %d must be in range [0,%d]",
                         iWindow, pImpl->mNumberOfColumns);
     }
     int indx = pImpl->mFTOffset*iWindow;
@@ -819,6 +819,6 @@ void SlidingWindowRealDFT<T>::getTimeWindows(const double samplingRate,
 ///--------------------------------------------------------------------------///
 ///                            Template instantiation                        ///
 ///--------------------------------------------------------------------------///
-template class RTSeis::Utilities::Transforms::SlidingWindowRealDFT<double>;
-template class RTSeis::Utilities::Transforms::SlidingWindowRealDFT<float>;
+template class RTSeis::Transforms::SlidingWindowRealDFT<double>;
+template class RTSeis::Transforms::SlidingWindowRealDFT<float>;
 

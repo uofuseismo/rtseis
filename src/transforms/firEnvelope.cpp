@@ -1,15 +1,16 @@
 #include <cstdio>
 #include <cstdlib>
 #include <array>
+#include <string>
 #include <ipps.h>
-#include "rtseis/utilities/transforms/firEnvelope.hpp"
+#include "rtseis/transforms/firEnvelope.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "private/throw.hpp"
 
 using namespace RTSeis::Utilities;
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 namespace
 {
@@ -158,7 +159,8 @@ void FIREnvelope<E, T>::initialize(const int ntaps)
     clear();
     if (ntaps < 1)
     {
-        RTSEIS_THROW_IA("ntaps = %d must be positive", ntaps);
+        throw std::invalid_argument("ntaps = " + std::to_string(ntaps)
+                                  + " must be positive");
     }
     pImpl->mType3 = false;
     if (ntaps%2 == 1){pImpl->mType3 = true;}
@@ -178,8 +180,9 @@ void FIREnvelope<E, T>::initialize(const int ntaps)
     catch (const std::exception &e) 
     {
         clear();
-        RTSEIS_THROW_RTE("%s; Failed to initialize Hilbert transformer",
-                         e.what());
+        auto errmsg = "Failed to initialize Hilbert transformer: "
+                    + std::string(e.what());
+        throw std::runtime_error(errmsg);
     }
     pImpl->mInitialized = true;
 }
@@ -188,10 +191,7 @@ void FIREnvelope<E, T>::initialize(const int ntaps)
 template<RTSeis::ProcessingMode E, class T>
 int FIREnvelope<E, T>::getInitialConditionLength() const
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Envelope class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mImagFIRFilter.getInitialConditionLength();
 }
 
@@ -199,14 +199,12 @@ int FIREnvelope<E, T>::getInitialConditionLength() const
 template<RTSeis::ProcessingMode E, class T>
 void FIREnvelope<E, T>::setInitialConditions(const int nz, const double zi[])
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Envelope class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int nzRef = getInitialConditionLength();
     if (nz != nzRef)
     {
-        RTSEIS_THROW_IA("nz = %d must equal %d", nz, nzRef);
+       throw std::invalid_argument("nz = " + std::to_string(nz)
+                                 + " must equal " + std::to_string(nzRef));
     }
     pImpl->mRealFIRFilter.setInitialConditions(nz, zi);
     pImpl->mImagFIRFilter.setInitialConditions(nz, zi);
@@ -217,10 +215,7 @@ void FIREnvelope<E, T>::setInitialConditions(const int nz, const double zi[])
 template<RTSeis::ProcessingMode E, class T>
 void FIREnvelope<E, T>::resetInitialConditions()
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Envelope class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     pImpl->mRealFIRFilter.resetInitialConditions();
     pImpl->mImagFIRFilter.resetInitialConditions();
 }
@@ -235,7 +230,7 @@ void FIREnvelope<E, T>::transform(const int n, const T x[], T *yIn[])
     auto y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
         throw std::invalid_argument("y is NULL");
     }
     // Post-processing removes the phase shift
@@ -301,15 +296,12 @@ void FIREnvelope<float>::transform(const int n, const float x[], float *yIn[])
 {
     pImpl->mMean = 0;
     if (n < 1){return;} // Nothing to do
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Failed to initialize");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Post-processing removes the phase shift
     if (pImpl->mMode == RTSeis::ProcessingMode::POST_PROCESSING)
@@ -369,8 +361,10 @@ void FIREnvelope<float>::transform(const int n, const float x[], float *yIn[])
 }
 */
 
-/// Template instantiation
-template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, double>;
-template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::REAL_TIME, double>;
-template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, float>;
-template class RTSeis::Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::REAL_TIME, float>;
+///--------------------------------------------------------------------------///
+///                          Template Instantiation                          ///
+///--------------------------------------------------------------------------///
+template class RTSeis::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::Transforms::FIREnvelope<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::Transforms::FIREnvelope<RTSeis::ProcessingMode::REAL_TIME, float>;

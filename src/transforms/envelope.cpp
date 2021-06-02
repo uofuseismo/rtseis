@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include <complex>
 #include <ipps.h>
-#include "rtseis/utilities/transforms/envelope.hpp"
-#include "rtseis/utilities/transforms/hilbert.hpp"
+#include "rtseis/transforms/envelope.hpp"
+#include "rtseis/transforms/hilbert.hpp"
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 template<>
 class Envelope<double>::EnvelopeImpl
@@ -359,17 +359,17 @@ void Envelope<float>::transform(const int n, const float x[], float *yIn[])
     pImpl->mMean = 0;
     if (!isInitialized())
     {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
+        throw std::runtime_error("Class not initialized");
     }
     if (n != pImpl->mEnvelopeLength)
     {
-        RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mEnvelopeLength);
+        throw std::invalid_argument("n = %d must equal %d", n, pImpl->mEnvelopeLength);
     }
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Special case
     if (n == 1)
@@ -393,6 +393,8 @@ void Envelope<float>::transform(const int n, const float x[], float *yIn[])
 }
 */
 
-/// Template instantiation
-template class RTSeis::Utilities::Transforms::Envelope<double>;
-template class RTSeis::Utilities::Transforms::Envelope<float>;
+///--------------------------------------------------------------------------///
+///                            Template instantiation                        ///
+///--------------------------------------------------------------------------///
+template class RTSeis::Transforms::Envelope<double>;
+template class RTSeis::Transforms::Envelope<float>;

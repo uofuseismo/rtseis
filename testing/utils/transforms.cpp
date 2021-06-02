@@ -13,26 +13,26 @@
 #include <vector>
 #include <ipps.h>
 #include <fftw/fftw3.h>
-#include "rtseis/utilities/transforms/enums.hpp"
-#include "rtseis/utilities/transforms/dftRealToComplex.hpp"
-#include "rtseis/utilities/transforms/dft.hpp"
-#include "rtseis/utilities/transforms/hilbert.hpp"
-#include "rtseis/utilities/transforms/envelope.hpp"
-#include "rtseis/utilities/transforms/firEnvelope.hpp"
-#include "rtseis/utilities/transforms/spectrogram.hpp"
-#include "rtseis/utilities/transforms/welch.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
-#include "rtseis/utilities/transforms/utilities.hpp"
-#include "rtseis/utilities/transforms/wavelets/morlet.hpp"
-#include "rtseis/utilities/transforms/continuousWavelet.hpp"
+#include "rtseis/transforms/enums.hpp"
+#include "rtseis/transforms/dftRealToComplex.hpp"
+#include "rtseis/transforms/dft.hpp"
+#include "rtseis/transforms/hilbert.hpp"
+#include "rtseis/transforms/envelope.hpp"
+#include "rtseis/transforms/firEnvelope.hpp"
+#include "rtseis/transforms/spectrogram.hpp"
+#include "rtseis/transforms/welch.hpp"
+#include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"
+#include "rtseis/transforms/slidingWindowRealDFT.hpp"
+#include "rtseis/transforms/utilities.hpp"
+#include "rtseis/transforms/wavelets/morlet.hpp"
+#include "rtseis/transforms/continuousWavelet.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 void readEnvelopeFile(const std::string &fileName,
                       std::vector<double> *x,

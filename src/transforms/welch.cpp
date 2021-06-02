@@ -2,11 +2,11 @@
 #include <cstdlib>
 #include <complex>
 #include <ipps.h>
-#include "rtseis/utilities/transforms/welch.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
+#include "rtseis/transforms/welch.hpp"
+#include "rtseis/transforms/slidingWindowRealDFT.hpp"
+#include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 namespace
 {
@@ -340,5 +340,5 @@ void Welch<T>::getFrequencies(const int nFrequencies, T *freqsIn[]) const
 ///--------------------------------------------------------------------------///
 ///                            Template Instantiation                        ///
 ///--------------------------------------------------------------------------///
-template class RTSeis::Utilities::Transforms::Welch<double>;
-template class RTSeis::Utilities::Transforms::Welch<float>;
+template class RTSeis::Transforms::Welch<double>;
+template class RTSeis::Transforms::Welch<float>;

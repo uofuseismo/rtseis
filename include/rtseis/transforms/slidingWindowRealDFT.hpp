@@ -1,10 +1,10 @@
-#ifndef RTSEIS_UTILITIES_TRANSFORMS_SLIDINGWINDOWREALDFT_HPP
-#define RTSEIS_UTILITIES_TRANSFORMS_SLIDINWINDOWGREALDFT_HPP 1
+#ifndef RTSEIS_TRANSFORMS_SLIDINGWINDOWREALDFT_HPP
+#define RTSEIS_TRANSFORMS_SLIDINWINDOWGREALDFT_HPP 1
 #include <memory>
 #include <vector>
 #include <complex>
 #include "rtseis/enums.hpp"
-namespace RTSeis::Utilities::Transforms
+namespace RTSeis::Transforms
 {
 // Forward declaration
 class SlidingWindowRealDFTParameters;

@@ -1,10 +1,10 @@
-#ifndef RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP
-#define RTSEIS_UTILITIES_TRANSFORMS_WELCH_HPP 1
+#ifndef RTSEIS_TRANSFORMS_WELCH_HPP
+#define RTSEIS_TRANSFORMS_WELCH_HPP 1
 #include <memory>
 #include <vector>
-#include "rtseis/utilities/transforms/enums.hpp"
+#include "rtseis/transforms/enums.hpp"
 
-namespace RTSeis::Utilities::Transforms
+namespace RTSeis::Transforms
 {
 class SlidingWindowRealDFTParameters;
 /// @class Welch "welch.hpp" "rtseis/utilities/transforms/welch.hpp"

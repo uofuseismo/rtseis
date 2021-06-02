@@ -4,10 +4,10 @@
 #include <cassert>
 #include <ipps.h>
 #include "rtseis/utilities/windowFunctions.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
-#include "rtseis/utilities/transforms/enums.hpp"
+#include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"
+#include "rtseis/transforms/enums.hpp"
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 class SlidingWindowRealDFTParameters::SlidingWindowRealDFTParametersImpl
 {
@@ -272,7 +272,7 @@ bool SlidingWindowRealDFTParameters::isValid() const noexcept
 }
 
 /// Check for equality
-bool RTSeis::Utilities::Transforms::operator==(
+bool RTSeis::Transforms::operator==(
     const SlidingWindowRealDFTParameters &lhs,
     const SlidingWindowRealDFTParameters &rhs)
 {
@@ -296,7 +296,7 @@ bool RTSeis::Utilities::Transforms::operator==(
     return true;
 }
 
-bool RTSeis::Utilities::Transforms::operator!=(
+bool RTSeis::Transforms::operator!=(
     const SlidingWindowRealDFTParameters &lhs,
     const SlidingWindowRealDFTParameters &rhs)
 {

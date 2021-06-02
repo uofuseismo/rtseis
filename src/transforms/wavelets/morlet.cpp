@@ -2,9 +2,9 @@
 #include <complex>
 #include <cmath>
 #include <cassert>
-#include "rtseis/utilities/transforms/wavelets/morlet.hpp"
+#include "rtseis/transforms/wavelets/morlet.hpp"
 
-using namespace RTSeis::Utilities::Transforms::Wavelets;
+using namespace RTSeis::Transforms::Wavelets;
 
 namespace
 {

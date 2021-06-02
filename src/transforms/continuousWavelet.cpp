@@ -6,15 +6,15 @@
 #include <mkl.h>
 #include <mkl_vsl.h>
 #include <fftw/fftw3.h>
-#include "rtseis/utilities/transforms/dftRealToComplex.hpp"
-#include "rtseis/utilities/transforms/continuousWavelet.hpp"
-#include "rtseis/utilities/transforms/wavelets/morlet.hpp"
+#include "rtseis/transforms/dftRealToComplex.hpp"
+#include "rtseis/transforms/continuousWavelet.hpp"
+#include "rtseis/transforms/wavelets/morlet.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "private/convolve.hpp"
 #include "private/pad.hpp"
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 namespace Convolve = RTSeis::Utilities::Math::Convolve;
 
@@ -440,5 +440,5 @@ void ContinuousWavelet<T>::getTransform(
 ///--------------------------------------------------------------------------///
 ///                          Template Instantiation                          ///
 ///--------------------------------------------------------------------------///
-template class RTSeis::Utilities::Transforms::ContinuousWavelet<double>; 
+template class RTSeis::Transforms::ContinuousWavelet<double>; 
 //template class RTSeis::Utilities::Transforms::ContinuousWavelet<float>;

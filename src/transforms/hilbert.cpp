@@ -1,3 +1,4 @@
+#include <string> 
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -8,15 +9,13 @@
 #include <pstl/algorithm>
 #include <pstl/execution>
 #endif
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
-#include "rtseis/utilities/transforms/enums.hpp"
-#include "rtseis/utilities/transforms/hilbert.hpp"
-#include "rtseis/utilities/transforms/dftRealToComplex.hpp"
-#include "rtseis/utilities/transforms/dft.hpp"
+#include "rtseis/transforms/enums.hpp"
+#include "rtseis/transforms/hilbert.hpp"
+#include "rtseis/transforms/dftRealToComplex.hpp"
+#include "rtseis/transforms/dft.hpp"
 
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 template<class T>
 class Hilbert<T>::HilbertImpl
@@ -144,13 +143,11 @@ Hilbert<T>::Hilbert(const Hilbert &hilbert)
     *this = hilbert;
 }
 
-/*
 template<class T>
 Hilbert<T>::Hilbert(Hilbert &&hilbert) noexcept
 {
     *this = std::move(hilbert);
 }
-*/
 
 template<class T>
 Hilbert<T>& Hilbert<T>::operator=(const Hilbert &hilbert)
@@ -161,7 +158,6 @@ Hilbert<T>& Hilbert<T>::operator=(const Hilbert &hilbert)
     return *this;
 }
 
-/*
 template<class T>
 Hilbert<T>& Hilbert<T>::operator=(Hilbert &&hilbert) noexcept
 {
@@ -169,7 +165,6 @@ Hilbert<T>& Hilbert<T>::operator=(Hilbert &&hilbert) noexcept
     pImpl = std::move(hilbert.pImpl);
     return *this;
 }
-*/
 
 template<class T>
 Hilbert<T>::~Hilbert() = default;
@@ -189,10 +184,7 @@ bool Hilbert<T>::isInitialized() noexcept
 template<class T>
 int Hilbert<T>::getTransformLength()
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mTransformLength;
 }
 
@@ -203,7 +195,8 @@ void Hilbert<double>::initialize(const int n)
     clear();
     if (n < 1)
     {
-        RTSEIS_THROW_IA("n = %d must be positive", n);
+        throw std::invalid_argument("n = " + std::to_string(n)
+                                  + " must be positive");
     }
     pImpl->initialize(n, precision);
 }
@@ -215,7 +208,8 @@ void Hilbert<float>::initialize(const int n)
     clear();
     if (n < 1)
     {
-        RTSEIS_THROW_IA("n = %d must be positive", n);
+        throw std::invalid_argument("n = " + std::to_string(n)
+                                  + " must be positive");
     }
     pImpl->initialize(n, precision);
 }
@@ -224,16 +218,19 @@ template<class T>
 void Hilbert<T>::transform(const int n, const T x[], 
                            std::complex<T> *hIn[])
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    if (n != pImpl->mTransformLength)
+    auto transformLength = getTransformLength(); // Throws on uninitialized
+    if (n != transformLength)
     {
-        RTSEIS_THROW_IA("n = %d must equal %d", n, pImpl->mTransformLength);
+        throw std::invalid_argument("n = " + std::to_string(n) + " must equal "
+                                  + std::to_string(transformLength));
     }
     std::complex<T> *h = *hIn;
-    if (h == nullptr){RTSEIS_THROW_IA("%s", "h is NULL");}
+    if (h == nullptr){throw std::invalid_argument("h is NULL");}
     pImpl->transform(x, h);
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::Transforms::Hilbert<double>;
-template class RTSeis::Utilities::Transforms::Hilbert<float>;
+///--------------------------------------------------------------------------///
+///                       Template instantiation                             ///
+///--------------------------------------------------------------------------///
+template class RTSeis::Transforms::Hilbert<double>;
+template class RTSeis::Transforms::Hilbert<float>;

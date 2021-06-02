@@ -1,11 +1,11 @@
-#ifndef RTSEIS_UTILITIES_TRANSFORMS_SLIDINGWINDOWREALDFTPARAMETERS_HPP
-#define RTSEIS_UTILITIES_TRANSFORMS_SLIDINGWINDOWREALDFTPARAMETERS_HPP 1
+#ifndef RTSEIS_TRANSFORMS_SLIDINGWINDOWREALDFTPARAMETERS_HPP
+#define RTSEIS_TRANSFORMS_SLIDINGWINDOWREALDFTPARAMETERS_HPP 1
 #include <memory>
 #include <vector>
 #include "rtseis/enums.hpp"
-#include "rtseis/utilities/transforms/enums.hpp"
+#include "rtseis/transforms/enums.hpp"
 
-namespace RTSeis::Utilities::Transforms
+namespace RTSeis::Transforms
 {
 /// @brief Defines the parameters for sliding window real DFT.
 /// @author Ben Baker, University of Utah

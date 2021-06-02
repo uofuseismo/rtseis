@@ -1,12 +1,12 @@
-#ifndef RTSEIS_UTILITIES_TRANSFORMS_DFTUTILITIES_HPP
-#define RTSEIS_UTILITIES_TRANSFORMS_DFTUTILITIES_HPP 1
+#ifndef RTSEIS_TRANSFORMS_DFTUTILITIES_HPP
+#define RTSEIS_TRANSFORMS_DFTUTILITIES_HPP 1
 #include <cmath>
 #include <complex>
 #include <vector>
 /// @defgroup rtseis_utils_transforms_utils Utility Functions
 /// @brief Utility routines accompanying the DFT.
 /// @ingroup rtseis_utils_transforms
-namespace RTSeis::Utilities::Transforms::DFTUtilities
+namespace RTSeis::Transforms::DFTUtilities
 {
 /// @name Magnitude 
 /// @{

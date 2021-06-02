@@ -1,9 +1,9 @@
-#include "rtseis/utilities/transforms/spectrogram.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFT.hpp"
-#include "rtseis/utilities/transforms/slidingWindowRealDFTParameters.hpp"
-#include "rtseis/utilities/transforms/utilities.hpp"
+#include "rtseis/transforms/spectrogram.hpp"
+#include "rtseis/transforms/slidingWindowRealDFT.hpp"
+#include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"
+#include "rtseis/transforms/utilities.hpp"
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 template<class T>
 class Spectrogram<T>::SpectrogramImpl
@@ -288,6 +288,6 @@ const T *Spectrogram<T>::getPhasePointer() const
 ///--------------------------------------------------------------------------///
 ///                            Template Instantiation                        ///
 ///--------------------------------------------------------------------------///
-template class RTSeis::Utilities::Transforms::Spectrogram<double>;
-template class RTSeis::Utilities::Transforms::Spectrogram<float>;
+template class RTSeis::Transforms::Spectrogram<double>;
+template class RTSeis::Transforms::Spectrogram<float>;
 

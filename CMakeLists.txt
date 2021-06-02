@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(RTSeis VERSION 0.2.1 LANGUAGES CXX)
+project(RTSeis VERSION 0.3.1 LANGUAGES CXX)
 enable_testing()
 
 ##########################################################################################
@@ -123,18 +123,18 @@ SET(UTILS_SRCS
     src/utilities/polarization/eigenPolarizer.cpp
     src/utilities/polarization/svdPolarizer.cpp
     src/utilities/rotate/utilities.cpp
-    src/utilities/transforms/continuousWavelet.cpp
-    src/utilities/transforms/dft.cpp
-    src/utilities/transforms/dftRealToComplex.cpp
-    src/utilities/transforms/dftUtils.cpp
-    src/utilities/transforms/hilbert.cpp
-    src/utilities/transforms/envelope.cpp
-    src/utilities/transforms/firEnvelope.cpp
-    src/utilities/transforms/slidingWindowRealDFT.cpp
-    src/utilities/transforms/slidingWindowRealDFTParameters.cpp
-    src/utilities/transforms/spectrogram.cpp
-    src/utilities/transforms/welch.cpp
-    src/utilities/transforms/wavelets/morlet.cpp
+    src/transforms/continuousWavelet.cpp
+    src/transforms/dft.cpp
+    src/transforms/dftRealToComplex.cpp
+    src/transforms/dftUtils.cpp
+    src/transforms/hilbert.cpp
+    src/transforms/envelope.cpp
+    src/transforms/firEnvelope.cpp
+    src/transforms/slidingWindowRealDFT.cpp
+    src/transforms/slidingWindowRealDFTParameters.cpp
+    src/transforms/spectrogram.cpp
+    src/transforms/welch.cpp
+    src/transforms/wavelets/morlet.cpp
     src/utilities/trigger/waterLevel.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c

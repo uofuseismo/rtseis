@@ -40,8 +40,8 @@
 #include "rtseis/utilities/normalization/minMax.hpp"
 #include "rtseis/utilities/normalization/signBit.hpp"
 #include "rtseis/utilities/normalization/zscore.hpp"
-#include "rtseis/utilities/transforms/firEnvelope.hpp"
-#include "rtseis/utilities/transforms/envelope.hpp"
+#include "rtseis/transforms/firEnvelope.hpp"
+#include "rtseis/transforms/envelope.hpp"
 
 using namespace RTSeis;
 using namespace PostProcessing::SingleChannel;
@@ -815,7 +815,7 @@ void Waveform<T>::firEnvelope(const int nfir)
     pImpl->resizeOutputData(nx);
     T *y = pImpl->getOutputDataPointer(); // Handle on output
     const T *x = pImpl->getInputDataPointer(); // Handle on input
-    Utilities::Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, T>envelope;
+    Transforms::FIREnvelope<RTSeis::ProcessingMode::POST, T>envelope;
     envelope.initialize(nfir);
     envelope.transform(nx, x, &y);
     pImpl->lfirstFilter_ = false;
@@ -828,7 +828,7 @@ void Waveform<T>::envelope()
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int nx = pImpl->getLengthOfInputSignal();
     if (nx < 1){RTSEIS_THROW_IA("%s", "No data is set on the module");}
-    Utilities::Transforms::Envelope<T> envelope;
+    Transforms::Envelope<T> envelope;
     envelope.initialize(nx);
     pImpl->resizeOutputData(nx);
     T *y = pImpl->getOutputDataPointer(); // Handle on output

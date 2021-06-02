@@ -6,11 +6,11 @@
 #include <algorithm>
 #include <string>
 #include <ipps.h>
-#include "rtseis/utilities/transforms/dft.hpp"
-#include "rtseis/utilities/transforms/enums.hpp"
+#include "rtseis/transforms/dft.hpp"
+#include "rtseis/transforms/enums.hpp"
 #include "rtseis/enums.hpp"
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 template<class T>
 class DFT<T>::DFTImpl
@@ -660,31 +660,27 @@ DFT<T>::DFT(const DFT &dft)
     *this = dft;
 }
 
-/*
-DFT::DFT(DFT &&dft) noexcept
+template<class T>
+DFT<T>::DFT(DFT &&dft) noexcept
 {
-    *this = std::Move(dft);
+    *this = std::move(dft);
 }
-*/
 
 template<class T>
 DFT<T>& DFT<T>::operator=(const DFT &dft)
 {
     if (&dft == this){return *this;}
-    if (pImpl){pImpl->clear();}
-    clear();
     pImpl = std::make_unique<DFTImpl> (*dft.pImpl);
     return *this;
 }
 
-/*
-DFT& DFT::operator=(DFT &&dft) noexcept
+template<class T>
+DFT<T>& DFT<T>::operator=(DFT &&dft) noexcept
 {
     if (&dft == this){return *this;}
-    pImpl = std::move(hilbert.pImpl);
+    pImpl = std::move(dft.pImpl);
     return *this;
 }
-*/
 
 template<class T>
 void DFT<T>::clear() noexcept
@@ -833,6 +829,8 @@ bool DFT<T>::isInitialized() const noexcept
     return pImpl->isInitialized();
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::Transforms::DFT<double>;
-template class RTSeis::Utilities::Transforms::DFT<float>;
+///--------------------------------------------------------------------------///
+///                         Template instantiation                           ///
+///--------------------------------------------------------------------------///
+template class RTSeis::Transforms::DFT<double>;
+template class RTSeis::Transforms::DFT<float>;

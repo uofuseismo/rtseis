@@ -6,14 +6,14 @@
 #include <vector>
 #include <ipps.h>
 //#include "rtseis/utilities/transforms/wavelets/derivativeOfGaussian.hpp"
-#include "rtseis/utilities/transforms/wavelets/morlet.hpp"
+#include "rtseis/transforms/wavelets/morlet.hpp"
 //#include "rtseis/utilities/transforms/wavelets/ricker.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 /*
 TEST(UtilitiesTransformsWavelets, dog)

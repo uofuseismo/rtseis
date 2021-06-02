@@ -1,47 +1,47 @@
-#ifndef RTSEIS_UTILITIES_TRANSFORMS_HILBERT_HPP
-#define RTSEIS_UTILITIES_TRANSFORMS_HILBERT_HPP 1
+#ifndef RTSEIS_TRANSFORMS_HILBERT_HPP
+#define RTSEIS_TRANSFORMS_HILBERT_HPP 1
 #include <memory>
 #include <complex>
-#include "rtseis/utilities/transforms/enums.hpp"
+#include "rtseis/transforms/enums.hpp"
 
-namespace RTSeis::Utilities::Transforms
+namespace RTSeis::Transforms
 {
-/*!
- * @class Hilbert hilbert.hpp "include/rtseis/utilities/transforms/hilbert.hpp"
- * @brief Computes the analytic signal.
- * @note The Hilbert transform is obtained from the analytic signal, 
- *       \f$ x_a = x_r + i x_h \f$ where \f$ x_r \f$ is the input signal and
- *       \f$ x_h \f$ is the Hilbert transform of the signal.
- * @ingroup rtseis_utils_transforms
- */
+/// @class Hilbert hilbert.hpp "include/rtseis/utilities/transforms/hilbert.hpp"
+/// @brief Computes the analytic signal.
+/// @note The Hilbert transform is obtained from the analytic signal, 
+///       \f$ x_a = x_r + i x_h \f$ where \f$ x_r \f$ is the input signal and
+///       \f$ x_h \f$ is the Hilbert transform of the signal.
+/// @ingroup rtseis_utils_transforms
 template<class T = double>
 class Hilbert
 {
 public:
-    /*! @name Constructors
-     * @{ 
-     */
-    /*!
-     * @brief Default constructor.
-     */
+    /// @name Constructors
+    /// @{ 
+    /// @brief Default constructor.
     Hilbert();
-    /*!
-     * @brief Copy constructor.
-     * @param[in] hilbert  Class from which to initialize from.
-     */
+    /// @brief Copy constructor.
+    /// @param[in] hilbert  The class from which to initialize this class.
     Hilbert(const Hilbert &hilbert);
-    /*! @} */
+    /// @brief Move constructor.
+    /// @param[in,out] hilbert  The class from which to initialize this class.
+    ///                         On exit, hilbert's behavior is undefined.
+    Hilbert(Hilbert &&hilbert) noexcept;
+    /// @}
 
-    /*! @name Operators
-     * @{
-     */
-    /*!
-     * @brief Copy operator.
-     * @param[in] hilbert  The hilbert class to copy.
-     * @result A deep copy of the input class.
-     */
+    /// @name Operators
+    /// @{
+    /// @brief Copy assignment operator.
+    /// @param[in] hilbert  The hilbert class to copy.
+    /// @result A deep copy of the input class.
     Hilbert& operator=(const Hilbert &hilbert);
-    /*! @} */
+    /// @brief Move assignment operator.
+    /// @param[in,out] hilbert  The hilbert class whose memory will be moved
+    ///                         to this.  On exit, hilbert's behavior is
+    ///                         undefined.
+    /// @result The memory from hilbert moved to this.
+    Hilbert& operator=(Hilbert &&hilbert) noexcept;
+    /// @}
 
     /*! @name Destructors
      * @{

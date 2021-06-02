@@ -1,15 +1,15 @@
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 #include <cmath>
 #include <algorithm>
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
-#include "rtseis/utilities/transforms/enums.hpp"
-#include "rtseis/utilities/transforms/dftRealToComplex.hpp"
+#include "rtseis/transforms/enums.hpp"
+#include "rtseis/transforms/dftRealToComplex.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
-using namespace RTSeis::Utilities::Transforms;
+using namespace RTSeis::Transforms;
 
 template<class T>
 class DFTRealToComplex<T>::DFTImpl
@@ -148,7 +148,7 @@ public:
                 }
                 if (n2 < length)
                 {
-                    RTSEIS_ERRMSG("%s", "Algorithmic failure");
+                    std::cerr << "Algorithmic failure" << std::endl;
                     clear();
                     return -1;
                 }
@@ -174,7 +174,7 @@ public:
                                               &bufferSize_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to get buffer sizes");
+                    std::cerr << "Failed to get buffer sizes" << std::endl;
                     clear();
                     return -1;
                 }
@@ -190,7 +190,7 @@ public:
                 if (pSpecBuffer){ippsFree(pSpecBuffer);}
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to initialize FFT");
+                    std::cerr << "Failed to initialize FFT" << std::endl;
                     ippsFree(pSpec);
                     clear();
                     return -1; 
@@ -208,7 +208,7 @@ public:
                                               &bufferSize_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to get buffer sizes");
+                    std::cerr << "Failed to get DFT buffer sizes" << std::endl;
                     clear();
                     return -1;
                 }
@@ -223,7 +223,7 @@ public:
                 if (pSpecBuffer){ippsFree(pSpecBuffer);}
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to initialize DFT");
+                    std::cerr << "Failed to initialize DFT" << std::endl;
                     clear();
                     return -1;
                 }
@@ -245,7 +245,7 @@ public:
                                               &bufferSize_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to get buffer sizes");
+                    std::cerr << "Failed to get float buffer sizes" << std::endl;
                     clear();
                     return -1; 
                 }
@@ -261,7 +261,7 @@ public:
                 if (pSpecBuffer){ippsFree(pSpecBuffer);}
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to initialize FFT");
+                    std::cerr << "Failed to initialize float FFT" << std::endl;
                     ippsFree(pSpec);
                     clear();
                     return -1; 
@@ -279,7 +279,7 @@ public:
                                               &bufferSize_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to get buffer sizes");
+                    std::cerr << "Failed to get float buffer sizes" << std::endl;
                     clear();
                     return -1; 
                 }
@@ -294,7 +294,7 @@ public:
                 if (pSpecBuffer){ippsFree(pSpecBuffer);}
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to initialize DFT");
+                    std::cerr << "Failed to initialize DFT" << std::endl;
                     clear();
                     return -1;
                 }
@@ -351,7 +351,7 @@ public:
                                                pFFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    std::cerr << "Error applying FFT" << std::endl;
                     return -1;
                 }
             }
@@ -362,7 +362,7 @@ public:
                                                pDFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    std::cerr << "Error applying DFT" << std::endl;
                     return -1;
                 }
             }
@@ -380,7 +380,7 @@ public:
                                                pFFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    std::cerr << "Error applying FFT" << std::endl;
                     return -1;
                 }
             }
@@ -391,7 +391,7 @@ public:
                                                pDFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    std::cerr << "Error applying DFT" << std::endl;
                     return -1;
                 }
             }
@@ -422,7 +422,7 @@ public:
                                                pFFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    std::cerr << "Error applying float FFT" << std::endl;
                     return -1;
                 }
             }
@@ -433,7 +433,7 @@ public:
                                                pDFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    std::cerr << "Error applying float DFT" << std::endl;
                     return -1;
                 }
             }
@@ -451,7 +451,7 @@ public:
                                                pFFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying FFT");
+                    std::cerr << "Error applying float FFT" << std::endl;
                     return -1;
                 }
             }
@@ -462,7 +462,7 @@ public:
                                                pDFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying DFT");
+                    std::cerr << "Error applying float DFT" << std::endl;
                     return -1;
                 }
             }
@@ -493,7 +493,7 @@ public:
                 status = ippsFFTInv_CCSToR_64f(pSrc, y, pFFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    std::cerr << "Error applying inverse FFT" << std::endl;
                     return -1; 
                 }
             }
@@ -503,7 +503,7 @@ public:
                 status = ippsDFTInv_CCSToR_64f(pSrc, y, pDFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    std::cerr << "Error applying inverse DFT" << std::endl;
                     return -1;
                 }
             }
@@ -521,7 +521,7 @@ public:
                                                pFFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    std::cerr << "Error applying inverse FFT" << std::endl;
                     return -1;
                 }
             }
@@ -532,7 +532,7 @@ public:
                                                pDFTSpec64_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    std::cerr << "Error applying inverse DFT" << std::endl;
                     return -1;
                 }
             }
@@ -563,7 +563,8 @@ public:
                 status = ippsFFTInv_CCSToR_32f(pSrc, y, pFFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    std::cerr << "Error appyling float inverse FFT"
+                              << std::endl;
                     return -1; 
                 }
             }
@@ -573,7 +574,8 @@ public:
                 status = ippsDFTInv_CCSToR_32f(pSrc, y, pDFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    std::cerr << "Error applying float inverse DFT"
+                              << std::endl;
                     return -1;
                 }
             }
@@ -591,7 +593,8 @@ public:
                                                pFFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse FFT");
+                    std::cerr << "Error applying float inverse FFT"
+                              << std::endl;
                     return -1;
                 }
             }
@@ -602,7 +605,8 @@ public:
                                                pDFTSpec32_, pBuf_);
                 if (status != ippStsNoErr)
                 {
-                    RTSEIS_ERRMSG("%s", "Error applying inverse DFT");
+                    std::cerr << "Error applying float inverse DFT"
+                              << std::endl;
                     return -1;
                 }
             }
@@ -708,7 +712,8 @@ void DFTRealToComplex<double>::initialize(
     // Check the inputs
     if (length < 2)
     {
-        RTSEIS_THROW_IA("Length=%d must be at least 2", length);
+        throw std::invalid_argument("Length = " + std::to_string(length)
+                                  + " must be at least 2");
     }
     bool ldoFFT = false;
     if (implementation == FourierTransformImplementation::FFT)
@@ -718,7 +723,7 @@ void DFTRealToComplex<double>::initialize(
     int ierr = pImpl->initialize(length, ldoFFT, precision);
     if (ierr != 0)
     {
-        RTSEIS_THROW_RTE("%s", "Failed ot initialize DFT");
+        throw std::runtime_error("Failed to initialize DFT");
     }
 }
 
@@ -732,7 +737,8 @@ void DFTRealToComplex<float>::initialize(
     // Check the inputs
     if (length < 2)
     {
-        RTSEIS_THROW_IA("Length=%d must be at least 2", length);
+        throw std::invalid_argument("Length = " + std::to_string(length)
+                                  + " must be at least 2");
     }
     bool ldoFFT = false;
     if (implementation == FourierTransformImplementation::FFT)
@@ -742,7 +748,7 @@ void DFTRealToComplex<float>::initialize(
     int ierr = pImpl->initialize(length, ldoFFT, precision);
     if (ierr != 0)
     {
-        RTSEIS_THROW_RTE("%s", "Failed ot initialize DFT");
+        throw std::runtime_error("Failed to in itialize DFT");
     }
 }
 
@@ -751,15 +757,12 @@ void DFTRealToComplex<T>::inverseTransform(const int lenft,
                                            const std::complex<T> x[],
                                            const int maxy, T *yIn[])
 {
-    if (!pImpl->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     int ftLen = getTransformLength();
     int length = getInverseTransformLength();
@@ -767,16 +770,18 @@ void DFTRealToComplex<T>::inverseTransform(const int lenft,
     {
         if (maxy < length)
         {
-            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, length);
+            throw std::invalid_argument("maxy = " + std::to_string(maxy)
+                                      + " must be at least "
+                                      + std::to_string(length));
         }
-        RTSEIS_THROW_IA("lenft = %d cannot exceed %d", lenft, ftLen);
+        throw std::invalid_argument("lenft = " + std::to_string(lenft)
+                                  + " cannot exceed " + std::to_string(ftLen));
     }
     int ierr = pImpl->inverseTransform(lenft, x, y);
     if (ierr != 0)
     {
-        RTSEIS_THROW_RTE("%s", "Failed to compute inverse transform");
+        throw std::runtime_error("Failed to compute inverse transform");
     }
-    return;
 } 
 
 /*
@@ -786,13 +791,13 @@ void DFTRealToComplex::inverseTransform(const int lenft,
 {
     if (!pImpl->isInitialized())
     {
-        RTSEIS_THROW_RTE("%s", "Class is not initialized");
+        throw std::runtime_error("Class is not initialized");
     }
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("%s", "y is NULL");
     }
     int ftLen = getTransformLength();
     int length = getInverseTransformLength();
@@ -800,16 +805,15 @@ void DFTRealToComplex::inverseTransform(const int lenft,
     {
         if (maxy < length)
         {
-            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, length);
+            throw std::invalid_argument("maxy = %d must be at least %d", maxy, length);
         }
-        RTSEIS_THROW_IA("lenft = %d cannot exceed %d", lenft, ftLen);
+        throw std::invalid_argument("lenft = %d cannot exceed %d", lenft, ftLen);
     }
     int ierr = pImpl->inverseTransform(lenft, x, y); 
     if (ierr != 0)
     {
-        RTSEIS_THROW_RTE("%s", "Failed to compute inverse transform");
+        throw std::runtime_error("Failed to compute inverse transform");
     }
-    return;
 }
 */
 
@@ -817,15 +821,12 @@ template<class T>
 void DFTRealToComplex<T>::forwardTransform(const int n, const T x[],
                              const int maxy, std::complex<T> *yIn[])
 {
-    if (!pImpl->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     std::complex<T> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
-        RTSEIS_THROW_RTE("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     int lenft = getTransformLength();
     int length = getInverseTransformLength();
@@ -833,16 +834,18 @@ void DFTRealToComplex<T>::forwardTransform(const int n, const T x[],
     {
         if (maxy < lenft)
         {
-            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, lenft);
+            throw std::invalid_argument("maxy = " + std::to_string(maxy)
+                                      + " must be at least "
+                                      + std::to_string(lenft));
         }
-        RTSEIS_THROW_IA("n = %d cannot exceed %d", n, length);
+        throw std::invalid_argument("n = " + std::to_string(n)
+                                  + " cannot exceed " + std::to_string(length));
     }
     int ierr = pImpl->forwardTransform(n, x, y);
     if (ierr != 0)
     {
-        RTSEIS_THROW_RTE("%s", "Failed to apply forward transform");
+        throw std::runtime_error("Failed to compute forward transform");
     }
-    return;
 }
 
 /*
@@ -851,13 +854,13 @@ void DFTRealToComplex::forwardTransform(const int n, const float x[],
 {
     if (!pImpl->isInitialized())
     {
-        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
+        throw std::runtime_error("Class is not intiialized");
     }
     std::complex<float> *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
-        RTSEIS_THROW_RTE("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     int lenft = getTransformLength();
     int length = getInverseTransformLength();
@@ -865,46 +868,36 @@ void DFTRealToComplex::forwardTransform(const int n, const float x[],
     {
         if (maxy < lenft)
         {
-            RTSEIS_THROW_IA("maxy = %d must be at least %d", maxy, lenft);
+            throw std::invalid_argument("maxy = %d must be at least %d", maxy, lenft);
         }
-        RTSEIS_THROW_IA("n = %d cannot exceed %d", n, length);
+        throw std::invalid_argument("n = %d cannot exceed %d", n, length);
     }
     int ierr = pImpl->forwardTransform(n, x, y);
     if (ierr != 0)
     {
-        RTSEIS_THROW_RTE("%s", "Failed to apply forward transform");
+        throw std::invalid_argument("%s", "Failed to apply forward transform");
     }
-    return;
 }
 */
 
 template<class T>
 int DFTRealToComplex<T>::getTransformLength() const
 {
-    if (!pImpl->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->getTransformLength();
 }
 
 template<class T>
 int DFTRealToComplex<T>::getInverseTransformLength() const
 {
-    if (!pImpl->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->getInverseTransformLength();
 }
 
 template<class T> 
 int DFTRealToComplex<T>::getMaximumInputSignalLength() const
 {
-    if (!pImpl->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class is not intiialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->getMaximumInputSignalLength();
 }
 
@@ -914,6 +907,8 @@ bool DFTRealToComplex<T>::isInitialized() const noexcept
     return pImpl->isInitialized();
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::Transforms::DFTRealToComplex<double>;
-template class RTSeis::Utilities::Transforms::DFTRealToComplex<float>;
+///--------------------------------------------------------------------------///
+///                         Template instantiation                           ///
+///--------------------------------------------------------------------------///
+template class RTSeis::Transforms::DFTRealToComplex<double>;
+template class RTSeis::Transforms::DFTRealToComplex<float>;
