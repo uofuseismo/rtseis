@@ -1,10 +1,9 @@
-#define RTSEIS_LOGGING 1
+#include <iostream>
 #include <cmath>
 #include <algorithm>
-#include "rtseis/utilities/filterRepresentations/zpk.hpp"
-#include "rtseis/log.h"
+#include "rtseis/filterRepresentations/zpk.hpp"
 
-using namespace RTSeis::Utilities::FilterRepresentations;
+using namespace RTSeis::FilterRepresentations;
 
 #define DEFAULT_TOL 1.e-12
 
@@ -22,11 +21,13 @@ public:
 
 };
 
+/// C'tor
 ZPK::ZPK() :
     pImpl(std::make_unique<ZPKImpl>())
 {
 }
 
+/// Constructor from zeros and poles
 ZPK::ZPK(const std::vector<std::complex<double>> &zeros,
          const std::vector<std::complex<double>> &poles,
          const double k) :
@@ -37,18 +38,22 @@ ZPK::ZPK(const std::vector<std::complex<double>> &zeros,
     setGain(k);
 }
 
+/// Copy c'tor
 ZPK::ZPK(const ZPK &zpk)
 {
     *this = zpk;
 }
 
+/// Move c'tor
 ZPK::ZPK(ZPK &&zpk) noexcept
 {
     *this = std::move(zpk);
 }
 
+/// Destructor
 ZPK::~ZPK() = default;
 
+/// Move assignment
 ZPK& ZPK::operator=(ZPK &&zpk) noexcept
 {
     if (&zpk == this){return *this;}
@@ -56,6 +61,7 @@ ZPK& ZPK::operator=(ZPK &&zpk) noexcept
     return *this;
 }
 
+/// Copy assignment
 ZPK& ZPK::operator=(const ZPK &zpk)
 {
     if (&zpk == this){return *this;}
@@ -63,6 +69,7 @@ ZPK& ZPK::operator=(const ZPK &zpk)
     return *this;
 }
 
+/// Equality operator
 bool ZPK::operator==(const ZPK &zpk) const
 {
     if (pImpl->p.size() != zpk.pImpl->p.size()){return false;}
@@ -85,6 +92,7 @@ bool ZPK::operator==(const ZPK &zpk) const
     return true;
 }
 
+/// Inequality operator
 bool ZPK::operator!=(const ZPK &zpk) const
 {
     return !(*this == zpk); 
@@ -169,7 +177,7 @@ void ZPK::clear() noexcept
 
 void ZPK::setGain(const double k)
 {
-    if (k == 0){RTSEIS_WARNMSG("%s", "Gain is zero");}
+    if (k == 0){std::cerr << "Gain is zero" << std::endl;}
     pImpl->k = k;
 }
 
@@ -192,7 +200,7 @@ void ZPK::setPoles(const size_t n, std::complex<double> poles[])
 {
     if (n > 0 && poles == nullptr)
     {
-        RTSEIS_ERRMSG("%s", "Poles is null");
+        std::cerr << "poles is NULL" << std::endl;;
         pImpl->p.resize(0);
         return;
     }
@@ -212,7 +220,7 @@ void ZPK::setZeros(const size_t n, std::complex<double> zeros[])
 {
     if (n > 0 && zeros == nullptr)
     {
-        RTSEIS_ERRMSG("%s", "Zeros is null");
+        std::cerr << "zeros is NULL" << std::endl;
         pImpl->z.resize(0);
         return;
     }
@@ -241,6 +249,6 @@ std::vector<std::complex<double>> ZPK::getZeros() const
 [[maybe_unused]]
 void ZPK::setEqualityTolerance(const double tol)
 {
-    if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
+    if (tol < 0){std::cerr << "Tolerance is negative" << std::endl;}
     pImpl->tol = tol;
 }

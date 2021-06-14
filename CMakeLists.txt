@@ -96,10 +96,10 @@ SET(UTILS_SRCS
     src/utilities/filterDesign/fir.cpp
     src/utilities/filterDesign/analogProtype.cpp
     src/utilities/filterDesign/windowFunctions.cpp
-    src/utilities/filterRepresentations/ba.cpp
-    src/utilities/filterRepresentations/fir.cpp
-    src/utilities/filterRepresentations/sos.cpp
-    src/utilities/filterRepresentations/zpk.cpp
+    src/filterRepresentations/ba.cpp
+    src/filterRepresentations/fir.cpp
+    src/filterRepresentations/sos.cpp
+    src/filterRepresentations/zpk.cpp
     src/utilities/filterImplementations/decimate.cpp
     src/utilities/filterImplementations/detrend.cpp
     src/utilities/filterImplementations/downsample.cpp

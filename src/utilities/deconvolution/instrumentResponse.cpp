@@ -5,18 +5,18 @@
 #include "private/throw.hpp"
 #include "rtseis/utilities/deconvolution/instrumentResponse.hpp"
 #include "rtseis/utilities/filterDesign/iir.hpp"
-#include "rtseis/utilities/filterRepresentations/zpk.hpp"
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/zpk.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 
 using namespace RTSeis::Utilities::Deconvolution;
 
 class InstrumentResponse::InstrumentResponseImpl
 {
 public:
-    //class RTSeis::Utilities::FilterRepresentations::ZPK mZPK;
-    class RTSeis::Utilities::FilterRepresentations::BA mBA;
-    //class RTSeis::Utilities::FilterRepresentations mSOS;
+    //class RTSeis::FilterRepresentations::ZPK mZPK;
+    class RTSeis::FilterRepresentations::BA mBA;
+    //class RTSeis::FilterRepresentations mSOS;
     double mSamplingRate = 0;
     bool mHaveResponse = false;
     bool mIsAnalog = true;
@@ -67,7 +67,7 @@ void InstrumentResponse::setSamplingRate(const double df)
 }
 
 void InstrumentResponse::setAnalogResponse(
-    const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept
+    const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
     pImpl->mIsAnalog = true;
     pImpl->mBA.clear();
@@ -76,7 +76,7 @@ void InstrumentResponse::setAnalogResponse(
 }
 
 void InstrumentResponse::setDigitalResponse(
-    const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept
+    const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
     pImpl->mIsAnalog = false;
     pImpl->mBA.clear();
@@ -86,7 +86,7 @@ void InstrumentResponse::setDigitalResponse(
 
 /*
 void InstrumentResponse::setResponse(
-    const RTSeis::Utilities::FilterRepresentations::ZPK &zpk,
+    const RTSeis::FilterRepresentations::ZPK &zpk,
     const bool lanalog)
 {
     pImpl->mIsAnalog = lanalog;

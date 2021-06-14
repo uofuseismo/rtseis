@@ -3,19 +3,13 @@
 #include <utility>
 #include "rtseis/utilities/filterDesign/enums.hpp"
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterRepresentations
+namespace RTSeis::FilterRepresentations
 {
 class FIR;
 }
-namespace FilterDesign
-{
-namespace FIR
-{
 
+namespace RTSeis::Utilities::FilterDesign::FIR
+{
 /*!
  * @brief Designs an FIR lowpass filter using the window method.
  * @param[in] order   Order of filter.  The number of taps is order + 1.
@@ -27,7 +21,7 @@ namespace FIR
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR1Lowpass(const int order, const double r,
             const FIRWindow window = FIRWindow::HAMMING);
 /*!
@@ -41,7 +35,7 @@ FIR1Lowpass(const int order, const double r,
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR1Highpass(const int order, const double r,
              const FIRWindow window = FIRWindow::HAMMING);
 /*!
@@ -57,7 +51,7 @@ FIR1Highpass(const int order, const double r,
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR1Bandpass(const int order, const std::pair<double,double> &r,
              const FIRWindow window = FIRWindow::HAMMING);
 /*! 
@@ -73,7 +67,7 @@ FIR1Bandpass(const int order, const std::pair<double,double> &r,
  * @throws std::invalid_argument if any arguments are incorrect.
  * @ingroup rtseis_utils_design_fir
  */
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR1Bandstop(const int order, const std::pair<double,double> &r,
              const FIRWindow window = FIRWindow::HAMMING);
 /*!
@@ -96,14 +90,7 @@ FIR1Bandstop(const int order, const std::pair<double,double> &r,
  * @throws std::invalid_argument If order is negative or if \f$ \beta \f$
  *         is too large.
  */
-std::pair<FilterRepresentations::FIR, FilterRepresentations::FIR>
+std::pair<RTSeis::FilterRepresentations::FIR, RTSeis::FilterRepresentations::FIR>
 HilbertTransformer(const int order, const double beta = 8);
-
-}; /* End FIR */
-
-}; /* End FilterDesign */
-}; /* End Utils */
-
-}; /* End RTseis */
-
+} /* End RTseis */
 #endif

@@ -13,9 +13,9 @@
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterDesign/iir.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterImplementations/sosFilter.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
@@ -158,7 +158,7 @@ int testFilter(const std::vector<double> &x)
     int order = 50;
     const double fc = 0.4;
     std::vector<double> y;
-    Utilities::FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     try
     {
         fir = Utilities::FilterDesign::FIR::FIR1Lowpass(order, fc,
@@ -191,9 +191,9 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     constexpr double tol = 1.e-10;
     double l1Norm;
     int npts = static_cast<int> (x.size());
-    Utilities::FilterRepresentations::SOS sos;
-    Utilities::FilterRepresentations::FIR fir;
-    Utilities::FilterRepresentations::BA ba;
+    RTSeis::FilterRepresentations::SOS sos;
+    RTSeis::FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::BA ba;
     const double fsamp = 200;      // Sampling rate
     const double dt = 1/fsamp;     // Sampling period
     const double fnyq = 1./(2*dt); // Nyquist frequency
@@ -398,7 +398,7 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     constexpr double tol = 1.e-10;
     double l1Norm;
     int npts = static_cast<int> (x.size());
-    Utilities::FilterRepresentations::BA ba;
+    RTSeis::FilterRepresentations::BA ba;
     const double fsamp = 200;      // Sampling rate
     const double dt = 1/fsamp;     // Sampling period
     const double fnyq = 1./(2*dt); // Nyquist frequency
@@ -599,7 +599,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     constexpr double tol = 1.e-10;
     double l1Norm;
     int npts = static_cast<int> (x.size());
-    Utilities::FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     const double fsamp = 200;      // Sampling rate
     const double dt = 1/fsamp;     // Sampling period
     const double fnyq = 1./(2*dt); // Nyquist frequency

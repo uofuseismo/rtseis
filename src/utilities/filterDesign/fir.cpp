@@ -10,7 +10,7 @@
 #include "private/throw.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterDesign/enums.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 
 using namespace RTSeis::Utilities;
@@ -19,11 +19,11 @@ using namespace RTSeis::Utilities::FilterDesign;
 static IppWinType classifyWindow(const FIRWindow window);
 static void sinc(const int n, const double x[], double sinc[]);
 
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR::FIR1Lowpass(const int order, const double r,
                  const FIRWindow window)
 {
-    FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     // Check inputs
     if (order < 4 || r <= 0.0 || r >= 1.0)
     {
@@ -61,11 +61,11 @@ FIR::FIR1Lowpass(const int order, const double r,
     return fir;
 }
 
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR::FIR1Highpass(const int order, const double r,
                   const FIRWindow window)
 {
-    FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     // Check inputs
     if (order < 4 || r <= 0.0 || r >= 1.0)
     {   
@@ -103,11 +103,11 @@ FIR::FIR1Highpass(const int order, const double r,
     return fir;
 }
 
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
                   const FIRWindow window)
 {
-    FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     // Check inputs
     const double r0 = r.first;
     const double r1 = r.second;
@@ -152,11 +152,11 @@ FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
     return fir;
 }
 
-FilterRepresentations::FIR
+RTSeis::FilterRepresentations::FIR
 FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
                   const FIRWindow window)
 {
-    FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     // Check inputs
     const double r0 = r.first;
     const double r1 = r.second;
@@ -202,7 +202,7 @@ FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
 }
 
 /// Hilbert transformer
-std::pair<FilterRepresentations::FIR, FilterRepresentations::FIR>
+std::pair<RTSeis::FilterRepresentations::FIR,RTSeis::FilterRepresentations::FIR>
 FIR::HilbertTransformer(const int order, const double beta)
 {
     if (order < 0){RTSEIS_THROW_IA("order=%d cannot be negative", order);}
@@ -212,8 +212,8 @@ FIR::HilbertTransformer(const int order, const double beta)
     {
         std::vector<double> hfiltR(1, 1);
         std::vector<double> hfiltI(1, 0);
-        FilterRepresentations::FIR realFIR(hfiltR);
-        FilterRepresentations::FIR imagFIR(hfiltI); 
+        RTSeis::FilterRepresentations::FIR realFIR(hfiltR);
+        RTSeis::FilterRepresentations::FIR imagFIR(hfiltI); 
         return std::pair(realFIR, imagFIR);
     }
     // Create a kaiser window
@@ -272,8 +272,8 @@ FIR::HilbertTransformer(const int order, const double beta)
         ippsDivC_64f_I(gain, hfiltI.data(), n);
     }
     // Set the filter
-    FilterRepresentations::FIR realFIR;
-    FilterRepresentations::FIR imagFIR; 
+    RTSeis::FilterRepresentations::FIR realFIR;
+    RTSeis::FilterRepresentations::FIR imagFIR; 
     realFIR.setFilterTaps(hfiltR);
     imagFIR.setFilterTaps(hfiltI);
     return std::pair(realFIR, imagFIR);
@@ -339,8 +339,8 @@ IppWinType classifyWindow(const FIRWindow window)
  */
 /*
 void FIR::minimumPhase(
-    const FilterRepresentations::FIR &fir, 
-   FilterRepresentations::FIR &minfir,
+    const RTSeis::FilterRepresentations::FIR &fir, 
+   RTSeis::FilterRepresentations::FIR &minfir,
     const MinimumPhaseMethod method= MinimumPhaseMethod::HOMOMORPHIC,
      const int nfft =-1)
 {

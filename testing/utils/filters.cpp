@@ -10,7 +10,7 @@
 #include <vector>
 #include <ipps.h>
 #include "rtseis/utilities/filterDesign/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
 #include "rtseis/utilities/filterImplementations/iirFilter.hpp"

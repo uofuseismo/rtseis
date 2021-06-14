@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -25,9 +26,9 @@
 #include "rtseis/utilities/filterDesign/enums.hpp"
 #include "rtseis/utilities/filterDesign/filterDesigner.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterImplementations/detrend.hpp"
 #include "rtseis/utilities/filterImplementations/downsample.hpp"
@@ -850,7 +851,7 @@ void Waveform<T>::iirLowpassFilter(const int order, const double fc,
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::BA ba;
+    RTSeis::FilterRepresentations::BA ba;
     pImpl->filterDesigner.designLowpassIIRFilter(
                         order, r, ptype, ripple, ba,
                         Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
@@ -867,7 +868,7 @@ void Waveform<T>::sosLowpassFilter(const int order, const double fc,
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::SOS sos;
+    RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designLowpassIIRFilter(
                      order, r, ptype, ripple, sos,
                      Utilities::FilterDesign::SOSPairing::NEAREST,
@@ -883,7 +884,7 @@ void Waveform<T>::firLowpassFilter(const int ntapsIn, const double fc,
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
     {
-        RTSEIS_WARNMSG("%s", "Adding a filter tap");
+        std::cerr << "Adding a filter tap" << std::endl;
         ntaps = ntaps + 1;
     }
     if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
@@ -892,7 +893,7 @@ void Waveform<T>::firLowpassFilter(const int ntapsIn, const double fc,
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
-    Utilities::FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designLowpassFIRFilter(order, r, window, fir);
     if (!lremovePhase)
     {
@@ -914,7 +915,7 @@ void Waveform<T>::iirHighpassFilter(const int order, const double fc,
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::BA ba; 
+    RTSeis::FilterRepresentations::BA ba; 
     pImpl->filterDesigner.designHighpassIIRFilter(
                      order, r, ptype, ripple, ba, 
                      Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
@@ -931,7 +932,7 @@ void Waveform<T>::sosHighpassFilter(const int order, const double fc,
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::SOS sos;
+    RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designHighpassIIRFilter(
                     order, r, ptype, ripple, sos,
                     Utilities::FilterDesign::SOSPairing::NEAREST,
@@ -947,7 +948,7 @@ void Waveform<T>::firHighpassFilter(const int ntapsIn, const double fc,
     int ntaps = ntapsIn;
     if (lremovePhase && ntaps%2 == 0)
     {
-        RTSEIS_WARNMSG("%s", "Adding a filter tap");
+        std::cerr << "Adding a filter tap" << std::endl;
         ntaps = ntaps + 1;
     }
     if (ntaps < 5){RTSEIS_THROW_IA("ntaps = %d  must be at least 5", ntaps);}
@@ -956,7 +957,7 @@ void Waveform<T>::firHighpassFilter(const int ntapsIn, const double fc,
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
-    Utilities::FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designHighpassFIRFilter(order, r, window, fir);
     // Standard FIR filtering
     if (!lremovePhase)
@@ -981,7 +982,7 @@ void Waveform<T>::iirBandpassFilter(const int order,
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::BA ba; 
+    RTSeis::FilterRepresentations::BA ba; 
     pImpl->filterDesigner.designBandpassIIRFilter(
                     order, r, ptype, ripple, ba, 
                      Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
@@ -1000,7 +1001,7 @@ void Waveform<T>::sosBandpassFilter(const int order,
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::SOS sos;
+    RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designBandpassIIRFilter(
                     order, r, ptype, ripple, sos,
                     Utilities::FilterDesign::SOSPairing::NEAREST,
@@ -1027,7 +1028,7 @@ void Waveform<T>::firBandpassFilter(const int ntapsIn,
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
-    Utilities::FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designBandpassFIRFilter(order, r, window, fir);
     if (!lremovePhase)
     {
@@ -1051,7 +1052,7 @@ void Waveform<T>::iirBandstopFilter(const int order,
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::BA ba;
+    RTSeis::FilterRepresentations::BA ba;
     pImpl->filterDesigner.designBandstopIIRFilter(
                     order, r, ptype, ripple, ba,
                     Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
@@ -1070,7 +1071,7 @@ void Waveform<T>::sosBandstopFilter(const int order,
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
-    Utilities::FilterRepresentations::SOS sos;
+    RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designBandstopIIRFilter(
                     order, r, ptype, ripple, sos,
                     Utilities::FilterDesign::SOSPairing::NEAREST,
@@ -1097,7 +1098,7 @@ void Waveform<T>::firBandstopFilter(const int ntapsIn,
          = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
     Utilities::FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
-    Utilities::FilterRepresentations::FIR fir;
+    RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designBandstopFIRFilter(order, r, window, fir);
     if (!lremovePhase)
     {
@@ -1115,7 +1116,7 @@ void Waveform<T>::firBandstopFilter(const int ntapsIn,
 
 template<>
 void Waveform<double>::firFilter(
-    const Utilities::FilterRepresentations::FIR &fir,
+    const RTSeis::FilterRepresentations::FIR &fir,
     const bool lremovePhase)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
@@ -1157,7 +1158,7 @@ void Waveform<double>::firFilter(
 }
 
 template<class T>
-void Waveform<T>::iirFilter(const Utilities::FilterRepresentations::BA &ba,
+void Waveform<T>::iirFilter(const RTSeis::FilterRepresentations::BA &ba,
                             const bool lremovePhase)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
@@ -1206,7 +1207,7 @@ void Waveform<T>::iirFilter(const Utilities::FilterRepresentations::BA &ba,
 
 template<>
 void Waveform<double>::sosFilter(
-    const Utilities::FilterRepresentations::SOS &sos,
+    const RTSeis::FilterRepresentations::SOS &sos,
     const bool lremovePhase)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}

@@ -6,9 +6,9 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 
 namespace PBPostProcessing
 {
@@ -86,7 +86,7 @@ public:
     void setTaps(pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> taps);
     pybind11::array_t<double> getTaps() const;
 private:
-    std::unique_ptr<RTSeis::Utilities::FilterRepresentations::FIR> fir_;
+    std::unique_ptr<RTSeis::FilterRepresentations::FIR> fir_;
 };
 
 class SOS
@@ -97,7 +97,7 @@ public:
     pybind11::array_t<double> getNumeratorCoefficients() const;
     pybind11::array_t<double> getDenominatorCoefficients() const;
 private:
-    std::unique_ptr<RTSeis::Utilities::FilterRepresentations::SOS> sos_;
+    std::unique_ptr<RTSeis::FilterRepresentations::SOS> sos_;
 };
 
 class BA 
@@ -109,7 +109,7 @@ public:
     pybind11::array_t<double> getNumeratorCoefficients() const;
     pybind11::array_t<double> getDenominatorCoefficients() const;
 private:
-    std::unique_ptr<RTSeis::Utilities::FilterRepresentations::BA> ba_;
+    std::unique_ptr<RTSeis::FilterRepresentations::BA> ba_;
 };
 
 }; /// End representations

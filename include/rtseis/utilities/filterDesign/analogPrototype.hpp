@@ -5,13 +5,11 @@
 
 namespace RTSeis
 {
-namespace Utilities
-{
 namespace FilterRepresentations
 {
 class ZPK;
 };
-namespace FilterDesign
+namespace Utilities::FilterDesign
 {
 namespace IIR
 {
@@ -70,10 +68,8 @@ FilterRepresentations::ZPK cheb1ap(const int n, const double rp);
  */
 FilterRepresentations::ZPK cheb2ap(const int n, const double rs);
 
-}; // End analog prototype
-}; // End IIR
-}; // End FilterDesign
-}; // End RTSeis
-}; // End RTSeis
-
+} // End analog prototype
+} // End IIR
+} // End FilterDesign
+} // End RTSeis
 #endif

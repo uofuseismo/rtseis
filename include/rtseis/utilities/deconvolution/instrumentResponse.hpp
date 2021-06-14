@@ -3,7 +3,7 @@
 #include <memory>
 
 // Forward declarations
-namespace RTSeis::Utilities::FilterRepresentations
+namespace RTSeis::FilterRepresentations
 {
 class BA;
 class ZPK;
@@ -87,7 +87,7 @@ public:
      * @brief Sets the analog digital response.
      * @param[in] zpk  The analog poles, zeros, and gain defining the response.
      */
-    void setAnalogResponse(const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept;
+    void setAnalogResponse(const RTSeis::FilterRepresentations::ZPK &zpk) noexcept;
     /*!
      * @brief Sets the analog digital response.
      * @param[in] ba   The numerator and denominator coefficients defining the
@@ -95,7 +95,7 @@ public:
      * @throws std::invalid_argument if there are no numerator or denominator
      *         coefficients or the first denominator coefficient is 0.
      */
-    void setAnalogResponse(const RTSeis::Utilities::FilterRepresentations::BA &ba);
+    void setAnalogResponse(const RTSeis::FilterRepresentations::BA &ba);
     /*! @} */
 
     /*! @name Digital Transfer Function
@@ -105,7 +105,7 @@ public:
      * @brief Sets a digital instrument response.
      * @param[in] zpk  The digital poles, zeros, and gain defining the response.
      */
-    void setDigitalResponse(const RTSeis::Utilities::FilterRepresentations::ZPK &zpk) noexcept;
+    void setDigitalResponse(const RTSeis::FilterRepresentations::ZPK &zpk) noexcept;
     /*!
      * @brief Sets the digital instrument response.
      * @param[in] ba   The numerator and denominator coefficients defining the
@@ -113,7 +113,7 @@ public:
      * @throws std::invalid_argument if there are no numerator or denominator
      *         coefficients or the first denominator coefficient is 0.
      */
-    void setDigitalResponse(const RTSeis::Utilities::FilterRepresentations::BA &ba);
+    void setDigitalResponse(const RTSeis::FilterRepresentations::BA &ba);
     /*! @} */
 
     /*!

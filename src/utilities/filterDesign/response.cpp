@@ -10,13 +10,13 @@
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/log.h"
 #include <ipps.h>
 
 
 using namespace RTSeis::Utilities::FilterDesign;
-using namespace RTSeis::Utilities::FilterRepresentations;
+using namespace RTSeis::FilterRepresentations;
 
 std::vector<std::complex<double>>
 Response::freqs(const BA &ba, const std::vector<double> &w)

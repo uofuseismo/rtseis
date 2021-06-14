@@ -4,13 +4,13 @@
 #include <cmath>
 #include <ipps.h>
 #include "rtseis/utilities/filterDesign/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
 
-using namespace RTSeis::Utilities;
+using namespace RTSeis;
 using namespace RTSeis::Utilities::FilterDesign;
 
 /*! Test FIR-window based filter design (fir1 in matlab). */

@@ -8,9 +8,9 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <pybind11/complex.h>
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 
 namespace py = pybind11;
 using namespace PBPostProcessing;
@@ -140,7 +140,7 @@ void Waveform::firFilter(py::array_t<double, py::array::c_style | py::array::for
     std::memcpy(tapsVec.data(), taps.data(), taps.size()*sizeof(double));
     try
     {
-        RTSeis::Utilities::FilterRepresentations::FIR fir(tapsVec);
+        RTSeis::FilterRepresentations::FIR fir(tapsVec);
         waveform_->firFilter(fir); 
     }
     catch (const std::invalid_argument &ia)

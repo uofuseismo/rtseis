@@ -3,7 +3,7 @@
 #include "rtseis/utilities/filterDesign/enums.hpp"
 
 /// Forward declarations
-namespace RTSeis::Utilities::FilterRepresentations
+namespace RTSeis::FilterRepresentations
 {
 class BA;
 class SOS;
@@ -38,7 +38,7 @@ namespace RTSeis::Utilities::FilterDesign::IIR
  * @throws std::invalid_argument if any of the arguments are invalid.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::BA
+RTSeis::FilterRepresentations::BA
 designBAIIRFilter(const int n, const double *W,
                   const double rp, const double rs,
                   const Bandtype btype,
@@ -69,7 +69,7 @@ designBAIIRFilter(const int n, const double *W,
  * @throws std::invalid_argument if any of the arguments are invalid.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::ZPK
+RTSeis::FilterRepresentations::ZPK
 designZPKIIRFilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,
@@ -101,7 +101,7 @@ designZPKIIRFilter(const int n, const double *W,
  * @throws std::invalid_argument if any of the arguments are invalid.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::SOS
+RTSeis::FilterRepresentations::SOS
 designSOSIIRFilter(const int n, const double *W,
                    const double rp, const double rs,
                    const Bandtype btype,
@@ -120,8 +120,8 @@ designSOSIIRFilter(const int n, const double *W,
  *         zpk.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::SOS
-zpk2sos(const FilterRepresentations::ZPK &zpk,
+RTSeis::FilterRepresentations::SOS
+zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
         const SOSPairing pairing = SOSPairing::NEAREST);
 /*!
  * @brief Computes the pole-zero representation from a polynomial
@@ -135,8 +135,8 @@ zpk2sos(const FilterRepresentations::ZPK &zpk,
  *         is 0.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::ZPK
-tf2zpk(const FilterRepresentations::BA &ba);
+RTSeis::FilterRepresentations::ZPK
+tf2zpk(const RTSeis::FilterRepresentations::BA &ba);
 /*! 
  * @brief Computes the polynomial transfer function from a pole-zero
  *        representation.
@@ -146,8 +146,8 @@ tf2zpk(const FilterRepresentations::BA &ba);
  *         numerator and denominator coefficients.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::BA
-zpk2tf(const FilterRepresentations::ZPK &zpk) noexcept;
+RTSeis::FilterRepresentations::BA
+zpk2tf(const RTSeis::FilterRepresentations::ZPK &zpk) noexcept;
 /*!
  * @brief Converts a lowpass filter prototype to a different cutoff
  *        frequency.
@@ -157,8 +157,8 @@ zpk2tf(const FilterRepresentations::ZPK &zpk) noexcept;
  * @throws std::invalid_argument if zpkIn is empty or w0 is invalid.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::ZPK
-zpklp2lp(const FilterRepresentations::ZPK &zpkIn, const double w0);
+RTSeis::FilterRepresentations::ZPK
+zpklp2lp(const RTSeis::FilterRepresentations::ZPK &zpkIn, const double w0);
 /*!
  * @brief Converts a lowpass filter prototype to a highpss filter.
  * @param[in] zpkIn    Input lowpass filter prototype to convert.
@@ -167,8 +167,8 @@ zpklp2lp(const FilterRepresentations::ZPK &zpkIn, const double w0);
  * @throws std::invalid_argument if zpkIn is empty or w0 is invalid.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::ZPK
-zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0);
+RTSeis::FilterRepresentations::ZPK
+zpklp2hp(const RTSeis::FilterRepresentations::ZPK &zpkIn, const double w0);
 /*!
  * @brief Transforms a lowpass filter prototype to a bandpass filter.
  *        The passband width is defined by [w0,w1] = [w0,w0+bw] in rad/s.
@@ -180,8 +180,8 @@ zpklp2hp(const FilterRepresentations::ZPK &zpkIn, const double w0);
  * @throws std::invalid_argument if w0 or bw is invalid or zpkIn is empty.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::ZPK
-zpklp2bp(const FilterRepresentations::ZPK &zpkIn,
+RTSeis::FilterRepresentations::ZPK
+zpklp2bp(const RTSeis::FilterRepresentations::ZPK &zpkIn,
          const double w0, const double bw);
 /*!
  * @brief Transforms a lowpass filter prototype to a bandstop filter.
@@ -193,8 +193,8 @@ zpklp2bp(const FilterRepresentations::ZPK &zpkIn,
  * @throws std::invalid_argument if w0 or bw is invalid or zpkIn is empty.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::ZPK
-zpklp2bs(const FilterRepresentations::ZPK &zpkIn,
+RTSeis::FilterRepresentations::ZPK
+zpklp2bs(const RTSeis::FilterRepresentations::ZPK &zpkIn,
          const double w0, const double bw);
 /*!
  * @brief Converts an analog filter to a digital filter using the bilinear
@@ -212,8 +212,8 @@ zpklp2bs(const FilterRepresentations::ZPK &zpkIn,
  *         poles in zpk.
  * @ingroup rtseis_utils_design_iir
  */
-FilterRepresentations::ZPK
-zpkbilinear(const FilterRepresentations::ZPK zpk, const double fs);
+RTSeis::FilterRepresentations::ZPK
+zpkbilinear(const RTSeis::FilterRepresentations::ZPK zpk, const double fs);
 
 }
 #endif

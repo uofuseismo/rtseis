@@ -6,10 +6,10 @@
 #include "rtseis/utilities/filterDesign/filterDesigner.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/utilities/filterDesign/iir.hpp"
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
-#include "rtseis/utilities/filterRepresentations/zpk.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/zpk.hpp"
 
 using namespace RTSeis::Utilities;
 using namespace RTSeis::Utilities::FilterDesign;
@@ -334,13 +334,13 @@ public:
     }
 
     std::vector<IIRDesignParameters> zpkDesigns;
-    std::vector<FilterRepresentations::ZPK> zpkCache;
+    std::vector<RTSeis::FilterRepresentations::ZPK> zpkCache;
     std::vector<IIRDesignParameters> baDesigns;
-    std::vector<FilterRepresentations::BA> baCache;
+    std::vector<RTSeis::FilterRepresentations::BA> baCache;
     std::vector<SOSDesignParameters> sosDesigns;
-    std::vector<FilterRepresentations::SOS> sosCache; 
+    std::vector<RTSeis::FilterRepresentations::SOS> sosCache; 
     std::vector<FIRDesignParameters> firDesigns;
-    std::vector<FilterRepresentations::FIR> firCache;
+    std::vector<RTSeis::FilterRepresentations::FIR> firCache;
 };
 
 //=============================================================================//
@@ -391,7 +391,7 @@ void FilterDesigner::designLowpassIIRFilter(
     const int n, const double r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::ZPK &zpk,
+    RTSeis::FilterRepresentations::ZPK &zpk,
     const IIRFilterDomain ldigital)
 {
     zpk.clear();
@@ -421,7 +421,7 @@ void FilterDesigner::designHighpassIIRFilter(
     const int n, const double r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::ZPK &zpk,
+    RTSeis::FilterRepresentations::ZPK &zpk,
     const IIRFilterDomain ldigital)
 {
     zpk.clear();
@@ -451,7 +451,7 @@ void FilterDesigner::designBandpassIIRFilter(
     const int n, const std::pair<double,double> r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::ZPK &zpk,
+    RTSeis::FilterRepresentations::ZPK &zpk,
     const IIRFilterDomain ldigital)
 {
     zpk.clear();
@@ -481,7 +481,7 @@ void FilterDesigner::designBandstopIIRFilter(
     const int n, const std::pair<double,double> r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::ZPK &zpk,
+    RTSeis::FilterRepresentations::ZPK &zpk,
     const IIRFilterDomain ldigital)
 {
     zpk.clear();
@@ -513,7 +513,7 @@ void FilterDesigner::designLowpassIIRFilter(
     const int n, const double r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::BA &ba,
+    RTSeis::FilterRepresentations::BA &ba,
     const IIRFilterDomain ldigital)
 {
     ba.clear();
@@ -529,7 +529,7 @@ void FilterDesigner::designLowpassIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designLowpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
@@ -542,7 +542,7 @@ void FilterDesigner::designHighpassIIRFilter(
     const int n, const double r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::BA &ba,
+    RTSeis::FilterRepresentations::BA &ba,
     const IIRFilterDomain ldigital)
 {
     ba.clear();
@@ -558,7 +558,7 @@ void FilterDesigner::designHighpassIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designHighpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
@@ -571,7 +571,7 @@ void FilterDesigner::designBandpassIIRFilter(
     const int n, const std::pair<double,double> r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::BA &ba,
+    RTSeis::FilterRepresentations::BA &ba,
     const IIRFilterDomain ldigital)
 {
     ba.clear();
@@ -587,7 +587,7 @@ void FilterDesigner::designBandpassIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designBandpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
@@ -600,7 +600,7 @@ void FilterDesigner::designBandstopIIRFilter(
     const int n, const std::pair<double,double> r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::BA &ba,
+    RTSeis::FilterRepresentations::BA &ba,
     const IIRFilterDomain ldigital)
 {
     ba.clear();
@@ -616,7 +616,7 @@ void FilterDesigner::designBandstopIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designBandstopIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         ba = IIR::zpk2tf(zpk);
         pImpl->baDesigns.push_back(parms);
@@ -631,7 +631,7 @@ void FilterDesigner::designLowpassIIRFilter(
     const int n, const double r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::SOS &sos,
+    RTSeis::FilterRepresentations::SOS &sos,
     const SOSPairing pairing,   
     const IIRFilterDomain ldigital)
 {
@@ -649,7 +649,7 @@ void FilterDesigner::designLowpassIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designLowpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
@@ -662,7 +662,7 @@ void FilterDesigner::designHighpassIIRFilter(
     const int n, const double r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::SOS &sos,
+    RTSeis::FilterRepresentations::SOS &sos,
     const SOSPairing pairing,
     const IIRFilterDomain ldigital)
 {
@@ -680,7 +680,7 @@ void FilterDesigner::designHighpassIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designHighpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
@@ -693,7 +693,7 @@ void FilterDesigner::designBandpassIIRFilter(
     const int n, const std::pair<double,double> r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::SOS &sos,
+    RTSeis::FilterRepresentations::SOS &sos,
     const SOSPairing pairing,
     const IIRFilterDomain ldigital)
 {
@@ -711,7 +711,7 @@ void FilterDesigner::designBandpassIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designBandpassIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
@@ -724,7 +724,7 @@ void FilterDesigner::designBandstopIIRFilter(
     const int n, const std::pair<double,double> r,
     const IIRPrototype ftype,
     const double ripple,
-    FilterRepresentations::SOS &sos,
+    RTSeis::FilterRepresentations::SOS &sos,
     const SOSPairing pairing,
     const IIRFilterDomain ldigital)
 {
@@ -742,7 +742,7 @@ void FilterDesigner::designBandstopIIRFilter(
     }
     else
     {
-        FilterRepresentations::ZPK zpk;
+        RTSeis::FilterRepresentations::ZPK zpk;
         designBandstopIIRFilter(n, r, ftype, ripple, zpk, ldigital);
         sos = IIR::zpk2sos(zpk);
         pImpl->sosDesigns.push_back(parms);
@@ -757,7 +757,7 @@ void FilterDesigner::designLowpassFIRFilter(
     const int order,
     const double r,
     const FIRWindow window,
-    FilterRepresentations::FIR &fir) const
+    RTSeis::FilterRepresentations::FIR &fir) const
 {
     fir.clear();
     FIRDesignParameters parms(order, r, window, Bandtype::HIGHPASS);
@@ -783,7 +783,7 @@ void FilterDesigner::designHighpassFIRFilter(
     const int order,
     const double r,
     const FIRWindow window,
-    FilterRepresentations::FIR &fir) const
+    RTSeis::FilterRepresentations::FIR &fir) const
 {
     fir.clear();
     FIRDesignParameters parms(order, r, window, Bandtype::HIGHPASS);
@@ -809,7 +809,7 @@ void FilterDesigner::designBandpassFIRFilter(
     const int order,
     const std::pair<double,double> r,
     const FIRWindow window,
-    FilterRepresentations::FIR &fir) const
+    RTSeis::FilterRepresentations::FIR &fir) const
 {
     fir.clear();
     FIRDesignParameters parms(order, r, window, Bandtype::BANDPASS);
@@ -835,7 +835,7 @@ void FilterDesigner::designBandstopFIRFilter(
     const int order,
     const std::pair<double,double> r,
     const FIRWindow window,
-    FilterRepresentations::FIR &fir) const
+    RTSeis::FilterRepresentations::FIR &fir) const
 {
     fir.clear();
     FIRDesignParameters parms(order, r, window, Bandtype::BANDSTOP);

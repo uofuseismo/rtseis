@@ -2,9 +2,9 @@
 #include <cstdlib>
 #include <cassert>
 #include <string>
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterRepresentations/zpk.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/zpk.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 #include "rtseis/utilities/filterDesign/iir.hpp"
 #include "rtseis/utilities/filterDesign/analogPrototype.hpp"
 #include <gtest/gtest.h>
@@ -13,7 +13,7 @@ namespace
 {
 
 using namespace RTSeis;
-using namespace RTSeis::Utilities::FilterRepresentations;
+using namespace RTSeis::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 
 ///  IIR analog prototype design. 

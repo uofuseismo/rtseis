@@ -1,10 +1,10 @@
+#include <iostream>
+#include <string>
 #include <cmath>
 #include <algorithm>
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
-#define RTSEIS_LOGGING 1
-#include "rtseis/log.h"
+#include "rtseis/filterRepresentations/sos.hpp"
 
-using namespace RTSeis::Utilities::FilterRepresentations;
+using namespace RTSeis::FilterRepresentations;
 
 #define DEFAULT_TOL 1.e-12
 
@@ -21,11 +21,13 @@ public:
     double tol = DEFAULT_TOL;
 };
 
+/// Constructor
 SOS::SOS() :
     pImpl(std::make_unique<SOSImpl>())
 {
 }
 
+/// Constructor
 SOS::SOS(const int ns,
          const std::vector<double> &bs,
          const std::vector<double> &as) :
@@ -34,6 +36,7 @@ SOS::SOS(const int ns,
     setSecondOrderSections(ns, bs, as);
 }
 
+/// Copy assignment
 SOS& SOS::operator=(const SOS &sos)
 {
     if (&sos == this){return *this;}
@@ -41,6 +44,7 @@ SOS& SOS::operator=(const SOS &sos)
     return *this;
 }
 
+/// Move assignment
 SOS& SOS::operator=(SOS &&sos) noexcept
 {
     if (&sos == this){return *this;}
@@ -48,6 +52,7 @@ SOS& SOS::operator=(SOS &&sos) noexcept
     return *this;
 }
 
+/// Equality operator
 bool SOS::operator==(const SOS &sos) const
 {
     if (pImpl->bs.size() != sos.pImpl->bs.size()){return false;}
@@ -70,23 +75,28 @@ bool SOS::operator==(const SOS &sos) const
     return true;
 }
 
+/// Inequality operator
 bool SOS::operator!=(const SOS &sos) const
 {
     return !(*this == sos);
 }
 
+/// Copy c'tor
 SOS::SOS(const SOS &sos)
 {
    *this = sos;
 }
 
+/// Move c'tor
 SOS::SOS(SOS &&sos) noexcept
 {
     *this = std::move(sos);
 }
 
+/// Destructor
 SOS::~SOS() = default;
 
+/// Reset class
 void SOS::clear() noexcept
 {
     pImpl->bs.clear();
@@ -120,19 +130,16 @@ void SOS::setSecondOrderSections(const int ns,
     clear();
     if (ns < 1)
     {
-        RTSEIS_ERRMSG("%s", "No sections in SOS filter");
         throw std::invalid_argument("No sections in SOS filter");
     }
     size_t ns3 = static_cast<size_t> (ns)*3;
     if (ns3 != bs.size())
     {
-        RTSEIS_ERRMSG("bs.size() = %ld must equal 3*ns=%ld", bs.size(), ns3);
         throw std::invalid_argument("ba.size() = " + std::to_string(bs.size())
                                  + " must equal 3*ns = " + std::to_string(ns3));
     }
     if (ns3 != as.size()) 
     {
-        RTSEIS_ERRMSG("as.size() = %ld must equal 3*ns=%ld", as.size(), ns3);
         throw std::invalid_argument("as.size() = " + std::to_string(as.size())
                                  + " must equal 3*ns = " + std::to_string(ns3));
     }
@@ -140,7 +147,6 @@ void SOS::setSecondOrderSections(const int ns,
     {
         if (bs[3*i] == 0)
         {
-            RTSEIS_ERRMSG("Leading bs coefficient of section %d is zero", i);
             throw std::invalid_argument("Leading bs coefficient of section "
                                      + std::to_string(i+1) + "is zero");
         }
@@ -149,7 +155,6 @@ void SOS::setSecondOrderSections(const int ns,
     {
         if (as[3*i] == 0)
         {
-            RTSEIS_ERRMSG("Leading bs coefficient of section %d is zero", i);
             throw std::invalid_argument("Leading as coefficient of section "
                                      + std::to_string(i+1) + "is zero");
         }
@@ -177,6 +182,9 @@ int SOS::getNumberOfSections() const noexcept
 
 void SOS::setEqualityTolerance(const double tol)
 {
-    if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
+    if (tol < 0)
+    {
+        std::cerr << "Tolerance is negative" << std::endl;
+    }
     pImpl->tol = tol;
 }

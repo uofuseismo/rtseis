@@ -4,7 +4,7 @@
 #include "rtseis/utilities/filterDesign/enums.hpp"
 
 // Forward declarations
-namespace RTSeis::Utilities::FilterRepresentations
+namespace RTSeis::FilterRepresentations
 {
 class BA; 
 class SOS;

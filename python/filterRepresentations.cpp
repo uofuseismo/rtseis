@@ -6,15 +6,15 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <pybind11/complex.h>
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 
 namespace py = pybind11;
 using namespace PBFilterRepresentations;
 
 FIR::FIR() :
-   fir_(new RTSeis::Utilities::FilterRepresentations::FIR()) 
+   fir_(new RTSeis::FilterRepresentations::FIR()) 
 {
    return;
 }
@@ -38,13 +38,13 @@ class BA
 {
 public:
     BA(void) :
-       ba_(new RTSeis::Utilities::FilterRepresentations::BA())
+       ba_(new RTSeis::FilterRepresentations::BA())
     {
         return;
     }
  
 private:
-    std::unique_ptr<RTSeis::Utilities::FilterRepresentations::BA> ba_;
+    std::unique_ptr<RTSeis::FilterRepresentations::BA> ba_;
 };
 };
 };

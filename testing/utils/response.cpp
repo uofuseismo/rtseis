@@ -3,14 +3,14 @@
 #include <string>
 #include <ipps.h>
 #include "rtseis/utilities/filterDesign/response.hpp"
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
 
 using namespace RTSeis;
-using namespace RTSeis::Utilities::FilterRepresentations;
+using namespace RTSeis::FilterRepresentations;
 using namespace RTSeis::Utilities::FilterDesign;
 
 //int rtseis_test_utils_design_freqs(void)

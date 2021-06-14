@@ -1,9 +1,8 @@
-#define RTSEIS_LOGGING 1
+#include <iostream>
 #include <cmath>
-#include "rtseis/utilities/filterRepresentations/ba.hpp"
-#include "rtseis/log.h"
+#include "rtseis/filterRepresentations/ba.hpp"
 
-using namespace RTSeis::Utilities::FilterRepresentations;
+using namespace RTSeis::FilterRepresentations;
 
 #define DEFAULT_TOL 1.e-12
 
@@ -18,11 +17,25 @@ public:
     double tol = DEFAULT_TOL;
 };
 
+/// C'tor
 BA::BA() :
     pImpl(std::make_unique<BAImpl>())
 {
 }
 
+/// Copy c'tor
+BA::BA(const BA &ba)
+{
+    *this = ba;
+}
+
+/// Move c'tor
+BA::BA(BA &&ba) noexcept
+{
+    *this = std::move(ba);
+}
+
+/// Construct from numerator/denominator coefficients
 BA::BA(const std::vector<double> &b, const std::vector<double> &a) :
     pImpl(std::make_unique<BAImpl>())
 {
@@ -30,14 +43,11 @@ BA::BA(const std::vector<double> &b, const std::vector<double> &a) :
     setDenominatorCoefficients(a);
 }
 
+/// Copy assignment
 BA& BA::operator=(const BA &ba)
 {
     if (&ba == this){return *this;}
-    pImpl = std::make_unique<BAImpl> ();
-    //pImpl = std::unique_ptr<BAImpl> (new BAImpl());
-    pImpl->b   = ba.pImpl->b;
-    pImpl->a   = ba.pImpl->a;
-    pImpl->tol = ba.pImpl->tol;
+    pImpl = std::make_unique<BAImpl> (*ba.pImpl);
     return *this;
 }
 
@@ -48,30 +58,22 @@ BA& BA::operator=(BA &&ba) noexcept
     return *this;
 }
 
-BA::BA(const BA &ba)
-{
-    *this = ba;
-}
+/// Destructor
+BA::~BA() = default;
 
-BA::BA(BA &&ba) noexcept
-{
-    *this = std::move(ba);
-}
-
-BA::~BA(void) = default;
-
+/// Equality
 bool BA::operator==(const BA &ba) const
 {
     if (pImpl->b.size() != ba.pImpl->b.size()){return false;}
     if (pImpl->a.size() != ba.pImpl->a.size()){return false;}
-    for (size_t i=0; i<pImpl->b.size(); i++)
+    for (size_t i = 0; i < pImpl->b.size(); i++)
     {
         if (std::abs(pImpl->b[i] - pImpl->b[i]) > pImpl->tol)
         {
             return false;
         }
     }
-    for (size_t i=0; i<pImpl->a.size(); i++)
+    for (size_t i = 0; i < pImpl->a.size(); i++)
     {
         if (std::abs(pImpl->a[i] - pImpl->a[i]) > pImpl->tol)
         {
@@ -81,6 +83,7 @@ bool BA::operator==(const BA &ba) const
     return true;
 }
 
+/// Inequality
 bool BA::operator!=(const BA &ba) const
 {
     return !(*this == ba);
@@ -105,6 +108,7 @@ void BA::print(FILE *fout) const noexcept
     }
 }
 
+/// Reset class
 void BA::clear() noexcept
 {
     if (pImpl)
@@ -137,7 +141,6 @@ void BA::setNumeratorCoefficients(const size_t n, const double b[])
     if (n > 0 && b == nullptr)
     {
         pImpl->b.resize(0);
-        RTSEIS_ERRMSG("%s", "b is null");
         throw std::invalid_argument("b is NULL");
     }
     pImpl->b.resize(n);
@@ -159,12 +162,10 @@ void BA::setDenominatorCoefficients(const size_t n, const double a[])
     if (n > 0 && a == nullptr)
     {
         pImpl->a.resize(0);
-        RTSEIS_ERRMSG("%s", "a is null");
         throw std::invalid_argument("a is NULL or empty");
     }
     if (n > 0 && a[0] == 0)
     {
-        RTSEIS_ERRMSG("%s", "a[0] = 0");
         throw std::invalid_argument("a[0] = 0");
     }
     pImpl->a.resize(n);
@@ -188,7 +189,10 @@ std::vector<double> BA::getDenominatorCoefficients() const noexcept
 
 void BA::setEqualityTolerance(const double tol)
 {
-    if (tol < 0){RTSEIS_WARNMSG("%s", "Tolerance is negative");}
+    if (tol < 0)
+    {
+        std::cerr << "Tolerance is negative" << std::endl;
+    }
     pImpl->tol = tol;
 }
 

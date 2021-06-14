@@ -8,7 +8,7 @@
 #endif
 
 // Forward declare filter representations
-namespace RTSeis::Utilities::FilterRepresentations
+namespace RTSeis::FilterRepresentations
 {
 class FIR;
 class SOS;
@@ -297,7 +297,7 @@ public:
      *       signal sampling rate and the sampling rate used in the digital
      *       filter design are compatible.
      */
-    void firFilter(const Utilities::FilterRepresentations::FIR &fir,
+    void firFilter(const RTSeis::FilterRepresentations::FIR &fir,
                    bool lremovePhase=false);
     /*! 
      * @brief Lowpass filters a signal using an FIR filter.
@@ -388,7 +388,7 @@ public:
      *       signal sampling rate and the sampling rate used in the digital
      *       filter design are compatible.
      */
-    void sosFilter(const Utilities::FilterRepresentations::SOS &sos,
+    void sosFilter(const RTSeis::FilterRepresentations::SOS &sos,
                    bool lzeroPhase=false);
     /*! 
      * @brief Lowpass filters a signal using an IIR filter specified as a series
@@ -495,7 +495,7 @@ public:
      *        an SOS implementation.
      * @throws std::invalid_argument if the filter is invalid.
      */
-    void iirFilter(const Utilities::FilterRepresentations::BA &ba,
+    void iirFilter(const RTSeis::FilterRepresentations::BA &ba,
                    bool lzeroPhase=false);
     /*!
      * @brief Lowpass filters a signal using an IIR direct form filter.

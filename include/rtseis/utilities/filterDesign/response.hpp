@@ -3,17 +3,12 @@
 #include <complex>
 #include <vector>
 
-namespace RTSeis
-{
-namespace Utilities
-{
-namespace FilterRepresentations
+namespace RTSeis::FilterRepresentations
 {
 class BA;
-};
-namespace FilterDesign
-{
-namespace Response
+}
+
+namespace RTSeis::Utilities::FilterDesign::Response
 {
 /*!
  * @brief Computes the complex frequency response H(s) of an analog filter
@@ -36,7 +31,7 @@ namespace Response
  * @ingroup rtseis_utils_design_response
  */
 std::vector<std::complex<double>>
-freqs(const FilterRepresentations::BA &ba,
+freqs(const RTSeis::FilterRepresentations::BA &ba,
       const std::vector<double> &w);
 
 /*!
@@ -63,7 +58,7 @@ freqs(const FilterRepresentations::BA &ba,
  * @ingroup rtseis_utils_design_response
  */
 std::vector<std::complex<double>>
-freqz(const FilterRepresentations::BA &ba,
+freqz(const RTSeis::FilterRepresentations::BA &ba,
       const std::vector<double> &w);
  
 /*!
@@ -86,15 +81,8 @@ freqz(const FilterRepresentations::BA &ba,
  * @ingroup rtseis_utils_design_response
  */
 std::vector<double>
-groupDelay(const FilterRepresentations::BA &ba,
+groupDelay(const RTSeis::FilterRepresentations::BA &ba,
            const std::vector<double> &w);
 
-
-}; /* End Response */
-
-}; /* End FilterDesign */
-}; /* End Utils */
-
-}; /* End RTseis */
-
+} // End namespace
 #endif

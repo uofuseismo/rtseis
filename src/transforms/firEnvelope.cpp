@@ -5,7 +5,7 @@
 #include <ipps.h>
 #include "rtseis/transforms/firEnvelope.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
-#include "rtseis/utilities/filterRepresentations/fir.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/filterImplementations/firFilter.hpp"
 #include "private/throw.hpp"
 
