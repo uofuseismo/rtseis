@@ -135,7 +135,7 @@ SET(UTILS_SRCS
     src/transforms/spectrogram.cpp
     src/transforms/welch.cpp
     src/transforms/wavelets/morlet.cpp
-    src/utilities/trigger/waterLevel.cpp)
+    src/trigger/waterLevel.cpp)
 #SET(IPPS_SRCS
 #    src/ipps/dft.c
 #    src/ipps/downsample.c 

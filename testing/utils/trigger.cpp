@@ -5,17 +5,17 @@
 #include <string>
 #include <vector>
 #include <ipps.h>
-#include "rtseis/utilities/trigger/waterLevel.hpp"
+#include "rtseis/trigger/waterLevel.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
 
-using namespace RTSeis::Utilities::Trigger;
+using namespace RTSeis::Trigger;
 
 TEST(UtilitiesTrigger, waterLevel)
 {
-    PostProcessing::WaterLevel<double> trigger;
+    WaterLevel<RTSeis::ProcessingMode::POST_PROCESSING, double> trigger;
     double triggerOn = 0.8;
     double triggerOff = 0.2;
     // Create an oscillatory function

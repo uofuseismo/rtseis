@@ -1,15 +1,12 @@
-#include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <vector>
-#include <ipps.h>
 #include "private/throw.hpp"
-#include "rtseis/utilities/trigger/waterLevel.hpp"
+#include "rtseis/trigger/waterLevel.hpp"
 
-using namespace RTSeis::Utilities::Trigger::PostProcessing;
+using namespace RTSeis::Trigger;
 
-template<class T>
-class WaterLevel<T>::WaterLevelImpl
+template<RTSeis::ProcessingMode E, class T>
+class WaterLevel<E, T>::WaterLevelImpl
 {
 public:
     std::vector<std::pair<int, int>> mWindows;
@@ -20,29 +17,29 @@ public:
 };
 
 /// C'tor
-template<class T>
-WaterLevel<T>::WaterLevel() :
+template<RTSeis::ProcessingMode E, class T>
+WaterLevel<E, T>::WaterLevel() :
     pImpl(std::make_unique<WaterLevelImpl> ())
 {
 }
 
 /// Copy c'tor
-template<class T>
-WaterLevel<T>::WaterLevel(const WaterLevel &trigger)
+template<RTSeis::ProcessingMode E, class T>
+WaterLevel<E, T>::WaterLevel(const WaterLevel &trigger)
 {
     *this = trigger;
 }
 
 /// Move c'tor
-template<class T>
-WaterLevel<T>::WaterLevel(WaterLevel &&trigger) noexcept
+template<RTSeis::ProcessingMode E, class T>
+WaterLevel<E, T>::WaterLevel(WaterLevel &&trigger) noexcept
 {
     *this = std::move(trigger);
 }
 
 /// Copy assignment operator
-template<class T>
-WaterLevel<T>& WaterLevel<T>::operator=(const WaterLevel &trigger)
+template<RTSeis::ProcessingMode E, class T>
+WaterLevel<E, T>& WaterLevel<E, T>::operator=(const WaterLevel &trigger)
 {
     if (&trigger == this){return *this;}
     pImpl = std::make_unique<WaterLevelImpl> (*trigger.pImpl);
@@ -50,8 +47,8 @@ WaterLevel<T>& WaterLevel<T>::operator=(const WaterLevel &trigger)
 }
 
 /// Move assignment operator
-template<class T>
-WaterLevel<T>& WaterLevel<T>::operator=(WaterLevel &&trigger) noexcept
+template<RTSeis::ProcessingMode E, class T>
+WaterLevel<E, T>& WaterLevel<E, T>::operator=(WaterLevel &&trigger) noexcept
 {
     if (&trigger == this){return *this;}
     pImpl = std::move(trigger.pImpl);
@@ -59,12 +56,12 @@ WaterLevel<T>& WaterLevel<T>::operator=(WaterLevel &&trigger) noexcept
 }
 
 /// Destructor
-template<class T>
-WaterLevel<T>::~WaterLevel() = default;
+template<RTSeis::ProcessingMode E, class T>
+WaterLevel<E, T>::~WaterLevel() = default;
 
 /// Clears the class
-template<class T>
-void WaterLevel<T>::clear() noexcept
+template<RTSeis::ProcessingMode E, class T>
+void WaterLevel<E, T>::clear() noexcept
 {
     pImpl->mWindows.clear();
     pImpl->mOnTolerance = 0;
@@ -73,15 +70,15 @@ void WaterLevel<T>::clear() noexcept
 }
 
 /// Gets the number of triggers
-template<class T>
-int WaterLevel<T>::getNumberOfWindows() const noexcept
+template<RTSeis::ProcessingMode E, class T>
+int WaterLevel<E, T>::getNumberOfWindows() const noexcept
 {
     return static_cast<int> (pImpl->mWindows.size());
 }
 
 /// Initialize the class
-template<class T>
-void WaterLevel<T>::initialize(const double onTolerance,
+template<RTSeis::ProcessingMode E, class T>
+void WaterLevel<E, T>::initialize(const double onTolerance,
                                const double offTolerance)
 {
     clear();
@@ -91,43 +88,45 @@ void WaterLevel<T>::initialize(const double onTolerance,
 }
 
 /// Is the class initialized?
-template<class T>
-bool WaterLevel<T>::isInitialized() const noexcept
+template<RTSeis::ProcessingMode E, class T>
+bool WaterLevel<E, T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Gets the triggers
-template<class T>
-std::vector<std::pair<int, int>> WaterLevel<T>::getWindows() const
+template<RTSeis::ProcessingMode E, class T>
+std::vector<std::pair<int, int>> WaterLevel<E, T>::getWindows() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mWindows;
 }
 
 /// Gets the triggers
-template<class T>
-void WaterLevel<T>::getWindows(const int nWindows,
-                               std::pair<int, int> *windowsIn[]) const
+template<RTSeis::ProcessingMode E, class T>
+void WaterLevel<E, T>::getWindows(
+    const int nWindows,
+    std::pair<int, int> *windowsIn[]) const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     auto nwinRef = getNumberOfWindows();
     if (nWindows != nwinRef)
     {
-        RTSEIS_THROW_IA("nWindows = %d must equal %d", nWindows, nwinRef);
+        throw std::invalid_argument("nWindows = " + std::to_string(nWindows)
+                                 + " must equal " + std::to_string(nwinRef));
     }
     auto windows = *windowsIn;
     std::copy(pImpl->mWindows.begin(), pImpl->mWindows.end(), windows);
 }
 
 /// Applies
-template<class T>
-void WaterLevel<T>::apply(const int nSamples, const T x[])
+template<RTSeis::ProcessingMode E, class T>
+void WaterLevel<E, T>::apply(const int nSamples, const T x[])
 {
     pImpl->mWindows.clear();
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (nSamples < 1){return;} // Nothing to do
-    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL\n");}
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
     // Look for all points where the value of x is above the tolerances
     pImpl->mWindows.reserve(2048);
     T on  = static_cast<T> (pImpl->mOnTolerance);
@@ -201,6 +200,8 @@ void WaterLevel<T>::apply(const int nSamples, const T x[])
 */
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::Trigger::PostProcessing::WaterLevel<double>;
-template class RTSeis::Utilities::Trigger::PostProcessing::WaterLevel<float>;
+///--------------------------------------------------------------------------///
+///                            Template Instantiation                        ///
+///--------------------------------------------------------------------------///
+template class RTSeis::Trigger::WaterLevel<RTSeis::ProcessingMode::POST_PROCESSING, double>;
+template class RTSeis::Trigger::WaterLevel<RTSeis::ProcessingMode::POST_PROCESSING, float>;
