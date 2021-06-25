@@ -100,15 +100,15 @@ SET(UTILS_SRCS
     src/filterRepresentations/fir.cpp
     src/filterRepresentations/sos.cpp
     src/filterRepresentations/zpk.cpp
-    src/utilities/filterImplementations/decimate.cpp
-    src/utilities/filterImplementations/detrend.cpp
-    src/utilities/filterImplementations/downsample.cpp
-    src/utilities/filterImplementations/firFilter.cpp
-    src/utilities/filterImplementations/multiRateFIRFilter.cpp
-    src/utilities/filterImplementations/iirFilter.cpp
-    src/utilities/filterImplementations/iiriirFilter.cpp
-    src/utilities/filterImplementations/medianFilter.cpp
-    src/utilities/filterImplementations/sos.cpp
+    src/filterImplementations/decimate.cpp
+    src/filterImplementations/detrend.cpp
+    src/filterImplementations/downsample.cpp
+    src/filterImplementations/firFilter.cpp
+    src/filterImplementations/multiRateFIRFilter.cpp
+    src/filterImplementations/iirFilter.cpp
+    src/filterImplementations/iiriirFilter.cpp
+    src/filterImplementations/medianFilter.cpp
+    src/filterImplementations/sos.cpp
     src/utilities/interpolation/cubicSpline.cpp
     src/utilities/interpolation/interpolate.cpp
     src/utilities/interpolation/linear.cpp
