@@ -9,9 +9,8 @@
 #include "rtseis/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"
 #include "rtseis/transforms/utilities.hpp"
-#include "rtseis/utilities/filterImplementations/detrend.hpp"
+#include "rtseis/filterImplementations/detrend.hpp"
 
-using namespace RTSeis::Utilities;
 using namespace RTSeis::Transforms;
 
 /*

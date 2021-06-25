@@ -6,9 +6,9 @@
 #endif
 #include <ipps.h>
 #include "rtseis/enums.hpp"
-#include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
+#include "rtseis/filterImplementations/iiriirFilter.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<class T>
 class IIRIIRFilter<T>::IIRIIRImpl
@@ -537,6 +537,8 @@ int IIRIIRFilter<T>::getFilterOrder() const
     return len;
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::IIRIIRFilter<double>;
-template class RTSeis::Utilities::FilterImplementations::IIRIIRFilter<float>;
+///--------------------------------------------------------------------------///
+///                         Template Instantiation                           ///
+///--------------------------------------------------------------------------///
+template class RTSeis::FilterImplementations::IIRIIRFilter<double>;
+template class RTSeis::FilterImplementations::IIRIIRFilter<float>;

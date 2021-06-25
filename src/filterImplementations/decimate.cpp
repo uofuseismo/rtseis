@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <string>
 #include <climits>
 #include <string>
 #ifndef NDEBBUG
@@ -6,15 +6,14 @@
 #endif
 #include <ipps.h>
 #include "rtseis/enums.hpp"
-#include "private/throw.hpp"
-#include "rtseis/utilities/filterImplementations/decimate.hpp"
+#include "rtseis/filterImplementations/decimate.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterImplementations/downsample.hpp"
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#include "rtseis/filterImplementations/downsample.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
 
 using namespace RTSeis::Utilities;
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<RTSeis::ProcessingMode E, class T>
 class Decimate<E, T>::DecimateImpl
@@ -354,7 +353,7 @@ template<RTSeis::ProcessingMode E, class T>
 int Decimate<E, T>::estimateSpace(const int n) const
 {
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
+    if (n < 0){throw std::invalid_argument("n cannot be negative");}
     return pImpl->mDownsampler.estimateSpace(n);
 }
 /* TODO - when lashing in a more performant multirate fir filter use this fn
@@ -396,7 +395,9 @@ void Decimate<E, T>::setInitialConditions(const int nz,const double zi[])
     int nzref = getInitialConditionLength();
     if (nz != nzref)
     {
-        RTSEIS_THROW_IA("nz = %d must equal %d", nz, nzref);
+        throw std::invalid_argument("nz = " + std::to_string(nz)
+                                  + " must be equal to "
+                                  + std::to_string(nzref));
     }
     if (nz > 0 && zi == nullptr){throw std::invalid_argument("zi is NULL");}
     //pImpl->mMRFIRFilter.setInitialConditions(nz, zi);
@@ -596,7 +597,7 @@ int Decimate<E, T>::getFIRFilterLength() const
 ///--------------------------------------------------------------------------///
 ///                         Template instantiation                           ///
 ///--------------------------------------------------------------------------///
-template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, double>;
-template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::REAL_TIME, double>;
-template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, float>;
-template class RTSeis::Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::REAL_TIME, float>;
+template class RTSeis::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::FilterImplementations::Decimate<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::FilterImplementations::Decimate<RTSeis::ProcessingMode::REAL_TIME, float>;

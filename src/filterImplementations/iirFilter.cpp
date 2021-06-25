@@ -8,9 +8,9 @@
 #include <ippcore.h>
 #include <ipptypes.h>
 #include "rtseis/enums.hpp"
-#include "rtseis/utilities/filterImplementations/iirFilter.hpp"
+#include "rtseis/filterImplementations/iirFilter.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<RTSeis::ProcessingMode E, class T>
 class IIRFilter<E, T>::IIRFilterImpl
@@ -719,8 +719,10 @@ bool IIRFilter<E, T>::isInitialized() const noexcept
     return pImpl->isInitialized();
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::POST, double>;
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::POST, float>;
-template class RTSeis::Utilities::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::REAL_TIME, float>;
+///--------------------------------------------------------------------------///
+///                          Template Instantiation                          ///
+///--------------------------------------------------------------------------///
+template class RTSeis::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::FilterImplementations::IIRFilter<RTSeis::ProcessingMode::REAL_TIME, float>;

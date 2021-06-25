@@ -11,21 +11,21 @@
 #include <ipps.h>
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterImplementations/decimate.hpp"
-#include "rtseis/utilities/filterImplementations/downsample.hpp"
-#include "rtseis/utilities/filterImplementations/iirFilter.hpp"
-#include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
-#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
-#include "rtseis/utilities/filterImplementations/medianFilter.hpp"
-#include "rtseis/utilities/filterImplementations/sosFilter.hpp"
-#include "rtseis/utilities/filterImplementations/enums.hpp"
+#include "rtseis/filterImplementations/decimate.hpp"
+#include "rtseis/filterImplementations/downsample.hpp"
+#include "rtseis/filterImplementations/iirFilter.hpp"
+#include "rtseis/filterImplementations/iiriirFilter.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
+#include "rtseis/filterImplementations/multiRateFIRFilter.hpp"
+#include "rtseis/filterImplementations/medianFilter.hpp"
+#include "rtseis/filterImplementations/sosFilter.hpp"
+#include "rtseis/filterImplementations/enums.hpp"
 #include <gtest/gtest.h>
 
 namespace
 {
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 static void read_decimate(const int nq, std::vector<double> *xdecim);
 static int readTextFile(int *npts, double *xPtr[],
                         const std::string fileName = "utils/data/gse2.txt");

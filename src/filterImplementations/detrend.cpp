@@ -1,9 +1,9 @@
-#include <cstdlib>
+#include <string>
 #include <cmath>
 #include <ipps.h>
-#include "rtseis/utilities/filterImplementations/detrend.hpp"
+#include "rtseis/filterImplementations/detrend.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<class T>
 class Detrend<T>::DetrendImpl
@@ -153,7 +153,7 @@ void Detrend<float>::apply(const int nx, const float x[], float *yin[])
 }
 
 /// Remove trend (float)
-void RTSeis::Utilities::FilterImplementations::removeTrend(
+void RTSeis::FilterImplementations::removeTrend(
     const int length, const float x[], float *yin[],
     float *intercept, float *slope)
 {
@@ -207,7 +207,7 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
 }
 
 /// Remove trend (double)
-void RTSeis::Utilities::FilterImplementations::removeTrend(
+void RTSeis::FilterImplementations::removeTrend(
     const int length, const double x[], double *yin[],
     double *intercept, double *slope)
 {
@@ -258,7 +258,7 @@ void RTSeis::Utilities::FilterImplementations::removeTrend(
 }
 
 /// Remove mean (double)
-void RTSeis::Utilities::FilterImplementations::removeMean(
+void RTSeis::FilterImplementations::removeMean(
     const int nx, const double x[], double *y[], double *mean)
 {
     if (nx <= 0){return;} 
@@ -274,7 +274,7 @@ void RTSeis::Utilities::FilterImplementations::removeMean(
 }
 
 /// Remove mean (float)
-void RTSeis::Utilities::FilterImplementations::removeMean(
+void RTSeis::FilterImplementations::removeMean(
     const int nx, const float x[], float *y[], float *mean)
 {
     if (nx <= 0){return;} 
@@ -289,6 +289,8 @@ void RTSeis::Utilities::FilterImplementations::removeMean(
     if (mean){*mean = pMean;}
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::Detrend<double>;
-template class RTSeis::Utilities::FilterImplementations::Detrend<float>;
+///--------------------------------------------------------------------------///
+///                        Template instantiation                            ///
+///--------------------------------------------------------------------------///
+template class RTSeis::FilterImplementations::Detrend<double>;
+template class RTSeis::FilterImplementations::Detrend<float>;

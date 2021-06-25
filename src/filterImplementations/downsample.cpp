@@ -5,9 +5,9 @@
 #include <ipps.h>
 #include "rtseis/enums.hpp"
 #include "private/throw.hpp"
-#include "rtseis/utilities/filterImplementations/downsample.hpp"
+#include "rtseis/filterImplementations/downsample.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<RTSeis::ProcessingMode E, class T>
 class Downsample<E, T>::DownsampleImpl
@@ -332,7 +332,7 @@ int Downsample<E, T>::getDownsampleFactor() const noexcept
 }
 
 /// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::Downsample<RTSeis::ProcessingMode::POST, double>;
-template class RTSeis::Utilities::FilterImplementations::Downsample<RTSeis::ProcessingMode::REAL_TIME, double>;
-template class RTSeis::Utilities::FilterImplementations::Downsample<RTSeis::ProcessingMode::POST, float>;
-template class RTSeis::Utilities::FilterImplementations::Downsample<RTSeis::ProcessingMode::REAL_TIME, float>;
+template class RTSeis::FilterImplementations::Downsample<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::FilterImplementations::Downsample<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::FilterImplementations::Downsample<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::FilterImplementations::Downsample<RTSeis::ProcessingMode::REAL_TIME, float>;

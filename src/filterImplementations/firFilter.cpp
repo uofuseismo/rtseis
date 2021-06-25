@@ -6,9 +6,9 @@
 #include <ipps.h>
 #include "rtseis/enums.hpp"
 #include "private/throw.hpp"
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<RTSeis::ProcessingMode E, class T>
 class FIRFilter<E, T>::FIRImpl
@@ -517,7 +517,7 @@ void FIRFilter<E, T>::getInitialConditions(const int nz, double *ziOut[]) const
 }
 
 /// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double>;
-template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
-template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, float>;
-template class RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, float>;
+template class RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, float>;

@@ -4,7 +4,7 @@
 #include <string>
 #include <algorithm>
 #include <ipps.h>
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
 #include "rtseis/utilities/characteristicFunction/carlSTALTA.hpp"
 #include "rtseis/enums.hpp"
 
@@ -20,10 +20,10 @@ void compute(const int n, const int mChunkSize,
              T *__attribute__((aligned(64))) yWork,
              T *__attribute__((aligned(64))) staSignal,
              T *__attribute__((aligned(64))) ltaSignal,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mSTAFilter,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mLTAFilter,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mSTARFilter,
-             RTSeis::Utilities::FilterImplementations::FIRFilter<E, T> &mLTARFilter)
+             RTSeis::FilterImplementations::FIRFilter<E, T> &mSTAFilter,
+             RTSeis::FilterImplementations::FIRFilter<E, T> &mLTAFilter,
+             RTSeis::FilterImplementations::FIRFilter<E, T> &mSTARFilter,
+             RTSeis::FilterImplementations::FIRFilter<E, T> &mLTARFilter)
 {
     // Loop on chunks
     for (int i=0; i<n; i=i+mChunkSize)
@@ -201,13 +201,13 @@ public:
     /// Workspace for LTA signal in block.  This has dimension [mChunkSize].
     void *__attribute__((aligned(64))) mLTA = nullptr;
     /// STA FIR filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mSTAFilter;
+    RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mSTAFilter;
     /// LTA FIR filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mLTAFilter;
+    RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mLTAFilter;
     /// Rectified STA filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mSTARFilter;
+    RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mSTARFilter;
     /// Rectified LTA filter implementation.
-    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mLTARFilter;
+    RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::REAL_TIME, T> mLTARFilter;
     /// Ratio - scales the rectified LTA
     T mRatio = 1;
     /// Shift to increase sensitifity of characteristic function

@@ -16,11 +16,11 @@
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
-#include "rtseis/utilities/filterImplementations/decimate.hpp"
-#include "rtseis/utilities/filterImplementations/sosFilter.hpp"
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
-#include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
-#include "rtseis/utilities/filterImplementations/iirFilter.hpp"
+#include "rtseis/filterImplementations/decimate.hpp"
+#include "rtseis/filterImplementations/sosFilter.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
+#include "rtseis/filterImplementations/iiriirFilter.hpp"
+#include "rtseis/filterImplementations/iirFilter.hpp"
 
 const std::string dataDir = "data/";
 const std::string taperSolns100FileName = dataDir + "taper100.all.txt";
@@ -210,7 +210,7 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     int ns = sos.getNumberOfSections();
     std::vector<double> bs = sos.getNumeratorCoefficients();
     std::vector<double> as = sos.getDenominatorCoefficients();
-    Utilities::FilterImplementations::SOSFilter
+    FilterImplementations::SOSFilter
         <RTSeis::ProcessingMode::POST, double> sosFilt; 
     std::vector<double> ysosRef(npts);
     sosFilt.initialize(ns, bs.data(), as.data());
@@ -416,8 +416,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     std::vector<double> a = ba.getDenominatorCoefficients();
     int nb = static_cast<int> (b.size());
     int na = static_cast<int> (a.size());
-    Utilities::FilterImplementations::IIRFilter<ProcessingMode::POST, double> iirFilt; 
-    Utilities::FilterImplementations::IIRIIRFilter<double> iiriirFilt;
+    FilterImplementations::IIRFilter<ProcessingMode::POST, double> iirFilt; 
+    FilterImplementations::IIRIIRFilter<double> iiriirFilt;
     std::vector<double> yiirRef(npts);
     iirFilt.initialize(nb, b.data(), na, a.data());
     double *yptr = yiirRef.data();
@@ -613,7 +613,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
                                   Utilities::FilterDesign::FIRWindow::HAMMING);
     int ntaps = fir.getNumberOfFilterTaps();
     std::vector<double> b = fir.getFilterTaps();
-    Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilt;
+    FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilt;
     std::vector<double> yfirRef(npts);
     firFilt.initialize(ntaps, b.data());
     double *yptr = yfirRef.data();
@@ -864,7 +864,7 @@ int testDecimate(const std::vector<double> &x)
             return EXIT_FAILURE;
         }
         // Verify
-        RTSeis::Utilities::FilterImplementations::Decimate
+        FilterImplementations::Decimate
           <RTSeis::ProcessingMode::POST, double> decim;
         decim.initialize(iq, firLen, removePhaseShift);
         std::vector<double> yref(npts);

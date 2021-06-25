@@ -1,12 +1,12 @@
+#include <iostream>
+#include <string>
 #include <cstdio>
+#include <cassert>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
 #include "rtseis/enums.hpp"
-#include "private/throw.hpp"
-#include "rtseis/log.h"
-#include "rtseis/utilities/filterImplementations/multiRateFIRFilter.hpp"
+#include "rtseis/filterImplementations/multiRateFIRFilter.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<class T>
 class MultiRateFIRFilter<T>::MultiRateFIRImpl
@@ -31,7 +31,7 @@ public:
                               firmr.chunkSize_);
         if (ierr != 0)
         {
-            RTSEIS_ERRMSG("%s", "Failed to inititalize");
+            std::cerr << "Failed to inititalize" << std::endl;
             clear();
             return *this;
         }
@@ -158,7 +158,8 @@ public:
     {
         resetInitialConditions();
         int nzRef = getInitialConditionLength();
-        if (nzRef != nz){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+        assert(nzRef == nz);
+        //if (nzRef != nz){std::cerr << "Shouldn't happen" << std::endl;}
         if (nzRef > 0){ippsCopy_64f(zi, zi_, nzRef);}
         ippsCopy_64f(zi, zi_, nzRef);
         if (precision_ == RTSeis::Precision::DOUBLE)
@@ -191,7 +192,8 @@ public:
                                                  pSpec64_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error reinitializing state structure");
+                std::cerr << "Error reinitializing state structure"
+                          << std::endl;
                 return -1;
             }
         }
@@ -209,7 +211,8 @@ public:
                                                  pSpec32_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Error reinitializing state structure");
+                std::cerr << "Error reinitializing float state structure"
+                          << std::endl;
                 return -1;
             }
         }
@@ -256,7 +259,7 @@ public:
                                                 &specSize_, &bufferSize_);
             if (status != ippStsNoErr)
             {   
-                RTSEIS_ERRMSG("%s", "Failed to get state size");
+                std::cerr << "Failed to get state size" << std::endl;
                 clear();
                 return -1; 
             }
@@ -299,7 +302,7 @@ public:
                                        pSpec64_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to initialize filter state");
+                std::cerr << "Failed to initialize filter state" << std::endl;
                 clear();
                 return -1;
             }
@@ -312,7 +315,7 @@ public:
                                                 &specSize_, &bufferSize_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to get state size");
+                std::cerr <<  "Failed to get float state size" << std::endl;
                 clear();
                 return -1; 
             }
@@ -352,7 +355,8 @@ public:
                                        pSpec32_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("%s", "Failed to initialize filter state");
+                std::cerr << "Failed to initialize float filter state"
+                          << std::endl;
                 clear();
                 return -1;
             }
@@ -377,7 +381,7 @@ public:
             ippsFree(x32);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to apply filter" << std::endl;
                 ippsFree(y32);
                 return -1;
             }
@@ -448,8 +452,9 @@ public:
             if (nCopy > 0){ippsCopy_64f(x, &pSrc[nprev], nCopy);}
             if (nUse%downFactor != 0)
             {
-                RTSEIS_ERRMSG("mod(nUse,downFactor) = mod(%d,%d) = %d != 0",
-                              nUse, downFactor, nUse%downFactor);
+                std::cerr << "mod(nUse,downFactor) = mod(" << nUse << ","
+                          << downFactor << ") = " << nUse%downFactor
+                          << " != 0" << std::endl;
             }
         }
         *len = 0;
@@ -458,7 +463,8 @@ public:
             *len = (upFactor*nUse + downFactor - 1 - downPhase)/downFactor;
             if (*len > ny)
             {
-                RTSEIS_ERRMSG("ny=%d must be at least %d\n", ny, *len);
+                std::cerr << "ny= " << ny << " must be at least "
+                          << *len << std::endl;
                 return -2;
             }
             // Apply it
@@ -467,8 +473,8 @@ public:
                                              dlysrc, dlydst, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("Error in FIRMR with %d/%d=%d samples",
-                              nUse, downFactor, nUse/downFactor);
+                std::cerr << "Error in FIRMR with " << nUse << "/" << downFactor
+                          << "=" << nUse/downFactor << " samples" << std::endl;
                 return -1;
             }
             ippsCopy_64f(pDst, y, *len);
@@ -489,7 +495,7 @@ public:
             *len = 0;
             if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
             {
-                RTSEIS_WARNMSG("%s", "Shouldn't be here\n");
+                std::cerr << "Shouldn't be here" << std::endl;
                 ippsCopy_64f(pSrc, work64_, nprev);
                 ippsCopy_64f(&x[n-nexcess], &work64_[nprev], nexcess);
                 nExcess_ = nexcess;
@@ -518,7 +524,7 @@ public:
             ippsFree(x64);
             if (ierr != 0)
             {
-                RTSEIS_ERRMSG("%s", "Failed to apply filter");
+                std::cerr << "Failed to apply filter" << std::endl;
                 ippsFree(y64);
                 return -1; 
             }
@@ -588,8 +594,9 @@ public:
             if (nCopy > 0){ippsCopy_32f(x, &pSrc[nprev], nCopy);}
             if (nUse%downFactor != 0)
             {
-                RTSEIS_ERRMSG("mod(nUse,downFactor) = mod(%d,%d) = %d != 0",
-                              nUse, downFactor, nUse%downFactor);
+                std::cerr << "mod(nUse,downFactor) = mod(" << nUse << ","
+                          << downFactor << ") = " << nUse%downFactor
+                          << " != 0" << std::endl;
             }
         }
         *len = 0;
@@ -598,7 +605,8 @@ public:
             *len = (upFactor*nUse + downFactor - 1 - downPhase)/downFactor;
             if (*len > ny)
             {
-                RTSEIS_ERRMSG("ny=%d must be at least %d\n", ny, *len);
+                std::cerr << "ny= " << ny << " must be at least "
+                          << *len << std::endl;
                 return -2;
             }
             // Apply it
@@ -607,8 +615,8 @@ public:
                                              dlysrc, dlydst, pBuf_);
             if (status != ippStsNoErr)
             {
-                RTSEIS_ERRMSG("Error in FIRMR with %d/%d=%d samples",
-                              nUse, downFactor, nUse/downFactor);
+                std::cerr << "Error in FIRMR with " << nUse << "/" << downFactor
+                          << "=" << nUse/downFactor << " samples" << std::endl;
                 return -1;
             }
             ippsCopy_32f(pDst, y, *len);
@@ -629,7 +637,7 @@ public:
             *len = 0;
             if (mode_ == RTSeis::ProcessingMode::REAL_TIME)
             {
-                RTSEIS_WARNMSG("%s", "Shouldn't be here\n");
+                std::cerr << "Shouldn't be here" << std::endl;
                 ippsCopy_32f(pSrc, work32_, nprev);
                 ippsCopy_32f(&x[n-nexcess], &work32_[nprev], nexcess);
                 nExcess_ = nexcess;
@@ -788,27 +796,32 @@ void MultiRateFIRFilter<double>::initialize(
     {
         if (upFactor < 1)
         {
-            RTSEIS_THROW_RTE("Upsampling factor=%d must be positive", upFactor);
+            throw std::invalid_argument("Upsampling factor = "
+                                      + std::to_string(upFactor)
+                                      + " must be positive");
         }
         if (downFactor < 1)
         {
-            RTSEIS_THROW_RTE("Downsampling factor=%d must be positive",
-                             downFactor);
+            throw std::invalid_argument("Downsampling factor = " 
+                                      + std::to_string(downFactor)
+                                      + " must be positive");
         }
-        if (nb < 1){RTSEIS_THROW_RTE("No filter taps; nb=%d", nb);}
-        if (downFactor < 1){RTSEIS_THROW_RTE("%s", "b is NULL");}
+        if (nb < 1){throw std::invalid_argument("No filter taps");}
+        if (downFactor < 1){throw std::invalid_argument("b is NULL");}
         if (chunkSize < 1)
         {
-            RTSEIS_ERRMSG("Chunksize=%d must be positive", chunkSize);
+            throw std::invalid_argument("chunkSize = %d "
+                                      + std::to_string(chunkSize)
+                                      + " must be positive");
         }
     }
-#ifdef DEBUG
+#ifdef NDEBUG
+    pFIR_->initialize(upFactor, downFactor,
+                      nb, b, mode, precision, chunkSize);
+#else
     int ierr = pFIR_->initialize(upFactor, downFactor,
                                  nb, b, mode, precision, chunkSize);
     assert(ierr == 0);
-#else
-    pFIR_->initialize(upFactor, downFactor,
-                      nb, b, mode, precision, chunkSize);
 #endif
 }
 
@@ -826,27 +839,32 @@ void MultiRateFIRFilter<float>::initialize(
     {
         if (upFactor < 1)
         {
-            RTSEIS_THROW_RTE("Upsampling factor=%d must be positive", upFactor);
+            throw std::invalid_argument("Upsampling factor = "
+                                      + std::to_string(upFactor)
+                                      + " must be positive");
         }
         if (downFactor < 1)
         {
-            RTSEIS_THROW_RTE("Downsampling factor=%d must be positive",
-                             downFactor);
+            throw std::invalid_argument("Downsampling factor = " 
+                                      + std::to_string(downFactor)
+                                      + " must be positive");
         }
-        if (nb < 1){RTSEIS_THROW_RTE("No filter taps; nb=%d", nb);}
-        if (downFactor < 1){RTSEIS_THROW_RTE("%s", "b is NULL");}
+        if (nb < 1){throw std::invalid_argument("No filter taps");}
+        if (downFactor < 1){throw std::invalid_argument("b is NULL");}
         if (chunkSize < 1)
         {
-            RTSEIS_ERRMSG("Chunksize=%d must be positive", chunkSize);
+            throw std::invalid_argument("chunkSize = %d "
+                                      + std::to_string(chunkSize)
+                                      + " must be positive");
         }
     }
-#ifdef DEBUG
+#ifndef NDEBUG
+    pFIR_->initialize(upFactor, downFactor,
+                      nb, b, mode, precision, chunkSize);
+#else
     int ierr = pFIR_->initialize(upFactor, downFactor,
                                  nb, b, mode, precision, chunkSize);
     assert(ierr == 0);
-#else
-    pFIR_->initialize(upFactor, downFactor,
-                      nb, b, mode, precision, chunkSize);
 #endif
 }
 
@@ -872,10 +890,7 @@ void MultiRateFIRFilter<T>::initialize(
 template<class T>
 int MultiRateFIRFilter<T>::estimateSpace(const int n) const
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Module is not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     if (n <= 0){return 0;} // No points
     int len = pFIR_->estimateSpace(n);
     return len;
@@ -884,10 +899,7 @@ int MultiRateFIRFilter<T>::estimateSpace(const int n) const
 template<class T>
 int MultiRateFIRFilter<T>::getInitialConditionLength() const
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pFIR_->getInitialConditionLength();
 }
 
@@ -895,15 +907,17 @@ template<class T>
 void MultiRateFIRFilter<T>::setInitialConditions(
     const int nz, const double zi[])
 {
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     int nzRef = getInitialConditionLength();
     if (nz != nzRef || zi == nullptr)
     {
-        if (nz != nzRef){RTSEIS_THROW_IA("nz=%d should equal %d", nz, nzRef);}
-        RTSEIS_THROW_IA("%s", "zi is NULL");
+        if (nz != nzRef)
+        {
+            throw std::invalid_argument("nz = " + std::to_string(nz)
+                                      + " should equal "
+                                      + std::to_string(nzRef));
+        }
+        throw std::invalid_argument("zi is NULL");
     }
     pFIR_->setInitialConditions(nz, zi);
 }
@@ -914,24 +928,16 @@ void MultiRateFIRFilter<T>::apply(const int n, const T x[],
 {
     *ny = 0;
     if (n <= 0){return;} // Nothing to do
-    if (!isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Module is not initialized");
-    }
-    if (x == nullptr)
-    {
-        RTSEIS_THROW_IA("%s", "x is NULL");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
     int nworkEst = pFIR_->estimateSpace(n);
     if (nywork < nworkEst)
     {
-        RTSEIS_THROW_IA("Resize nywork =  %d to %d", nywork, nworkEst);
+        throw std::invalid_argument("Resize nywork = " + std::to_string(nywork)
+                                 + " to " + std::to_string(nworkEst));
     }
     T *y = *yIn;
-    if (y == nullptr)
-    {
-        RTSEIS_THROW_IA("%s", "y is NULL");
-    }
+    if (y == nullptr){throw std::invalid_argument("y is NULL");}
 #ifdef DEBUG
     int ierr = pFIR_->apply(n, x, nywork, ny, y);
     assert(ierr == 0);
@@ -981,10 +987,7 @@ int MultiRateFIRFilter::apply(const int n, const float x[],
 template<class T>
 void MultiRateFIRFilter<T>::resetInitialConditions()
 {
-    if (!pFIR_->isInitialized())
-    {
-        RTSEIS_THROW_RTE("%s", "Module is not initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
 #ifdef DEBUG
     int ierr = pFIR_->resetInitialConditions();
     assert(ierr == 0);
@@ -1000,6 +1003,8 @@ bool MultiRateFIRFilter<T>::isInitialized() const noexcept
     return pFIR_->isInitialized();
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::MultiRateFIRFilter<double>;
-template class RTSeis::Utilities::FilterImplementations::MultiRateFIRFilter<float>;
+///--------------------------------------------------------------------------///
+///                         Template instantiation                           ///
+///--------------------------------------------------------------------------///
+template class RTSeis::FilterImplementations::MultiRateFIRFilter<double>;
+template class RTSeis::FilterImplementations::MultiRateFIRFilter<float>;

@@ -1,17 +1,9 @@
-#ifndef RTSEIS_UTILITIES_FILTER_ENUMS_HPP
-#define RTSEIS_UTILITIES_FILTER_ENUMS_HPP 1
-
-namespace RTSeis
+#ifndef RTSEIS_FILTERIMPLEMENTATIONS_ENUMS_HPP
+#define RTSEIS_FILTERIMPLEMENTATIONS_ENUMS_HPP 1
+namespace RTSeis::FilterImplementations
 {
-namespace Utilities
-{
-namespace FilterImplementations
-{
-
-/*! 
- * @brief Defines the implementation of the FIR filter.
- * @ingroup rtseis_utils_filters
- */
+/// @brief Defines the implementation of the FIR filter.
+/// @ingroup rtseis_filterImplemenations
 enum class FIRImplementation
 {
     DIRECT, /*!< Direct-form implementation.  This is 
@@ -25,10 +17,8 @@ enum class FIRImplementation
                  between DIRECT or FFT based. */
 };
 
-/*! 
- * @brief Defines the IIR direct-form implementation.
- * @ingroup rtseis_utils_filters
- */
+/// @brief Defines the IIR direct-form implementation.
+/// @ingroup rtseis_filterImplemenations
 enum IIRDFImplementation
 {
     DF2_FAST, /*!< A fast IPP implementation.  For high order
@@ -39,18 +29,13 @@ enum IIRDFImplementation
                    with Matlab. */
 };
 
-/*! 
- * @brief Defines the detrend strategy.
- * @ingroup rtseis_utils_filters
- */
+/// @brief Defines the detrend strategy.
+/// @ingroup rtseis_filterImplemenations
 enum DetrendType
 {
     CONSTANT, /*!< Removes the mean from the time series. */
     LINEAR    /*!< Removes a best fitting line from the time series. */
 };
 
-} // end FilterImplementations
-} // End Utilities
-} // End RTSeis
-
+}
 #endif

@@ -7,8 +7,7 @@
 #include "private/throw.hpp"
 #include "rtseis/enums.hpp"
 #include "rtseis/utilities/characteristicFunction/classicSTALTA.hpp"
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
-#include "rtseis/utilities/filterImplementations/enums.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
 
 #define CHUNK_SIZE 1024
 
@@ -126,7 +125,7 @@ public:
         double div =  1/static_cast<double> (nSta);
         ippsSet(nSta, div, filterCoeffs.data());
         mSTAFilter.initialize(nSta, filterCoeffs.data(),
-           RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
+           RTSeis::FilterImplementations::FIRImplementation::DIRECT);
         // Set the numerator's initial conditions to 0 
         ippsSet(nSta-1, 0, filterCoeffs.data());
         mSTAFilter.setInitialConditions(nSta-1, filterCoeffs.data());
@@ -135,7 +134,7 @@ public:
         div = 1/static_cast<double> (nLta);
         ippsSet(nLta, div, filterCoeffs.data());
         mLTAFilter.initialize(nLta, filterCoeffs.data(),
-           RTSeis::Utilities::FilterImplementations::FIRImplementation::DIRECT);
+           RTSeis::FilterImplementations::FIRImplementation::DIRECT);
 
         // Set the denominator's initial conditions to a large number.  This
         // will result in a calculation on startup like 0/big which is 0.
@@ -211,9 +210,9 @@ public:
         mLTAFilter.setInitialConditions(nzDen, zDen);
     }
 ///private:
-    RTSeis::Utilities::FilterImplementations::FIRFilter<
+    RTSeis::FilterImplementations::FIRFilter<
         RTSeis::ProcessingMode::REAL_TIME, T> mSTAFilter;
-    RTSeis::Utilities::FilterImplementations::FIRFilter<
+    RTSeis::FilterImplementations::FIRFilter<
         RTSeis::ProcessingMode::REAL_TIME, T> mLTAFilter;
     T *mX2 = nullptr;
     T *mYNum = nullptr;

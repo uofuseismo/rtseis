@@ -9,7 +9,6 @@
 #include "rtseis/transforms/dftRealToComplex.hpp"
 #include "rtseis/transforms/continuousWavelet.hpp"
 #include "rtseis/transforms/wavelets/morlet.hpp"
-#include "rtseis/utilities/filterImplementations/detrend.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "private/convolve.hpp"
 #include "private/pad.hpp"

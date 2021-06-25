@@ -6,7 +6,7 @@
 #include "rtseis/transforms/firEnvelope.hpp"
 #include "rtseis/utilities/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
 #include "private/throw.hpp"
 
 using namespace RTSeis::Utilities;

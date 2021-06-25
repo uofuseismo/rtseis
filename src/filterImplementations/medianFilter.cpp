@@ -3,11 +3,10 @@
 #ifndef NDEBUG
 #include <cassert>
 #endif
-
 #include "rtseis/enums.hpp"
-#include "rtseis/utilities/filterImplementations/medianFilter.hpp"
+#include "rtseis/filterImplementations/medianFilter.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<RTSeis::ProcessingMode E, class T>
 class MedianFilter<E, T>::MedianFilterImpl
@@ -453,8 +452,10 @@ int MedianFilter<E, T>::getGroupDelay() const
     return pImpl->getGroupDelay();
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::POST, double>;
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::POST, float>;
-template class RTSeis::Utilities::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::REAL_TIME, float>;
+///--------------------------------------------------------------------------///
+///                           Template Instantiation                         ///
+///--------------------------------------------------------------------------///
+template class RTSeis::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::FilterImplementations::MedianFilter<RTSeis::ProcessingMode::REAL_TIME, float>;

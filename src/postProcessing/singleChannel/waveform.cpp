@@ -29,13 +29,13 @@
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
-#include "rtseis/utilities/filterImplementations/decimate.hpp"
-#include "rtseis/utilities/filterImplementations/detrend.hpp"
-#include "rtseis/utilities/filterImplementations/downsample.hpp"
-#include "rtseis/utilities/filterImplementations/firFilter.hpp"
-#include "rtseis/utilities/filterImplementations/iirFilter.hpp"
-#include "rtseis/utilities/filterImplementations/iiriirFilter.hpp"
-#include "rtseis/utilities/filterImplementations/sosFilter.hpp"
+#include "rtseis/filterImplementations/decimate.hpp"
+#include "rtseis/filterImplementations/detrend.hpp"
+#include "rtseis/filterImplementations/downsample.hpp"
+#include "rtseis/filterImplementations/firFilter.hpp"
+#include "rtseis/filterImplementations/iirFilter.hpp"
+#include "rtseis/filterImplementations/iiriirFilter.hpp"
+#include "rtseis/filterImplementations/sosFilter.hpp"
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include "rtseis/utilities/normalization/minMax.hpp"
@@ -82,9 +82,9 @@ classifyFIRWindow(const FIRWindow windowIn);
     const double *x = pImpl->getInputDataPointer(); \
     ippsCopy_64f(x, xtemp, len); \
     ippsZero_64f(&xtemp[len], npad - len); \
-    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilter; \
+    RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilter; \
     firFilter.initialize(nt, taps.data(), \
-                   Utilities::FilterImplementations::FIRImplementation::DIRECT); \
+                   RTSeis::FilterImplementations::FIRImplementation::DIRECT); \
     firFilter.apply(npad, xtemp, &ytemp); \
     ippsFree(xtemp); \
     pImpl->resizeOutputData(len); \
@@ -581,11 +581,10 @@ void Waveform<T>::demean()
         RTSEIS_THROW_RTE("%s", "No data is set on the module");
     }
     // Demean the data
-    constexpr Utilities::FilterImplementations::DetrendType type
-        = Utilities::FilterImplementations::DetrendType::CONSTANT;
+    constexpr auto type = RTSeis::FilterImplementations::DetrendType::CONSTANT;
     try
     {
-        Utilities::FilterImplementations::Detrend<T> demean;
+        RTSeis::FilterImplementations::Detrend<T> demean;
         demean.initialize(type);
         const T *x = pImpl->getInputDataPointer();
         pImpl->resizeOutputData(len);
@@ -619,11 +618,10 @@ void Waveform<T>::detrend()
         RTSEIS_THROW_RTE("%s", "No data iset set on the module");
     }
     // Detrend the data
-    constexpr Utilities::FilterImplementations::DetrendType type 
-        = Utilities::FilterImplementations::DetrendType::LINEAR;
+    constexpr auto type = RTSeis::FilterImplementations::DetrendType::LINEAR;
     try  
     {    
-        Utilities::FilterImplementations::Detrend<T> detrend;
+        RTSeis::FilterImplementations::Detrend<T> detrend;
         detrend.initialize(type);
         const T *x = pImpl->getInputDataPointer();
         pImpl->resizeOutputData(len);
@@ -666,7 +664,7 @@ void Waveform<T>::downsample(const int nq)
         RTSEIS_THROW_IA("Downsampling factor = %d must be at least 1", nq); 
     }
     // Initialize the downsampler
-    Utilities::FilterImplementations::Downsample
+    RTSeis::FilterImplementations::Downsample
         <RTSeis::ProcessingMode::POST_PROCESSING, T> downsample;
     try
     {
@@ -711,7 +709,7 @@ void Waveform<T>::decimate(const int nq, const int filterLength)
     // Handle odd length so I can remove the phase shift from the FIR filter
     int nfir = filterLength;
     if (nfir%2 == 0){nfir = nfir + 1;}
-    Utilities::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, T> decimate;
+    RTSeis::FilterImplementations::Decimate<RTSeis::ProcessingMode::POST, T> decimate;
     try
     {
         constexpr bool lremovePhaseShift = true;
@@ -1134,9 +1132,9 @@ void Waveform<double>::firFilter(
         RTSEIS_THROW_IA("%s", "No filter taps");
     }
     // Initialize filter
-    RTSeis::Utilities::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilter;
+    RTSeis::FilterImplementations::FIRFilter<RTSeis::ProcessingMode::POST, double> firFilter;
     firFilter.initialize(nb, taps.data(),
-                   Utilities::FilterImplementations::FIRImplementation::DIRECT);
+                   RTSeis::FilterImplementations::FIRImplementation::DIRECT);
     pImpl->resizeOutputData(len);
     // Standard FIR filtering 
     const double *x = pImpl->getInputDataPointer();
@@ -1182,11 +1180,11 @@ void Waveform<T>::iirFilter(const RTSeis::FilterRepresentations::BA &ba,
     // Initialize filter
     if (!lremovePhase)
     {
-        RTSeis::Utilities::FilterImplementations::IIRFilter
+        RTSeis::FilterImplementations::IIRFilter
             <ProcessingMode::POST, T> iirFilter;
         iirFilter.initialize(nb, b.data(),
                              na, a.data(),
-               Utilities::FilterImplementations::IIRDFImplementation::DF2_FAST);
+               RTSeis::FilterImplementations::IIRDFImplementation::DF2_FAST);
         pImpl->resizeOutputData(len);
         const T *x = pImpl->getInputDataPointer();
         T *yout = pImpl->getOutputDataPointer();
@@ -1194,7 +1192,7 @@ void Waveform<T>::iirFilter(const RTSeis::FilterRepresentations::BA &ba,
     }
     else
     {
-        RTSeis::Utilities::FilterImplementations::IIRIIRFilter<T> iiriirFilter;
+        RTSeis::FilterImplementations::IIRIIRFilter<T> iiriirFilter;
         iiriirFilter.initialize(nb, b.data(),
                                 na, a.data());
         pImpl->resizeOutputData(len);
@@ -1226,8 +1224,8 @@ void Waveform<double>::sosFilter(
     const std::vector<double> bs = sos.getNumeratorCoefficients();
     const std::vector<double> as = sos.getDenominatorCoefficients();
     // Initialize filter
-    RTSeis::Utilities::FilterImplementations::SOSFilter
-         <RTSeis::ProcessingMode::POST, double> sosFilter;
+    RTSeis::FilterImplementations::SOSFilter
+        <RTSeis::ProcessingMode::POST, double> sosFilter;
     sosFilter.initialize(ns, bs.data(), as.data());
     pImpl->resizeOutputData(len);
     // Get handles on pointers

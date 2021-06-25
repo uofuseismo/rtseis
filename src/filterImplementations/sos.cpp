@@ -7,9 +7,9 @@
 #endif
 #include <ipps.h>
 #include "rtseis/enums.hpp"
-#include "rtseis/utilities/filterImplementations/sosFilter.hpp"
+#include "rtseis/filterImplementations/sosFilter.hpp"
 
-using namespace RTSeis::Utilities::FilterImplementations;
+using namespace RTSeis::FilterImplementations;
 
 template<RTSeis::ProcessingMode E, class T>
 class SOSFilter<E, T>::SOSFilterImpl
@@ -598,8 +598,10 @@ bool SOSFilter<E, T>::isInitialized() const noexcept
     return pImpl->mInitialized;
 }
 
-/// Template instantiation
-template class RTSeis::Utilities::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::POST, double>;
-template class RTSeis::Utilities::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
-template class RTSeis::Utilities::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::POST, float>;
-template class RTSeis::Utilities::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::REAL_TIME, float>;
+///--------------------------------------------------------------------------///
+///                             Template Instantiation                       ///
+///--------------------------------------------------------------------------///
+template class RTSeis::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::POST, double>;
+template class RTSeis::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::REAL_TIME, double>;
+template class RTSeis::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::FilterImplementations::SOSFilter<RTSeis::ProcessingMode::REAL_TIME, float>;
