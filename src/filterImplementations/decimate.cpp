@@ -7,12 +7,11 @@
 #include <ipps.h>
 #include "rtseis/enums.hpp"
 #include "rtseis/filterImplementations/decimate.hpp"
-#include "rtseis/utilities/filterDesign/fir.hpp"
+#include "rtseis/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterImplementations/downsample.hpp"
 #include "rtseis/filterImplementations/firFilter.hpp"
 
-using namespace RTSeis::Utilities;
 using namespace RTSeis::FilterImplementations;
 
 template<RTSeis::ProcessingMode E, class T>

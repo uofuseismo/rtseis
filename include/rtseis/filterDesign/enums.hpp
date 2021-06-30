@@ -1,17 +1,9 @@
-#ifndef RTSEIS_UTILS_DESIGN_ENUMS_HPP
-#define RTSEIS_UTILS_DESIGN_ENUMS_HPP 1
-
-namespace RTSeis
+#ifndef RTSEIS_FILTERDESIGN_ENUMS_HPP
+#define RTSEIS_FILTERDESIGN_ENUMS_HPP 1
+namespace RTSeis::FilterDesign
 {
-namespace Utilities
-{
-namespace FilterDesign
-{
-
-/*! 
- * @brief defines the windows available for FIR design.
- * @ingroup rtseis_utils_design_fir
- */
+/// @brief defines the windows available for FIR design.
+/// @ingroup rtseis_filterdesign_fir
 enum class FIRWindow
 {
     HAMMING,     /*!< Hamming window. */
@@ -19,10 +11,8 @@ enum class FIRWindow
     HANN,        /*!< Hann window. */
     BLACKMAN_OPT /*!< Optimal Blackman window. */
 };
-/*! 
- * @brief Defines the analog prototype for the IIR filter design.
- * @ingroup rtseis_utils_design_iir
- */
+/// @brief Defines the analog prototype for the IIR filter design.
+/// @ingroup rtseis_filterdesign_iir
 enum class IIRPrototype
 {   
     BUTTERWORTH, /*!< Butterworth filter design. */
@@ -30,20 +20,16 @@ enum class IIRPrototype
     CHEBYSHEV1,  /*!< Chebyshev I filter design. */
     CHEBYSHEV2   /*!< Chebyshev II filter design. */
 };  
-/*!
- * @brief Differentiates the IIR filter design as being for analog or
- *        digital filtering.
- * @ingroup rtseis_utils_design_iir
- */
+/// @brief Differentiates the IIR filter design as being for analog or
+///        digital filtering.
+/// @ingroup rtseis_filterdesign_iir
 enum class IIRFilterDomain
 {
     DIGITAL, /*!< Digital filter. */
     ANALOG   /*!< Analog filter. */
 };
-/*! 
- * @brief Defines the bandtype for the IIR filter design.
- * @ingroup rtseis_utils_design_iir
- */
+/// @brief Defines the bandtype for the IIR filter design.
+/// @ingroup rtseis_filterdesign_iir
 enum class Bandtype
 {   
     LOWPASS,  /*!< Lowpass filter. */
@@ -51,10 +37,8 @@ enum class Bandtype
     BANDPASS, /*!< Bandpass filter. */
     BANDSTOP  /*!< Bandstop filter. */
 };  
-/*! 
- * @brief Pairing strategy when converting a ZPK filter to an SOS filter.
- * @ingroup rtseis_utils_design_iir
- */
+/// @brief Pairing strategy when converting a ZPK filter to an SOS filter.
+/// @ingroup rtseis_filterdesign_iir
 enum class SOSPairing
 {
     NEAREST,  /*!< This attempts to minimize the peak gain. */
@@ -62,9 +46,5 @@ enum class SOSPairing
                    subject to the constraint that odd-order
                    systems should retain one section as first order. */
 };
-
-}; // End Filter design
-}; // End Utilities
-}; // End RTSeis
-
+}
 #endif

@@ -1,20 +1,18 @@
-#include <cstdio>
-#include <cstdlib>
+#include <string>
 #include <vector>
 #include <cmath>
 #include <stdexcept>
-#ifdef DEBUG
+#ifndef NDEBUG
 #include <cassert>
 #endif
 #include <ipps.h>
-#include "private/throw.hpp"
-#include "rtseis/utilities/filterDesign/fir.hpp"
-#include "rtseis/utilities/filterDesign/enums.hpp"
+#include "rtseis/filterDesign/fir.hpp"
+#include "rtseis/filterDesign/enums.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 
 using namespace RTSeis::Utilities;
-using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::FilterDesign;
 
 static IppWinType classifyWindow(const FIRWindow window);
 static void sinc(const int n, const double x[], double sinc[]);
@@ -29,9 +27,11 @@ FIR::FIR1Lowpass(const int order, const double r,
     {
         if (order < 4)
         {
-            RTSEIS_THROW_IA("order=%d must be at least 4", order);
+            throw std::invalid_argument("order = " + std::to_string(order)
+                                     + " must be at least 4");
         }
-        RTSEIS_THROW_IA("r=%f must be in range (0,1)", r);
+        throw std::invalid_argument("r = " + std::to_string(r)
+                                 + " must be in range (0,1)");
     }
     IppWinType winType = classifyWindow(window);
     IppBool doNormal = ippTrue; // Normalize filter coefficients
@@ -41,7 +41,7 @@ FIR::FIR1Lowpass(const int order, const double r,
     IppStatus status = ippsFIRGenGetBufferSize(tapsLen, &bufSize);
     if (status != ippStsNoErr)
     {
-        RTSEIS_THROW_RTE("%s", "Error getting buffer size");
+        throw std::runtime_error("Error getting buffer size");
     }
     Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
     Ipp64f *pTaps = ippsMalloc_64f(tapsLen);  
@@ -55,7 +55,8 @@ FIR::FIR1Lowpass(const int order, const double r,
     else
     {
         ippsFree(pTaps);
-        RTSEIS_THROW_RTE("%s", "Error generating lowpass filter coefficients");
+        throw std::runtime_error(
+            "Error generating lowpass filter coefficients");
     }
     ippsFree(pTaps);
     return fir;
@@ -71,9 +72,11 @@ FIR::FIR1Highpass(const int order, const double r,
     {   
         if (order < 4)
         {
-            RTSEIS_THROW_IA("order=%d must be at least 4", order);
+            throw std::invalid_argument("order = " + std::to_string(order)
+                                     + " must be at least 4");
         }
-        RTSEIS_THROW_IA("r=%f must be in range (0,1)", r);
+        throw std::invalid_argument("r = " + std::to_string(r)
+                                 + " must be in range (0,1)");
     }
     IppWinType winType = classifyWindow(window);
     IppBool doNormal = ippTrue; // Normalize filter coefficients
@@ -83,7 +86,7 @@ FIR::FIR1Highpass(const int order, const double r,
     IppStatus status = ippsFIRGenGetBufferSize(tapsLen, &bufSize);
     if (status != ippStsNoErr)
     {
-        RTSEIS_THROW_RTE("%s", "Error getting buffer size");
+        throw std::runtime_error("Error getting buffer size");
     }
     Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
     Ipp64f *pTaps = ippsMalloc_64f(tapsLen);
@@ -97,7 +100,8 @@ FIR::FIR1Highpass(const int order, const double r,
     else
     {
         ippsFree(pTaps);
-        RTSEIS_THROW_RTE("%s", "Error generating highpass filter coefficients");
+        throw std::runtime_error(
+            "Error generating highpass filter coefficients");
     }
     ippsFree(pTaps);
     return fir;
@@ -115,13 +119,16 @@ FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
     {
         if (order < 4)
         {
-            RTSEIS_THROW_IA("order=%d must be at least 4", order);
+            throw std::invalid_argument("order = " + std::to_string(order)
+                                     + " must be at least 4");
         }
         if (r0 < 0.0 || r0 >= 1.0)
         {
-            RTSEIS_THROW_IA("r.first=%f must be in range (0,1)", r0);
+            throw std::invalid_argument("r.first = " + std::to_string(r0)
+                                      + " must be in range (0,1)");
         }
-        RTSEIS_THROW_IA("r.second=%lf < r.first=%lf", r0, r1);
+        throw std::invalid_argument("r.second = " + std::to_string(r0)
+                                  + " < r.first = " + std::to_string(r1));
     }
     IppWinType winType = classifyWindow(window);
     IppBool doNormal = ippTrue; // Normalize filter coefficients
@@ -132,7 +139,7 @@ FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
     IppStatus status = ippsFIRGenGetBufferSize(tapsLen, &bufSize);
     if (status != ippStsNoErr)
     {
-        RTSEIS_THROW_RTE("%s", "Error getting buffer size");
+        throw std::runtime_error("Error getting buffer size");
     }
     Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
     Ipp64f *pTaps = ippsMalloc_64f(tapsLen);
@@ -146,7 +153,8 @@ FIR::FIR1Bandpass(const int order, const std::pair<double, double> &r,
     else
     {
         ippsFree(pTaps);
-        RTSEIS_THROW_RTE("%s", "Error generating bandpass filter coefficients");
+        throw std::runtime_error(
+            "Error generating bandpass filter coefficients");
     }
     ippsFree(pTaps);
     return fir;
@@ -164,13 +172,16 @@ FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
     {
         if (order < 4)
         {
-            RTSEIS_THROW_IA("order=%d must be at least 4", order);
+            throw std::invalid_argument("order = " + std::to_string(order)
+                                     + " must be at least 4");
         }
         if (r0 < 0.0 || r0 >= 1.0)
         {
-            RTSEIS_THROW_IA("r.first=%f must be in range (0,1)", r0);
+            throw std::invalid_argument("r.first = " + std::to_string(r0)
+                                      + " must be in range (0,1)");
         }
-        RTSEIS_THROW_IA("r.second=%lf < r.first=%lf", r0, r1);
+        throw std::invalid_argument("r.second = " + std::to_string(r0)
+                                  + " < r.first = " + std::to_string(r1));
     }
     IppWinType winType = classifyWindow(window);
     IppBool doNormal = ippTrue; // Normalize filter coefficients
@@ -181,7 +192,7 @@ FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
     IppStatus status = ippsFIRGenGetBufferSize(tapsLen, &bufSize);
     if (status != ippStsNoErr)
     {   
-        RTSEIS_THROW_RTE("%s", "Error getting buffer size");
+        throw std::runtime_error("Error getting buffer size");
     }   
     Ipp8u *pBuffer = ippsMalloc_8u(bufSize);
     Ipp64f *pTaps = ippsMalloc_64f(tapsLen);
@@ -195,7 +206,8 @@ FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
     else
     {
         ippsFree(pTaps);
-        RTSEIS_THROW_RTE("%s", "Error generating bandstop filter coefficients");
+        throw std::runtime_error(
+          "Error generating bandstop filter coefficients");
     }
     ippsFree(pTaps);
     return fir;
@@ -205,7 +217,7 @@ FIR::FIR1Bandstop(const int order, const std::pair<double, double> &r,
 std::pair<RTSeis::FilterRepresentations::FIR,RTSeis::FilterRepresentations::FIR>
 FIR::HilbertTransformer(const int order, const double beta)
 {
-    if (order < 0){RTSEIS_THROW_IA("order=%d cannot be negative", order);}
+    if (order < 0){throw std::invalid_argument("order cannot be negative");}
     int n = order + 1;
     // Special case
     if (n == 1)
@@ -264,7 +276,7 @@ FIR::HilbertTransformer(const int order, const double beta)
             gain = gain + hfiltR[i];
             hfiltI[i] = ks*sin(M_PI*t[i]);
         }
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(gain != 0);
 #endif
         // Normalize

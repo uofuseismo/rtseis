@@ -1,12 +1,9 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 #include <vector>
 #include <cmath>
 #include <cfloat>
 #include <algorithm>
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
-#include "rtseis/utilities/filterDesign/response.hpp"
+#include "rtseis/filterDesign/response.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
@@ -15,7 +12,8 @@
 #include <ipps.h>
 
 
-using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::Utilities;
+using namespace RTSeis::FilterDesign;
 using namespace RTSeis::FilterRepresentations;
 
 std::vector<std::complex<double>>
@@ -28,7 +26,7 @@ Response::freqs(const BA &ba, const std::vector<double> &w)
     std::vector<double> b = ba.getNumeratorCoefficients();
     std::vector<double> a = ba.getDenominatorCoefficients();
     bool lzero = true;
-    for (size_t ia=0; ia<a.size(); ia++)
+    for (size_t ia = 0; ia < a.size(); ia++)
     {
         if (a[ia] != 0)
         {
@@ -38,7 +36,7 @@ Response::freqs(const BA &ba, const std::vector<double> &w)
     } 
     if (lzero)
     {
-        RTSEIS_THROW_IA("%s", "a is entirely 0; division by zero");
+        throw std::invalid_argument("a is entirely 0; division by zero");
     }
     // Compute s = i \omega
     std::vector<std::complex<double>> s;
@@ -80,7 +78,7 @@ Response::freqz(const BA &ba, const std::vector<double> &w)
     std::vector<double> b = ba.getNumeratorCoefficients();
     std::vector<double> a = ba.getDenominatorCoefficients();
     bool lzero = true;
-    for (size_t ia=0; ia<a.size(); ia++)
+    for (size_t ia = 0; ia < a.size(); ia++)
     {   
         if (a[ia] != 0)
         {
@@ -90,32 +88,30 @@ Response::freqz(const BA &ba, const std::vector<double> &w)
     }   
     if (lzero)
     {   
-        RTSEIS_THROW_IA("%s", "a is entirely 0; division by zero");
+        throw std::invalid_argument("a is entirely 0; division by zero");
     }
     // Copy numerators and denominators in reverse order for consistency with
     // polyval and then compute z.  The polyval convention requires us to
     // compute z=e^{-i\omega} to compensate.  Normally, this is would
     // be z^{i \omega}.
     size_t nb = b.size();
-    std::vector<std::complex<double>> bz;
-    bz.resize(nb);
-#ifdef __INTEL_COMPILER
-    #pragma ivdep
-#endif
-    for (size_t i=0; i<nb; i++)
+    std::vector<std::complex<double>> bz(nb);
+    std::reverse_copy(b.begin(), b.end(), bz.begin());
+/*
+    for (size_t i = 0; i < nb; i++)
     {
         bz[i] = b[nb-1-i];
     }
+*/
     size_t na = a.size();
-    std::vector<std::complex<double>> az;
-    az.resize(a.size());
-#ifdef __INTEL_COMPILER
-    #pragma ivdep
-#endif
-    for (size_t i=0; i<na; i++)
+    std::vector<std::complex<double>> az(na);
+    std::reverse_copy(a.begin(), a.end(), az.begin());
+/*
+    for (size_t i = 0; i < na; i++)
     {
         az[i] = a[na-1-i];
     }
+*/
     std::vector<std::complex<double>> z;
     z.resize(nw);
 #ifdef __INTEL_COMPILER
@@ -138,7 +134,7 @@ Response::freqz(const BA &ba, const std::vector<double> &w)
 
 std::vector<double>
 Response::groupDelay(const BA &ba,
-                    const std::vector<double> &w)
+                     const std::vector<double> &w)
 {
     std::vector<double> gd;
     // Nothing to do
@@ -146,11 +142,10 @@ Response::groupDelay(const BA &ba,
     // Get handles on data
     std::vector<double> b = ba.getNumeratorCoefficients();
     std::vector<double> a = ba.getDenominatorCoefficients();
-    if (b.size() < 1 || a.size() < 1)
+    if (b.empty() || a.empty())
     {
-        if (b.size() < 1){RTSEIS_THROW_IA("%s", "No elements in b");}
-        if (a.size() < 1){RTSEIS_THROW_IA("%s", "No elements in a");}
-        RTSEIS_THROW_IA("%s", "Invalid arguments");
+        if (b.empty()){throw std::invalid_argument("b is empty");}
+        throw std::invalid_argument("a is empty");
     }
     // B/A = b[0]/A + b[1]/A + ... = b[0]*conj(A) + ... = b*conj(a)
     std::vector<double> c;
@@ -163,7 +158,7 @@ Response::groupDelay(const BA &ba,
     int nc = static_cast<int> (c.size());
     std::vector<std::complex<double>> zc(nc);
     std::vector<std::complex<double>> zcr(nc);
-    for (int i=0; i<static_cast<int>(c.size()); i++)
+    for (int i = 0; i < static_cast<int> (c.size()); i++)
     {
         zc[ nc-1-i] = std::complex<double> (c[i], 0);
         // Differentiate with power rule
@@ -171,7 +166,7 @@ Response::groupDelay(const BA &ba,
     }
     std::vector<std::complex<double>> z(w.size());
     #pragma omp simd
-    for (size_t i=0; i<w.size(); i++)
+    for (size_t i = 0; i < w.size(); i++)
     {
         std::complex<double> arg(0,-w[i]);
         z[i] = std::exp(arg);
@@ -183,11 +178,11 @@ Response::groupDelay(const BA &ba,
     std::vector<std::complex<double>> den;
     den = Math::Polynomial::polyval(zc, z); //, den);
     // Check for singular elements
-    for (size_t i=0; i<w.size(); i++)
+    for (size_t i = 0; i < w.size(); i++)
     {
         if (std::abs(den[i]) < 10*DBL_EPSILON)
         {
-            RTSEIS_WARNMSG("Group delay is singular at %lf", w[i]);
+            std::cerr << "Group delay is singular at %lf" << w[i] << std::endl;
             num[i] = std::complex<double> (0, 0);
             den[i] = std::complex<double> (1, 0);
         }
@@ -199,7 +194,7 @@ Response::groupDelay(const BA &ba,
     gd.resize(zgd.size());
     double shift = static_cast<double> (a.size() - 1);
     #pragma omp simd
-    for (int i=0; i<static_cast<int> (gd.size()); i++)
+    for (int i = 0; i <static_cast<int> (gd.size()); i++)
     {
         gd[i] = std::real(zgd[i]) - shift;
     }

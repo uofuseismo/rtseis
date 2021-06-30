@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <ipps.h>
-#include "rtseis/utilities/filterDesign/fir.hpp"
+#include "rtseis/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include <gtest/gtest.h>
 
@@ -11,7 +11,7 @@ namespace
 {
 
 using namespace RTSeis;
-using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::FilterDesign;
 
 /*! Test FIR-window based filter design (fir1 in matlab). */
 //int rtseis_test_utils_design_fir_fir1(void)

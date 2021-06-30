@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <string>
 #include <ipps.h>
-#include "rtseis/utilities/filterDesign/response.hpp"
+#include "rtseis/filterDesign/response.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include <gtest/gtest.h>
 
@@ -11,7 +11,7 @@ namespace
 
 using namespace RTSeis;
 using namespace RTSeis::FilterRepresentations;
-using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::FilterDesign;
 
 //int rtseis_test_utils_design_freqs(void)
 TEST(UtilitiesResponse, Freqs)

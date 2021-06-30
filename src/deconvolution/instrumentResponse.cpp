@@ -3,7 +3,7 @@
 #include <complex>
 #include <cmath>
 #include "rtseis/deconvolution/instrumentResponse.hpp"
-#include "rtseis/utilities/filterDesign/iir.hpp"
+#include "rtseis/filterDesign/iir.hpp"
 #include "rtseis/filterRepresentations/zpk.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
@@ -90,7 +90,7 @@ void InstrumentResponse::setAnalogResponse(
 {
     pImpl->mIsAnalog = true;
     pImpl->mBA.clear();
-    pImpl->mBA = RTSeis::Utilities::FilterDesign::IIR::zpk2tf(zpk);
+    pImpl->mBA = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
     pImpl->mHaveResponse = true;
 }
 
@@ -100,7 +100,7 @@ void InstrumentResponse::setDigitalResponse(
 {
     pImpl->mIsAnalog = false;
     pImpl->mBA.clear();
-    pImpl->mBA = RTSeis::Utilities::FilterDesign::IIR::zpk2tf(zpk);
+    pImpl->mBA = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
     pImpl->mHaveResponse = true;
 }
 

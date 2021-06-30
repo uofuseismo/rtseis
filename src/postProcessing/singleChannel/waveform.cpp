@@ -23,8 +23,8 @@
 #include "rtseis/postProcessing/singleChannel/detrend.hpp"
 #include "rtseis/postProcessing/singleChannel/demean.hpp"
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
-#include "rtseis/utilities/filterDesign/enums.hpp"
-#include "rtseis/utilities/filterDesign/filterDesigner.hpp"
+#include "rtseis/filterDesign/enums.hpp"
+#include "rtseis/filterDesign/filterDesigner.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
@@ -59,9 +59,9 @@ static inline Utilities::Math::Convolve::Mode
 classifyConvolveMode(const ConvolutionMode mode);
 static inline Utilities::Math::Convolve::Implementation
 classifyConvolveImplementation(const ConvolutionImplementation implementation);
-static inline Utilities::FilterDesign::IIRPrototype
+static inline FilterDesign::IIRPrototype
 classifyIIRPrototype(const IIRPrototype prototype);
-static inline Utilities::FilterDesign::FIRWindow
+static inline FilterDesign::FIRWindow
 classifyFIRWindow(const FIRWindow windowIn);
 
 #define FIR_REMOVE_PHASE(pImpl, fir) \
@@ -258,7 +258,7 @@ public:
         return nx_; //static_cast<int> (x_.size());
     }
 //private:
-    Utilities::FilterDesign::FilterDesigner filterDesigner;
+    FilterDesign::FilterDesigner filterDesigner;
     /// A pointer to the input data
     const double *xptr_ = nullptr;
     /// The input data
@@ -847,12 +847,12 @@ void Waveform<T>::iirLowpassFilter(const int order, const double fc,
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::BA ba;
     pImpl->filterDesigner.designLowpassIIRFilter(
                         order, r, ptype, ripple, ba,
-                        Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                        FilterDesign::IIRFilterDomain::DIGITAL);
     iirFilter(ba, lzeroPhase);
 }
 
@@ -864,13 +864,13 @@ void Waveform<T>::sosLowpassFilter(const int order, const double fc,
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designLowpassIIRFilter(
                      order, r, ptype, ripple, sos,
-                     Utilities::FilterDesign::SOSPairing::NEAREST,
-                     Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                     FilterDesign::SOSPairing::NEAREST,
+                     FilterDesign::IIRFilterDomain::DIGITAL);
     sosFilter(sos, lzeroPhase);
 }
 
@@ -889,7 +889,7 @@ void Waveform<T>::firLowpassFilter(const int ntapsIn, const double fc,
     int order = ntaps - 1;
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::FIRWindow window;
+    FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designLowpassFIRFilter(order, r, window, fir);
@@ -911,12 +911,12 @@ void Waveform<T>::iirHighpassFilter(const int order, const double fc,
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::BA ba; 
     pImpl->filterDesigner.designHighpassIIRFilter(
                      order, r, ptype, ripple, ba, 
-                     Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                     FilterDesign::IIRFilterDomain::DIGITAL);
     iirFilter(ba, lzeroPhase);
 }
 
@@ -928,13 +928,13 @@ void Waveform<T>::sosHighpassFilter(const int order, const double fc,
 {
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designHighpassIIRFilter(
                     order, r, ptype, ripple, sos,
-                    Utilities::FilterDesign::SOSPairing::NEAREST,
-                    Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                    FilterDesign::SOSPairing::NEAREST,
+                    FilterDesign::IIRFilterDomain::DIGITAL);
     sosFilter(sos, lzeroPhase);
 }
 
@@ -953,7 +953,7 @@ void Waveform<T>::firHighpassFilter(const int ntapsIn, const double fc,
     int order = ntaps - 1;
     // Compute normalized frequencies
     double r = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::FIRWindow window;
+    FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designHighpassFIRFilter(order, r, window, fir);
@@ -978,12 +978,12 @@ void Waveform<T>::iirBandpassFilter(const int order,
     // Compute normalized frequencies
     std::pair<double,double> r
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::BA ba; 
     pImpl->filterDesigner.designBandpassIIRFilter(
                     order, r, ptype, ripple, ba, 
-                     Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                    FilterDesign::IIRFilterDomain::DIGITAL);
     iirFilter(ba, lzeroPhase);
 }
 
@@ -997,13 +997,13 @@ void Waveform<T>::sosBandpassFilter(const int order,
     // Compute normalized frequencies
     std::pair<double,double> r
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designBandpassIIRFilter(
                     order, r, ptype, ripple, sos,
-                    Utilities::FilterDesign::SOSPairing::NEAREST,
-                    Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                    FilterDesign::SOSPairing::NEAREST,
+                    FilterDesign::IIRFilterDomain::DIGITAL);
     sosFilter(sos, lzeroPhase);
 }
 
@@ -1024,7 +1024,7 @@ void Waveform<T>::firBandpassFilter(const int ntapsIn,
     // Compute normalized frequencies
     std::pair<double,double> r
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::FIRWindow window;
+    FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designBandpassFIRFilter(order, r, window, fir);
@@ -1048,12 +1048,12 @@ void Waveform<T>::iirBandstopFilter(const int order,
     // Compute normalized frequencies
     std::pair<double,double> r
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::BA ba;
     pImpl->filterDesigner.designBandstopIIRFilter(
                     order, r, ptype, ripple, ba,
-                    Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                    FilterDesign::IIRFilterDomain::DIGITAL);
     iirFilter(ba, lzeroPhase);
 }
 
@@ -1067,13 +1067,13 @@ void Waveform<T>::sosBandstopFilter(const int order,
     // Compute normalized frequencies
     std::pair<double,double> r
         = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     ptype = classifyIIRPrototype(prototype);
     RTSeis::FilterRepresentations::SOS sos;
     pImpl->filterDesigner.designBandstopIIRFilter(
                     order, r, ptype, ripple, sos,
-                    Utilities::FilterDesign::SOSPairing::NEAREST,
-                    Utilities::FilterDesign::IIRFilterDomain::DIGITAL);
+                    FilterDesign::SOSPairing::NEAREST,
+                    FilterDesign::IIRFilterDomain::DIGITAL);
     sosFilter(sos, lzeroPhase);
 }
 
@@ -1094,7 +1094,7 @@ void Waveform<T>::firBandstopFilter(const int ntapsIn,
     // Compute normalized frequencies
     std::pair<double,double> r
          = computeNormalizedFrequencyFromSamplingPeriod(fc, pImpl->dt_);
-    Utilities::FilterDesign::FIRWindow window;
+    FilterDesign::FIRWindow window;
     window = classifyFIRWindow(windowIn);
     RTSeis::FilterRepresentations::FIR fir;
     pImpl->filterDesigner.designBandstopFIRFilter(order, r, window, fir);
@@ -1440,25 +1440,25 @@ classifyConvolveImplementation(const ConvolutionImplementation implementation)
     return convcorImpl;
 }
 
-Utilities::FilterDesign::IIRPrototype
+FilterDesign::IIRPrototype
 classifyIIRPrototype(const IIRPrototype prototype)
 {
-    Utilities::FilterDesign::IIRPrototype ptype;
+    FilterDesign::IIRPrototype ptype;
     if (prototype == IIRPrototype::BESSEL)
     {
-        ptype = Utilities::FilterDesign::IIRPrototype::BESSEL;
+        ptype = FilterDesign::IIRPrototype::BESSEL;
     }
     else if (prototype == IIRPrototype::BUTTERWORTH)
     {
-        ptype = Utilities::FilterDesign::IIRPrototype::BUTTERWORTH;
+        ptype = FilterDesign::IIRPrototype::BUTTERWORTH;
     }
     else if (prototype == IIRPrototype::CHEBYSHEV1)
     {
-        ptype = Utilities::FilterDesign::IIRPrototype::CHEBYSHEV1;
+        ptype = FilterDesign::IIRPrototype::CHEBYSHEV1;
     }
     else if (prototype == IIRPrototype::CHEBYSHEV2)
     {
-        ptype = Utilities::FilterDesign::IIRPrototype::CHEBYSHEV2;
+        ptype = FilterDesign::IIRPrototype::CHEBYSHEV2;
     }
     else
     {
@@ -1468,25 +1468,25 @@ classifyIIRPrototype(const IIRPrototype prototype)
     return ptype;
 }
 
-Utilities::FilterDesign::FIRWindow
+FilterDesign::FIRWindow
 classifyFIRWindow(const FIRWindow windowIn)
 {
-    Utilities::FilterDesign::FIRWindow window;
+    FilterDesign::FIRWindow window;
     if (windowIn == FIRWindow::HAMMING)
     {
-        window = Utilities::FilterDesign::FIRWindow::HAMMING;
+        window = FilterDesign::FIRWindow::HAMMING;
     }
     else if (windowIn == FIRWindow::HANN)
     {
-        window = Utilities::FilterDesign::FIRWindow::HANN;
+        window = FilterDesign::FIRWindow::HANN;
     }
     else if (windowIn == FIRWindow::BLACKMAN_OPT)
     {
-        window = Utilities::FilterDesign::FIRWindow::BLACKMAN_OPT;
+        window = FilterDesign::FIRWindow::BLACKMAN_OPT;
     }
     else if (windowIn == FIRWindow::BARTLETT)
     {
-        window = Utilities::FilterDesign::FIRWindow::BARTLETT;
+        window = FilterDesign::FIRWindow::BARTLETT;
     }
     else
     {

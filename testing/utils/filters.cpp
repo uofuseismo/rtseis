@@ -9,7 +9,7 @@
 #include <complex>
 #include <vector>
 #include <ipps.h>
-#include "rtseis/utilities/filterDesign/fir.hpp"
+#include "rtseis/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterImplementations/decimate.hpp"
 #include "rtseis/filterImplementations/downsample.hpp"
@@ -1125,8 +1125,8 @@ void lowpassFilterThenDownsample(const int npts, const int nfir,
     // Design an equivalent lowpass filter
     auto order = nfir - 1; 
     auto r = 1.0/static_cast<double> (downFactor);
-    auto fir = RTSeis::Utilities::FilterDesign::FIR::FIR1Lowpass(order, r,
-                           RTSeis::Utilities::FilterDesign::FIRWindow::HAMMING);
+    auto fir = RTSeis::FilterDesign::FIR::FIR1Lowpass(order, r,
+                           RTSeis::FilterDesign::FIRWindow::HAMMING);
     // Initialize the lowpass single rate filter and filter the signal
     FIRFilter firFilter;
     auto taps = fir.getFilterTaps();

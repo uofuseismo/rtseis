@@ -7,9 +7,9 @@
 #include <numeric>
 #include <cmath>
 #define RTSEIS_LOGGING 1
-#include "rtseis/utilities/filterDesign/iir.hpp"
-#include "rtseis/utilities/filterDesign/enums.hpp"
-#include "rtseis/utilities/filterDesign/analogPrototype.hpp"
+#include "rtseis/filterDesign/iir.hpp"
+#include "rtseis/filterDesign/enums.hpp"
+#include "rtseis/filterDesign/analogPrototype.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
 #include "rtseis/filterRepresentations/zpk.hpp"
@@ -25,7 +25,7 @@
 */
 
 using namespace RTSeis::FilterRepresentations;
-using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::FilterDesign;
 using namespace RTSeis::Utilities::Math;
 
 static int getNextWorstRealPoleIndex(const std::vector<bool> &pmask,
@@ -64,10 +64,10 @@ SOS IIR::designSOSIIRFilter(const int n, const double *W,
 
 //RTSeis::FilterRepresentations::BA
 BA IIR::designBAIIRFilter(const int n, const double *W, 
-                         const double rp, const double rs, 
-                         const Bandtype btype,
-                       const IIRPrototype ftype,
-                       const IIRFilterDomain ldigital)
+                          const double rp, const double rs, 
+                          const Bandtype btype,
+                          const IIRPrototype ftype,
+                          const IIRFilterDomain ldigital)
 {
      RTSeis::FilterRepresentations::ZPK zpk;
      zpk = IIR::designZPKIIRFilter(n, W, rp, rs, btype, ftype, ldigital);

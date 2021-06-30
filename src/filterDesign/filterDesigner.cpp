@@ -2,27 +2,37 @@
 #include <cstdlib>
 #include <vector>
 #include <algorithm>
-#include "rtseis/utilities/filterDesign/enums.hpp"
-#include "rtseis/utilities/filterDesign/filterDesigner.hpp"
-#include "rtseis/utilities/filterDesign/fir.hpp"
-#include "rtseis/utilities/filterDesign/iir.hpp"
+#include "rtseis/filterDesign/enums.hpp"
+#include "rtseis/filterDesign/filterDesigner.hpp"
+#include "rtseis/filterDesign/fir.hpp"
+#include "rtseis/filterDesign/iir.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
 #include "rtseis/filterRepresentations/zpk.hpp"
 
-using namespace RTSeis::Utilities;
-using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::FilterDesign;
 
-static inline
+namespace
+{
 std::pair<double,double> 
-iirPrototypeToRipple(const IIRPrototype ftype, const double r);
-
+iirPrototypeToRipple(const IIRPrototype ftype, const double r)
+{
+    std::pair<double,double> ripple(0,0);
+    if (ftype == IIRPrototype::CHEBYSHEV1)
+    {   
+        ripple = std::make_pair(r, 0); 
+    }   
+    else if (ftype == IIRPrototype::CHEBYSHEV2)
+    {   
+        ripple = std::make_pair(0, r); 
+    }   
+    return ripple;
+}
+}
 
 struct FIRDesignParameters
 {
-    FIRDesignParameters(void){return;}
-    ~FIRDesignParameters(void){return;}
     FIRDesignParameters(const int orderIn,
                         const double r,
                         const FIRWindow windowIn,
@@ -33,7 +43,6 @@ struct FIRDesignParameters
         window(windowIn),
         btype(btypeIn)
     {
-        return;
     } 
     FIRDesignParameters(const int orderIn,
                         const std::pair<double,double> r,
@@ -45,7 +54,6 @@ struct FIRDesignParameters
         window(windowIn),
         btype(btypeIn)
     {
-        return;
     } 
     FIRDesignParameters& operator=(const FIRDesignParameters &parms)
     {
@@ -73,14 +81,13 @@ struct FIRDesignParameters
     {
         return !(*this == parms);
     }
-    void clear(void)
+    void clear() noexcept
     {
         r1 = 0;
         r2 = 0;
         order = 0;
         window = FIRWindow::HAMMING;
         btype = Bandtype::LOWPASS;
-        return;
     }
 
     /// First critical frequency
@@ -97,7 +104,6 @@ struct FIRDesignParameters
 //----------------------------------------------------------------------------//
 struct IIRDesignParameters
 {
-    IIRDesignParameters(void){return;}
     /// IIR direct form constructor for lowpass/highpass
     IIRDesignParameters(const int orderIn,
                         const double r,
@@ -113,7 +119,6 @@ struct IIRDesignParameters
         btype(btypeIn),
         ldigital(ldigitalIn)
     {
-        return;
     }
     /// IIR direct form constructor for bandpass/bandstop
     IIRDesignParameters(const int orderIn,
@@ -130,10 +135,8 @@ struct IIRDesignParameters
         btype(btypeIn),
         ldigital(ldigitalIn)
     {
-        return;
     }
-    ~IIRDesignParameters(void){return;}
-    void clear(void)
+    void clear() noexcept
     {
         r1 = 0;
         r2 = 0;
@@ -195,7 +198,6 @@ struct IIRDesignParameters
 //----------------------------------------------------------------------------//
 struct SOSDesignParameters
 {
-    SOSDesignParameters(void){return;}
     /// SOS constructor for lowpass/highpass
     SOSDesignParameters(const int orderIn,
                         const double r,
@@ -213,7 +215,6 @@ struct SOSDesignParameters
         pairing(pairingIn),
         ldigital(ldigitalIn)
     {
-        return;
     }
     /// IIR sos constructor for bandpass/bandstop
     SOSDesignParameters(const int orderIn,
@@ -232,10 +233,8 @@ struct SOSDesignParameters
         pairing(pairingIn),
         ldigital(ldigitalIn)
     {   
-        return;
     }
-    ~SOSDesignParameters(void){return;}
-    void clear(void)
+    void clear() noexcept
     {
         r1 = 0;
         r2 = 0;
@@ -303,7 +302,7 @@ struct SOSDesignParameters
 class FilterDesigner::FilterDesignerImpl
 {
 public:
-    FilterDesignerImpl(void)
+    FilterDesignerImpl()
     {
         zpkDesigns.reserve(64);
         zpkCache.reserve(64);
@@ -313,14 +312,8 @@ public:
         sosCache.reserve(64);
         firDesigns.reserve(64);
         firCache.reserve(64);
-        return;
     }
-    ~FilterDesignerImpl(void)
-    {
-        clear();
-        return;
-    }
-    void clear(void)
+    void clear() noexcept
     {
         zpkDesigns.clear();
         zpkCache.clear();
@@ -330,7 +323,6 @@ public:
         sosCache.clear();
         firDesigns.clear();
         firCache.clear();
-        return;
     }
 
     std::vector<IIRDesignParameters> zpkDesigns;
@@ -345,44 +337,46 @@ public:
 
 //=============================================================================//
 
-FilterDesigner::FilterDesigner(void) :
+/// C'tor
+FilterDesigner::FilterDesigner() :
     pImpl(std::make_unique<FilterDesignerImpl>())
 {
-    return;
 }
 
+/// Copy c'tor
 FilterDesigner::FilterDesigner(const FilterDesigner &design)
 {
     *this = design;
-    return;
 }
 
-FilterDesigner::~FilterDesigner(void)
+FilterDesigner::FilterDesigner(FilterDesigner &&design) noexcept
 {
-    pImpl->clear();
-    return;
+    *this = std::move(design);
 }
 
+/// Destructor
+FilterDesigner::~FilterDesigner() = default;
+
+/// Copy assignment
 FilterDesigner& FilterDesigner::operator=(const FilterDesigner &design)
 {
     if (&design == this){return *this;}
-    if (pImpl){pImpl->clear();}
-    pImpl = std::make_unique<FilterDesignerImpl> (); //std::unique_ptr<FilterDesignerImpl> (new FilterDesignerImpl());
-    pImpl->zpkDesigns = design.pImpl->zpkDesigns;
-    pImpl->zpkCache   = design.pImpl->zpkCache;
-    pImpl->baDesigns  = design.pImpl->baDesigns;
-    pImpl->baCache    = design.pImpl->baCache;
-    pImpl->sosDesigns = design.pImpl->sosDesigns;
-    pImpl->sosCache   = design.pImpl->sosCache;
-    pImpl->firDesigns = design.pImpl->firDesigns;
-    pImpl->firCache   = design.pImpl->firCache;
+    pImpl = std::make_unique<FilterDesignerImpl> (*design.pImpl);
     return *this;
 }
 
-void FilterDesigner::clear(void)
+/// Move assignment
+FilterDesigner& FilterDesigner::operator=(FilterDesigner &&design) noexcept
+{
+    if (&design == this){return *this;}
+    pImpl = std::move(design.pImpl);
+    return *this;
+}
+
+/// Reset class
+void FilterDesigner::clear() noexcept
 {
     if (pImpl){pImpl->clear();}
-    return;
 }
 
 //============================================================================//
@@ -414,7 +408,6 @@ void FilterDesigner::designLowpassIIRFilter(
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }   
-    return;
 }
 
 void FilterDesigner::designHighpassIIRFilter(
@@ -444,11 +437,10 @@ void FilterDesigner::designHighpassIIRFilter(
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }
-    return;
 }
 
 void FilterDesigner::designBandpassIIRFilter(
-    const int n, const std::pair<double,double> r,
+    const int n, const std::pair<double,double> &r,
     const IIRPrototype ftype,
     const double ripple,
     RTSeis::FilterRepresentations::ZPK &zpk,
@@ -474,11 +466,10 @@ void FilterDesigner::designBandpassIIRFilter(
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }
-    return;
 }
 
 void FilterDesigner::designBandstopIIRFilter(
-    const int n, const std::pair<double,double> r,
+    const int n, const std::pair<double,double> &r,
     const IIRPrototype ftype,
     const double ripple,
     RTSeis::FilterRepresentations::ZPK &zpk,
@@ -504,7 +495,6 @@ void FilterDesigner::designBandstopIIRFilter(
         pImpl->zpkDesigns.push_back(parms);
         pImpl->zpkCache.push_back(zpk);
     }
-    return;
 }
 
 //============================================================================//
@@ -535,7 +525,6 @@ void FilterDesigner::designLowpassIIRFilter(
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
-    return;
 }
 
 void FilterDesigner::designHighpassIIRFilter(
@@ -564,11 +553,10 @@ void FilterDesigner::designHighpassIIRFilter(
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
-    return;
 }
 
 void FilterDesigner::designBandpassIIRFilter(
-    const int n, const std::pair<double,double> r,
+    const int n, const std::pair<double,double> &r,
     const IIRPrototype ftype,
     const double ripple,
     RTSeis::FilterRepresentations::BA &ba,
@@ -593,11 +581,10 @@ void FilterDesigner::designBandpassIIRFilter(
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
-    return;
 }
 
 void FilterDesigner::designBandstopIIRFilter(
-    const int n, const std::pair<double,double> r,
+    const int n, const std::pair<double,double> &r,
     const IIRPrototype ftype,
     const double ripple,
     RTSeis::FilterRepresentations::BA &ba,
@@ -622,7 +609,6 @@ void FilterDesigner::designBandstopIIRFilter(
         pImpl->baDesigns.push_back(parms);
         pImpl->baCache.push_back(ba);
     }
-    return;
 }
 
 //============================================================================//
@@ -686,11 +672,10 @@ void FilterDesigner::designHighpassIIRFilter(
         pImpl->sosDesigns.push_back(parms);
         pImpl->sosCache.push_back(sos);
     }
-    return;
 }
 
 void FilterDesigner::designBandpassIIRFilter(
-    const int n, const std::pair<double,double> r,
+    const int n, const std::pair<double,double> &r,
     const IIRPrototype ftype,
     const double ripple,
     RTSeis::FilterRepresentations::SOS &sos,
@@ -717,11 +702,10 @@ void FilterDesigner::designBandpassIIRFilter(
         pImpl->sosDesigns.push_back(parms);
         pImpl->sosCache.push_back(sos);
     }
-    return;
 }
 
 void FilterDesigner::designBandstopIIRFilter(
-    const int n, const std::pair<double,double> r,
+    const int n, const std::pair<double,double> &r,
     const IIRPrototype ftype,
     const double ripple,
     RTSeis::FilterRepresentations::SOS &sos,
@@ -748,7 +732,6 @@ void FilterDesigner::designBandstopIIRFilter(
         pImpl->sosDesigns.push_back(parms);
         pImpl->sosCache.push_back(sos);
     }
-    return;
 }
 
 //============================================================================//
@@ -776,7 +759,6 @@ void FilterDesigner::designLowpassFIRFilter(
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
-    return;
 }
 
 void FilterDesigner::designHighpassFIRFilter(
@@ -802,12 +784,11 @@ void FilterDesigner::designHighpassFIRFilter(
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
-    return;
 }
 
 void FilterDesigner::designBandpassFIRFilter(
     const int order,
-    const std::pair<double,double> r,
+    const std::pair<double,double> &r,
     const FIRWindow window,
     RTSeis::FilterRepresentations::FIR &fir) const
 {
@@ -828,12 +809,11 @@ void FilterDesigner::designBandpassFIRFilter(
         pImpl->firDesigns.push_back(parms); 
         pImpl->firCache.push_back(fir);
     }
-    return;
 }
 
 void FilterDesigner::designBandstopFIRFilter(
     const int order,
-    const std::pair<double,double> r,
+    const std::pair<double,double> &r,
     const FIRWindow window,
     RTSeis::FilterRepresentations::FIR &fir) const
 {
@@ -854,20 +834,5 @@ void FilterDesigner::designBandstopFIRFilter(
         pImpl->firDesigns.push_back(parms);
         pImpl->firCache.push_back(fir);
     }
-    return;
 }
 
-std::pair<double,double> 
-iirPrototypeToRipple(const IIRPrototype ftype, const double r)
-{
-    std::pair<double,double> ripple(0,0);
-    if (ftype == IIRPrototype::CHEBYSHEV1)
-    {
-        ripple = std::make_pair(r, 0);
-    }
-    else if (ftype == IIRPrototype::CHEBYSHEV2)
-    {
-        ripple = std::make_pair(0, r);
-    }
-    return ripple;
-}

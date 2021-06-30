@@ -5,8 +5,8 @@
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/zpk.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
-#include "rtseis/utilities/filterDesign/iir.hpp"
-#include "rtseis/utilities/filterDesign/analogPrototype.hpp"
+#include "rtseis/filterDesign/iir.hpp"
+#include "rtseis/filterDesign/analogPrototype.hpp"
 #include <gtest/gtest.h>
 
 namespace
@@ -14,7 +14,7 @@ namespace
 
 using namespace RTSeis;
 using namespace RTSeis::FilterRepresentations;
-using namespace RTSeis::Utilities::FilterDesign;
+using namespace RTSeis::FilterDesign;
 
 ///  IIR analog prototype design. 
 //int rtseis_test_utils_design_iir_ap(void)

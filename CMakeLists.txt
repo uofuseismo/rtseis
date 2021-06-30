@@ -90,12 +90,12 @@ SET(UTILS_SRCS
     src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/characteristicFunction/carlSTALTA.cpp
     src/deconvolution/instrumentResponse.cpp
-    src/utilities/filterDesign/filterDesigner.cpp
-    src/utilities/filterDesign/response.cpp
-    src/utilities/filterDesign/iir.cpp
-    src/utilities/filterDesign/fir.cpp
-    src/utilities/filterDesign/analogProtype.cpp
-    src/utilities/filterDesign/windowFunctions.cpp
+    src/filterDesign/filterDesigner.cpp
+    src/filterDesign/response.cpp
+    src/filterDesign/iir.cpp
+    src/filterDesign/fir.cpp
+    src/filterDesign/analogProtype.cpp
+    src/filterDesign/windowFunctions.cpp
     src/filterRepresentations/ba.cpp
     src/filterRepresentations/fir.cpp
     src/filterRepresentations/sos.cpp
