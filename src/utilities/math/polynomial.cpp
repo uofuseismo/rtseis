@@ -4,8 +4,6 @@
 #include <complex>
 #include <algorithm>
 #include <cfloat>
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/log.h"
 #include <mkl_lapacke.h>
@@ -17,17 +15,18 @@
 
 using namespace::RTSeis::Utilities::Math;
 
-std::vector<std::complex<double>> 
-Polynomial::polyval(const std::vector<std::complex<double>> &p,
-                    const std::vector<std::complex<double>> &x)
+template<typename U>
+std::vector<std::complex<U>> 
+Polynomial::polyval(const std::vector<std::complex<U>> &p,
+                    const std::vector<std::complex<U>> &x)
 {
     if (p.empty())
     {
-        RTSEIS_THROW_IA("%s", "No points in coefficients in p");
+        throw std::invalid_argument("No coefficients in p");
     }
     int norder = p.size() - 1;
     int nx = static_cast<int> (x.size());
-    std::vector<std::complex<double>> y(nx);
+    std::vector<std::complex<U>> y(nx);
     if (nx < 1){return y;}
     // Expand the constant case 
     if (norder == 0)
@@ -98,17 +97,18 @@ Polynomial::polyval(const std::vector<std::complex<double>> &p,
     return y;
 }
 
-std::vector<double>
-Polynomial::polyval(const std::vector<double> &p,
-                    const std::vector<double> &x)
+template<typename U>
+std::vector<U>
+Polynomial::polyval(const std::vector<U> &p,
+                    const std::vector<U> &x)
 {
     if (p.empty())
     {
-        RTSEIS_THROW_IA("%s", "No points in coefficients in p");
+        throw std::invalid_argument("No coefficients in p");
     }
     int norder = static_cast<int> (p.size()) - 1;
     int nx = static_cast<int> (x.size());
-    std::vector<double> y(nx);
+    std::vector<U> y(nx);
     if (nx < 1){return y;}
     // Expand the constant case 
     if (norder == 0)
@@ -167,38 +167,39 @@ Polynomial::polyval(const std::vector<double> &p,
     return y;
 }
 //----------------------------------------------------------------------------//
-std::vector<std::complex<double>> 
-Polynomial::poly(const std::vector<std::complex<double>> &p) noexcept
+template<typename U>
+std::vector<std::complex<U>> 
+Polynomial::poly(const std::vector<std::complex<U>> &p) noexcept
 {
     int nord = static_cast<int> (p.size());
-    std::vector<std::complex<double>> y(nord+1);
+    std::vector<std::complex<U>> y(nord+1);
     // Special case
     if (nord == 0)
     {
-        y[0] = std::complex<double> (1, 0);
+        y[0] = std::complex<U> (1, 0);
         return y;
     } 
     // Linear case
     if (nord == 1)
     {
-        y[0] = std::complex<double> (1, 0);
+        y[0] = std::complex<U> (1, 0);
         y[1] =-p[0];
     } 
-    const std::complex<double> zero(0, 0);
-    const std::complex<double> zone(1, 0);
-    std::vector<std::complex<double>> temp1(nord+1, zero);
-    std::vector<std::complex<double>> temp2(nord+1, zero);
+    const std::complex<U> zero(0, 0);
+    const std::complex<U> zone(1, 0);
+    std::vector<std::complex<U>> temp1(nord+1, zero);
+    std::vector<std::complex<U>> temp2(nord+1, zero);
     // Initialize
     y[0] =-p[0];
     y[1] = zone;  //y =-p_1 + x 
-    for (auto i=2; i<=nord; i++)
+    for (auto i = 2; i <= nord; i++)
     {
         // x*(a_0 + a_1 x + ... + a_n x^{n-1}) = a_0 x + a_1 x^2 + ... + a_n x^i
         // shift right
 #ifdef __INTEL_COMPILER
         #pragma ivdep
 #endif
-        for (auto j=i; j>=1; j--)
+        for (auto j = i; j >= 1; j--)
         {
             temp1[j] = y[j-1];
         }
@@ -208,7 +209,7 @@ Polynomial::poly(const std::vector<std::complex<double>> &p) noexcept
 #ifdef __INTEL_COMPILER
         #pragma ivdep
 #endif
-        for (auto j=1; j<=i; j++)
+        for (auto j = 1; j <= i; j++)
         {
             temp2[j-1] =-y[j-1]*p[i-1];
         }
@@ -219,7 +220,7 @@ Polynomial::poly(const std::vector<std::complex<double>> &p) noexcept
 #ifdef __INTEL_COMPILER
         #pragma ivdep
 #endif
-        for (auto j=1; j<=i+1; j++)
+        for (auto j = 1; j <= i+1; j++)
         {
             y[j-1] = temp1[j-1] + temp2[j-1];
         }   
@@ -228,11 +229,11 @@ Polynomial::poly(const std::vector<std::complex<double>> &p) noexcept
 #ifdef __INTEL_COMPILER
     #pragma ivdep
 #endif
-    for (auto i=0; i<nord+1; i++)
+    for (auto i = 0; i < nord+1; i++)
     {
-        if (std::abs(std::imag(y[i])) < DBL_EPSILON)
+        if (std::abs(std::imag(y[i])) < std::numeric_limits<U>::epsilon())
         {
-            y[i] = std::complex<double> (std::real(y[i]), 0);
+            y[i] = std::complex<U> (std::real(y[i]), 0);
         }
     }
     // Reverse y for consistency with MatLab
@@ -243,11 +244,12 @@ Polynomial::poly(const std::vector<std::complex<double>> &p) noexcept
     return y;
 }
 
-std::vector<double>
-Polynomial::poly(const std::vector<double> &p) noexcept
+template<typename U>
+std::vector<U>
+Polynomial::poly(const std::vector<U> &p) noexcept
 {
     int nord = p.size();
-    std::vector<double> y(nord+1);
+    std::vector<U> y(nord+1);
     // Special case
     if (nord == 0)
     {
@@ -260,19 +262,19 @@ Polynomial::poly(const std::vector<double> &p) noexcept
         y[0] = 1;
         y[1] =-p[0];
     } 
-    constexpr double zero = 0;
-    constexpr double one  = 1;
-    std::vector<double> temp1(nord+1, zero);
-    std::vector<double> temp2(nord+1, zero);
+    constexpr U zero = 0;
+    constexpr U one  = 1;
+    std::vector<U> temp1(nord+1, zero);
+    std::vector<U> temp2(nord+1, zero);
     // Initialize
     y[0] =-p[0];
     y[1] = one;   //y =-p_1 + x 
-    for (auto i=2; i<=nord; i++)
+    for (auto i = 2; i <= nord; i++)
     {
         // x*(a_0 + a_1 x + ... + a_n x^{n-1}) = a_0 x + a_1 x^2 + ... + a_n x^i
         // shift right
         #pragma omp simd
-        for (auto j=i; j>=1; j--)
+        for (auto j = i; j >= 1; j--)
         {
             temp1[j] = y[j-1];
         }
@@ -280,7 +282,7 @@ Polynomial::poly(const std::vector<double> &p) noexcept
         // -p_i*(a_0 + .... + a_n x^{i-1}) =-p_i a_0 - ... p_i a_n x^{i-1}
         // multiply
         #pragma omp simd
-        for (auto j=1; j<=i; j++)
+        for (auto j = 1; j <= i; j++)
         {
             temp2[j-1] =-y[j-1]*p[i-1];
         }
@@ -289,7 +291,7 @@ Polynomial::poly(const std::vector<double> &p) noexcept
         //          -     a_0 x - ...                   - a_n x^i
         // difference previous two loops
         #pragma omp simd
-        for (auto j=1; j<=i+1; j++)
+        for (auto j = 1; j <= i+1; j++)
         {
             y[j-1] = temp1[j-1] + temp2[j-1];
         }
@@ -308,18 +310,17 @@ std::vector<std::complex<double>>
     auto nc = static_cast<int> (coeffs.size());
     if (nc < 1)
     {
-        RTSEIS_THROW_IA("%s", "No coefficients");
+        throw std::invalid_argument("No coefficeints");
     }
     int nord = nc - 1;
     if (coeffs[0] == 0)
     {
-        RTSEIS_THROW_IA("%s", "Highest order coefficient is zero");
+        throw std::invalid_argument("Highest order coefficient is zero");
     }
     // Set space for companion matrix
     int n   = nord;
     int lda = std::max(8, nord);
-    auto *a = new double[lda*lda];
-    memset(a, 0, static_cast<size_t> (lda*lda)*sizeof(double));
+    std::vector<double> a(lda*lda, 0);
     double ami = 1.0/coeffs[0]; //coefficient on highest order term
     // Fill out the non-zeros of the companion matrix
     for (int i=1; i<nord+1; i++)
@@ -333,41 +334,39 @@ std::vector<std::complex<double>>
             a[indx] = 1.0;
         }
     }
-    double *wr = new double[static_cast<size_t> (std::max(32, n))];
-    double *wi = new double[static_cast<size_t> (std::max(32, n))];
-    double vl[1] = {0};
-    double vr[1] = {0}; 
+    std::vector<double> wr(n);
+    std::vector<double> wi(n);
+    double vl, vr;
     const int ldvl = 1;
     const int ldvr = 1;
-    double *work = nullptr;
+    std::vector<double> work;
     double work8;
     int lwork =-1;
 #ifdef DEBUG
     //int info = LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
     //                         wr, wi, vl, ldvl, vr, ldvr);
-    auto info = LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
-                                   wr, wi, vl, ldvl, vr, ldvr,
+    auto info = LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a.data(), lda,
+                                   wr.data(), wi.data(), &vl, ldvl, &vr, ldvr,
                                    &work8, lwork);
     cassert(info == 0);
     lwork = static_cast<int> (work8);
-    work = new double[static_cast<size_t> (lwork)];
-    info = LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
-                              wr, wi, vl, ldvl, vr, ldvr,
-                              work, lwork);
+    work.resize(lwork);
+    info = LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a.data(), lda,
+                              wr.data(), wi.data(), &vl, ldvl, &vr, ldvr,
+                              work.data(), lwork);
     cassert(info == 0);     
 #else
     //LAPACKE_dgeev(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
     //              wr, wi, vl, ldvl, vr, ldvr);
-    LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
-                       wr, wi, vl, ldvl, vr, ldvr,
+    LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a.data(), lda,
+                       wr.data(), wi.data(), &vl, ldvl, &vr, ldvr,
                        &work8, lwork);
     lwork = static_cast<int> (work8);
-    work = new double[static_cast<size_t> (lwork)];
-    LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a, lda,
-                       wr, wi, vl, ldvl, vr, ldvr,
-                       work, lwork);
+    work.resize(lwork);
+    LAPACKE_dgeev_work(LAPACK_COL_MAJOR, 'N', 'N', n, a.data(), lda,
+                       wr.data(), wi.data(), &vl, ldvl, &vr, ldvr,
+                       work.data(), lwork);
 #endif
-    delete[] work;
     std::vector<std::complex<double>> roots(n);
 #ifdef __INTEL_COMPILER
     #pragma ivdep
@@ -376,8 +375,35 @@ std::vector<std::complex<double>>
     {
         roots[i] = std::complex<double> (wr[i], wi[i]);
     }
-    delete[] wr;
-    delete[] wi;
-    delete[] a;
     return roots;
 }
+///--------------------------------------------------------------------------///
+///                             Template Insantiation                        ///
+///--------------------------------------------------------------------------///
+template std::vector<std::complex<double>> 
+RTSeis::Utilities::Math::Polynomial::poly(
+    const std::vector<std::complex<double>> &p);
+template std::vector<std::complex<float>>
+RTSeis::Utilities::Math::Polynomial::poly(
+    const std::vector<std::complex<float>> &p);
+
+template std::vector<double>
+RTSeis::Utilities::Math::Polynomial::poly(const std::vector<double> &p);
+template std::vector<float>
+RTSeis::Utilities::Math::Polynomial::poly(const std::vector<float> &p);
+
+template std::vector<std::complex<double>> 
+RTSeis::Utilities::Math::Polynomial::polyval(
+    const std::vector<std::complex<double>> &p,
+    const std::vector<std::complex<double>> &x);
+template std::vector<std::complex<float>>
+RTSeis::Utilities::Math::Polynomial::polyval(
+    const std::vector<std::complex<float>> &p,
+    const std::vector<std::complex<float>> &x);
+
+template std::vector<double>
+RTSeis::Utilities::Math::Polynomial::polyval(const std::vector<double> &p,
+                                             const std::vector<double> &x);
+template std::vector<float>
+RTSeis::Utilities::Math::Polynomial::polyval(const std::vector<float> &p,
+                                             const std::vector<float> &x);

@@ -1,9 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
+#include <valarray>
 #include <complex>
 #include <cmath>
 #include "rtseis/deconvolution/instrumentResponse.hpp"
 #include "rtseis/filterDesign/iir.hpp"
+#include "rtseis/filterDesign/response.hpp"
 #include "rtseis/filterRepresentations/zpk.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
@@ -13,11 +15,11 @@ using namespace RTSeis::Deconvolution;
 class InstrumentResponse::InstrumentResponseImpl
 {
 public:
-    //class RTSeis::FilterRepresentations::ZPK mZPK;
+    RTSeis::FilterRepresentations::ZPK mZPK;
     RTSeis::FilterRepresentations::BA mBA;
     //class RTSeis::FilterRepresentations mSOS;
     double mSamplingRate = 0;
-    bool mHaveResponse = false;
+    bool mHaveTransferFunction = false;
     bool mIsAnalog = true;
 };
 
@@ -53,7 +55,7 @@ void InstrumentResponse::clear() noexcept
 {
     pImpl->mBA.clear();
     pImpl->mSamplingRate = 0;
-    pImpl->mHaveResponse = false;
+    pImpl->mHaveTransferFunction = false;
     pImpl->mIsAnalog = true;
 }
 
@@ -85,23 +87,23 @@ bool InstrumentResponse::haveSamplingRate() const noexcept
 }
 
 /// Set an analog response
-void InstrumentResponse::setAnalogResponse(
+void InstrumentResponse::setAnalogTransferFunction(
     const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
     pImpl->mIsAnalog = true;
     pImpl->mBA.clear();
     pImpl->mBA = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
-    pImpl->mHaveResponse = true;
+    pImpl->mHaveTransferFunction = true;
 }
 
 /// Set a digital response
-void InstrumentResponse::setDigitalResponse(
+void InstrumentResponse::setDigitalTransferFunction(
     const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
     pImpl->mIsAnalog = false;
     pImpl->mBA.clear();
     pImpl->mBA = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
-    pImpl->mHaveResponse = true;
+    pImpl->mHaveTransferFunction = true;
 }
 
 /*
@@ -113,17 +115,58 @@ void InstrumentResponse::setResponse(
 }
 */
 
-/// Analog response?
-bool InstrumentResponse::isAnalogResponse() const
+std::vector<std::complex<double>>
+InstrumentResponse::compute(const std::vector<double> &frequencies) const
 {
-    if (haveResponse()){throw std::runtime_error("Response not yet set");}
+    std::vector<std::complex<double>> response;
+    if (frequencies.empty()){return response;}
+    response.resize(frequencies.size());
+    auto responsePtr = response.data();
+    compute(frequencies.size(), frequencies.data(), &responsePtr); 
+    return response;
+}
+
+void InstrumentResponse::compute(const int nFrequencies,
+                                 const double frequencies[],
+                                 std::complex<double> *responseIn[]) const
+{
+    if (nFrequencies < 1){return;}
+    if (!haveTransferFunction())
+    {
+        throw std::runtime_error("Transfer function not yet set");
+    }
+    if (frequencies == nullptr)
+    {
+        throw std::invalid_argument("freqruencies is NULL");
+    }
+    auto response = *responseIn;
+    if (response == nullptr){throw std::invalid_argument("response is NULL");}
+    if (isAnalogTransferFunction())
+    {
+        constexpr double twopi = 2*M_PI;
+        std::vector<double> omega(nFrequencies);
+        std::transform(frequencies, frequencies + nFrequencies, omega.begin(),
+                       [&twopi](auto &x){return twopi*x;});
+
+        //FilterDesign::Response::freqs(pImpl->mBA, *omega[0]);
+    }
+}
+                        
+
+/// Analog response?
+bool InstrumentResponse::isAnalogTransferFunction() const
+{
+    if (!haveTransferFunction())
+    {
+        throw std::runtime_error("Transfer function not yet set");
+    }
     return pImpl->mIsAnalog;
 }
 
 /// Have response?
-bool InstrumentResponse::haveResponse() const noexcept
+bool InstrumentResponse::haveTransferFunction() const noexcept
 {
-    return pImpl->mHaveResponse;
+    return pImpl->mHaveTransferFunction;
 }
 
 /*

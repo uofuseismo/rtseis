@@ -8,8 +8,6 @@
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
-#include "rtseis/log.h"
-#include <ipps.h>
 
 
 using namespace RTSeis::Utilities;
@@ -23,8 +21,8 @@ Response::freqs(const BA &ba, const std::vector<double> &w)
     std::vector<std::complex<double>> h;
     if (nw == 0){return h;}
     // Get a handle on the numerator and denominator coefficients
-    std::vector<double> b = ba.getNumeratorCoefficients();
-    std::vector<double> a = ba.getDenominatorCoefficients();
+    auto b = ba.getNumeratorCoefficients();
+    auto a = ba.getDenominatorCoefficients();
     bool lzero = true;
     for (size_t ia = 0; ia < a.size(); ia++)
     {
@@ -75,8 +73,8 @@ Response::freqz(const BA &ba, const std::vector<double> &w)
     std::vector<std::complex<double>> h;
     if (nw == 0){return h;} 
     // Get a handle on the numerator and denominator coefficients
-    std::vector<double> b = ba.getNumeratorCoefficients();
-    std::vector<double> a = ba.getDenominatorCoefficients();
+    auto b = ba.getNumeratorCoefficients();
+    auto a = ba.getDenominatorCoefficients();
     bool lzero = true;
     for (size_t ia = 0; ia < a.size(); ia++)
     {   
