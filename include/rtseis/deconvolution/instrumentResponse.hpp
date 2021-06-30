@@ -90,13 +90,13 @@ public:
     /// @param[in] zpk  The digital poles, zeros, and gain defining the response.
     void setDigitalTransferFunction(
         const RTSeis::FilterRepresentations::ZPK &zpk) noexcept;
-    /// @brief Sets the digital instrument transfer function.
-    /// @param[in] ba   The numerator and denominator coefficients defining the
-    ///                 transfer function.
+    /// @param[in] ba   The digital transfer function.
     /// @throws std::invalid_argument if there are no numerator or denominator
-    ///         coefficients or the first denominator coefficient is 0.
+    ///         coefficients or all the denominator coefficients are zero.
     void setDigitalTransferFunction(
         const RTSeis::FilterRepresentations::BA &ba);
+    /// @}
+
     /// @result True indicates that the response was set.
     /// @sa \c setAnalogTransferFunction(), \c setDigitalTransferFunction()
     [[nodiscard]] bool haveTransferFunction() const noexcept;
@@ -104,7 +104,6 @@ public:
     /// @throws std::runtime_error if the response is not yet set.
     /// @sa \c haveTransferFunction()
     [[nodiscard]] bool isAnalogTransferFunction() const;
-    /// @}
 
     /// @brief Computes the instrument response at the given frequencies.
     /// @param[in] frequencies  The frequencies in Hz at which to compute the

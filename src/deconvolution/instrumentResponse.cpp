@@ -15,9 +15,7 @@ using namespace RTSeis::Deconvolution;
 class InstrumentResponse::InstrumentResponseImpl
 {
 public:
-    RTSeis::FilterRepresentations::ZPK mZPK;
     RTSeis::FilterRepresentations::BA mBA;
-    //class RTSeis::FilterRepresentations mSOS;
     double mSamplingRate = 0;
     bool mHaveTransferFunction = false;
     bool mIsAnalog = true;
@@ -90,9 +88,26 @@ bool InstrumentResponse::haveSamplingRate() const noexcept
 void InstrumentResponse::setAnalogTransferFunction(
     const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
+    auto ba = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
+    setAnalogTransferFunction(ba);
+}
+
+void InstrumentResponse::setAnalogTransferFunction(
+     const RTSeis::FilterRepresentations::BA &ba)
+{
+    pImpl->mHaveTransferFunction = false;
+    auto b = ba.getNumeratorCoefficients();
+    auto a = ba.getDenominatorCoefficients();
+    if (b.empty()){throw std::invalid_argument("No numerator coefficients");}
+    if (a.empty()){throw std::invalid_argument("No demoninator coefficients");}
+    bool okay = false;
+    for (const auto &ai : a)
+    {
+        if (ai != 0){okay = true;}
+    } 
+    if (!okay){throw std::invalid_argument("All a coefficients are zero");} 
     pImpl->mIsAnalog = true;
-    pImpl->mBA.clear();
-    pImpl->mBA = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
+    pImpl->mBA = ba;
     pImpl->mHaveTransferFunction = true;
 }
 
@@ -100,9 +115,26 @@ void InstrumentResponse::setAnalogTransferFunction(
 void InstrumentResponse::setDigitalTransferFunction(
     const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
+    auto ba = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
+    setDigitalTransferFunction(ba);
+}
+
+void InstrumentResponse::setDigitalTransferFunction(
+     const RTSeis::FilterRepresentations::BA &ba)
+{
+    pImpl->mHaveTransferFunction = false;
+    auto b = ba.getNumeratorCoefficients();
+    auto a = ba.getDenominatorCoefficients();
+    if (b.empty()){throw std::invalid_argument("No numerator coefficients");}
+    if (a.empty()){throw std::invalid_argument("No demoninator coefficients");}
+    bool okay = false;
+    for (const auto &ai : a)
+    {
+        if (ai != 0){okay = true;}
+    }
+    if (!okay){throw std::invalid_argument("All a coefficients are zero");} 
     pImpl->mIsAnalog = false;
-    pImpl->mBA.clear();
-    pImpl->mBA = RTSeis::FilterDesign::IIR::zpk2tf(zpk);
+    pImpl->mBA = ba;
     pImpl->mHaveTransferFunction = true;
 }
 
@@ -147,8 +179,7 @@ void InstrumentResponse::compute(const int nFrequencies,
         std::vector<double> omega(nFrequencies);
         std::transform(frequencies, frequencies + nFrequencies, omega.begin(),
                        [&twopi](auto &x){return twopi*x;});
-
-        //FilterDesign::Response::freqs(pImpl->mBA, *omega[0]);
+        FilterDesign::Response::freqs(pImpl->mBA, omega);
     }
 }
                         

@@ -167,7 +167,7 @@ Response::groupDelay(const BA &ba,
     {
         if (std::abs(den[i]) < 10*std::numeric_limits<double>::epsilon())//10*DBL_EPSILON)
         {
-            std::cerr << "Group delay is singular at %lf" << w[i] << std::endl;
+            std::cerr << "Group delay is singular at " << w[i] << std::endl;
             num[i] = std::complex<double> (0, 0);
             den[i] = std::complex<double> (1, 0);
         }

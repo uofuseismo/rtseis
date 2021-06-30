@@ -90,6 +90,7 @@ SET(UTILS_SRCS
     src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/characteristicFunction/carlSTALTA.cpp
     src/deconvolution/instrumentResponse.cpp
+    src/deconvolution/woodAnderson.cpp
     src/filterDesign/filterDesigner.cpp
     src/filterDesign/response.cpp
     src/filterDesign/iir.cpp
@@ -197,7 +198,8 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/response.cpp
                testing/utils/rotate.cpp
                testing/utils/polarization.cpp
-               testing/utils/trigger.cpp)
+               testing/utils/trigger.cpp
+               testing/utils/deconvolution.cpp)
 ADD_EXECUTABLE(testPPSC
                testing/postProcessing/singleChannel.cpp)
                #testing/modules/modules.cpp
