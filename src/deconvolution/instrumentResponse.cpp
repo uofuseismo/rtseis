@@ -2,20 +2,19 @@
 #include <cstdlib>
 #include <complex>
 #include <cmath>
-#include "private/throw.hpp"
-#include "rtseis/utilities/deconvolution/instrumentResponse.hpp"
+#include "rtseis/deconvolution/instrumentResponse.hpp"
 #include "rtseis/utilities/filterDesign/iir.hpp"
 #include "rtseis/filterRepresentations/zpk.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
 
-using namespace RTSeis::Utilities::Deconvolution;
+using namespace RTSeis::Deconvolution;
 
 class InstrumentResponse::InstrumentResponseImpl
 {
 public:
     //class RTSeis::FilterRepresentations::ZPK mZPK;
-    class RTSeis::FilterRepresentations::BA mBA;
+    RTSeis::FilterRepresentations::BA mBA;
     //class RTSeis::FilterRepresentations mSOS;
     double mSamplingRate = 0;
     bool mHaveResponse = false;
@@ -49,6 +48,7 @@ InstrumentResponse::operator=(InstrumentResponse &&response) noexcept
 /// Destructors
 InstrumentResponse::~InstrumentResponse() = default;
 
+/// Reset class
 void InstrumentResponse::clear() noexcept
 {
     pImpl->mBA.clear();
@@ -57,15 +57,34 @@ void InstrumentResponse::clear() noexcept
     pImpl->mIsAnalog = true;
 }
 
+/// Set sampling rate
 void InstrumentResponse::setSamplingRate(const double df)
 {
     if (df <= 0)
     {
-        RTSEIS_THROW_RTE("Sampling rate = %lf must be positive", df);
+        throw std::invalid_argument("Sampling rate = " + std::to_string(df)
+                                  + " must be positive");
     }
     pImpl->mSamplingRate = df; 
 }
 
+/// Get sampling rate
+double InstrumentResponse::getSamplingRate() const
+{
+    if (!haveSamplingRate())
+    {   
+        throw std::runtime_error("Sampling rate not yet set");
+    }   
+    return pImpl->mSamplingRate;
+}
+
+/// Have sampling rate
+bool InstrumentResponse::haveSamplingRate() const noexcept
+{
+    return (pImpl->mSamplingRate > 0); 
+}
+
+/// Set an analog response
 void InstrumentResponse::setAnalogResponse(
     const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
@@ -75,6 +94,7 @@ void InstrumentResponse::setAnalogResponse(
     pImpl->mHaveResponse = true;
 }
 
+/// Set a digital response
 void InstrumentResponse::setDigitalResponse(
     const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
@@ -93,33 +113,27 @@ void InstrumentResponse::setResponse(
 }
 */
 
+/// Analog response?
 bool InstrumentResponse::isAnalogResponse() const
 {
-    if (haveResponse())
-    {
-        RTSEIS_THROW_RTE("%s", "Response not yet set");
-    }
+    if (haveResponse()){throw std::runtime_error("Response not yet set");}
     return pImpl->mIsAnalog;
 }
 
+/// Have response?
 bool InstrumentResponse::haveResponse() const noexcept
 {
     return pImpl->mHaveResponse;
 }
 
 /*
-double InstrumentResponse::getSamplingRate() const
-{
-    if (pImpl->mSamplingRate <= 0)
-    {
-        RTSEIS_THROW_RTE("%s", "Sampling rate not yet set");
-    }
-    return pImpl->mSamplingRate;
-}
-
 double InstrumentResponse::getNyquistFrequency() const
 {
     double fnyq = getSamplingRate()/2.0;
     return fnyq;
 }
 */
+
+///--------------------------------------------------------------------------///
+///                          Template Instantiation                          ///
+///--------------------------------------------------------------------------///
