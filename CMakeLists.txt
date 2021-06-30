@@ -225,7 +225,7 @@ target_include_directories(testPPSC
 add_test(NAME utilities
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND utilityTests) 
-add_test(NAME singleChannlePostProcessing
+add_test(NAME singleChannelPostProcessing
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND testPPSC
          DEPENDS utils)
