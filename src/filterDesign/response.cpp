@@ -8,6 +8,7 @@
 #include "rtseis/utilities/math/polynomial.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
+#include "rtseis/filterRepresentations/zpk.hpp"
 
 
 using namespace RTSeis::Utilities;
@@ -95,29 +96,15 @@ Response::freqz(const BA &ba, const std::vector<double> &w)
     size_t nb = b.size();
     std::vector<std::complex<double>> bz(nb);
     std::reverse_copy(b.begin(), b.end(), bz.begin());
-/*
-    for (size_t i = 0; i < nb; i++)
-    {
-        bz[i] = b[nb-1-i];
-    }
-*/
     size_t na = a.size();
     std::vector<std::complex<double>> az(na);
     std::reverse_copy(a.begin(), a.end(), az.begin());
-/*
-    for (size_t i = 0; i < na; i++)
-    {
-        az[i] = a[na-1-i];
-    }
-*/
     std::vector<std::complex<double>> z;
     z.resize(nw);
-#ifdef __INTEL_COMPILER
-    #pragma ivdep
-#endif
-    for (size_t i=0; i<nw; i++)
+    for (size_t i = 0; i < nw; i++)
     {
-        z[i] = std::exp(std::complex<double> (0, -w[i]));
+        //z[i] = std::exp(std::complex<double> (0, -w[i]));
+        z[i] = std::complex<double> (std::cos(w[i]), -std::sin(w[i]));
     }
     // Evaluate the numerator and denominator polynoimals
     std::vector<std::complex<double>> hzNum;
@@ -178,7 +165,7 @@ Response::groupDelay(const BA &ba,
     // Check for singular elements
     for (size_t i = 0; i < w.size(); i++)
     {
-        if (std::abs(den[i]) < 10*DBL_EPSILON)
+        if (std::abs(den[i]) < 10*std::numeric_limits<double>::epsilon())//10*DBL_EPSILON)
         {
             std::cerr << "Group delay is singular at %lf" << w[i] << std::endl;
             num[i] = std::complex<double> (0, 0);

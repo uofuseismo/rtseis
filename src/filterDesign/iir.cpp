@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string>
 #include <cstdio>
 #include <cstdlib>
 #include <cfloat>
@@ -154,7 +156,7 @@ ZPK IIR::designZPKIIRFilter(const int n, const double *W,
         warped[1] = wn[1];
         if (wn[1] > 1.0)
         {
-            RTSEIS_WARNMSG("%s", "wn[1] > 0; result may be unstable");
+            std::cerr << "wn[1] > 0; result may be unstable" << std::endl;
         }
     }
     // Transform to lowpass, bandpass, highpass, or bandstop 
@@ -223,10 +225,10 @@ SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
         std::vector<double> bs({1, 0, 0});
         if (nzeros == 1)
         {
-            RTSEIS_WARNMSG("%s", "nzeros = 1 not yet tested");
+            std::cerr << "nzeros = 1 not yet tested" << std::endl;
             if (std::abs(std::imag(zin[0])) > 1.e-15)
             {
-                RTSEIS_WARNMSG("%s", "Taking real part of zin");
+                std::cerr << "Taking real part of zin" << std::endl;
             }
             bs[1] =-std::real(zin[0]);
         }
@@ -243,10 +245,10 @@ SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
         std::vector<double> as({1, 0, 0});
         if (npoles == 1)
         {
-            RTSEIS_WARNMSG("%s", "npoles = 1 not yet tested");
+            std::cerr << "npoles = 1 not yet tested" << std::endl;
             if (std::abs(std::imag(pin[0])) > 1.e-15)
             {
-                RTSEIS_WARNMSG("%s", "Taking real part of pin");
+                std::cerr << "Taking real part of pin" << std::endl;
             }
             as[1] =-std::real(pin[0]);
         }
@@ -268,10 +270,14 @@ SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
     }
     if (np != nz || np < 1 || nz < 1)
     {
-        if (np != nz){RTSEIS_ERRMSG("Error size inconsistent %d,%d!", np, nz);}
-        if (np < 1){RTSEIS_ERRMSG("Error no zeros in use %d", nz);}
-        if (nz < 1){RTSEIS_ERRMSG("Error no poles in use %d", np);}
-        RTSEIS_THROW_IA("%s", "Invalid inputs");
+        if (np != nz)
+        {
+            throw std::invalid_argument("Inconsistent size: nz = "
+                                      + std::to_string(nz) + " != np = "
+                                      + std::to_string(np));
+        }
+        if (nz < 1){throw std::invalid_argument("No zeros in use");}
+        throw std::invalid_argument("No poles in use");
     }
     std::vector<std::complex<double>> z;
     std::vector<bool> isreal_zero;
@@ -465,16 +471,16 @@ ZPK IIR::tf2zpk(const RTSeis::FilterRepresentations::BA &ba)
     std::vector<double> a = ba.getDenominatorCoefficients();
     if (b.size() < 1)
     {
-        RTSEIS_THROW_IA("%s", "No numerator coefficients");
+        throw std::invalid_argument("No numerator coefficients");
     }
     if (a.size() < 1)
     { 
-        RTSEIS_THROW_IA("%s", "No denominator coefficients");
+        throw std::invalid_argument("No denominator coefficients");
     }
     double a0 = a[0];
-    if (a0 == 0){RTSEIS_THROW_IA("%s", "a[0] = 0");}
+    if (a0 == 0){throw std::invalid_argument("a[0] = 0");}
     double b0 = b[0];
-    if (b0 == 0){RTSEIS_THROW_IA("%s", "b[0] = 0");}
+    if (b0 == 0){throw std::invalid_argument("b[0] = 0");}
     // Normalize
     #pragma omp simd
     for (size_t i=0; i<b.size(); i++){b[i] = b[i]/a0;} 
@@ -492,7 +498,7 @@ ZPK IIR::tf2zpk(const RTSeis::FilterRepresentations::BA &ba)
     }
     else
     {
-        RTSEIS_WARNMSG("%s", "Warning no zeros");
+        std::cerr << "Warning no zeros" << std::endl;
         z.resize(1);
         z[0] = std::complex<double> (1, 0);
     }
@@ -517,7 +523,7 @@ BA IIR::zpk2tf(const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
 {
     BA ba;
     double k = zpk.getGain();
-    if (k == 0){RTSEIS_WARNMSG("%s", "System gain is zero");}
+    if (k == 0){std::cerr << "System gain is zero" << std::endl;}
     // Compute polynomial representation of zeros by expanding:
     //  (z - z_1)*(z - z_2)*...*(z - z_nzeros)
     std::vector<std::complex<double>> z = zpk.getZeros();
@@ -553,7 +559,7 @@ BA IIR::zpk2tf(const RTSeis::FilterRepresentations::ZPK &zpk) noexcept
     }
     catch (const std::invalid_argument &ia)
     {
-        RTSEIS_ERRMSG("The impossible has happened %s", ia.what());
+        std::cerr << "The impossible has happened: " << ia.what() << std::endl;
     }
     return ba;
 }
@@ -620,9 +626,13 @@ ZPK IIR::zpklp2bp(const RTSeis::FilterRepresentations::ZPK &zpkIn,
     size_t npoles = zpkIn.getNumberOfPoles();
     if (w0 < 0 || bw < 0)
     {
-        if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
-        if (bw < 0){RTSEIS_THROW_IA("bw=%lf must be non-negative", bw);}
-        RTSEIS_THROW_IA("%s", "Invalid inputs");
+        if (w0 < 0)
+        {
+            throw std::invalid_argument("w0 = " + std::to_string(w0)
+                                      + " must be non-negative");
+        }
+        throw std::invalid_argument("bw = " + std::to_string(bw)
+                                  + " must be non-negative");
     }
     size_t nzeros_bp = nzeros + npoles;
     size_t npoles_bp = 2*npoles;
@@ -680,9 +690,13 @@ ZPK IIR::zpklp2bs(const RTSeis::FilterRepresentations::ZPK &zpkIn,
     size_t npoles = zpkIn.getNumberOfPoles();
     if (w0 < 0 || bw < 0)
     {
-        if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
-        if (bw < 0){RTSEIS_THROW_IA("bw=%lf must be non-negative", bw);}
-        RTSEIS_THROW_IA("%s", "Invalid inputs");
+        if (w0 < 0) 
+        {
+            throw std::invalid_argument("w0 = " + std::to_string(w0)
+                                      + " must be non-negative");
+        }
+        throw std::invalid_argument("bw = " + std::to_string(bw)
+                                  + " must be non-negative");
     }
     size_t nzeros_bs = 2*npoles;
     size_t npoles_bs = 2*npoles;
@@ -752,10 +766,14 @@ ZPK IIR::zpklp2lp(const RTSeis::FilterRepresentations::ZPK &zpkIn,
 {
     size_t nzeros = zpkIn.getNumberOfZeros();
     size_t npoles = zpkIn.getNumberOfPoles();
-    if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
+    if (w0 < 0)
+    {
+        throw std::invalid_argument("w0 = " + std::to_string(w0)
+                                  + " must be non-negative");
+    }
     if (npoles < nzeros)
     {
-        RTSEIS_THROW_IA("%s", "BUG! npoles < nzeros not implemented");
+        throw std::invalid_argument("BUG! npoles < nzeros not implemented");
     }
     std::vector<std::complex<double>> z = zpkIn.getZeros();
     std::vector<std::complex<double>> p = zpkIn.getPoles();
@@ -784,10 +802,14 @@ ZPK IIR::zpklp2hp(const RTSeis::FilterRepresentations::ZPK &zpkIn,
 {
     size_t nzeros = zpkIn.getNumberOfZeros();
     size_t npoles = zpkIn.getNumberOfPoles();
-    if (w0 < 0){RTSEIS_THROW_IA("w0=%lf must be non-negative", w0);}
+    if (w0 < 0) 
+    {    
+        throw std::invalid_argument("w0 = " + std::to_string(w0)
+                                  + " must be non-negative");
+    }    
     if (npoles < nzeros)
-    {
-        RTSEIS_THROW_IA("%s", "BUG! npoles < nzeros not implemented");
+    {    
+        throw std::invalid_argument("BUG! npoles < nzeros not implemented");
     }
     std::vector<std::complex<double>> z = zpkIn.getZeros();
     std::vector<std::complex<double>> p = zpkIn.getPoles();
@@ -965,7 +987,7 @@ static int cmplxreal(const std::vector<std::complex<double>> &z,
     isreal.resize(0);
     if (z.size() < 1)
     {
-        RTSEIS_ERRMSG("%s", "No elements in z");
+        std::cerr << "No elements in z" << std::endl;
         return -1;
     }
     // Set the tolerance
@@ -989,7 +1011,7 @@ static int cmplxreal(const std::vector<std::complex<double>> &z,
     size_t ncmplx = cmplxs.size();
     if (nreal + ncmplx != z.size())
     {
-        RTSEIS_ERRMSG("%s", "Algorithmic error");
+        std::cerr << "Algorithmic error" << std::endl;
         return -1;
     }
     // Sort the reals into ascending order and save them 
@@ -1053,17 +1075,17 @@ static int cmplxreal(const std::vector<std::complex<double>> &z,
         int npaired = std::accumulate(lskip.begin(), lskip.end(), 0);
         if (npaired != static_cast<int> (cmplxs.size()))
         {
-            RTSEIS_ERRMSG("All poles need complex conjugate pairs; %d %ld",
-                          npaired, cmplxs.size());
-            fprintf(stderr, "Input\n");
+            std::cerr << "All poles need complex conjugate pairs: "
+                      << npaired << " " << cmplxs.size() << std::endl;
+            std::cerr << "Input" << std::endl;
             for (size_t m=0; m<z.size(); m++)
             {
-                fprintf(stderr, "%e + %+ei\n", z[m].real(), z[m].imag());
+                std::cerr << z[m] << std::endl;//fprintf(stderr, "%e + %+ei\n", z[m].real(), z[m].imag());
             }
-            fprintf(stderr, "Found complexes\n");
+            std::cerr << "Found complexes" << std::endl;
             for (size_t m=0; m<cmplxs.size(); m++) 
             {
-                fprintf(stderr, "%e + %+ei\n", cmplxs[m].real(), cmplxs[m].imag());
+                std::cerr << cmplxs[m] << std::endl;// fprintf(stderr, "%e + %+ei\n", cmplxs[m].real(), cmplxs[m].imag());
             }
             p.resize(0);
 getchar();
@@ -1072,7 +1094,7 @@ getchar();
     }
     if (2*nconj + nreal != z.size())
     {
-        RTSEIS_ERRMSG("%s", "Algorithmic failure");
+        std::cerr << "Algorithmic failure" << std::endl;
         return -1;
     }
 /*
