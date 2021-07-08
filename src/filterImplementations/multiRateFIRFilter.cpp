@@ -858,7 +858,7 @@ void MultiRateFIRFilter<float>::initialize(
                                       + " must be positive");
         }
     }
-#ifndef NDEBUG
+#ifdef NDEBUG
     pFIR_->initialize(upFactor, downFactor,
                       nb, b, mode, precision, chunkSize);
 #else
