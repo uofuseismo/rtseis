@@ -5,7 +5,6 @@
 #include <complex> // Put this before fftw
 #include <mkl.h>
 #include <mkl_vsl.h>
-#include <fftw/fftw3.h>
 #include "rtseis/transforms/dftRealToComplex.hpp"
 #include "rtseis/transforms/continuousWavelet.hpp"
 #include "rtseis/transforms/wavelets/morlet.hpp"

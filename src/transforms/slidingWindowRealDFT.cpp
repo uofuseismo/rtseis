@@ -52,7 +52,7 @@ public:
         clear();
     }
     /// Releases memory
-    void clear()
+    void clear() noexcept
     {
         mParameters.clear();
         if (mHaveDoublePlan){fftw_destroy_plan(mDoublePlan);}
@@ -92,7 +92,7 @@ public:
     /// The parameters that went into initialization
     class SlidingWindowRealDFTParameters mParameters;
     /// FFTw plan
-    fftw_plan  mDoublePlan;
+    fftw_plan mDoublePlan;
     /// Holds the data to Fourier transform.  This is an array of dimension
     /// [mInDataOffset x mNumberOfColumns]
     double *mInData64f = nullptr;
