@@ -1,5 +1,4 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 #include <complex>
 #include <ipps.h>
 #include "rtseis/transforms/welch.hpp"
@@ -207,9 +206,12 @@ void Welch<T>::transform(const int nSamples, const T x[])
     // Initialize the summation
     T *__restrict__ pSumSpectrum = pImpl->mSumSpectrum.data();
     auto cPtr = pImpl->mSlidingWindowRealDFT.getTransform(0);
+#ifndef NDEBUG
+    assert(cPtr != nullptr);
+#endif
     //auto pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
     #pragma omp simd
-    for (auto k=0; k<nFrequencies; ++k)
+    for (auto k = 0; k < nFrequencies; ++k)
     {
         auto cr = std::real(cPtr[k]);
         auto ci = std::imag(cPtr[k]);
@@ -218,12 +220,15 @@ void Welch<T>::transform(const int nSamples, const T x[])
         //                + pDFT[k].im*pDFT[k].im;
     }
     // And sum the other windows
-    for (auto i=1; i<nWindows; ++i)
+    for (auto i = 1; i < nWindows; ++i)
     {
         cPtr = pImpl->mSlidingWindowRealDFT.getTransform(i);
+#ifndef NDEBUG
+        assert(cPtr != nullptr);
+#endif
         //pDFT = reinterpret_cast<const Ipp64fc *> (cPtr);
         #pragma omp simd
-        for (auto k=0; k<nFrequencies; ++k)
+        for (auto k = 0; k < nFrequencies; ++k)
         {
             auto cr = std::real(cPtr[k]);
             auto ci = std::imag(cPtr[k]);

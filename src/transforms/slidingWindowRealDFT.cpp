@@ -55,8 +55,8 @@ public:
     void clear() noexcept
     {
         mParameters.clear();
-        if (mHaveDoublePlan){fftw_destroy_plan(mDoublePlan);}
-        if (mHaveFloatPlan){fftwf_destroy_plan(mFloatPlan);}
+        if (mHaveDoublePlan && mDoublePlan){fftw_destroy_plan(mDoublePlan);}
+        if (mHaveFloatPlan  && mFloatPlan){fftwf_destroy_plan(mFloatPlan);}
         if (mOutData64f != nullptr){fftw_free(mOutData64f);}
         if (mOutData32f != nullptr){fftwf_free(mOutData32f);}
         if (mWindow64f != nullptr){ippsFree(mWindow64f);}
@@ -69,6 +69,8 @@ public:
         mWindow32f = nullptr;
         mInData64f = nullptr;
         mInData32f = nullptr;
+        mFloatPlan = nullptr;
+        mDoublePlan = nullptr;
         mInDataLength = 0;
         mOutDataLength = 0;
         mSamples = 0;
@@ -92,7 +94,7 @@ public:
     /// The parameters that went into initialization
     class SlidingWindowRealDFTParameters mParameters;
     /// FFTw plan
-    fftw_plan mDoublePlan;
+    fftw_plan mDoublePlan = nullptr;
     /// Holds the data to Fourier transform.  This is an array of dimension
     /// [mInDataOffset x mNumberOfColumns]
     double *mInData64f = nullptr;
@@ -103,7 +105,7 @@ public:
     /// [mSamplesPerSegment].  This is used with mApplyWindow.
     double *mWindow64f = nullptr;
     /// Holds the FFTw floating arithmetic plan
-    fftwf_plan mFloatPlan;
+    fftwf_plan mFloatPlan = nullptr;
     /// Holds the data to Fourier transform.  This is an array of dimension
     /// [mInDataOffset x mNumberOfColumns]
     float *mInData32f = nullptr;
@@ -325,6 +327,10 @@ void SlidingWindowRealDFT<T>::initialize(
                                                     pImpl->mOutData64f, onembed,
                                                     ostride, pImpl->mFTOffset,
                                                     FFTW_PATIENT);
+        if (pImpl->mDoublePlan == nullptr)
+        {
+            throw std::runtime_error("Failed to make double plan");
+        }
         pImpl->mHaveDoublePlan = true;
     }
     else
@@ -344,6 +350,10 @@ void SlidingWindowRealDFT<T>::initialize(
                                                     pImpl->mOutData32f, onembed,
                                                     ostride, pImpl->mFTOffset,
                                                     FFTW_PATIENT);
+        if (pImpl->mFloatPlan == nullptr)
+        {
+            throw std::runtime_error("Failed to make float plan");
+        }
         pImpl->mHaveFloatPlan = true;
     }
     pImpl->mHaveTransform = false;
