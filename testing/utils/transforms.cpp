@@ -1163,7 +1163,7 @@ TEST(UtilitiesTransforms, Welch)
     EXPECT_NO_THROW(parameters.setDetrendType(SlidingWindowDetrendType::REMOVE_MEAN));
     EXPECT_NO_THROW(parameters.setDFTLength(fftLength));
     EXPECT_TRUE(parameters.isValid());
-    Welch welch;
+    Welch<double> welch;
     EXPECT_NO_THROW(welch.initialize(parameters, samplingRate));
     EXPECT_EQ(welch.getNumberOfSamples(), nSamples);
     int nFrequencies = welch.getNumberOfFrequencies(); 

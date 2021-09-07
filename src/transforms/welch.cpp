@@ -1,5 +1,6 @@
 #include <iostream>
 #include <complex>
+#include <cassert>
 #include <ipps.h>
 #include "rtseis/transforms/welch.hpp"
 #include "rtseis/transforms/slidingWindowRealDFT.hpp"
@@ -46,8 +47,8 @@ template<class T>
 class Welch<T>::WelchImpl
 {
 public:
-    class SlidingWindowRealDFT<T> mSlidingWindowRealDFT;
-    class SlidingWindowRealDFTParameters mParameters;
+    SlidingWindowRealDFT<T> mSlidingWindowRealDFT;
+    SlidingWindowRealDFTParameters mParameters;
     std::vector<T> mSumSpectrum;
     double mSpectrumScaling = 1;
     double mDensityScaling = 1;
