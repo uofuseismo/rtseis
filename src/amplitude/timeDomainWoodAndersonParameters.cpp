@@ -11,7 +11,7 @@ namespace
 bool isValidSamplingRateWork(const double samplingRate,
                              const double tolerance = 1.e-4)
 {
-    const std::array<double, 7> samplingRates{100, 200, 40, 80, 50, 20, 250};
+    const std::array<double, 8> samplingRates{100, 200, 40, 80, 50, 20, 250, 500};
     for (const auto df : samplingRates) 
     {
         if (std::abs(df - samplingRate) < tolerance){return true;}
@@ -83,7 +83,7 @@ std::tuple<double, double, double>
             throw std::runtime_error("Unhandled sampling rate in velocity");
         }
     }
-    else if (inputUnits == InputUnits::Velocity) // accelerometer values
+    else if (inputUnits == InputUnits::Acceleration) // accelerometer values
     {
         if (samplingRate == 100)
         {
@@ -156,7 +156,7 @@ public:
     {
         if (mHaveInputUnits && mSamplingRate > 0)
         {
-            std::tie(mH, mG, mF) = getWoodAndersonConstants(mSamplingRate,
+            std::tie(mH, mF, mG) = getWoodAndersonConstants(mSamplingRate,
                                                             mInputUnits);
         }
     }
@@ -167,6 +167,7 @@ public:
     double mG = 0;
     double mF = 0;
     InputUnits mInputUnits = InputUnits::Velocity;
+    WoodAndersonGain mWAGain = WoodAndersonGain::WA_2800;
     WindowType mWindow = WindowType::Cosine;
     DetrendType mDetrendType = DetrendType::RemoveMean;
     bool mHaveInputUnits = false;
@@ -316,6 +317,25 @@ void TimeDomainWoodAndersonParameters::setDetrendType(
 DetrendType TimeDomainWoodAndersonParameters::getDetrendType() const noexcept
 {
     return pImpl->mDetrendType;
+}
+
+/// WA gain
+void TimeDomainWoodAndersonParameters::setWoodAndersonGain(
+    const WoodAndersonGain waGain) noexcept
+{
+    pImpl->mWAGain = waGain;
+}
+
+WoodAndersonGain 
+    TimeDomainWoodAndersonParameters::getWoodAndersonGain() const noexcept
+{
+    return pImpl->mWAGain;
+}
+
+/// Reset class
+void TimeDomainWoodAndersonParameters::clear() noexcept
+{
+    pImpl = std::make_unique<TimeDomainWoodAndersonParametersImpl> ();
 }
 
 /// Destructor

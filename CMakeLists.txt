@@ -89,6 +89,7 @@ SET(UTILS_SRCS
     src/utilities/verbosity.cpp
     src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/characteristicFunction/carlSTALTA.cpp
+    src/amplitude/timeDomainWoodAndersonParameters.cpp
     src/deconvolution/instrumentResponse.cpp
     src/deconvolution/woodAnderson.cpp
     src/filterDesign/filterDesigner.cpp
@@ -199,6 +200,7 @@ ADD_EXECUTABLE(utilityTests
                testing/utils/rotate.cpp
                testing/utils/polarization.cpp
                testing/utils/trigger.cpp
+               testing/utils/amplitude.cpp
                testing/utils/deconvolution.cpp)
 ADD_EXECUTABLE(testPPSC
                testing/postProcessing/singleChannel.cpp)
