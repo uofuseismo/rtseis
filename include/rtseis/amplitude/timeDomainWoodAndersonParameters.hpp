@@ -90,7 +90,7 @@ public:
     void setInputUnits(InputUnits units) noexcept;
     /// @result The units to which the input signal is proportional.
     /// @throws std::runtime_error if \c haveInputUnits() is false.
-    InputUntis getInputUnits() const noexcept;
+    InputUnits getInputUnits() const;
     /// @result True indicates that the input units were set.
     [[nodiscard]] bool haveInputUnits() const noexcept;
 
@@ -115,8 +115,9 @@ public:
     [[nodiscard]] double getSamplingRate() const;
     /// @result True indicates the sampling rate is set.
     [[nodiscard]] bool haveSamplingRate() const noexcept;
+    /// @param[in] samplingRate  The sampling rate in Hz.
     /// @result True indicates the sampling rate is supported.
-    [[nodiscard]] bool isSamplingRateSupported() const noexcept;
+    [[nodiscard]] bool isSamplingRateSupported(double samplingRate) const noexcept;
 
     /// @brief Sets the Wood-Anderson gain convention used by the filter.
     /// @param[in] gain  The Wood-Anderson gain convention.
@@ -124,6 +125,26 @@ public:
     void setWoodAndersonGain(WoodAndersonGain gain) noexcept;
     /// @result The Wood-Anderson gain convention.
     [[nodiscard]] WoodAndersonGain getWoodAndersonGain() const noexcept;
+
+    /// @}
+
+    /// @name Pre-Optimized Filter Coefficients
+    /// @{
+    /// @result The optimized damping constant, h, for this instrument and
+    ///         sampling rate.
+    /// @throws std::runtime_error if \c haveInputUnits() or
+    ///         \c haveSamplingRate() is false.
+    [[nodiscard]] double getOptimizedDampingConstant() const;
+    /// @result The optimized angular frequency, f, (rad/s) for this instrument and
+    ///         sampling rate.
+    /// @throws std::runtime_error if \c haveInputUnits() or
+    ///         \c haveSamplingRate() is false.
+    [[nodiscard]] double getOptimizedNaturalAngularFrequency() const;
+    /// @result The optimized gain, g, for this instrument and
+    ///         sampling rate.
+    /// @throws std::runtime_error if \c haveInputUnits() or
+    ///         \c haveSamplingRate() is false.
+    [[nodiscard]] double getOptimizedGain() const;
     /// @}
 
     /// @name Additional for Post-Processing Options
@@ -141,7 +162,7 @@ public:
     /// @result The percentage to taper the signal prior to filtering.
     [[nodiscard]] double getTaperPercentage() const noexcept;
     /// @result The window type.
-    [[nodiscard]] Taper getWindowType() const noexcept;
+    [[nodiscard]] WindowType getWindowType() const noexcept;
     
     /// @brief Sets the detrend strategy to apply prior to tapering.
     /// @param[in] detrendType   The detrend strategy.
