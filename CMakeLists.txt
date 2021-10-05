@@ -112,6 +112,7 @@ SET(UTILS_SRCS
     src/filterImplementations/iiriirFilter.cpp
     src/filterImplementations/medianFilter.cpp
     src/filterImplementations/sos.cpp
+    src/filterImplementations/taper.cpp
     src/utilities/interpolation/cubicSpline.cpp
     src/utilities/interpolation/interpolate.cpp
     src/utilities/interpolation/linear.cpp
@@ -146,14 +147,13 @@ SET(UTILS_SRCS
 #    src/ipps/iirfilter.c
 #    src/ipps/medianFilter.c)
 SET(MODULES_SRCS
-    src/modules/detrend.cpp
-    src/modules/demean.cpp
+    #src/modules/detrend.cpp
+    #src/modules/demean.cpp
     #src/modules/classicSTALTA.cpp
     )
 #SET(DATA_SRCS src/data/waveform.cpp)
 SET(PROCESSING_SRCS 
     src/postProcessing/singleChannel/waveform.cpp
-    src/postProcessing/singleChannel/taper.cpp
     )
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
 

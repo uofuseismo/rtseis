@@ -4,7 +4,7 @@
 #include <cmath>
 #include <string>
 #include <exception>
-#ifdef DEBUG
+#ifndef NDEBUG
 #include <cassert>
 #endif
 #include <memory>
@@ -22,7 +22,6 @@
 #include "rtseis/postProcessing/singleChannel/waveform.hpp"
 #include "rtseis/postProcessing/singleChannel/detrend.hpp"
 #include "rtseis/postProcessing/singleChannel/demean.hpp"
-#include "rtseis/postProcessing/singleChannel/taper.hpp"
 #include "rtseis/filterDesign/enums.hpp"
 #include "rtseis/filterDesign/filterDesigner.hpp"
 #include "rtseis/utilities/math/convolve.hpp"
@@ -36,6 +35,7 @@
 #include "rtseis/filterImplementations/iirFilter.hpp"
 #include "rtseis/filterImplementations/iiriirFilter.hpp"
 #include "rtseis/filterImplementations/sosFilter.hpp"
+#include "rtseis/filterImplementations/taper.hpp"
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include "rtseis/utilities/normalization/minMax.hpp"
@@ -473,7 +473,7 @@ void Waveform<T>::convolve(
                                             ny, s.data(),
                                             lenc, &nyout, &yout,
                                             convcorMode, convcorImpl);
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(lenc == nyout);
 #endif
         pImpl->lfirstFilter_ = false;
@@ -516,7 +516,7 @@ void Waveform<T>::correlate(
                                              ny, s.data(),
                                              lenc, &nyout, &yout,
                                              convcorMode, convcorImpl);
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(lenc == nyout);
 #endif
         pImpl->lfirstFilter_ = false;
@@ -555,7 +555,7 @@ void Waveform<T>::autocorrelate(
         Utilities::Math::Convolve::autocorrelate(nx, x,
                                                  lenc, &nyout, &yout,
                                                  convcorMode, convcorImpl);
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(lenc == nyout);
 #endif
         pImpl->lfirstFilter_ = false;
@@ -676,7 +676,7 @@ void Waveform<T>::downsample(const int nq)
         const T *x = pImpl->getInputDataPointer(); // Handle on input
         int nyout;
         downsample.apply(len, x, leny, &nyout, &y);  // Finally downsample
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(nyout == leny);
 #endif
         pImpl->dt_ = pImpl->dt_*static_cast<T> (nq);
@@ -721,7 +721,7 @@ void Waveform<T>::decimate(const int nq, const int filterLength)
         const T *x = pImpl->getInputDataPointer(); // Handle on input
         int nyout;
         decimate.apply(len, x, leny, &nyout, &y);  // Finally downsample
-#ifdef DEBUG
+#ifndef NDEBUG
         assert(nyout == leny);
 #endif
         pImpl->dt_ = pImpl->dt_*static_cast<T> (nq);
@@ -1259,7 +1259,7 @@ void Waveform<T>::normalizeMinMax(const std::pair<double, double> targetRange)
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        std::cerr << "No data is set on the module" << std::endl;
         return;
     }
     // Normalize the data
@@ -1279,7 +1279,7 @@ void Waveform<T>::normalizeSignBit()
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        std::cerr << "No data is set on the module" << std::endl;
         return;
     }
     // Normalize the data
@@ -1299,7 +1299,7 @@ void Waveform<T>::normalizeZScore()
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        std::cerr << "No data is set on the module" << std::endl;
         return;
     }
     // Normalize the data
@@ -1324,19 +1324,51 @@ void Waveform<T>::normalizeZScore()
 //----------------------------------------------------------------------------//
 
 template<class T>
-void Waveform<T>::taper(const double pct,
+void Waveform<T>::taper(const double percentage,
                         const TaperParameters::Type window)
 {
     if (!pImpl->lfirstFilter_){pImpl->overwriteInputWithOutput();}
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
-        RTSEIS_WARNMSG("%s", "No data is set on the module");
+        std::cerr << "No data is set on the module" << std::endl;
         return;
     }
     // Taper the data
-    TaperParameters parms(pct, window); //, RTSeis::Precision::DOUBLE);
-    Taper<T> taper(parms);
+    if (percentage < 0 || percentage > 100)
+    {
+        throw std::invalid_argument("Percentage = "
+                                  + std::to_string(percentage)
+                                  + " must be in range [0,100]");
+    }
+    auto windowType = RTSeis::FilterImplementations::TaperWindowType::Hamming;
+    if (window == TaperParameters::Type::HAMMING)
+    {
+        windowType = RTSeis::FilterImplementations::TaperWindowType::Hamming;
+    }
+    else if (window == TaperParameters::Type::BARTLETT)
+    {
+        windowType = RTSeis::FilterImplementations::TaperWindowType::Bartlett;
+    }
+    else if (window == TaperParameters::Type::HANN)
+    {
+        windowType = RTSeis::FilterImplementations::TaperWindowType::Hann;
+    }
+    else if (window == TaperParameters::Type::BLACKMAN)
+    {
+        windowType = RTSeis::FilterImplementations::TaperWindowType::Blackman;
+    } 
+    else if (window == TaperParameters::Type::SINE)
+    {
+        windowType = RTSeis::FilterImplementations::TaperWindowType::Sine;
+    }
+    else
+    {
+        throw std::invalid_argument("Unhandled window type");
+    }
+    RTSeis::FilterImplementations::Taper<T> taper;
+    taper.initialize(percentage, windowType);
+
     const T *x = pImpl->getInputDataPointer();
     pImpl->resizeOutputData(len);
     T *y = pImpl->getOutputDataPointer();
@@ -1386,7 +1418,7 @@ double computeNormalizedFrequencyFromSamplingPeriod(const double fc,
 }
 double computeNyquistFrequencyFromSamplingPeriod(const double dt)
 {
-#ifdef DEBUG
+#ifndef NDEBUG
     assert(dt > 0);
 #endif
     return 1.0/(2.0*dt);
@@ -1462,8 +1494,8 @@ classifyIIRPrototype(const IIRPrototype prototype)
     }
     else
     {
-        RTSEIS_THROW_IA("Unsupported prototype=%d",
-                        static_cast<int> (prototype));
+        throw std::invalid_argument("Unsupported window = " + 
+                                  std::to_string(static_cast<int> (prototype)));
     }
     return ptype;
 }
@@ -1490,11 +1522,13 @@ classifyFIRWindow(const FIRWindow windowIn)
     }
     else
     {
-        RTSEIS_THROW_IA("Unsupported window=%d",
-                        static_cast<int> (windowIn));
+        throw std::invalid_argument("Unsupported window = " + 
+                                   std::to_string(static_cast<int> (windowIn)));
     }
     return window;
 }
 
-// Template instantiation
+///--------------------------------------------------------------------------///
+///                         Template Instantiation                           ///
+///--------------------------------------------------------------------------///
 template class PostProcessing::SingleChannel::Waveform<double>;

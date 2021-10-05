@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <cassert>
 #include <cmath>
@@ -5,8 +6,10 @@
 #include <memory>
 #include <ipps.h>
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
+#include "rtseis/filterImplementations/taper.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
 
+/*
 using namespace RTSeis::PostProcessing::SingleChannel;
 
 class TaperParameters::TaperParametersImpl
@@ -16,21 +19,6 @@ public:
     double pct = 5;
     /// Taper type.
     Type type = Type::HAMMING;
-    /// Precision 
-    //RTSeis::Precision precision = RTSeis::Precision::DOUBLE; 
-    /// The processing mode can't be toggled
-    //const RTSeis::ProcessingMode mode = RTSeis::ProcessingMode::POST_PROCESSING;
-};
-
-template<class T>
-class Taper<T>::TaperImpl
-{
-public:
-    TaperParameters parms; 
-    std::vector<double> w8;
-    std::vector<float>  w4;
-    int winLen0 =-1;
-    bool linit = false;
 };
 
 /// Default c'tor
@@ -116,10 +104,28 @@ bool TaperParameters::isValid() const noexcept
     if (pImpl->pct < 0 || pImpl->pct > 100){return false;}
     return true;
 }
+*/
 
 //============================================================================//
 //                                    Tapering                                //
 //============================================================================//
+
+using namespace RTSeis::FilterImplementations;
+
+template<class T>
+class Taper<T>::TaperImpl
+{
+public:
+    //TaperParameters parms; 
+    std::vector<double> mW8; 
+    std::vector<float>  mW4; 
+    double mBeta = 8;
+    double mPercentage = 5;
+    int mWindowLength0 =-1;
+    TaperWindowType mWindowType = TaperWindowType::Hamming;
+    bool mInitialized = false;
+};
+
 /// C'tor
 template<class T>
 Taper<T>::Taper() :
@@ -141,28 +147,34 @@ Taper<T>::Taper(Taper<T> &&taper) noexcept
     *this = std::move(taper);
 }
 
+/*
 /// C'tor from parameters
 template<class T>
 Taper<T>::Taper(const TaperParameters &parameters) :
     pImpl(std::make_unique<TaperImpl>())
 {
-    setParameters(parameters);
+    initialize(parameters);
 }
+*/
 
 /// Destructor
 template<class T>
 Taper<T>::~Taper() = default;
 
+/// Reset class
 template<class T>
 void Taper<T>::clear() noexcept
 {
-    pImpl->parms.clear();
-    pImpl->w8.clear();
-    pImpl->w4.clear();
-    pImpl->winLen0 =-1;
-    pImpl->linit = false;
+    pImpl->mW8.clear();
+    pImpl->mW4.clear();
+    pImpl->mBeta = 8;
+    pImpl->mWindowLength0 =-1;
+    pImpl->mPercentage = 5;
+    pImpl->mWindowType = TaperWindowType::Hamming;
+    pImpl->mInitialized = false;
 }
 
+/// Copy assignment
 template<class T>
 Taper<T>& Taper<T>::operator=(const Taper &taper)
 {
@@ -171,6 +183,7 @@ Taper<T>& Taper<T>::operator=(const Taper &taper)
     return *this;
 }
 
+/// Move assignment
 template<class T>
 Taper<T>& Taper<T>::operator=(Taper &&taper) noexcept
 {
@@ -179,18 +192,29 @@ Taper<T>& Taper<T>::operator=(Taper &&taper) noexcept
     return *this;
 }
 
+/// Initialize
 template<class T>
-void Taper<T>::setParameters(const TaperParameters &parameters)
+void Taper<T>::initialize(const double percentage,
+                          const TaperWindowType type,
+                          const double beta)
 {
-    clear(); // Sets winLen0 to -1
-    if (!parameters.isValid())
+    clear(); // Sets mWindowLength0 to -1
+    if (percentage < 0 || percentage > 100)
     {
-        throw std::invalid_argument("Taper parameters are invalid");
+        throw std::invalid_argument("Percentage = " + std::to_string(percentage)
+                                  + " must be in range [0,100]");
     }
-    pImpl->parms = parameters;
-    pImpl->linit = true;
+    if (type == TaperWindowType::Kaiser && beta < 0)
+    {
+        throw std::invalid_argument("Beta must be positive for Kaiser windows");
+    }
+    pImpl->mPercentage = percentage;
+    pImpl->mBeta = beta;
+    pImpl->mWindowType = type;
+    pImpl->mInitialized = true;
 }
 
+/// Apply double
 template<>
 void Taper<double>::apply(const int nx, const double x[], double *yIn[])
 {
@@ -210,36 +234,42 @@ void Taper<double>::apply(const int nx, const double x[], double *yIn[])
         return;
     }
     // Compute taper length
-    double pct = pImpl->parms.getPercentage();
-    int npct = static_cast<int> (static_cast<double> (nx)*pct/100 + 0.5) + 1;
+    double pct = pImpl->mPercentage;
+    int npct = static_cast<int> (std::round((nx*pct)/100.)) + 1;
     int m = std::max(2, std::min(nx, npct));
-    // Redesign the window?  If the parameters were (re)set then winLen0 is -1.
+    // Redesign the window?  If the parameters were (re)set then mWindowLength0
+    // is -1.
     // Otherwise, if the same length signal is coming at us then the precision
     // of the module can't change so we can just use the old window.
-    if (pImpl->winLen0 != m)
+    if (pImpl->mWindowLength0 != m)
     {
-        pImpl->w8.resize(m); // Prevent reallocations in a bit
-        TaperParameters::Type type = pImpl->parms.getTaperType();
-        double *w8data = pImpl->w8.data();
-        if (type == TaperParameters::Type::HAMMING)
+        pImpl->mW8.resize(m); // Prevent reallocations in a bit
+        auto type = pImpl->mWindowType;
+        double beta = pImpl->mBeta;
+        double *w8data = pImpl->mW8.data();
+        if (type == TaperWindowType::Hamming)
         {
             RTSeis::Utilities::WindowFunctions::hamming(m, &w8data);
         }
-        else if (type == TaperParameters::Type::BLACKMAN)
+        else if (type == TaperWindowType::Blackman)
         {
             RTSeis::Utilities::WindowFunctions::blackman(m, &w8data);
         }
-        else if (type == TaperParameters::Type::HANN)
+        else if (type == TaperWindowType::Hann)
         {
             RTSeis::Utilities::WindowFunctions::hann(m, &w8data);
         }
-        else if (type == TaperParameters::Type::BARTLETT)
+        else if (type == TaperWindowType::Bartlett)
         {
             RTSeis::Utilities::WindowFunctions::bartlett(m, &w8data);
         }
-        else if (type == TaperParameters::SINE)
+        else if (type == TaperWindowType::Sine)
         {
             RTSeis::Utilities::WindowFunctions::sine(m, &w8data);
+        }
+        else if (type == TaperWindowType::Kaiser)
+        {
+            RTSeis::Utilities::WindowFunctions::kaiser(m, &w8data, beta);
         }
         else
         {
@@ -248,10 +278,11 @@ void Taper<double>::apply(const int nx, const double x[], double *yIn[])
 #endif
             throw std::invalid_argument("Unsupported window");
         }
+        pImpl->mWindowLength0 = m;
     }
     // Taper first (m+1)/2 points
     int mp12 = m/2;
-    const double *w = pImpl->w8.data();
+    const double *w = pImpl->mW8.data();
     ippsMul_64f(w, x, y, mp12);
     // Copy the intermediate portion of the signal
     int ncopy = nx - mp12 - mp12; // Subtract out two window lengths
@@ -263,6 +294,7 @@ void Taper<double>::apply(const int nx, const double x[], double *yIn[])
     ippsMul_64f(&w[m-mp12], &x[nx-mp12], &y[nx-mp12], mp12);
 }
 
+/// Apply float
 template<>
 void Taper<float>::apply(const int nx, const float x[], float *yIn[])
 {
@@ -282,36 +314,42 @@ void Taper<float>::apply(const int nx, const float x[], float *yIn[])
         return;
     }
     // Compute taper length
-    double pct = pImpl->parms.getPercentage();
-    int npct = static_cast<int> (static_cast<double> (nx)*pct/100 + 0.5) + 1;
+    double pct = pImpl->mPercentage;
+    int npct = static_cast<int> (std::round( (nx*pct)/100. )) + 1;
     int m = std::max(2, std::min(nx, npct));
-    // Redesign the window?  If the parameters were (re)set then winLen0 is -1.
+    // Redesign the window?  If the parameters were (re)set then mWindowLength0
+    // is -1.
     // Otherwise, if the same length signal is coming at us then the precision
     // of the module can't change so we can just use the old window.
-    if (pImpl->winLen0 != m)
+    if (pImpl->mWindowLength0 != m)
     {
-        pImpl->w4.resize(m); // Prevent reallocations in a bit
-        TaperParameters::Type type = pImpl->parms.getTaperType();
-        float *w4data = pImpl->w4.data();
-        if (type == TaperParameters::Type::HAMMING)
+        pImpl->mW4.resize(m); // Prevent reallocations in a bit
+        auto type = pImpl->mWindowType;
+        auto beta = static_cast<float> (pImpl->mBeta);
+        float *w4data = pImpl->mW4.data();
+        if (type == TaperWindowType::Hamming)
         {
             RTSeis::Utilities::WindowFunctions::hamming(m, &w4data);
         }
-        else if (type == TaperParameters::Type::BLACKMAN)
+        else if (type == TaperWindowType::Blackman)
         {
             RTSeis::Utilities::WindowFunctions::blackman(m, &w4data);
         }
-        else if (type == TaperParameters::Type::HANN)
+        else if (type == TaperWindowType::Hann)
         {
             RTSeis::Utilities::WindowFunctions::hann(m, &w4data);
         }
-        else if (type == TaperParameters::Type::BARTLETT)
+        else if (type == TaperWindowType::Bartlett)
         {
             RTSeis::Utilities::WindowFunctions::bartlett(m, &w4data);
         }
-        else if (type == TaperParameters::SINE)
+        else if (type == TaperWindowType::Sine)
         {
             RTSeis::Utilities::WindowFunctions::sine(m, &w4data);
+        }
+        else if (type == TaperWindowType::Kaiser)
+        {
+            RTSeis::Utilities::WindowFunctions::kaiser(m, &w4data, beta);
         }
         else
         {
@@ -320,10 +358,11 @@ void Taper<float>::apply(const int nx, const float x[], float *yIn[])
 #endif
             throw std::invalid_argument("Unsupported window");
         }
+        pImpl->mWindowLength0 = m;
     }
     // Taper first (m+1)/2 points
     int mp12 = m/2;
-    const float *w = pImpl->w4.data();
+    const float *w = pImpl->mW4.data();
     ippsMul_32f(w, x, y, mp12);
     // Copy the intermediate portion of the signal
     int ncopy = nx - mp12 - mp12; // Subtract out two window lengths
@@ -335,14 +374,15 @@ void Taper<float>::apply(const int nx, const float x[], float *yIn[])
     ippsMul_32f(&w[m-mp12], &x[nx-mp12], &y[nx-mp12], mp12);
 }
 
+/// Initialized?
 template<class T>
 bool Taper<T>::isInitialized() const
 {
-    return pImpl->linit;
+    return pImpl->mInitialized;
 }
 
 ///--------------------------------------------------------------------------///
 ///                             Template Instantiation                       ///
 ///--------------------------------------------------------------------------///
-template class RTSeis::PostProcessing::SingleChannel::Taper<double>;
-template class RTSeis::PostProcessing::SingleChannel::Taper<float>;
+template class RTSeis::FilterImplementations::Taper<double>;
+template class RTSeis::FilterImplementations::Taper<float>;

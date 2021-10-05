@@ -168,7 +168,7 @@ public:
     double mF = 0;
     InputUnits mInputUnits = InputUnits::Velocity;
     WoodAndersonGain mWAGain = WoodAndersonGain::WA_2800;
-    WindowType mWindow = WindowType::Cosine;
+    WindowType mWindow = WindowType::Sine;
     DetrendType mDetrendType = DetrendType::RemoveMean;
     bool mHaveInputUnits = false;
 };

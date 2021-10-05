@@ -37,7 +37,7 @@ enum class DetrendType
 enum class WindowType
 {
     None,   /*!< Do not apply a taper to the signal prior to filtering. */
-    Cosine  /*!< Apply a cosine taper prior to filtering */
+    Sine    /*!< Apply a sine taper prior to filtering */
 };
 
 /// @class TimeDomainWoodAndersonParameters timeDomainWoodAndersonParameters.hpp "rtseis/amplitude/timeDomainWoodAndersonParameters.hpp"
@@ -158,7 +158,7 @@ public:
     ///                        This must be in the range [0,100].
     /// @param[in] window      The window to apply.  If this is WindowType::None
     ///                        then no filtering will be performed.
-    void setTaper(double percentage = 5, WindowType window = WindowType::Cosine);
+    void setTaper(double percentage = 5, WindowType window = WindowType::Sine);
     /// @result The percentage to taper the signal prior to filtering.
     [[nodiscard]] double getTaperPercentage() const noexcept;
     /// @result The window type.

@@ -1163,7 +1163,7 @@ int testTaper()
     std::vector<double> ySine100;
     try
     {
-        double pct = 100*(0.2*2); // SAC to RTSeis; 20 pct of signal
+        double pct = 100*(0.2*2); // SAC to RTSeis; 40 pct of signal
         waveform.setData(x100);
         waveform.taper(pct, SC::TaperParameters::HAMMING);
         yHamming100 = waveform.getData();
@@ -1188,13 +1188,13 @@ int testTaper()
     {
         if (std::abs(yHamming100[i] - yHamming100Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 100 failed %ld,%lf,%lf", 
+            RTSEIS_ERRMSG("Hamming 100 failed %ld,%lf,%lf", 
                           i, yHamming100[i], yHamming100Ref[i])
             return EXIT_FAILURE;
         }
         if (std::abs(yHann100[i] - yHanning100Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 100 failed %ld,%lf,%lf", 
+            RTSEIS_ERRMSG("Hann 100 failed %ld,%lf,%lf", 
                           i, yHann100[i], yHanning100Ref[i])
             return EXIT_FAILURE;
         }
@@ -1236,13 +1236,13 @@ int testTaper()
     {
         if (std::abs(yHamming101[i] - yHamming101Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 101 failed %ld,%lf,%lf", 
+            RTSEIS_ERRMSG("Hamming 101 failed %ld,%lf,%lf", 
                           i, yHamming101[i], yHamming101Ref[i])
             return EXIT_FAILURE;
         }
         if (std::abs(yHann101[i] - yHanning101Ref[i]) > 1.e-6)
         {
-            RTSEIS_ERRMSG("Sine 101 failed %ld,%lf,%lf", 
+            RTSEIS_ERRMSG("Hann 101 failed %ld,%lf,%lf", 
                           i, yHann101[i], yHanning101Ref[i])
             return EXIT_FAILURE;
         }   

@@ -1,11 +1,9 @@
-#ifndef RTSEIS_POSTPROCESSING_SC_TAPER
-#define RTSEIS_POSTPROCESSING_SC_TAPER 1
+#ifndef RTSEIS_POSTPROCESSING_SINGLECHANNEL_TAPER_HPP
+#define RTSEIS_POSTPROCESSING_SINGLECHANNEL_TAPER_HPP 1
 #include <memory>
 #include "rtseis/enums.hpp"
-
 namespace RTSeis::PostProcessing::SingleChannel
 {
-
 /// @defgroup rtseis_postprocessing_sc_taper Taper
 /// @brief Utilities for tapering a signal.  This can be useful for mitigating
 ///        wraparound artificats prior to application of Fourier methods.
@@ -28,7 +26,7 @@ public:
         BLACKMAN,  /*!< Apply Blackman window to ends of signal. */
         SINE       /*!< Apply a sine window to the ends of the signal. */
     };
-
+/*
 public:
     /// @name Constructors
     /// @{
@@ -101,75 +99,7 @@ public:
 private:
     class TaperParametersImpl;
     std::unique_ptr<TaperParametersImpl> pImpl;
+*/
 }; // End Taper Parameters
-
-/*!
- * @class Taper taper.hpp "include/rtseis/processing/singleChannel/taper.hpp"
- * @brief Tapers a waveform.
- * @ingroup rtseis_postprocessing_sc_taper
- * @copyright Ben Baker distributed under the MIT license.
- */
-template<class T = double>
-class Taper
-{
-public:
-    /// @name Constructors
-    /// @{ 
-    /// @brief Default constructor.
-    Taper();
-    /// @brief Copy constructor.
-    /// @param[in] taper  Taper class from which to initialize this class.
-    Taper(const Taper &taper);
-    /// @brief Move constructor.
-    /// @param[in,out] taper  The taper class from which to initialize this
-    ///                       class.  On exit, taper's behavior is undefined. 
-    Taper(Taper &&taper) noexcept;
-    /// @brief Constructs a taper command from the parameters.
-    /// @param[in] parameters  The taper parameters.
-    /// @throw std::invalid_argument if the parameters are invalid.
-    explicit Taper(const TaperParameters &parameters);
-    /// @}
-
-    /// @name Operators
-    /// @{
-    /// @brief Copy assignment operator.
-    /// @param[in] taper   The taper class to copy to this.
-    /// @result A deep copy of the taper class.
-    Taper& operator=(const Taper &taper);
-    /// @brief Move assignment operator.
-    /// @param[in,out] taper  The taper class whose memory will be moved
-    ///                       to this.  On exit, taper's behavior is undefined.
-    /// @result The memory from taper moved to this.
-    Taper& operator=(Taper &&taper) noexcept;
-    /// @}
-
-    /// @name Destructors
-    /// @{
-    /// @brief Default destructor.
-    ~Taper();
-    /// @brief Clears the memory and restores the defaults.
-    void clear() noexcept;
-    /// @} 
-
-    /// @brief Sets the taper parameters.
-    /// @param[in] parameters  A correctly initialized taper parameters
-    ///                        class.
-    /// @throw std::invalid_argument if the parameters.isValid() is false.
-    void setParameters(const TaperParameters &parameters);
-
-    /// @brief Determines if the class is initialized.
-    /// @retval True indicates that the class is ready to be applied to data.
-    [[nodiscard]] bool isInitialized() const;
-    /// @brief Applies the taper to the data.
-    /// @param[in] nx   Number of points in the signal.
-    /// @param[in] x    The signal to taper.  This has dimension [nx].
-    /// @param[out] y   The tapered signal.  This has dimension [nx].
-    /// @throws std::invalid_argument if the parameters are invalid. 
-    /// @throws std::runtime_error if \c isInitialized() is false.
-    void apply(int nx, const T x[], T *y[]);
-private:
-    class TaperImpl;
-    std::unique_ptr<TaperImpl> pImpl;
-}; // End Taper
-} // End RTSeis
+}
 #endif

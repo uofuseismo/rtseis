@@ -19,6 +19,7 @@
 #include "rtseis/filterImplementations/multiRateFIRFilter.hpp"
 #include "rtseis/filterImplementations/medianFilter.hpp"
 #include "rtseis/filterImplementations/sosFilter.hpp"
+#include "rtseis/filterImplementations/taper.hpp"
 #include "rtseis/filterImplementations/enums.hpp"
 #include <gtest/gtest.h>
 
@@ -1090,6 +1091,130 @@ TEST(UtilitiesFilterImplementations, decimate)
     } // Loop on different downsampling factors
     free(x);
 }
+
+//============================================================================//
+
+TEST(UtilitiesFilterImplementations, taper)
+{
+    const std::string taperSolns100FileName = "data/taper100.all.txt";
+    const std::string taperSolns101FileName = "data/taper101.all.txt";
+
+    // Load the reference solutions
+    std::vector<double> yHamming100Ref(100);
+    std::vector<double> yHanning100Ref(100);
+    std::vector<double> ySine100Ref(100);
+    std::vector<double> yHamming101Ref(101);
+    std::vector<double> yHanning101Ref(101);
+    std::vector<double> ySine101Ref(101);
+    std::string line100, line101;
+    std::ifstream taper100File(taperSolns100FileName);
+    std::ifstream taper101File(taperSolns101FileName);
+    for (int i=0; i<100; i++)
+    {
+        ASSERT_TRUE((std::getline(taper100File, line100)));
+        std::sscanf(line100.c_str(), "%lf, %lf, %lf\n",
+                    &yHamming100Ref[i], &yHanning100Ref[i], &ySine100Ref[i]);
+        ASSERT_TRUE((std::getline(taper101File, line101)));
+        std::sscanf(line101.c_str(), "%lf, %lf, %lf\n",
+                    &yHamming101Ref[i], &yHanning101Ref[i], &ySine101Ref[i]);
+    }
+    ASSERT_TRUE(std::getline(taper101File, line101));
+    std::sscanf(line101.c_str(), "%lf, %lf, %lf\n",
+                &yHamming101Ref[100], &yHanning101Ref[100], &ySine101Ref[100]);
+    taper100File.close();
+    taper101File.close();
+
+    Taper<double> hammingTaper, hannTaper, sineTaper;
+
+    std::vector<double> x100(100, 1);
+    std::vector<double> yHamming100(x100.size());
+    std::vector<double> yHann100(x100.size());
+    std::vector<double> ySine100(x100.size());
+
+    double pct = 100*(0.2*2); // SAC to RTSeis; 40 pct of signal
+    EXPECT_NO_THROW(hammingTaper.initialize(pct, TaperWindowType::Hamming));
+    pct = 100*(0.1*2); // SAC to RTSeis; 20 pct of signal
+    EXPECT_NO_THROW(hannTaper.initialize(pct,    TaperWindowType::Hann));
+    pct = 100*(0.3*2); // SAC to RTSeis; 60 pct of signal
+    EXPECT_NO_THROW(sineTaper.initialize(pct,    TaperWindowType::Sine));
+
+    auto yPtr = yHamming100.data();
+    EXPECT_NO_THROW(hammingTaper.apply(x100.size(), x100.data(), &yPtr));
+    yPtr = yHann100.data();
+    EXPECT_NO_THROW(hannTaper.apply(x100.size(), x100.data(), &yPtr));
+    yPtr = ySine100.data();
+    EXPECT_NO_THROW(sineTaper.apply(x100.size(), x100.data(), &yPtr));
+    // Compare
+    for (size_t i = 0; i < x100.size(); i++)
+    {
+        EXPECT_NEAR(std::abs(yHamming100[i] - yHamming100Ref[i]), 0, 1e-6);
+        if (std::abs(yHamming100[i] - yHamming100Ref[i]) > 1.e-6)
+        {
+            fprintf(stderr, "Sine 100 failed %ld,%lf,%lf", 
+                    i, yHamming100[i], yHamming100Ref[i]);
+            //return EXIT_FAILURE;
+        }
+        EXPECT_NEAR(std::abs(yHann100[i] - yHanning100Ref[i]), 0, 1e-6);
+        if (std::abs(yHann100[i] - yHanning100Ref[i]) > 1.e-6)
+        {
+            fprintf(stderr, "Sine 100 failed %ld,%lf,%lf", 
+                    i, yHann100[i], yHanning100Ref[i]);
+            //return EXIT_FAILURE;
+        }
+        EXPECT_NEAR(std::abs(ySine100[i] - ySine100Ref[i]), 0, 1e-6);
+        if (std::abs(ySine100[i] - ySine100Ref[i]) > 1.e-6)
+        {
+            fprintf(stderr, "Sine 100 failed %ld,%lf,%lf", 
+                    i, ySine100[i], ySine100Ref[i]);
+            //return EXIT_FAILURE;
+        }
+    }
+    // Repeat for 101 points
+    std::vector<double> x101(101, 1); 
+    std::vector<double> yHamming101(x101.size());
+    std::vector<double> yHann101(x101.size());
+    std::vector<double> ySine101(x101.size());
+
+    // Keep same configs
+    pct = 100*(0.05*2); // SAC to RTSeis; 10 pct of signal
+    EXPECT_NO_THROW(hammingTaper.initialize(pct, TaperWindowType::Hamming));
+    pct = 100*(0.1*2); // SAC to RTSeis; 20 pct of signal
+    EXPECT_NO_THROW(hannTaper.initialize(pct,    TaperWindowType::Hann));
+    pct = 100*(0.15*2); // SAC to RTSeis; 30 pct of signal
+    EXPECT_NO_THROW(sineTaper.initialize(pct,    TaperWindowType::Sine));
+
+   
+    yPtr = yHamming101.data();
+    EXPECT_NO_THROW(hammingTaper.apply(x101.size(), x101.data(), &yPtr));
+    yPtr = yHann101.data();
+    EXPECT_NO_THROW(hannTaper.apply(x101.size(), x101.data(), &yPtr));
+    yPtr = ySine101.data();
+    EXPECT_NO_THROW(sineTaper.apply(x101.size(), x101.data(), &yPtr));
+
+    for (size_t i = 0; i < x101.size(); i++)
+    {
+        EXPECT_NEAR(std::abs(yHamming101[i] - yHamming101Ref[i]), 0, 1e-6);
+        if (std::abs(yHamming101[i] - yHamming101Ref[i]) > 1.e-6)
+        {
+            fprintf(stderr, "Hamming 101 failed %ld,%lf,%lf", 
+                    i, yHamming101[i], yHamming101Ref[i]);
+        }
+        EXPECT_NEAR(std::abs(yHann101[i] - yHanning101Ref[i]), 0, 1e-6);
+        if (std::abs(yHann101[i] - yHanning101Ref[i]) > 1.e-6)
+        {
+            fprintf(stderr, "Hann 101 failed %ld,%lf,%lf", 
+                    i, yHann101[i], yHanning101Ref[i]);
+        }
+        EXPECT_NEAR(std::abs(ySine101[i] - ySine101Ref[i]), 0, 1e-6);
+        if (std::abs(ySine101[i] - ySine101Ref[i]) > 1.e-6)
+        {   
+            fprintf(stderr, "Sine 101 failed %ld,%lf,%lf", 
+                    i, ySine101[i], ySine101Ref[i]);
+        }
+    }
+}
+
+
 //============================================================================//
 void read_decimate(const int nq, std::vector<double> *xdecim)
 {

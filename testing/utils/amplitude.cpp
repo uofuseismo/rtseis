@@ -1,8 +1,34 @@
+#include <fstream>
 #include <cmath>
+#include <vector>
 #include "rtseis/amplitude/timeDomainWoodAndersonParameters.hpp"
+#include "rtseis/amplitude/timeDomainWoodAnderson.hpp"
 #include <gtest/gtest.h>
 
 using namespace RTSeis::Amplitude;
+
+namespace
+{
+std::vector<double> readSeismogram(const std::string &fileName)
+{
+    std::ifstream infl(fileName, std::ios::in);
+    std::vector<double> x;
+    if (infl.is_open())
+    {   
+        std::string line;
+        x.reserve(14000);
+        while (std::getline(infl, line))
+        {
+            double t, xi; 
+            sscanf(line.c_str(), "%lf, %lf\n", &t, &xi);
+            x.push_back(xi);
+        }
+        infl.close();
+    }   
+    return x;
+}
+
+}
 
 TEST(Amplitude, TimeDomainWoodAndersonParameters)
 {
@@ -124,7 +150,38 @@ TEST(Amplitude, TimeDomainWoodAndersonParameters)
     EXPECT_EQ(parmsCopy.getWoodAndersonGain(), waGain);
     EXPECT_EQ(parmsCopy.getDetrendType(), detrendType);
     EXPECT_NEAR(parmsCopy.getTaperPercentage(), pct, 1.e-10);
-
-
-    
 }
+
+TEST(Amplitude, TimeDomainWoodAndersonVelocity)
+{
+    double dt = 0.01;
+    double df = std::round(1/dt);
+    double gain = 1274800764.8712056/100;
+    double pct = 0.15;
+    auto x = readSeismogram("data/UU.SPU.HHN.01.txt");
+    ASSERT_EQ(static_cast<int> (x.size()), 7201);
+
+    TimeDomainWoodAndersonParameters parameters;
+    parameters.setInputUnits(InputUnits::Velocity);
+    parameters.setSamplingRate(df);
+    parameters.setSimpleResponse(gain);
+    parameters.setDetrendType(DetrendType::RemoveMean);
+    parameters.setTaper(pct, WindowType::Sine);
+    parameters.setWoodAndersonGain(WoodAndersonGain::WA_2800);
+
+    TimeDomainWoodAnderson<RTSeis::ProcessingMode::POST, double> filter;
+    EXPECT_NO_THROW(filter.initialize(parameters));
+    EXPECT_TRUE(filter.isInitialized());
+    EXPECT_TRUE(filter.isVelocityFilter());
+    std::vector<double> y(x.size(), 0);
+    double *yPtr = y.data();
+    filter.apply(x.size(), x.data(), &yPtr);
+
+    std::ofstream ofl("waVel.txt");
+    for (int i = 0; i < y.size(); ++i)
+    {
+        ofl << dt*i << " " << y[i] << std::endl;
+    }
+    ofl.close();
+}
+
