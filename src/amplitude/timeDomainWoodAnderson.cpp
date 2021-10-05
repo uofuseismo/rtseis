@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cmath>
 #include <vector>
 #include <array>
@@ -6,8 +7,10 @@
 #include "rtseis/filterImplementations/iirFilter.hpp"
 #include "rtseis/filterImplementations/detrend.hpp"
 #include "rtseis/filterImplementations/taper.hpp"
+#include "rtseis/utilities/math/convolve.hpp"
 
 using namespace RTSeis::Amplitude;
+namespace RConvolve = RTSeis::Utilities::Math::Convolve;
 
 namespace
 {
@@ -24,6 +27,7 @@ public:
     RTSeis::FilterImplementations::Detrend<T> mDetrender;
     RTSeis::FilterImplementations::Taper<T> mTaperer;
     TimeDomainWoodAndersonParameters mParameters;
+    bool mHighPassFilter = false;
     bool mVelocityFilter = true;
     bool mDemean = false;
     bool mTaper = false;
@@ -62,28 +66,78 @@ void TimeDomainWoodAnderson<E, T>::initialize(
     double wdt = (2*M_PI)*(f0*dt);
     double gain = parameters.getSimpleResponse();
     double waCorrectedGain = 1;
+    double c1 = 1 + h0*wdt;
+    double c2 = 1 + 2*(h0*wdt) + wdt*wdt;
+    
     if (parameters.getWoodAndersonGain() == WoodAndersonGain::WA_2080)
     {
         waCorrectedGain = 2080./2800.;
     }
+    // Convolve in the high-pass filter so we get this in shot
+    std::vector<double> bHighPass(1, 1);
+    std::vector<double> aHighPass(1, 1);
+    if (parameters.getHighPassFilter() == HighPassFilter::Yes)
+    {
+        double q = parameters.getHighPassFilterQ();
+        bHighPass.resize(2);
+        aHighPass.resize(2);
+        bHighPass[0] = (1 + q)/2;
+        bHighPass[1] =-(1 + q)/2;
+        aHighPass[0] = 1;
+        aHighPass[1] =-q;
+    }
+    // Create velocity filters
     if (parameters.getInputUnits() == InputUnits::Velocity)
     {
         pImpl->mVelocityFilter = true;
         double scalar = (g0/gain)*dt; 
-        double c1 = 1 + h0*wdt;
-        double c2 = 1 + 2*(h0*wdt) + wdt*wdt;
         double b0 = waCorrectedGain*(scalar/c2);
         double b1 =-waCorrectedGain*(scalar/c2);
-        double a1 =-waCorrectedGain*((2*c1)/c2);
-        double a2 = waCorrectedGain*(1/c2);
-        const std::array<double, 3> b{b0, b1, 0};
-        const std::array<double, 3> a{1,  a1, a2};
-        pImpl->mWAVelocityFilter.initialize(b.size(), b.data(),
-                                            a.size(), a.data());
+        double a1 =-((2*c1)/c2);
+        double a2 = 1/c2;
+        std::vector<double> b(3);
+        b[0] = b0;
+        b[1] = b1;
+        b[2] = 0;
+        std::vector<double> a(3);
+        a[0] = 1;
+        a[1] = a1;
+        a[2] = a2;
+        // Convolve filters 
+        auto bFilter = RConvolve::convolve(bHighPass, b,
+                                           RConvolve::FULL,
+                                           RConvolve::Implementation::DIRECT);
+        auto aFilter = RConvolve::convolve(aHighPass, a,
+                                           RConvolve::FULL,
+                                           RConvolve::Implementation::DIRECT);
+        pImpl->mWAVelocityFilter.initialize(bFilter.size(), bFilter.data(),
+                                            aFilter.size(), aFilter.data());
     }
     else
     {
         pImpl->mVelocityFilter = false;
+        double scalar = (g0/gain)*(dt*dt);
+        double b0 = waCorrectedGain*(scalar/c2);
+        double b1 = 0;
+        double a1 =-((2*c1)/c2);
+        double a2 = 1/c2;
+        std::vector<double> b(3);
+        b[0] = b0;
+        b[1] = b1;
+        b[2] = 0;
+        std::vector<double> a(3);
+        a[0] = 1;
+        a[1] = a1;
+        a[2] = a2;
+        // Convolve filters 
+        auto bFilter = RConvolve::convolve(bHighPass, b,
+                                           RConvolve::FULL,
+                                           RConvolve::Implementation::DIRECT);
+        auto aFilter = RConvolve::convolve(aHighPass, a,
+                                           RConvolve::FULL,
+                                           RConvolve::Implementation::DIRECT);
+        pImpl->mWAAccelerationFilter.initialize(bFilter.size(), bFilter.data(),
+                                                aFilter.size(), aFilter.data());
     }
     // Detrend?
     if constexpr (E == RTSeis::ProcessingMode::POST)
@@ -175,6 +229,7 @@ void TimeDomainWoodAnderson<E, T>::apply(const int n, const T x[], T *yPtr[])
         }
         else
         {
+            pImpl->mWAAccelerationFilter.apply(n, xPtr, yPtr);
         }
     }
     else // Real time
@@ -185,9 +240,26 @@ void TimeDomainWoodAnderson<E, T>::apply(const int n, const T x[], T *yPtr[])
         }
         else
         {
+            pImpl->mWAAccelerationFilter.apply(n, x, yPtr);
         }
     }
 }
+
+/// Reset initial filter conditions
+template<RTSeis::ProcessingMode E, class T>
+void TimeDomainWoodAnderson<E, T>::resetInitialConditions()
+{
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    if (isVelocityFilter())
+    {
+        pImpl->mWAVelocityFilter.resetInitialConditions();
+    }
+    else
+    {
+        pImpl->mWAAccelerationFilter.resetInitialConditions();
+    }
+}
+   
 
 /// Destructor
 template<RTSeis::ProcessingMode E, class T>
@@ -198,5 +270,5 @@ TimeDomainWoodAnderson<E, T>::~TimeDomainWoodAnderson() = default;
 ///--------------------------------------------------------------------------///
 template class RTSeis::Amplitude::TimeDomainWoodAnderson<RTSeis::ProcessingMode::POST, double>;
 template class RTSeis::Amplitude::TimeDomainWoodAnderson<RTSeis::ProcessingMode::REAL_TIME, double>;
-//template class RTSeis::Amplitude::TimeDomainWoodAnderson<RTSeis::ProcessingMode::POST, float>;
-//template class RTSeis::Amplitude::TimeDomainWoodAnderson<RTSeis::ProcessingMode::REAL_TIME, float>;
+template class RTSeis::Amplitude::TimeDomainWoodAnderson<RTSeis::ProcessingMode::POST, float>;
+template class RTSeis::Amplitude::TimeDomainWoodAnderson<RTSeis::ProcessingMode::REAL_TIME, float>;

@@ -136,6 +136,11 @@ TEST(Amplitude, TimeDomainWoodAndersonParameters)
     EXPECT_EQ(parms.getWindowType(), taperType);
     EXPECT_NEAR(parms.getTaperPercentage(), pct, 1.e-10);
 
+    const double q = 0.9;
+    EXPECT_NO_THROW(parms.setHighPassRCFilter(q, HighPassFilter::Yes));
+    EXPECT_NEAR(parms.getHighPassFilterQ(), q, 1.e-10);
+    EXPECT_EQ(parms.getHighPassFilter(), HighPassFilter::Yes);
+
     // Test copy
     TimeDomainWoodAndersonParameters parmsCopy(parms);
     EXPECT_EQ(parmsCopy.getInputUnits(), InputUnits::Acceleration);
@@ -150,23 +155,29 @@ TEST(Amplitude, TimeDomainWoodAndersonParameters)
     EXPECT_EQ(parmsCopy.getWoodAndersonGain(), waGain);
     EXPECT_EQ(parmsCopy.getDetrendType(), detrendType);
     EXPECT_NEAR(parmsCopy.getTaperPercentage(), pct, 1.e-10);
+    EXPECT_NEAR(parmsCopy.getHighPassFilterQ(), q, 1.e-10);
+    EXPECT_EQ(parmsCopy.getHighPassFilter(), HighPassFilter::Yes);
 }
 
 TEST(Amplitude, TimeDomainWoodAndersonVelocity)
 {
+    double q = 0.998;
     double dt = 0.01;
     double df = std::round(1/dt);
     double gain = 1274800764.8712056/100;
-    double pct = 0.15;
+    double accGain = 321168.428435/100;
+    double pct = 5;
     auto x = readSeismogram("data/UU.SPU.HHN.01.txt");
     ASSERT_EQ(static_cast<int> (x.size()), 7201);
+    auto xAcc = readSeismogram("data/UU.TMU.ENN.01.txt");
+    ASSERT_EQ(static_cast<int> (xAcc.size()), 13489L);
 
     TimeDomainWoodAndersonParameters parameters;
     parameters.setInputUnits(InputUnits::Velocity);
     parameters.setSamplingRate(df);
     parameters.setSimpleResponse(gain);
     parameters.setDetrendType(DetrendType::RemoveMean);
-    parameters.setTaper(pct, WindowType::Sine);
+    parameters.setTaper(pct, WindowType::None);
     parameters.setWoodAndersonGain(WoodAndersonGain::WA_2800);
 
     TimeDomainWoodAnderson<RTSeis::ProcessingMode::POST, double> filter;
@@ -181,6 +192,27 @@ TEST(Amplitude, TimeDomainWoodAndersonVelocity)
     for (int i = 0; i < y.size(); ++i)
     {
         ofl << dt*i << " " << y[i] << std::endl;
+    }
+    ofl.close();
+
+    TimeDomainWoodAndersonParameters accParameters;
+    accParameters.setInputUnits(InputUnits::Acceleration);
+    accParameters.setSamplingRate(df);
+    accParameters.setSimpleResponse(accGain);
+    accParameters.setDetrendType(DetrendType::RemoveMean);
+    accParameters.setTaper(pct, WindowType::Sine);
+    accParameters.setWoodAndersonGain(WoodAndersonGain::WA_2800);
+    accParameters.setHighPassRCFilter(q, HighPassFilter::Yes);
+    TimeDomainWoodAnderson<RTSeis::ProcessingMode::POST, double> accFilter;
+    accFilter.initialize(accParameters);
+    std::vector<double> yAcc(xAcc.size());
+    yPtr = yAcc.data();
+    accFilter.apply(xAcc.size(), xAcc.data(), &yPtr);
+
+    ofl.open("waAcc.txt");
+    for (int i =0; i < y.size(); ++i)
+    {
+        ofl << dt*i << " " << yAcc[i] << std::endl;
     }
     ofl.close();
 }

@@ -94,6 +94,10 @@ public:
     /// @throws std::runtime_error if \c isInitialized() is false.
     void apply(int n, const T x[], T *y[]); 
 
+    /// @brief Resets the initial conditions.
+    /// @throws std::invalid_argument if \c isInitialized() is false.
+    void resetInitialConditions();
+
     /// @name Destructors
     /// @{
     /// @brief Resets the class and releases all memory.

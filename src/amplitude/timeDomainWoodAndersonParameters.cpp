@@ -163,6 +163,7 @@ public:
     double mSamplingRate = 0;
     double mTaperPct = 5;
     double mSimpleResponse = 0;
+    double mHighPassFilterQ = 0.998; // Default q in 1998 paper
     double mH = 0;
     double mG = 0;
     double mF = 0;
@@ -170,6 +171,7 @@ public:
     WoodAndersonGain mWAGain = WoodAndersonGain::WA_2800;
     WindowType mWindow = WindowType::Sine;
     DetrendType mDetrendType = DetrendType::RemoveMean;
+    HighPassFilter mHighPassFilter = HighPassFilter::No;
     bool mHaveInputUnits = false;
 };
 
@@ -330,6 +332,31 @@ WoodAndersonGain
     TimeDomainWoodAndersonParameters::getWoodAndersonGain() const noexcept
 {
     return pImpl->mWAGain;
+}
+
+/// High pass filter q
+void TimeDomainWoodAndersonParameters::setHighPassRCFilter(
+    const double q,
+    HighPassFilter filter)
+{
+    if (std::abs(q) >= 1)
+    {
+        throw std::invalid_argument("|q| = " + std::to_string(q)
+                                  + " must be less than 1");
+    }
+    pImpl->mHighPassFilterQ = q;
+    pImpl->mHighPassFilter = filter;
+}
+
+double TimeDomainWoodAndersonParameters::getHighPassFilterQ() const noexcept
+{
+    return pImpl->mHighPassFilterQ;
+}
+
+HighPassFilter
+    TimeDomainWoodAndersonParameters::getHighPassFilter() const noexcept
+{
+    return pImpl->mHighPassFilter;
 }
 
 /// Reset class

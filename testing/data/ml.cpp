@@ -26,7 +26,7 @@ std::vector<T> cosineTaper(const std::vector<T> &x,
     for (int i = 0; i < mp12; ++i)
     {
         auto scale = static_cast<T> (std::sin(i*M_PI/(m - 1)));
-std::cout << i << " " << scale << std::endl;
+        //std::cout << i << " " << scale << std::endl;
         xt[i] = x[i]*scale;
         xt[nx - mp12 + i] = x[nx - mp12 + i]*scale;
     }

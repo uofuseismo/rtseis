@@ -39,7 +39,11 @@ enum class WindowType
     None,   /*!< Do not apply a taper to the signal prior to filtering. */
     Sine    /*!< Apply a sine taper prior to filtering */
 };
-
+enum class HighPassFilter
+{
+    No,
+    Yes
+};
 /// @class TimeDomainWoodAndersonParameters timeDomainWoodAndersonParameters.hpp "rtseis/amplitude/timeDomainWoodAndersonParameters.hpp"
 /// @brief The parameters that control the time-domain Wood-Anderson
 ///        filtering described by Kanamori et al.'s 1999 paper:
@@ -169,6 +173,25 @@ public:
     void setDetrendType(DetrendType detrendType);
     /// @result The detrend 
     [[nodiscard]] DetrendType getDetrendType() const noexcept;
+
+    /// @brief This will apply a high-pass RC filter with the given q after 
+    ///        detrending and tapering the signal.
+    /// @param[in] q       This is the q that defines the high-pass filter in
+    ///                    Eqn. 9 of Kanamori et al., 1999.  It is a pole
+    ///                    but it is also the negative of a zero.
+    ///                    It's magnitude must be in the range [0,1).
+    /// @param[in] filter  Toggles whether or not to perform filtering.
+    /// @throws std::invalid_argument if the |q| is greater than or equal to 1.
+    /// @note https://dsp.stackexchange.com/questions/68667/3-db-cut-off-frequency-of-first-order-iir-high-pass-filter
+    void setHighPassRCFilter(double q = 0.998,
+                             HighPassFilter filter = HighPassFilter::Yes);
+    /// @result The parameter defining the high-pass filter.
+    [[nodiscard]] double getHighPassFilterQ() const noexcept;
+    /// @result HighPassFilter::Yes means a high-pass RC filter will be applied
+    ///         after detrending and tapering.
+    /// @note Jiggle appears to do this for acceleration traces but not velocity
+    ///       traces.
+    [[nodiscard]] HighPassFilter getHighPassFilter() const noexcept;
     /// @}
 
     /// @name Destructors
