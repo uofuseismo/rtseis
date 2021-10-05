@@ -1,16 +1,11 @@
-#include <cstdio>
-#include <cstdlib>
+#include <string>
 #include <cassert>
 #include <cmath>
 #include <algorithm>
-#include <exception>
-#include <stdexcept>
 #include <memory>
 #include <ipps.h>
-#include "private/throw.hpp"
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"
-#include "rtseis/enums.hpp"
 
 using namespace RTSeis::PostProcessing::SingleChannel;
 
@@ -35,9 +30,10 @@ public:
     std::vector<double> w8;
     std::vector<float>  w4;
     int winLen0 =-1;
-    bool linit = true;
+    bool linit = false;
 };
 
+/// Default c'tor
 TaperParameters::TaperParameters(const double pct,
                                  const Type type) :
     pImpl(std::make_unique<TaperParametersImpl> ())
@@ -46,16 +42,19 @@ TaperParameters::TaperParameters(const double pct,
     setTaperType(type);
 }
 
+/// Copy c'tor
 TaperParameters::TaperParameters(const TaperParameters &parms)
 {
     *this = parms;
 }
 
-TaperParameters::TaperParameters(TaperParameters &&parms)
+/// Move c'tor
+TaperParameters::TaperParameters(TaperParameters &&parms) noexcept
 {
     *this = std::move(parms);
 }
 
+/// Copy assignment
 TaperParameters& TaperParameters::operator=(const TaperParameters &parms)
 {
     if (&parms == this){return *this;}
@@ -63,40 +62,46 @@ TaperParameters& TaperParameters::operator=(const TaperParameters &parms)
     return *this;
 }
 
-TaperParameters& TaperParameters::operator=(TaperParameters &&parms)
+/// Move assignment
+TaperParameters& TaperParameters::operator=(TaperParameters &&parms) noexcept
 {
     if (&parms == this){return *this;}
     pImpl = std::move(parms.pImpl);
     return *this;
 }
 
-TaperParameters::~TaperParameters(void) = default;
+/// Destructor
+TaperParameters::~TaperParameters() = default;
 
-void TaperParameters::setTaperType(const Type type)
+/// Taper type
+void TaperParameters::setTaperType(const Type type) noexcept
 {
     pImpl->type = type;
 }
 
-TaperParameters::Type TaperParameters::getTaperType(void) const
+TaperParameters::Type TaperParameters::getTaperType() const
 {
     return pImpl->type;
 }
 
+/// Percentage
 void TaperParameters::setPercentage(const double pct)
 {
     if (pct < 0 || pct > 100)
     {
-        RTSEIS_THROW_IA("%s", "Percentage must be in range [0,100]");
+        throw std::invalid_argument("Percentage = " + std::to_string(pct)
+                                  + " must be in range [0,100]");
     }
     pImpl->pct = pct;
 }
 
-double TaperParameters::getPercentage(void) const
+double TaperParameters::getPercentage() const
 {
     return pImpl->pct;
 }
 
-void TaperParameters::clear(void)
+/// Reset class
+void TaperParameters::clear() noexcept
 {
     if (pImpl)
     {
@@ -105,7 +110,8 @@ void TaperParameters::clear(void)
     }
 }
 
-bool TaperParameters::isValid(void) const
+/// Is valid?
+bool TaperParameters::isValid() const noexcept
 {
     if (pImpl->pct < 0 || pImpl->pct > 100){return false;}
     return true;
@@ -114,13 +120,28 @@ bool TaperParameters::isValid(void) const
 //============================================================================//
 //                                    Tapering                                //
 //============================================================================//
-
+/// C'tor
 template<class T>
 Taper<T>::Taper() :
     pImpl(std::make_unique<TaperImpl>())
 {
 }
 
+/// Copy c'tor
+template<class T>
+Taper<T>::Taper(const Taper<T> &taper)
+{
+    *this = taper;
+}
+
+/// Move c'tor
+template<class T>
+Taper<T>::Taper(Taper<T> &&taper) noexcept
+{
+    *this = std::move(taper);
+}
+
+/// C'tor from parameters
 template<class T>
 Taper<T>::Taper(const TaperParameters &parameters) :
     pImpl(std::make_unique<TaperImpl>())
@@ -128,25 +149,33 @@ Taper<T>::Taper(const TaperParameters &parameters) :
     setParameters(parameters);
 }
 
+/// Destructor
 template<class T>
 Taper<T>::~Taper() = default;
 
 template<class T>
-void Taper<T>::clear()
+void Taper<T>::clear() noexcept
 {
     pImpl->parms.clear();
     pImpl->w8.clear();
     pImpl->w4.clear();
     pImpl->winLen0 =-1;
-    pImpl->linit = true;
+    pImpl->linit = false;
 }
 
 template<class T>
 Taper<T>& Taper<T>::operator=(const Taper &taper)
 {
     if (&taper == this){return *this;}
-    if (pImpl){pImpl.reset();}
     pImpl = std::make_unique<TaperImpl> (*taper.pImpl);
+    return *this;
+}
+
+template<class T>
+Taper<T>& Taper<T>::operator=(Taper &&taper) noexcept
+{
+    if (&taper == this){return *this;}
+    pImpl = std::move(taper.pImpl);
     return *this;
 }
 
@@ -156,25 +185,22 @@ void Taper<T>::setParameters(const TaperParameters &parameters)
     clear(); // Sets winLen0 to -1
     if (!parameters.isValid())
     {
-        RTSEIS_THROW_IA("%s", "Taper parameters are invalid");
+        throw std::invalid_argument("Taper parameters are invalid");
     }
     pImpl->parms = parameters;
+    pImpl->linit = true;
 }
 
 template<>
 void Taper<double>::apply(const int nx, const double x[], double *yIn[])
 {
     if (nx <= 0){return;}
-    if (!pImpl->linit)
-    {
-        RTSEIS_THROW_IA("%s", "Taper never initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Taper not initialized");}
     double *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is NULL");}
-        RTSEIS_THROW_IA("%s", "Invalid arguments");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Deal with an edge case
     if (nx < 3)
@@ -217,10 +243,10 @@ void Taper<double>::apply(const int nx, const double x[], double *yIn[])
         }
         else
         {
-#ifdef DEBUG
+#ifndef NDEBUG
             assert(false);
 #endif
-            RTSEIS_THROW_IA("%s", "Unsupported window");
+            throw std::invalid_argument("Unsupported window");
         }
     }
     // Taper first (m+1)/2 points
@@ -241,16 +267,12 @@ template<>
 void Taper<float>::apply(const int nx, const float x[], float *yIn[])
 {
     if (nx <= 0){return;}
-    if (!pImpl->linit)
-    {
-        RTSEIS_THROW_IA("%s", "Taper never initialized");
-    }
+    if (!isInitialized()){throw std::runtime_error("Taper never initialized");}
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_THROW_IA("%s", "y is NULL");}
-        RTSEIS_THROW_IA("%s", "Invalid arguments");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Deal with an edge case
     if (nx < 3)
@@ -293,10 +315,10 @@ void Taper<float>::apply(const int nx, const float x[], float *yIn[])
         }
         else
         {
-#ifdef DEBUG
+#ifndef NDEBUG
             assert(false);
 #endif
-            RTSEIS_THROW_IA("%s", "Unsupported window");
+            throw std::invalid_argument("Unsupported window");
         }
     }
     // Taper first (m+1)/2 points
@@ -319,6 +341,8 @@ bool Taper<T>::isInitialized() const
     return pImpl->linit;
 }
 
-/// Template instantiation
+///--------------------------------------------------------------------------///
+///                             Template Instantiation                       ///
+///--------------------------------------------------------------------------///
 template class RTSeis::PostProcessing::SingleChannel::Taper<double>;
 template class RTSeis::PostProcessing::SingleChannel::Taper<float>;

@@ -4,8 +4,7 @@
 #include "rtseis/enums.hpp"
 namespace RTSeis::Amplitude
 {
-class TimeDomainWoodAndersonRealTimeParameters;
-class TimeDomainWoodAndersonPostProcessingParameters;
+class TimeDomainWoodAndersonParameters;
 /// @defgroup rtseis_amplitude Amplitudes
 /// @brief These are the core real-time and post-processing 
 ///        filter implementations to aid in computing amplitudes.

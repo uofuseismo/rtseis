@@ -90,6 +90,7 @@ SET(UTILS_SRCS
     src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/characteristicFunction/carlSTALTA.cpp
     src/amplitude/timeDomainWoodAndersonParameters.cpp
+    src/amplitude/timeDomainWoodAnderson.cpp
     src/deconvolution/instrumentResponse.cpp
     src/deconvolution/woodAnderson.cpp
     src/filterDesign/filterDesigner.cpp
