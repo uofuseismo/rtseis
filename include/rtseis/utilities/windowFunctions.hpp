@@ -65,7 +65,7 @@ void sine(int len, float *window[]);
 ///        \f$
 ///           w_n = \left \{
 ///                   \begin{array}{lr}
-///                     \frac{2n}{L-1}   & 0 \le n \le \frac{L-1}{2}  \\
+///                     \frac{2n}{L-1}   & 0 \le n \le \frac{L-1}{2}
 ///                     2-\frac{2n}{L-1} & \frac{L-1}{2} < n \le L -1 
 ///                   \end{array}
 ///                 \right . 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <cassert>
 #include <cmath>
 #include <algorithm>
@@ -266,6 +267,10 @@ void Taper<double>::apply(const int nx, const double x[], double *yIn[])
         else if (type == TaperWindowType::Sine)
         {
             RTSeis::Utilities::WindowFunctions::sine(m, &w8data);
+for (int i = 0; i < m; ++i)
+{
+ std::cout << m << " " << i << " " << w8data[i] << std::endl;
+}
         }
         else if (type == TaperWindowType::Kaiser)
         {
