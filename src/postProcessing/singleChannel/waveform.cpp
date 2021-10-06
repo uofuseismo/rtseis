@@ -729,7 +729,7 @@ void Waveform<T>::decimate(const int nq, const int filterLength)
     }
     catch (const std::exception &e)
     {
-        RTSEIS_ERRMSG("Decimation failed: %s", e.what());
+        std::cerr << "Decimation failed: " <<  e.what() << std::endl;
     }
 }
 
@@ -741,13 +741,14 @@ void Waveform<T>::interpolate(const double newSamplingPeriod,
     int len = pImpl->getLengthOfInputSignal();
     if (len < 1)
     {
-        RTSEIS_WARNMSG("%s", "No data set in module");
+        std::cerr << "No data set in module" << std::endl;
         return;
     }
     if (newSamplingPeriod <= 0)
     {
-        RTSEIS_THROW_IA("New sampling period = %lf must be positive",
-                        newSamplingPeriod);
+        throw std::invalid_argument("New sampling period = "
+                                  + std::to_string(newSamplingPeriod)
+                                  + " must be positive");
     }
     const T *x = pImpl->getInputDataPointer(); // Handle on input
     if (method == InterpolationMethod::DFT) 
