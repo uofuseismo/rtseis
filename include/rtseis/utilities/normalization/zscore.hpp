@@ -11,6 +11,7 @@ namespace RTSeis::Utilities::Normalization
 ///        where \f$ \mu$ \f$ is the mean and \f$ \sigma \f$ the standard
 ///        deviation.
 /// @copyright Ben Baker (University of Utah) distributed under the MIT license.
+template<class T = double>
 class ZScore
 {
 public:
@@ -63,7 +64,7 @@ public:
     ///                 cannot be comprised of uniform values.
     /// @throws std::invalid_argument if nx is too small, x is NULL, or x is
     ///         comprised of all identical values.
-    void initialize(int nx, const double x[]);
+    void initialize(int nx, const T x[]);
     /// @result True indicates that the class is initialized.
     [[nodiscard]] bool isInitialized() const noexcept;
     /// @brief Applies the z-score normalization.
@@ -75,9 +76,7 @@ public:
     /// @throws std::invalid_argument if nx is positive and x or y is NULL.
     /// @throws std::runtime_error if the class is not initialized.
     /// @sa \c isInitialized()
-    void apply(int npts, const double x[], double *y[]);
-    /// @copydoc apply
-    void apply(int npts, const float x[], float *y[]);
+    void apply(int npts, const T x[], T *y[]);
 private:
     class ZScoreImpl;
     std::unique_ptr<ZScoreImpl> pImpl; 
@@ -88,7 +87,11 @@ private:
 ///                 deviation.  This is an array of dimension [nx].
 /// @result A pair where pair.first contains the mean and pair.second
 ///         contains the standard deviation.
-std::pair<double,double>
-computeMeanAndStanardDeviation(int nx, const double x[]);
+/// @throws std::invalid_argument if x is NULL or x does not contain at least
+///         two samples.
+[[nodiscard]] std::pair<double, double>
+computeMeanAndStandardDeviation(int nx, const double x[]);
+[[nodiscard]] std::pair<float, float>
+computeMeanAndStandardDeviation(int nx, const float x[]);
 }
 #endif

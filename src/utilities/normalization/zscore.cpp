@@ -6,43 +6,76 @@
 
 using namespace RTSeis::Utilities::Normalization;
 
-class ZScore::ZScoreImpl
+namespace
+{
+
+void ippsMeanStdDev(const double *x, const int nx,
+                    double *pMean, double *pStdDev)
+{
+    ippsMeanStdDev_64f(x, nx, pMean, pStdDev);
+}
+
+void ippsMeanStdDev(const float *x, const int nx,
+                    float *pMean, float *pStdDev)
+{
+    ippsMeanStdDev_32f(x, nx, pMean, pStdDev, ippAlgHintAccurate);
+}
+
+void ippsNormalize(const double *x, double *y, const int nx,
+                   const double pMean, const double pStd)
+{
+    ippsNormalize_64f(x, y, nx, pMean, pStd);
+}
+
+void ippsNormalize(const float *x, float *y, const int nx,
+                   const float pMean, const float pStd)
+{
+    ippsNormalize_32f(x, y, nx, pMean, pStd);
+}
+
+}
+
+template<class T>
+class ZScore<T>::ZScoreImpl
 {
 public:
-    double mMean64f = 0;
-    double mStd64f = 0;
-    float mMean32f = 0;
-    float mStd32f = 0;
+    T mMean = 0;
+    T mStd = 0;
     bool mInitialized = false;
 };
 
 /// Constructors
-ZScore::ZScore() :
+template<class T>
+ZScore<T>::ZScore() :
     pImpl(std::make_unique<ZScoreImpl> ())
 {
 }
 
 /// Copy c'tor
-ZScore::ZScore(const ZScore &zscore)
+template<class T>
+ZScore<T>::ZScore(const ZScore &zscore)
 {
     *this = zscore;
 }
 
 /// Move c'tor
-ZScore::ZScore(ZScore &&zscore) noexcept
+template<class T>
+ZScore<T>::ZScore(ZScore &&zscore) noexcept
 {
     *this = std::move(zscore);
 }
 
 /// Operators
-ZScore& ZScore::operator=(const ZScore &zscore)
+template<class T>
+ZScore<T>& ZScore<T>::operator=(const ZScore<T> &zscore)
 {
     if (&zscore == this){return *this;}
     pImpl = std::make_unique<ZScoreImpl> (*zscore.pImpl);
     return *this;
 }
 
-ZScore& ZScore::operator=(ZScore &&zscore) noexcept
+template<class T>
+ZScore<T>& ZScore<T>::operator=(ZScore<T> &&zscore) noexcept
 {
     if (&zscore == this){return *this;}
     pImpl = std::move(zscore.pImpl);
@@ -50,21 +83,22 @@ ZScore& ZScore::operator=(ZScore &&zscore) noexcept
 }
 
 /// Destructors
-ZScore::~ZScore() = default;
+template<class T>
+ZScore<T>::~ZScore() = default;
 
 /// Clears the class
-void ZScore::clear() noexcept
+template<class T>
+void ZScore<T>::clear() noexcept
 {
-    pImpl->mMean64f = 0;
-    pImpl->mStd64f = 0;
-    pImpl->mMean32f = 0;
-    pImpl->mStd32f = 0;
+    pImpl->mMean = 0;
+    pImpl->mStd = 0;
     pImpl->mInitialized = false;
 }
 
 /// Initializes the class
-void ZScore::initialize(const double mean,
-                        const double std)
+template<class T>
+void ZScore<T>::initialize(const double mean,
+                           const double std)
 {
     clear();
     if (std <= 0)
@@ -72,64 +106,78 @@ void ZScore::initialize(const double mean,
         throw std::invalid_argument("standard deviation = "
                                   + std::to_string(std) + " must be positive");
     }
-    pImpl->mMean64f = mean;
-    pImpl->mStd64f = std;
-    pImpl->mMean32f = static_cast<float> (mean);
-    pImpl->mStd32f = static_cast<float> (mean);
+    pImpl->mMean = static_cast<T> (mean);
+    pImpl->mStd = static_cast<T> (std);
     pImpl->mInitialized = true;
 }
 
 /// Initialize the class
-void ZScore::initialize(const int nx, const double x[])
+template<class T>
+void ZScore<T>::initialize(const int nx, const T x[])
 {
     clear();
-    if (nx < 2 || x == nullptr)
-    {
-        if (nx < 2)
-        {
-            throw std::invalid_argument("nx = " + std::to_string(nx)
-                                     + " must be at least 2");
-        }
-        throw std::invalid_argument("x is NULL");
-    }
-    double pMean, pStdDev;
-    ippsMeanStdDev_64f(x, nx, &pMean, &pStdDev);
+    auto [pMean, pStdDev] = computeMeanAndStandardDeviation(nx, x);
     if (pStdDev == 0)
     {
         throw std::invalid_argument("x cannot be all the same values");
     }
-    initialize(pMean, pStdDev); 
+    initialize(static_cast<double> (pMean), static_cast<double> (pStdDev));
 }
 
 /// Initialized?
-bool ZScore::isInitialized() const noexcept
+template<class T>
+bool ZScore<T>::isInitialized() const noexcept
 {
     return pImpl->mInitialized;
 }
 
 /// Standardizes the data
-void ZScore::apply(const int npts, const double x[], double *yIn[])
+template<class T>
+void ZScore<T>::apply(const int npts, const T x[], T *yIn[])
 {
     if (npts < 1){return;}
     if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    double *y = *yIn;
+    T *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
         if (x == nullptr){throw std::invalid_argument("x is NULL");}
         throw std::invalid_argument("y is NULL");
     }
-    ippsNormalize_64f(x, y, npts, pImpl->mMean64f, pImpl->mStd64f);
+    ippsNormalize(x, y, npts, pImpl->mMean, pImpl->mStd);
 }
 
-void ZScore::apply(const int npts, const float x[], float *yIn[])
+/// Computes the mean and standard deviation
+std::pair<double, double>
+RTSeis::Utilities::Normalization::computeMeanAndStandardDeviation(
+    const int nx, const double x[])
 {
-    if (npts < 1){return;}
-    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
-    float *y = *yIn;
-    if (x == nullptr || y == nullptr)
+    if (nx < 2)
     {
-        if (x == nullptr){throw std::invalid_argument("x is NULL");}
-        throw std::invalid_argument("y is NULL");
+        throw std::invalid_argument("x must contain at least 2 samples");
     }
-    ippsNormalize_32f(x, y, npts, pImpl->mMean32f, pImpl->mStd32f);
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
+    double pMean, pStdDev;
+    ippsMeanStdDev(x, nx, &pMean, &pStdDev);
+    return std::pair(pMean, pStdDev);
 }
+
+std::pair<float, float>
+RTSeis::Utilities::Normalization::computeMeanAndStandardDeviation(
+    const int nx, const float x[])
+{   
+    if (nx < 2)
+    {
+        throw std::invalid_argument("x must contain at least 2 samples");
+    }
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
+    float pMean, pStdDev; 
+    ippsMeanStdDev(x, nx, &pMean, &pStdDev);
+    return std::pair(pMean, pStdDev);
+}
+
+///--------------------------------------------------------------------------///
+///                            Template Instantiation                        ///
+///--------------------------------------------------------------------------///
+
+template class RTSeis::Utilities::Normalization::ZScore<double>;
+template class RTSeis::Utilities::Normalization::ZScore<float>;
