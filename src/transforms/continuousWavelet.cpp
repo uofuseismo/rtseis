@@ -61,12 +61,14 @@ int convolve(const int n, const int ldx, const double x[],
     if (option == 2){mode = VSL_CONV_MODE_FFT;}
     // Set space on each thread
     int ierr = 0;
+/*
     #pragma omp parallel \
      shared(cwt, dt, ldx, n, nWidths, x, std::cerr, wavelet, widths) \
      firstprivate(i1, nCopy, mode) \
      reduction(+ : ierr) \
      default(none)
     {
+*/
     // Set space for the transform
     auto *xz = static_cast<MKL_Complex16 *>
                (mkl_calloc(static_cast<int> (n), sizeof(MKL_Complex16), 64));
@@ -94,7 +96,7 @@ int convolve(const int n, const int ldx, const double x[],
     auto *z = static_cast<MKL_Complex16 *>
               (mkl_calloc(zShape, sizeof(MKL_Complex16), 64));
     // Have each thread contribute to the correlation
-    #pragma omp for
+    //#pragma omp for
     for (int j=0; j<nWidths; ++j)
     {
         // Evaluate the wavelet transform
@@ -156,7 +158,9 @@ for (int i=0; i<n; ++i)
     MKL_free(xz);
     MKL_free(y);
     MKL_free(z);
+/*
     } // End parallel 
+*/
     if (ierr != 0)
     {
         std::cerr << "Errors detected during convolution" << std::endl;
