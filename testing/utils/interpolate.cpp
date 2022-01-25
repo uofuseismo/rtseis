@@ -105,7 +105,7 @@ TEST(UtilitiesInterpolation, linearInterolation)
         auto ref = 2*(intervalInterp.first + i*dxFine);
         error = std::max(error, std::abs(y[i] - ref));
     }
-    EXPECT_LE(error, 1.e-14);
+    EXPECT_LE(error, 4.e-14);
     // Do with all interpolation points
     EXPECT_NO_THROW(linear.interpolate(nint, xq.data(), &yptr));
     error = 0;
@@ -114,7 +114,7 @@ TEST(UtilitiesInterpolation, linearInterolation)
         auto ref = 2*(intervalInterp.first + i*dxFine);
         error = std::max(error, std::abs(y[i] - ref));
     }
-    EXPECT_LE(error, 1.e-14);
+    EXPECT_LE(error, 4.e-14);
     // Repeat for many points
     EXPECT_NO_THROW(linear.clear());
     EXPECT_NO_THROW(linear.initialize(nq, xqEqual.data(), yqEqual.data()));
@@ -128,7 +128,7 @@ TEST(UtilitiesInterpolation, linearInterolation)
         auto ref = 2*(intervalInterp.first + i*dxFine);
         error = std::max(error, std::abs(y[i] - ref));
     }
-    EXPECT_LE(error, 1.e-14);
+    EXPECT_LE(error, 4.e-14);
     // Try a two point example - count from 0 to 100 on interval [-50,50]
     double x2[2] = {-50, 50};
     double y2[2] = {0, 100};

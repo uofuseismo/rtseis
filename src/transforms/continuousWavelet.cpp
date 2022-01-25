@@ -62,7 +62,7 @@ int convolve(const int n, const int ldx, const double x[],
     // Set space on each thread
     int ierr = 0;
     #pragma omp parallel \
-     shared(cwt, x, std::cerr, wavelet, widths) \
+     shared(cwt, dt, ldx, n, nWidths, x, std::cerr, wavelet, widths) \
      firstprivate(i1, nCopy, mode) \
      reduction(+ : ierr) \
      default(none)
