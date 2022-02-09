@@ -9,7 +9,6 @@
 #include "rtseis/enums.hpp"
 #include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
-#include "private/throw.hpp"
 #include <ipps.h>
 
 using namespace RTSeis::Utilities::Interpolation;
@@ -481,18 +480,23 @@ void WeightedAverageSlopes<double>::interpolate(
     double xMin = getMinimumX(); // Throws on initialization
     double xMax = getMaximumX(); // Throws on initialization
     double *yq = *yqIn;
-    if (yq == nullptr){RTSEIS_THROW_IA("%s", "yq is NULL");}
+    if (yq == nullptr){throw std::invalid_argument("yq is NULL");}
     double xqMin = xInterval.first;
     double xqMax = xInterval.second;
     if (xqMin > xqMax)
     {
-        RTSEIS_THROW_IA("xInterval.first = %lf > xInterval.second = %lf",
-                         xqMin, xqMax);
+        throw std::invalid_argument("xInterval.first = " + std::to_string(xqMin)
+                                  + " > xInterval.second = "
+                                  + std::to_string(xqMax));
     }
     if (xqMin < xMin || xqMax > xMax)
     {
-        RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
-                        xqMin, xqMax, xMin, xMax);
+        throw std::invalid_argument("Min/max of xq = ("
+                                  + std::to_string(xqMin) + ","
+                                  + std::to_string(xqMax)
+                                  + ") must be in range ["    
+                                  + std::to_string(xMin) + ","
+                                  + std::to_string(xMax) + "]");
     }
     // Interpolate
     const MKL_INT nsite = nq;
