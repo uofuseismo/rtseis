@@ -40,14 +40,27 @@ find_package(GTest REQUIRED)
 find_package(FindIPP REQUIRED)
 find_package(FindMKL REQUIRED)
 
+if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+   message("Running on x86_64")
+elseif (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "i386")
+   message("Running on i386")
+endif() 
+if (${FindIPP_FOUND})
+   message("IPP found")
+   add_compile_definitions(WITH_IPP)
+endif()
+if (${FindMKL_FOUND})
+   message("MKL found")
+   add_compile_definitions(WITH_MKL)
+endif()
+
+
 ##########################################################################################
 #                                       Include Directories                              #
 ##########################################################################################
 
 include_directories(
    ${CMAKE_CURRENT_SOURCE_DIR}/include
-   ${IPP_INCLUDE_DIR}
-   ${MKL_INCLUDE_DIR}
 )
 set(PRIVATE_INCLUDE_DEPENDS ${IPP_INCLUDE_DIR} ${MKL_INCLUDE_DIR})
 message("Include directories:" ${PRIVATE_INCLUDE_DEPENDS})
@@ -58,7 +71,7 @@ message("Include directories:" ${PRIVATE_INCLUDE_DEPENDS})
 #                                        Sort Out Python Wrappers                        #
 ##########################################################################################
 #set(RTSEIS_WRAP_PYTHON YES)
-IF (RTSEIS_WRAP_PYTHON)
+if (RTSEIS_WRAP_PYTHON)
    add_library(pyrtseis MODULE
                python/pyrtseis.cpp
                python/filterRepresentations.cpp
@@ -67,7 +80,7 @@ IF (RTSEIS_WRAP_PYTHON)
    ##PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
    ##TARGET_LINK_LIBRARIES(rtseis_python
    ##                      rtseis ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
-ENDIF()
+endif()
 
 ##########################################################################################
 #                                      Define Library Dependencies                       #
@@ -76,9 +89,9 @@ ENDIF()
 configure_file(${CMAKE_SOURCE_DIR}/include/private/version.hpp.in
                ${CMAKE_SOURCE_DIR}/include/rtseis/version.hpp)
 set(PUBLIC_HEADER_DIRECTORIES
-    include/rtseis)
+    ${CMAKE_SOURCE_DIR}/include/rtseis)
 set(PRIVATE_HEADER_DIRECTORIES
-    include/private)
+    ${CMAKE_SOURCE_DIR}/include/private)
 set(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
 set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 
@@ -161,13 +174,15 @@ SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SR
 set(BUILD_SHARED_LIBS YES)
 add_library(rtseis SHARED ${SRCS})
 target_include_directories(rtseis
+                           PUBLIC $<BUILD_INTERFACE:${PUBLIC_HEADER_DIRECTORIES}>
+                           PUBLIC $<INSTALL_INTERFACE:${PUBLIC_HEADER_DIRECTORIES}> 
                            PRIVATE ${PRIVATE_INCLUDE_DEPENDS})
 target_link_libraries(rtseis
-                      PRIVATE ${LIBALL})
-#TARGET_COMPILE_FEATURES(rtseis PUBLIC CXX_STD_14)
-#SET_TARGET_PROPERTIES(rtseis PROPERTIES
-#                      CXX_STANDARD_REQUIRED YES
-#                      CXX_EXTENSIONS NO)
+                      PRIVATE ${MKL_LIBRARY} ${IPP_LIBRARY})
+set_target_properties(rtseis PROPERTIES
+                      CXX_STANDARD 17
+                      CXX_STANDARD_REQUIRED YES 
+                      CXX_EXTENSIONS NO) 
 #set(RTSEIS_WRAP_PYTHON YES)
 
 #########################################################################################
