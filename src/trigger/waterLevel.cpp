@@ -133,7 +133,7 @@ void WaterLevel<E, T>::apply(const int nSamples, const T x[])
     T off = static_cast<T> (pImpl->mOffTolerance);
     int isOn =-1;
     if (x[0] > on){isOn = 0;}
-    for (int i=1; i<nSamples; ++i)
+    for (int i = 1; i < nSamples; ++i)
     {
         // Searching for end of window
         if (isOn > -1)

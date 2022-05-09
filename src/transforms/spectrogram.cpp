@@ -9,8 +9,8 @@ template<class T>
 class Spectrogram<T>::SpectrogramImpl
 {
 public:
-    class SlidingWindowRealDFT<T> mSlidingWindowRealDFT;
-    class SlidingWindowRealDFTParameters mParameters;
+    SlidingWindowRealDFT<T> mSlidingWindowRealDFT;
+    SlidingWindowRealDFTParameters mParameters;
     std::vector<T> mAmplitude;
     std::vector<T> mPhase;
     double mSamplingRate = 1;
