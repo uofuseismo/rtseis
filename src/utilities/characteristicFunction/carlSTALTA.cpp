@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <vector>
 #include <cmath>
 #include <cstring>

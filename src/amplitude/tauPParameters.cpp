@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include <iostream>
 #include <array>
 #include <cmath>
 #include "rtseis/amplitude/tauPParameters.hpp"
@@ -27,7 +29,7 @@ public:
         constexpr auto pairing = RTSeis::FilterDesign::SOSPairing::NEAREST; 
         constexpr double rp = 5;
         constexpr double rs = 20; 
-        const double nyquist = 1./(2*mSamplingRate);
+        const double nyquist = 0.5*mSamplingRate;
         const std::array<double, 2> Wn{3./nyquist, 0}; 
         mFilter = FilterDesign::IIR::designSOSIIRFilter(n, Wn.data(), rp, rs, 
                                                         highpass, butterworth,
@@ -54,6 +56,49 @@ public:
     bool mHaveInputUnits{false};
     bool mHaveSimpleResponse{false};
 };
+
+/// C'tor
+TauPParameters::TauPParameters() :
+    pImpl(std::make_unique<TauPParametersImpl> ())
+{
+}
+
+/// Copy c'tor
+TauPParameters::TauPParameters(const TauPParameters &parameters)
+{
+    *this = parameters;
+}
+
+/// Move c'tor
+TauPParameters::TauPParameters(TauPParameters &&parameters) noexcept
+{
+    *this = std::move(parameters);
+}
+
+/// Copy assignment
+TauPParameters& TauPParameters::operator=(const TauPParameters &parameters)
+{
+    if (&parameters == this){return *this;}
+    pImpl = std::make_unique<TauPParametersImpl> (*parameters.pImpl);
+    return *this;
+}
+
+/// Move assignment
+TauPParameters& TauPParameters::operator=(TauPParameters &&parameters) noexcept
+{
+    if (&parameters == this){return *this;}
+    pImpl = std::move(parameters.pImpl);
+    return *this;
+}
+
+/// Reset class
+void TauPParameters::clear() noexcept
+{
+    pImpl = std::make_unique<TauPParametersImpl> ();
+}
+
+/// Destructor
+TauPParameters::~TauPParameters() = default;
 
 /// Input units
 void TauPParameters::setInputUnits(
