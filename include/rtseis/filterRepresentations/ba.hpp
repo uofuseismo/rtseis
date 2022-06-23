@@ -1,6 +1,7 @@
 #ifndef RTSEIS_FILTERREPRESENTATIONS_BA_HPP
 #define RTSEIS_FILTERREPRESENTATIONS_BA_HPP 1
 #include <vector>
+#include <cstdio>
 #include <memory>
 namespace RTSeis::FilterRepresentations
 {
