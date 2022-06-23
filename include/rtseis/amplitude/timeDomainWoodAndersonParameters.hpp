@@ -54,7 +54,7 @@ public:
     void setInputUnits(InputUnits units) noexcept;
     /// @result The units to which the input signal is proportional.
     /// @throws std::runtime_error if \c haveInputUnits() is false.
-    InputUnits getInputUnits() const;
+    [[nodiscard]] InputUnits getInputUnits() const;
     /// @result True indicates that the input units were set.
     [[nodiscard]] bool haveInputUnits() const noexcept;
 

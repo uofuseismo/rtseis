@@ -102,6 +102,7 @@ SET(UTILS_SRCS
     src/utilities/verbosity.cpp
     src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/characteristicFunction/carlSTALTA.cpp
+    src/amplitude/tauPParameters.cpp
     src/amplitude/timeDomainWoodAndersonParameters.cpp
     src/amplitude/timeDomainWoodAnderson.cpp
     src/deconvolution/instrumentResponse.cpp
