@@ -1,6 +1,5 @@
 #include <string>
 #include <vector>
-#include "private/throw.hpp"
 #include "rtseis/trigger/waterLevel.hpp"
 
 using namespace RTSeis::Trigger;

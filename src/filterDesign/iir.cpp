@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <cstdio>
 #include <cstdlib>
 #include <cfloat>
 #include <cassert>
@@ -8,7 +7,6 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
-#define RTSEIS_LOGGING 1
 #include "rtseis/filterDesign/iir.hpp"
 #include "rtseis/filterDesign/enums.hpp"
 #include "rtseis/filterDesign/analogPrototype.hpp"
@@ -16,8 +14,6 @@
 #include "rtseis/filterRepresentations/sos.hpp"
 #include "rtseis/filterRepresentations/zpk.hpp"
 #include "rtseis/utilities/math/polynomial.hpp"
-#include "private/throw.hpp"
-#include "rtseis/log.h"
 
 //#define DEBUG 1
 
@@ -84,29 +80,40 @@ ZPK IIR::designZPKIIRFilter(const int n, const double *W,
                             const IIRFilterDomain ldigital)
 {
     ZPK zpk;
-    if (n < 1){RTSEIS_THROW_IA("Order = %d must be positive", n);}
-    if (W == nullptr){RTSEIS_THROW_IA("%s", "W is NULL");}
+    if (n < 1)
+    {
+        throw std::invalid_argument("Order = "
+                                  + std::to_string(n) + " must be positive");
+    }
+    if (W == nullptr){throw std::invalid_argument("W is null");}
     // Check ripples
     if (ftype == IIRPrototype::CHEBYSHEV1 && rp <= 0)
     {
-        RTSEIS_THROW_IA("rp = %lf must be positive", rp);
+        throw std::invalid_argument("rp = " + std::to_string(rp)
+                                  + " must be positive");
     }
     if (ftype == IIRPrototype::CHEBYSHEV2 && rs <= 0)
     {
-        RTSEIS_THROW_IA("rs = %lf must be positive", rs);
+        throw std::invalid_argument("rs = " + std::to_string(rs)
+                                  + " must be positive");
     }
     if (ldigital == IIRFilterDomain::ANALOG)
     {
-        RTSEIS_WARNMSG("%s", "Analog filter design is untested");
+        std::cerr << "Analog filter design is untested" << std::endl;
     }
     // Check the low-corner frequency
     double wn[2];
     wn[0] = W[0];
     wn[1] = 0;
-    if (wn[0] < 0){RTSEIS_THROW_IA("W[0] = %lf cannot be negative", wn[0]);}
+    if (wn[0] < 0)
+    {
+        throw std::invalid_argument("W[0] = " + std::to_string(wn[0])
+                                  + " cannot be negative");
+    }
     if (ldigital == IIRFilterDomain::DIGITAL && wn[0] > 1)
     {
-        RTSEIS_THROW_IA("W[0]=%lf cannot exceed 1", wn[0]);
+        throw std::invalid_argument("W[0] = " + std::to_string(wn[0])
+                                  + " cannot exceed 1");
     }
     // Check the high-corner frequency
     if (btype == Bandtype::BANDPASS || btype == Bandtype::BANDSTOP)
@@ -114,12 +121,14 @@ ZPK IIR::designZPKIIRFilter(const int n, const double *W,
         wn[1] = W[1];
         if (wn[1] < wn[0])
         {
-            RTSEIS_THROW_IA("W[1] = %lf can't be less than W[0] = %lf",
-                             wn[0], wn[1]);
+            throw std::invalid_argument("W[1] = " + std::to_string(wn[1])
+                                      + " can't be less than W[0] = "
+                                      + std::to_string(wn[0]));
         }
         if (wn[1] > 1)
         {
-            RTSEIS_THROW_IA("W[1] = %lf cannot exced 1", wn[1]);
+            throw std::invalid_argument("W[1] = " + std::to_string(wn[1])
+                                      + " cannot exced 1");
         } 
     }
     // Create the analog prototype
@@ -203,7 +212,7 @@ SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
     int nzeros = zpkWork.getNumberOfZeros();
     if (npoles <= 0 || nzeros <= 0)
     {
-        RTSEIS_WARNMSG("sos will simply scale data by %lf", k); 
+        std::cerr << "sos will simply scale data by " << k << std::endl;
         std::vector<double> bs({k, 0, 0});
         std::vector<double> as({1, 0, 0});
         sos = RTSeis::FilterRepresentations::SOS(1, bs, as);
@@ -259,7 +268,7 @@ SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
             as[2] = std::pow(std::abs(pin[0]), 2);
         }
         sos = RTSeis::FilterRepresentations::SOS(1, bs, as);
-        //RTSEIS_WARNMSG("%s", "Summary of design");
+        //std::cout <<  "Summary of design" << std::endl;
         //sos.print(stdout);
         return sos;
     }
@@ -426,8 +435,8 @@ SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
     {
         if (!pmask[ip])
         {
-            RTSEIS_ERRMSG("Failed to find pole %ld; nsections=%d",
-                          ip, nSections);
+            std::cerr << "Failed to find pole " << ip << " nSections = "
+                      << nSections << std::endl;
 #ifdef DEBUG
             assert(false);
 #endif
@@ -438,7 +447,7 @@ SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
     {
         if (!zmask[iz])
         {
-            RTSEIS_ERRMSG("Failed to find zero %ld", iz);
+            std::cerr << "Failed to find zero " << iz << std::endl;
 #ifdef DEBUG
             assert(false);
 #endif
@@ -510,7 +519,7 @@ ZPK IIR::tf2zpk(const RTSeis::FilterRepresentations::BA &ba)
     }
     else
     {
-        RTSEIS_WARNMSG("%s", "No poles");
+        std::cerr << "No poles" << std::endl;
         p.resize(1);
         p[0] = std::complex<double> (1, 0); 
     }
@@ -571,7 +580,7 @@ ZPK IIR::zpkbilinear(const RTSeis::FilterRepresentations::ZPK zpk,
     size_t npoles = zpk.getNumberOfPoles();
     if (nzeros > npoles)
     {
-        RTSEIS_THROW_IA("%s", "Cannot have more zeros than poles");
+        throw std::invalid_argument("Cannot have more zeros than poles");
     }
     std::vector<std::complex<double>> z = zpk.getZeros();
     std::vector<std::complex<double>> p = zpk.getPoles();

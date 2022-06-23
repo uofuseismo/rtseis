@@ -1,5 +1,6 @@
 #ifndef RTSEIS_THROW_HPP
 #define RTSIES_THROW_HPP 1
+#include <stdexcept>
 #include <cstring>
 #include <string>
 #include <exception>
