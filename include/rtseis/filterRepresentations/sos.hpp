@@ -1,6 +1,7 @@
 #ifndef RTSEIS_FILTERREPRESENTATIONS_SOS_HPP
 #define RTSEIS_FILTERREPRESENTATIONS_SOS_HPP 1
 #include <vector>
+#include <ostream>
 #include <memory>
 namespace RTSeis::FilterRepresentations
 {
@@ -108,5 +109,7 @@ private:
     class SOSImpl;
     std::unique_ptr<SOSImpl> pImpl;
 }; // End SOS
+/// @result The text version of the sos filter.
+[[nodiscard]] std::ostream& operator<<(std::ostream &os, const SOS &sos);
 }
 #endif

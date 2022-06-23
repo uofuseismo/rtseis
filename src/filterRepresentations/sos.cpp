@@ -1,4 +1,6 @@
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <cmath>
 #include <algorithm>
@@ -110,13 +112,13 @@ void SOS::print(FILE *fout) const noexcept
     FILE *f = stdout;
     if (fout != nullptr){f = fout;}
     fprintf(f, "Numerator sections\n");
-    for (int i=0; i<pImpl->ns; i++)
+    for (int i = 0; i < pImpl->ns; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
                 pImpl->bs[3*i], pImpl->bs[3*i+1], pImpl->bs[3*i+2]);
     }
     fprintf(f, "Denominator sections\n");
-    for (int i=0; i<pImpl->ns; i++)
+    for (int i = 0; i < pImpl->ns; i++)
     {
         fprintf(f, "%+.16lf, %+.16lf, %+.16lf\n",
                 pImpl->as[3*i], pImpl->as[3*i+1], pImpl->as[3*i+2]);
@@ -187,4 +189,30 @@ void SOS::setEqualityTolerance(const double tol)
         std::cerr << "Tolerance is negative" << std::endl;
     }
     pImpl->tol = tol;
+}
+
+std::ostream& RTSeis::FilterRepresentations::operator<<(
+    std::ostream &os, const SOS &sos)
+{
+    std::stringstream result;
+    result << "Numerator sections" << std::endl;
+    auto nSections = sos.getNumberOfSections();
+    auto bs = sos.getNumeratorCoefficients(); 
+    for (int i = 0; i < nSections; ++i)
+    {
+        result << std::setprecision(16)
+               << bs.at(3*i)   << ","
+               << bs.at(3*i+1) << ","
+               << bs.at(3*i+2) << std::endl;
+    } 
+    auto as = sos.getDenominatorCoefficients();
+    result << "Denominator sections" << std::endl;
+    for (int i = 0; i < nSections; ++i)
+    {
+        result << std::setprecision(16)
+               << as.at(3*i)   << "," 
+               << as.at(3*i+1) << "," 
+               << as.at(3*i+2) << std::endl;
+    }
+    return os << result.str();
 }

@@ -3,6 +3,8 @@
 #include <vector>
 #include "rtseis/amplitude/timeDomainWoodAndersonParameters.hpp"
 #include "rtseis/amplitude/timeDomainWoodAnderson.hpp"
+#include "rtseis/amplitude/tauPParameters.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 #include <gtest/gtest.h>
 
 using namespace RTSeis::Amplitude;
@@ -26,8 +28,6 @@ std::vector<double> readSeismogram(const std::string &fileName)
         infl.close();
     }   
     return x;
-}
-
 }
 
 TEST(Amplitude, TimeDomainWoodAndersonParameters)
@@ -217,3 +217,51 @@ TEST(Amplitude, TimeDomainWoodAndersonVelocity)
     ofl.close();
 }
 
+TEST(Amplitude, TauPParameters)
+{
+    TauPParameters parameters;
+    const double samplingRate{50};
+    const double alphaDefault = 1. - 1./samplingRate;
+    const double alpha = 0.9;
+    const double gain = 450;
+    const double q = 0.8;
+    const InputUnits units = InputUnits::Acceleration;
+    EXPECT_NO_THROW(parameters.setSamplingRate(samplingRate));
+    parameters.setInputUnits(units);
+    EXPECT_NO_THROW(parameters.setSimpleResponse(gain));
+    EXPECT_NO_THROW(parameters.setSmoothingParameter(alphaDefault));
+    EXPECT_NEAR(parameters.getSmoothingParameter(), alphaDefault, 1.e-10); 
+    EXPECT_NO_THROW(parameters.setSmoothingParameter(alpha));
+    EXPECT_NO_THROW(parameters.setFilterConstantQ(q));
+    
+
+    TauPParameters copy(parameters);
+    EXPECT_EQ(copy.getInputUnits(), units);
+    EXPECT_NEAR(copy.getSamplingRate(), samplingRate, 1.e-10);
+    EXPECT_NEAR(copy.getSmoothingParameter(), alpha, 1.e-10);
+    EXPECT_NEAR(copy.getSimpleResponse(), gain, 1.e-10);
+    EXPECT_NEAR(copy.getFilterConstantQ(), q, 1.e-10);
+    auto sos = copy.getFilter();
+    EXPECT_EQ(sos.getNumberOfSections(), 2);
+    std::vector<double> bRef{0.60894463, -1.21788927,  0.60894463,
+                             1.        , -2.        ,  1.};
+    std::vector<double> aRef{1.        , -1.38761971,  0.49242289,
+                             1.        , -1.62993553,  0.75304017};
+    auto b = sos.getNumeratorCoefficients();
+    auto a = sos.getDenominatorCoefficients();
+    EXPECT_EQ(b.size(), bRef.size());
+    double resMax = 0;
+    for (int i = 0; i < static_cast<int> (b.size()); ++i)
+    { 
+        resMax = std::max(resMax, std::abs(b[i] - bRef[i]));
+        resMax = std::max(resMax, std::abs(a[i] - aRef[i]));
+    }
+    EXPECT_NEAR(resMax, 0, 1.e-8);
+}
+
+TEST(Amplitude, TauP)
+{
+
+}
+
+}
