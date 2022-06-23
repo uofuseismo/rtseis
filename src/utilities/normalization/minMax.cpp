@@ -1,5 +1,4 @@
-#include <cstdio>
-#include <cstdlib>
+#include <stdexcept>
 #include <string>
 #include <algorithm>
 #include <ipps.h>

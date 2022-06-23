@@ -1,5 +1,4 @@
-#include <cstdio>
-#include <cstdlib>
+#include <stdexcept>
 #include <string>
 #include <ipps.h>
 #include "rtseis/utilities/normalization/zscore.hpp"

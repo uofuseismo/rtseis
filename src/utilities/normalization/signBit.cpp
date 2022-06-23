@@ -1,5 +1,4 @@
-#include <cstdio>
-#include <cstdlib>
+#include <stdexcept>
 #include <memory>
 #include "rtseis/log.h"
 #include "rtseis/utilities/normalization/signBit.hpp"
