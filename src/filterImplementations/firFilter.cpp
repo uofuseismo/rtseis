@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <iostream>
 #include <cmath>
 #ifndef NDEBUG

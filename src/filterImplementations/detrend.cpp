@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <string>
 #include <cmath>
 #include <ipps.h>
