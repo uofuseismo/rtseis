@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include "rtseis/trigger/waterLevel.hpp"
