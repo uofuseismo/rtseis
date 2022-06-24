@@ -63,7 +63,7 @@ After descending into rtseis you will have to configure CMake.  I prefer to do t
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_CXX_COMPILER=${CXX} \
     -DCMAKE_CXX_FLAGS="-Wall" \
-    -DRTSEIS_WRAP_PYTHON=TRUE \
+    -DRTSEIS_WRAP_PYTHON=ON \
     -Dpybind11_INCLUDE_DIR="/usr/local/include/pybind11"
 
 ## Building

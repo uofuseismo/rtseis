@@ -17,8 +17,6 @@ jobs:
       - run:
           name: Configure the code
           command: |
-            export CC=gcc-7
-            export CXX=g++-7
             export IPP_ROOT=/opt/intel/ipp
             export MKL_ROOT=/opt/intel/mkl
             export GTEST_ROOT=/usr/local
@@ -30,11 +28,12 @@ jobs:
             mkdir ${BUILD_DIR}
             cd ${BUILD_DIR}
             cmake .. \
-            -DCMAKE_CXX_COMPILER=g++-7 \
-            -DCMAKE_C_FLAGS="-Wall" \
-            -DCMAKE_CXX_FLAGS="-Wall" \
-            -DRTSEIS_WRAP_PYTHON=TRUE \
-            -Dpybind11_INCLUDE_DIR="/usr/local/include/pybind11"
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_C_FLAGS="-Wall"
+            #\
+            #-DCMAKE_CXX_FLAGS="-Wall" \
+            #-DRTSEIS_WRAP_PYTHON=ON \
+            #-Dpybind11_INCLUDE_DIR="/usr/local/include/pybind11"
       - run:
            name: Build the code
            command: |
