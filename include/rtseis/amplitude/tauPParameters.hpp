@@ -82,9 +82,6 @@ public:
     /// @{
 
     /// @brief Stable integration requires the removal of long-period signals. 
-    ///        The approach appears to be to clean this up after the fact, 
-    ///        so velocity signals are lowpass filtered prior to computing
-    ///        the velocity^2 and acceleration^2 signals.
     /// @param[in] sos  The (likely highpass) filter to apply to the
     ///                 signal prior. 
     /// @note When the sampling rate is set this will default to a 
@@ -92,9 +89,15 @@ public:
     ///       Initially, a 2-pole filter was suggested, however, 
     ///       Shieh, Wu, and Allen suggest a 4, 5, or 6 pole filter lowers
     ///       the variance in the max(tau_p) estimates.
-    void setFilter(const FilterRepresentations::SOS &sos);
-    /// @result The filter representation.
-    [[nodiscard]] FilterRepresentations::SOS getFilter() const noexcept;
+    void setAccelerationFilter(const FilterRepresentations::SOS &sos);
+    /// @result The (highpass) acceleration filter.
+    [[nodiscard]] FilterRepresentations::SOS getAccelerationFilter() const noexcept;
+
+    /// @brief Prior to computing tauP a causal 3 Hz low-pass Butterworth
+    ///        filter with 2 poles is applied. 
+    void setVelocityFilter(const FilterRepresentations::SOS &sos);
+    /// @result The (lowpass) velocity filter representation.
+    [[nodiscard]] FilterRepresentations::SOS getVelocityFilter() const noexcept;
 
     /// @brief Sets the smoothing constant for updating the squared
     ///        velocity and acceleration signals:
@@ -128,6 +131,12 @@ public:
     void setFilterConstantQ(double constant);
     /// @result The filter constant.
     [[nodiscard]] double getFilterConstantQ() const noexcept;
+
+    /// @brief Sets the detrend strategy to apply prior to tapering.
+    /// @param[in] detrendType   The detrend strategy.
+    void setDetrendType(DetrendType detrendType);
+    /// @result The detrend 
+    [[nodiscard]] DetrendType getDetrendType() const noexcept;
     /// @}
 
     /// @name Destructors

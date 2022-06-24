@@ -97,8 +97,8 @@ public:
     ///                    scale as \f$ s = \frac{F_c f_s}{2 \pi f} \f$
     ///                    where \f$ f_s \f$ is the sampling rate in Hz.
     /// @param[out] daughter  The daughter wavelet evaluated at the n samples.
-    ///                        This is an array whose dimension is [n].
-    ///                      This will be centered at \f$ x = 0 \f$ which 
+    ///                       This is an array whose dimension is [n].
+    ///                       This will be centered at \f$ x = 0 \f$ which 
     ///                       corresponds to index n/2 for n odd.
     void evaluate(int n, double scale,
                   std::complex<double> *w[]) const override;

@@ -10,7 +10,9 @@ template<RTSeis::ProcessingMode E, class T>
 class TauP<E, T>::TauPImpl
 {
 public:
-    RTSeis::FilterImplementations::SOSFilter<E, T> mHighpassFilter;
+    RTSeis::FilterImplementations::SOSFilter<E, T> mAccelerationFilter;
+    RTSeis::FilterImplementations::SOSFilter<E, T> mVelocityFilter;
+    bool mAcceleration{false};
 };
 
 /// C'tor
@@ -40,6 +42,16 @@ void TauP<E, T>::initialize(const TauPParameters &parameters)
     {
         throw std::invalid_argument("Input units not set");
     }
-    auto highpassFilter = parameters.getFilter();
-    pImpl->mHighpassFilter.initialize(highpassFilter);
+    if (parameters.getInputUnits() == InputUnits::Acceleration)
+    {
+        auto accelerationFilter = parameters.getAccelerationFilter();
+        pImpl->mAccelerationFilter.initialize(accelerationFilter);
+        pImpl->mAcceleration = true;
+    }
+    else
+    {
+        pImpl->mAcceleration = false;
+    }
+    auto velocityFilter = parameters.getVelocityFilter();    
+    pImpl->mVelocityFilter.initialize(velocityFilter);
 }

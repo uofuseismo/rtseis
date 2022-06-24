@@ -226,6 +226,7 @@ TEST(Amplitude, TauPParameters)
     const double gain = 450;
     const double q = 0.8;
     const InputUnits units = InputUnits::Acceleration;
+    const DetrendType detrendType = DetrendType::RemoveTrend;
     EXPECT_NO_THROW(parameters.setSamplingRate(samplingRate));
     parameters.setInputUnits(units);
     EXPECT_NO_THROW(parameters.setSimpleResponse(gain));
@@ -233,20 +234,20 @@ TEST(Amplitude, TauPParameters)
     EXPECT_NEAR(parameters.getSmoothingParameter(), alphaDefault, 1.e-10); 
     EXPECT_NO_THROW(parameters.setSmoothingParameter(alpha));
     EXPECT_NO_THROW(parameters.setFilterConstantQ(q));
+    parameters.setDetrendType(detrendType);
     
 
     TauPParameters copy(parameters);
     EXPECT_EQ(copy.getInputUnits(), units);
+    EXPECT_EQ(copy.getDetrendType(), detrendType);
     EXPECT_NEAR(copy.getSamplingRate(), samplingRate, 1.e-10);
     EXPECT_NEAR(copy.getSmoothingParameter(), alpha, 1.e-10);
     EXPECT_NEAR(copy.getSimpleResponse(), gain, 1.e-10);
     EXPECT_NEAR(copy.getFilterConstantQ(), q, 1.e-10);
-    auto sos = copy.getFilter();
-    EXPECT_EQ(sos.getNumberOfSections(), 2);
-    std::vector<double> bRef{0.60894463, -1.21788927,  0.60894463,
-                             1.        , -2.        ,  1.};
-    std::vector<double> aRef{1.        , -1.38761971,  0.49242289,
-                             1.        , -1.62993553,  0.75304017};
+    auto sos = copy.getVelocityFilter();
+    EXPECT_EQ(sos.getNumberOfSections(), 1);
+    std::vector<double> bRef{0.02785977,  0.05571953,  0.02785977};
+    std::vector<double> aRef{1,          -1.47548044,  0.58691951};
     auto b = sos.getNumeratorCoefficients();
     auto a = sos.getDenominatorCoefficients();
     EXPECT_EQ(b.size(), bRef.size());
@@ -256,7 +257,24 @@ TEST(Amplitude, TauPParameters)
         resMax = std::max(resMax, std::abs(b[i] - bRef[i]));
         resMax = std::max(resMax, std::abs(a[i] - aRef[i]));
     }
-    EXPECT_NEAR(resMax, 0, 1.e-8);
+    EXPECT_NEAR(resMax, 0, 1.e-6);
+
+    sos = copy.getAccelerationFilter();
+    EXPECT_EQ(sos.getNumberOfSections(), 2);
+    std::vector<double> bRef2{0.98776139, -1.97552278,  0.98776139,
+                              1.        , -2.        ,  1.};
+    std::vector<double> aRef2{1.00000000e+00, -1.9826478,  0.99281262,
+                              1.00000000e+00, -1.99272411, 0.99281262};
+    b = sos.getNumeratorCoefficients();
+    a = sos.getDenominatorCoefficients();
+    EXPECT_EQ(b.size(), bRef2.size());
+    resMax = 0;
+    for (int i = 0; i < static_cast<int> (b.size()); ++i)
+    {
+        resMax = std::max(resMax, std::abs(b[i] - bRef2[i]));
+        resMax = std::max(resMax, std::abs(a[i] - aRef2[i]));
+    }
+
 }
 
 TEST(Amplitude, TauP)

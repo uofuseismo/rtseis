@@ -15,7 +15,7 @@ public:
     {
         update();
     }
-    // Design a 3C Hz highpass filter.  
+    // Design a 0.075 Hz highpass filter.  
     // This is to be applied prior to integration.
     void designHighpassFilter()
     {
@@ -30,10 +30,32 @@ public:
         constexpr double rp = 5;
         constexpr double rs = 20; 
         const double nyquist = 0.5*mSamplingRate;
-        const std::array<double, 2> Wn{3./nyquist, 0}; 
-        mFilter = FilterDesign::IIR::designSOSIIRFilter(n, Wn.data(), rp, rs, 
-                                                        highpass, butterworth,
-                                                        digital, pairing);
+        const std::array<double, 2> Wn{0.075/nyquist, 0}; 
+        mAccelerationFilter
+            = FilterDesign::IIR::designSOSIIRFilter(n, Wn.data(), rp, rs,
+                                                    highpass, butterworth,
+                                                    digital, pairing);
+    }
+    // Design a 3 Hz highpass filter.  
+    // This is to be applied prior to integration.
+    void designLowpassFilter()
+    {
+        constexpr int n = 2; // Brown et al., 2011 use n = 2 
+                             // but it appears higher order filters
+                             // result in less variance in tau p max
+        constexpr auto lowpass = RTSeis::FilterDesign::Bandtype::LOWPASS;
+        constexpr auto butterworth
+            = RTSeis::FilterDesign::IIRPrototype::BUTTERWORTH;
+        constexpr auto digital = RTSeis::FilterDesign::IIRFilterDomain::DIGITAL;
+        constexpr auto pairing = RTSeis::FilterDesign::SOSPairing::NEAREST;
+        constexpr double rp = 5;
+        constexpr double rs = 20; 
+        const double nyquist = 0.5*mSamplingRate;
+        const std::array<double, 2> Wn{3/nyquist, 0};
+        mVelocityFilter
+            = FilterDesign::IIR::designSOSIIRFilter(n, Wn.data(), rp, rs,
+                                                    lowpass, butterworth,
+                                                    digital, pairing);
     }
     // Update smoothing parameter - Brown et al., 2011
     void updateSmoothing()
@@ -44,15 +66,18 @@ public:
     void update()
     {
         designHighpassFilter();
+        designLowpassFilter();
         updateSmoothing();
     }
 //private:
-    RTSeis::FilterRepresentations::SOS mFilter;
+    RTSeis::FilterRepresentations::SOS mAccelerationFilter;
+    RTSeis::FilterRepresentations::SOS mVelocityFilter;
     double mSamplingRate{100};
     double mFilterQ{0.994};
     double mSmoothing{0.99}; //1. - 1./mSamplingRate;
     double mSimpleResponse{0}; // For scaling to units of cm to avoid overlflow
     InputUnits mInputUnits{InputUnits::Velocity};
+    DetrendType mDetrendType{DetrendType::RemoveMean};
     bool mHaveInputUnits{false};
     bool mHaveSimpleResponse{false};
 };
@@ -162,15 +187,30 @@ bool TauPParameters::haveSimpleResponse() const noexcept
     return (std::abs(pImpl->mSimpleResponse) > 0);
 }
 
-/// Set the filter
-void TauPParameters::setFilter(const RTSeis::FilterRepresentations::SOS &sos)
+/// Acceleration filter
+void TauPParameters::setAccelerationFilter(
+    const RTSeis::FilterRepresentations::SOS &sos)
 {
-    pImpl->mFilter = sos;
+    pImpl->mAccelerationFilter = sos;
 }
 
-RTSeis::FilterRepresentations::SOS TauPParameters::getFilter() const noexcept
+RTSeis::FilterRepresentations::SOS
+    TauPParameters::getAccelerationFilter() const noexcept
 {
-    return pImpl->mFilter;
+    return pImpl->mAccelerationFilter;
+}
+
+/// Velocity filter
+void TauPParameters::setVelocityFilter(
+    const RTSeis::FilterRepresentations::SOS &sos)
+{
+    pImpl->mVelocityFilter = sos;
+}
+
+RTSeis::FilterRepresentations::SOS 
+    TauPParameters::getVelocityFilter() const noexcept
+{
+    return pImpl->mVelocityFilter;
 }
 
 /// Smoothing 
@@ -201,4 +241,16 @@ void TauPParameters::setFilterConstantQ(const double q)
 double TauPParameters::getFilterConstantQ() const noexcept
 {
     return pImpl->mFilterQ;
+}
+
+/// Detrend
+void TauPParameters::setDetrendType(
+    const DetrendType detrend)
+{
+    pImpl->mDetrendType = detrend;
+}
+
+DetrendType TauPParameters::getDetrendType() const noexcept
+{
+    return pImpl->mDetrendType;
 }

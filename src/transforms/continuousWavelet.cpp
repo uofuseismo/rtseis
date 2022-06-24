@@ -416,7 +416,7 @@ void ContinuousWavelet<T>::getTransform(
     if (!haveTransform()){throw std::runtime_error("CWT not yet computed");}
     auto n = getNumberOfSamples();
     auto ns = getNumberOfScales();
-    auto cwt = *cwtOut;
+    auto *__restrict__ cwt = *cwtOut;
     if (n != nSamples)
     {
         throw std::invalid_argument("nSamples = " + std::to_string(nSamples)
@@ -430,7 +430,7 @@ void ContinuousWavelet<T>::getTransform(
     if (cwt == nullptr){throw std::invalid_argument("cwt it NULL");}
     auto ldx = pImpl->mLeadingDimension;
     auto cwtPtr = reinterpret_cast<std::complex<T> *> (pImpl->mCWT);
-    for (int i=0; i<ns; ++i)
+    for (int i = 0; i < ns; ++i)
     {
         auto i1 = i*ldx; 
         auto i2 = i*ldx + nSamples;
@@ -438,6 +438,71 @@ void ContinuousWavelet<T>::getTransform(
         std::copy(cwtPtr + i1, cwtPtr + i2, cwt + j1);
     } 
 }
+
+template<class T>
+void ContinuousWavelet<T>::getAmplitudeTransform(
+    const int nSamples, const int nScales, T *cwtOut[]) const
+{
+    if (!haveTransform()){throw std::runtime_error("CWT not yet computed");}
+    auto n = getNumberOfSamples();
+    auto ns = getNumberOfScales();
+    auto *__restrict__ cwt = *cwtOut;
+    if (n != nSamples)
+    {   
+        throw std::invalid_argument("nSamples = " + std::to_string(nSamples)
+                                  + " must equal " + std::to_string(n));
+    }   
+    if (ns != nScales)
+    {   
+        throw std::invalid_argument("nScales = " + std::to_string(nScales)
+                                  + " must equal " + std::to_string(ns));
+    }   
+    if (cwt == nullptr){throw std::invalid_argument("cwt it NULL");}
+    auto ldx = pImpl->mLeadingDimension;
+    auto cwtPtr = reinterpret_cast<std::complex<T> *> (pImpl->mCWT);
+    for (int i = 0; i < ns; ++i)
+    {   
+        auto i1 = i*ldx; 
+        auto j1 = i*nSamples;
+        for (int j = 0; j < nSamples; ++j)
+        {
+             cwt[j1 + j] = std::abs(cwtPtr[i1 + j]);
+        }
+    }
+}
+
+template<class T>
+void ContinuousWavelet<T>::getPhaseTransform(
+    const int nSamples, const int nScales, T *cwtOut[]) const
+{
+    if (!haveTransform()){throw std::runtime_error("CWT not yet computed");}
+    auto n = getNumberOfSamples();
+    auto ns = getNumberOfScales();
+    auto *__restrict__ cwt = *cwtOut;
+    if (n != nSamples)
+    {   
+        throw std::invalid_argument("nSamples = " + std::to_string(nSamples)
+                                  + " must equal " + std::to_string(n));
+    }   
+    if (ns != nScales)
+    {   
+        throw std::invalid_argument("nScales = " + std::to_string(nScales)
+                                  + " must equal " + std::to_string(ns));
+    }   
+    if (cwt == nullptr){throw std::invalid_argument("cwt it NULL");}
+    auto ldx = pImpl->mLeadingDimension;
+    auto cwtPtr = reinterpret_cast<std::complex<T> *> (pImpl->mCWT);
+    for (int i = 0; i < ns; ++i)
+    {   
+        auto i1 = i*ldx; 
+        auto j1 = i*nSamples;
+        for (int j = 0; j < nSamples; ++j)
+        {
+             cwt[j1 + j] = std::arg(cwtPtr[i1 + j]);
+        }
+    }
+}
+
 
 ///--------------------------------------------------------------------------///
 ///                          Template Instantiation                          ///
