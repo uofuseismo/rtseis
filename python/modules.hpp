@@ -3,5 +3,9 @@
 #include <pybind11/pybind11.h>
 
 void init_pp_waveform(pybind11::module &m);
+namespace PTransforms
+{
+void init_transforms(pybind11::module &m);
+}
 
 #endif

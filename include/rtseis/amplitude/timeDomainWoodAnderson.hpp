@@ -30,6 +30,7 @@ class TimeDomainWoodAnderson
 public:
     /// @name Constructors
     /// @{
+
     /// @brief Constructor.
     TimeDomainWoodAnderson();
     /// @brief Copy constructor.
@@ -44,6 +45,7 @@ public:
 
     /// @name Operators
     /// @{
+
     /// @brief Copy assignment operator.
     /// @param[in] wa  The Wood-Anderson class to copy to this.
     /// @result A deep copy of the wa class.
@@ -57,11 +59,12 @@ public:
 
     /// @name Initialization
     /// @{
+
     /// @brief Initializes the Wood-Anderson time-domain filter.
     /// @param[in] parameters   The Wood-Anderson filtering parameters.
-    /// @throws std::invalid_argument if the sampling rate is not set.
+    /// @throws std::invalid_argument if the sampling rate, input units,
+    ///         or simple response is not set.
     void initialize(const TimeDomainWoodAndersonParameters &parameters);
-    /// @result The Wood-Anderson parameters.
     /// @result True indicates that the class is initialized.
     [[nodiscard]] bool isInitialized() const noexcept;
     /// @result True indicates this is configured for processing signals
@@ -100,6 +103,7 @@ public:
 
     /// @name Destructors
     /// @{
+
     /// @brief Resets the class and releases all memory.
     void clear() noexcept;
     /// @brief Destructor.

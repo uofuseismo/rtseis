@@ -41,7 +41,7 @@ TimeDomainWoodAnderson<E, T>::TimeDomainWoodAnderson() :
 {
 }
 
-/// 
+/// Initialize
 template<RTSeis::ProcessingMode E, class T>
 void TimeDomainWoodAnderson<E, T>::initialize(
     const TimeDomainWoodAndersonParameters &parameters)

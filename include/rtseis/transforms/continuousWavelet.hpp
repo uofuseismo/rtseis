@@ -1,6 +1,7 @@
 #ifndef RTSEIS_TRANSFORMS_CONTINUOUSWAVELET_HPP
 #define RTSEIS_TRANSFORMS_CONTINUOUSWAVELET_HPP 1
 #include <memory>
+#include <complex>
 namespace RTSeis::Transforms
 {
 namespace Wavelets

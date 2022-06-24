@@ -1,18 +1,25 @@
 //#include "wrap.hpp"
 #include "modules.hpp"
+#include "rtseis/version.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(libpyrtseis, modules)
+PYBIND11_MODULE(pyrtseis, modules)
 {
+    modules.attr("__version__") = RTSEIS_VERSION;
+    modules.attr("__name__") = "pyrtseis"; 
+    modules.attr("__doc__") = "The Python interface to RTSeis.";
     //------------------------------------------------------------------------//
     //                         PostProcessing Group                           //
     //------------------------------------------------------------------------// 
     py::module m = modules.def_submodule("PostProcessing");
     init_pp_waveform(m);
+
+    py::module mTransforms = modules.def_submodule("Transforms");
+    PTransforms::init_transforms(mTransforms);
 /*
 
     py::class_<PBPostProcessing::Waveform> singleChannelWaveform(m, "Waveform");

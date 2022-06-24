@@ -8,7 +8,7 @@ class SOS;
 }
 namespace RTSeis::Amplitude
 {
-/// @class PredominantPeriodParameters
+/// @class TauPParameters "tauPParameters.hpp" "rtseis/amplitude/tauPParameters.hpp"
 /// @brief Sets the parameters for the Berkeley \f$ \tau_p \f$ method.
 ///        Note, a lot of pertinent details can be found in the supplement of
 ///        https://doi.org/10.1029/2008GL035611.

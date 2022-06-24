@@ -75,8 +75,14 @@ if (RTSEIS_WRAP_PYTHON)
    add_library(pyrtseis MODULE
                python/pyrtseis.cpp
                python/filterRepresentations.cpp
+               python/transforms.cpp
                python/waveform.cpp)
    target_link_libraries(pyrtseis PRIVATE pybind11::module rtseis)
+   set_target_properties(pyrtseis PROPERTIES
+                         PREFIX ""
+                         CXX_STANDARD 17
+                         CXX_STANDARD_REQUIRED YES
+                         CXX_EXTENSIONS NO)
    ##PYTHON_ADD_MODULE(rtseis_python ${PYTHON_SRC})
    ##TARGET_LINK_LIBRARIES(rtseis_python
    ##                      rtseis ${LIBALL})# ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
@@ -102,6 +108,7 @@ SET(UTILS_SRCS
     src/utilities/verbosity.cpp
     src/utilities/characteristicFunction/classicSTALTA.cpp
     src/utilities/characteristicFunction/carlSTALTA.cpp
+    src/amplitude/tauP.cpp
     src/amplitude/tauPParameters.cpp
     src/amplitude/timeDomainWoodAndersonParameters.cpp
     src/amplitude/timeDomainWoodAnderson.cpp

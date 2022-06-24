@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from libpyrtseis.PostProcessing import Waveform as trace
+from pyrtseis.PostProcessing import Waveform as trace
 from numpy import zeros
 from numpy import linspace
 from scipy.signal import convolve
