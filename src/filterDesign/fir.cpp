@@ -372,7 +372,7 @@ void FIR::minimumPhase(
     }
     if (lwarn == 1)
     {
-        RTSEIS_WARNMSG("%s", "Filter not symmetric - this may fail");
+        std::cerr << "Filter not symmetric - this may fail" << std::endl;
     }
     nfftUse = nfft;
     if (nfft < 1)

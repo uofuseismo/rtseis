@@ -1,5 +1,4 @@
-#include <cstdio>
-#include <cstdlib>
+#include <string>
 #include <cmath>
 #include <stdexcept>
 #include <ipps.h>
@@ -10,7 +9,7 @@ using namespace RTSeis::Utilities;
 /*
 std::vector<double> WindowFunctions::hamming(const int len)
 {
-    if (len < 1){RTSEIS_THROW_IA("Length = %d must be positive", len);}
+    if (len < 1){throw std::invalid_argument("Length = " + std::to_string(len) + " must be positive");}
     std::vector<double> window(len);
     hamming(len, window.data());
     return window;
