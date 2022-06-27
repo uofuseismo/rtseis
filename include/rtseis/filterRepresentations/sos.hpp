@@ -113,6 +113,6 @@ private:
     std::unique_ptr<SOSImpl> pImpl;
 }; // End SOS
 /// @result The text version of the sos filter.
-[[nodiscard]] std::ostream& operator<<(std::ostream &os, const SOS &sos);
+std::ostream& operator<<(std::ostream &os, const SOS &sos);
 }
 #endif

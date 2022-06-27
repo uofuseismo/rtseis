@@ -189,7 +189,7 @@ TEST(Amplitude, TimeDomainWoodAndersonVelocity)
     filter.apply(x.size(), x.data(), &yPtr);
 
     std::ofstream ofl("waVel.txt");
-    for (int i = 0; i < y.size(); ++i)
+    for (int i = 0; i < static_cast<int> (y.size()); ++i)
     {
         ofl << dt*i << " " << y[i] << std::endl;
     }
@@ -210,7 +210,7 @@ TEST(Amplitude, TimeDomainWoodAndersonVelocity)
     accFilter.apply(xAcc.size(), xAcc.data(), &yPtr);
 
     ofl.open("waAcc.txt");
-    for (int i =0; i < y.size(); ++i)
+    for (int i =0; i < static_cast<int> (y.size()); ++i)
     {
         ofl << dt*i << " " << yAcc[i] << std::endl;
     }
