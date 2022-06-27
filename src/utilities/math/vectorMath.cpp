@@ -1,5 +1,4 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 #include <complex>
 #include <vector>
 #include <functional>
@@ -8,9 +7,7 @@
 #include <pstl/algorithm>
 #include <pstl/execution>
 #endif
-#define RTSEIS_LOGGING 1
 #include <ipps.h>
-#include "rtseis/log.h"
 #include "rtseis/utilities/math/vectorMath.hpp"
 
 int RTSeis::Utilities::Math::VectorMath::divide(
@@ -22,8 +19,9 @@ int RTSeis::Utilities::Math::VectorMath::divide(
     int nNum = static_cast<int> (num.size());
     if (nNum != nDen)
     {
-        RTSEIS_ERRMSG("num has length = %d while den has length = %d",
-                      nNum, nDen);
+        std::cerr << "Error: num has length = "
+                  << nNum << " while den has length = "
+                  << nDen << std::endl;
         return -1;
     }
     res.resize(nNum);
@@ -41,7 +39,7 @@ int RTSeis::Utilities::Math::VectorMath::divide(
     IppStatus status = ippsDiv_64fc(pSrc1, pSrc2, pDst, nNum); 
     if (status != ippStsNoErr)
     {
-        RTSEIS_ERRMSG("%s", "Division failed");
+        std::cerr << "Division failed" << std::endl;
         return -1;
     }
 #endif
@@ -63,7 +61,7 @@ int RTSeis::Utilities::Math::VectorMath::real(
     IppStatus status = ippsReal_64fc(pSrc, pDst, n); 
     if (status != ippStsNoErr)
     {   
-        RTSEIS_ERRMSG("%s", "Division failed");
+        std::cerr << "Division failed" << std::endl;
         return -1; 
     }   
     return 0;
@@ -87,8 +85,8 @@ template<typename T> int RTSeis::Utilities::Math::VectorMath::copysign(
     if (n <= 0){return 0;}
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_ERRMSG("%s", "x is NULL");}
-        if (y == nullptr){RTSEIS_ERRMSG("%s", "y is NULL");}
+        if (x == nullptr){std::cerr << "x is NULL" << std::endl;}
+        if (y == nullptr){std::cerr << "y is NULL" << std::endl;}
         return -1;
     }
     constexpr T one = 1;
