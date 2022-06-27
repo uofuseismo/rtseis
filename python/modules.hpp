@@ -5,7 +5,13 @@
 void init_pp_waveform(pybind11::module &m);
 namespace PTransforms
 {
-void init_transforms(pybind11::module &m);
+[[maybe_unused]]
+void initialize(pybind11::module &m);
+}
+namespace PFilterRepresentations
+{
+[[maybe_unused]]
+void initialize(pybind11::module &m);
 }
 
 #endif

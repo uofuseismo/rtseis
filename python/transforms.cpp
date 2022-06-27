@@ -159,7 +159,7 @@ public:
 }; 
 }
 
-void PTransforms::init_transforms(pybind11::module &m)
+void PTransforms::initialize(pybind11::module &m)
 {
     pybind11::class_<::Morlet> morlet(m, "MorletWavelet");
     morlet.def(pybind11::init<> ());

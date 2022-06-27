@@ -1,7 +1,6 @@
 #include <vector>
 #include <memory>
 #include <exception>
-#include "wrap.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -9,44 +8,74 @@
 #include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
+#include "modules.hpp"
 
-namespace py = pybind11;
-using namespace PBFilterRepresentations;
-
-FIR::FIR() :
-   fir_(new RTSeis::FilterRepresentations::FIR()) 
+namespace
 {
-   return;
-}
-/// Set the filter coefficients
-void FIR::setTaps(py::array_t<double, py::array::c_style | py::array::forcecast> taps)
-{
-   std::vector<double> tapsVec(taps.size());
-   std::memcpy(tapsVec.data(), tapsVec.data(), taps.size()*sizeof(double));
-   fir_->setFilterTaps(tapsVec);
-}
-/// Get the filter coefficients in a form usable
-py::array_t<double> FIR::getTaps() const
-{
-   std::vector<double> taps;
-   taps = fir_->getFilterTaps();
-   return py::array(taps.size(), taps.data());
-}
-
-/*
-class BA
+class FIR
 {
 public:
-    BA(void) :
-       ba_(new RTSeis::FilterRepresentations::BA())
+    FIR() :
+        mFilter(std::make_unique<RTSeis::FilterRepresentations::FIR> ())
     {
-        return;
     }
- 
-private:
-    std::unique_ptr<RTSeis::FilterRepresentations::BA> ba_;
+    FIR(const FIR &fir)
+    {
+        *this = fir;
+    }
+    FIR(FIR &&fir) noexcept
+    {
+        *this = std::move(fir);
+    }
+    ~FIR() = default;
+    FIR& operator=(const FIR &fir)
+    {
+        if (&fir == this){return *this;}
+        mFilter = std::make_unique<RTSeis::FilterRepresentations::FIR> (*fir.mFilter);
+        return *this;
+    }
+    FIR& operator=(FIR &&fir) noexcept
+    {
+        if (&fir == this){return *this;}
+        mFilter = std::move(fir.mFilter);
+        return *this;
+    }
+    RTSeis::FilterRepresentations::FIR getNativeClass() const noexcept
+    {
+        return *mFilter;
+    }
+    void setFilterTaps(const std::vector<double> &b)
+    {
+        mFilter->setFilterTaps(b);
+    }
+    std::vector<double> getFilterTaps() const noexcept
+    {
+        return mFilter->getFilterTaps();
+    }
+    std::unique_ptr<RTSeis::FilterRepresentations::FIR> mFilter;
 };
-};
-};
+}
 
-*/
+void PFilterRepresentations::initialize(pybind11::module &m)
+{
+    pybind11::class_<::FIR> fir(m, "FIR");
+    fir.def(pybind11::init<> ());
+    fir.doc() = R""""(
+Defines the finite-impulse response (FIR) filter structure.
+
+Parameters :
+    taps : The filter taps.  The order of the filter is len(taps) - 1.
+)"""";
+    fir.def_property("taps",
+                     &::FIR::getFilterTaps,
+                     &::FIR::setFilterTaps);
+    fir.def("__copy__", [](const ::FIR &self)
+    {
+        return ::FIR(self);
+    });
+    fir.def("__deepcopy_-", [](const ::FIR &self, pybind11::dict)
+    {
+        return ::FIR(self);
+    });
+}
+

@@ -18,8 +18,11 @@ PYBIND11_MODULE(pyrtseis, modules)
     py::module m = modules.def_submodule("PostProcessing");
     init_pp_waveform(m);
 
+    py::module mFilterRepresentations = modules.def_submodule("FilterRepresentations");
+    PFilterRepresentations::initialize(mFilterRepresentations);
+
     py::module mTransforms = modules.def_submodule("Transforms");
-    PTransforms::init_transforms(mTransforms);
+    PTransforms::initialize(mTransforms);
 /*
 
     py::class_<PBPostProcessing::Waveform> singleChannelWaveform(m, "Waveform");

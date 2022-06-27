@@ -1,12 +1,10 @@
-#include <cstdio>
-#include <cstdlib>
+#include <string>
 #include <cmath>
 #include <cfloat>
 #include <limits>
 #include <vector>
 #include <mkl.h>
 #include <ipps.h>
-#include "private/throw.hpp"
 #include "rtseis/utilities/interpolation/cubicSpline.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 
@@ -336,31 +334,36 @@ void CubicSpline::initialize(
     // Check the inputs
     if (npts < 4)
     {
-        RTSEIS_THROW_IA("npts = %d must be at least 4", npts);
+        throw std::invalid_argument("npts = " + std::to_string(npts)
+                                  + " must be at least 4");
     }
-    if (y == nullptr){RTSEIS_THROW_RTE("%s", "y is NULL");}
+    if (y == nullptr){throw std::invalid_argument("y is NULL");}
     if (xInterval.first >= xInterval.second)
     {
-        RTSEIS_THROW_IA("x.first = %lf must be less than x.second = %lf",
-                        xInterval.first, xInterval.second); 
+        throw std::invalid_argument("x.first = "
+                                  + std::to_string(xInterval.first)
+                                  + " must be less than x.second = "
+                                  + std::to_string(xInterval.second));
     }
     if (boundaryConditionType == CubicSplineBoundaryConditionType::PERIODIC)
     {
         // MKL is pretty stringent
         if (y[0] != y[npts-1])
         {
-            RTSEIS_THROW_RTE("y[0] = %e != y[npts-1] = %e", y[0], y[npts-1]);
+            throw std::invalid_argument("y[0] = " + std::to_string(y[0])
+                                      + " != y[npts-1]" 
+                                      + std::to_string(y[npts-1]));
         }
     }
     // Create the pipeline
     auto ierr = pImpl->createUniformXTask(npts, xInterval, y);
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to create task");}
+    if (ierr != 0){throw std::runtime_error("Failed to create task");}
     // Edit the pipeline to inform MKL which spline to create
     ierr = pImpl->editPipeline(boundaryConditionType);
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to edit spline");}
+    if (ierr != 0){throw std::runtime_error("Failed to edit spline");}
     // Construct the task
     ierr = pImpl->constructSpline();
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to construct spline");}
+    if (ierr != 0){throw std::runtime_error("Failed to construct spline");}
     pImpl->mInitialized = true;
 }
 
@@ -376,12 +379,13 @@ void CubicSpline::initialize(
     pImpl->mBCType = boundaryConditionType;
     if (npts < 4)
     {
-        RTSEIS_THROW_IA("npts = %d must be at least 4", npts);
+        throw std::invalid_argument("npts = " + std::to_string(npts)
+                                  + " must be at least 4");
     }
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_RTE("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Assert that the data is increasing order
     int isInvalid = 0;
@@ -392,14 +396,16 @@ void CubicSpline::initialize(
     }
     if (isInvalid > 0)
     {
-        RTSEIS_THROW_RTE("%s", "At least one x[i+1] <= x[i]\n");
+        throw std::invalid_argument("At least one x[i+1] <= x[i]\n");
     }
     if (boundaryConditionType == CubicSplineBoundaryConditionType::PERIODIC)
     {
         // MKL is pretty stringent
         if (y[0] != y[npts-1])
         {
-            RTSEIS_THROW_RTE("y[0] = %e != y[npts-1] = %e", y[0], y[npts-1]);
+            throw std::invalid_argument("y[0] = " + std::to_string(y[0])
+                                      + " != y[npts-1]"
+                                      + std::to_string(y[npts-1]));
         }
     }
 #ifdef DEBUG
@@ -415,13 +421,13 @@ void CubicSpline::initialize(
 #else
     // Create the pipeline
     auto ierr = pImpl->createTask(npts, x, y);
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to create task");}
+    if (ierr != 0){throw std::runtime_error("Failed to create task");}
     // Edit the pipeline to inform MKL which spline to create
     ierr = pImpl->editPipeline(boundaryConditionType);
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to edit spline");}
+    if (ierr != 0){throw std::runtime_error("Failed to edit spline");}
     // Construct the task
     ierr = pImpl->constructSpline();
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Failed to construct spline");}
+    if (ierr != 0){throw std::runtime_error("Failed to construct spline");}
 #endif
     pImpl->mInitialized = true;
 }
@@ -435,14 +441,14 @@ bool CubicSpline::isInitialized() const noexcept
 /// Get minimum x for interpolation
 double CubicSpline::getMinimumX() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mXMin;
 }
 
 /// Get maximum x for interpolation
 double CubicSpline::getMaximumX() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mXMax;
 }
 
@@ -457,15 +463,19 @@ void CubicSpline::interpolate(const int nq, const double xq[],
     double *yq = *yqIn;
     if (xq == nullptr || yq == nullptr)
     {
-        if (xq == nullptr){RTSEIS_THROW_IA("%s", "xq is NULL");}
-        RTSEIS_THROW_IA("%s", "yq is NULL");
+        if (xq == nullptr){throw std::invalid_argument("xq is NULL");}
+        throw std::invalid_argument("yq is NULL");
     }
     double xqMin, xqMax;
     ippsMinMax_64f(xq, nq, &xqMin, &xqMax);
     if (xqMin < xmin || xqMax > xmax)
     {
-       RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
-                       xqMin, xqMax, xmin, xmax);
+        throw std::invalid_argument("Min/max of xq = ("
+                                  + std::to_string(xqMin) + ","
+                                  + std::to_string(xqMax) + ")"
+                                  + " must be in range ["
+                                  + std::to_string(xmin) + "," 
+                                  + std::to_string(xmax) + "]");
     }
     // Check if this is sorted
     bool lsorted = Math::VectorMath::isSorted(nq, xq);
@@ -474,7 +484,7 @@ void CubicSpline::interpolate(const int nq, const double xq[],
 #ifdef DEBUG
     assert(ierr == 0);
 #endif
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Interpolation failed");}
+    if (ierr != 0){throw std::runtime_error("Interpolation failed");}
 }
 
 /// Integrate over an interval
@@ -487,13 +497,19 @@ double CubicSpline::integrate(const std::pair<double, double> &interval) const
     auto xmax = getMaximumX();
     if (interval.first < xmin || interval.first > xmax)
     {
-        RTSEIS_THROW_IA("interval.first = %lf must be in range [%lf,%lf]",
-                        interval.first, xmin, xmax);
+        throw std::invalid_argument("interval.first = "
+                                  + std::to_string(interval.first)
+                                  + " must be in range ["
+                                  + std::to_string(xmin) + "," 
+                                  + std::to_string(xmax) + "]");
     }
     if (interval.second < xmin || interval.second > xmax)
     {
-        RTSEIS_THROW_IA("interval.second = %lf must be in range [%lf,%lf]",
-                        interval.second, xmin, xmax);
+        throw std::invalid_argument("interval.second = "
+                                  + std::to_string(interval.second)
+                                  + " must be in range ["
+                                  + std::to_string(xmin) + "," 
+                                  + std::to_string(xmax) + "]");
     }
     // Integrate 
     int ierr;
@@ -514,7 +530,7 @@ double CubicSpline::integrate(const std::pair<double, double> &interval) const
 #endif
         integral =-integral;
     }
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Integration failed");}
+    if (ierr != 0){throw std::runtime_error("Integration failed");}
     return integral;
 }
 
@@ -529,8 +545,11 @@ void CubicSpline::integrate(const int nIntervals,
     double *integrals = *integralsIn;
     if (intervals == nullptr || integrals == nullptr)
     {
-        if (intervals == nullptr){RTSEIS_THROW_IA("%s", "intervals is NULL");}
-        RTSEIS_THROW_IA("%s", "integrals is NULL");
+        if (intervals == nullptr)
+        {
+            throw std::invalid_argument("intervals is NULL");
+        }
+        throw std::invalid_argument("integrals is NULL");
     }
     std::vector<double> llim(nIntervals, 0);
     std::vector<double> rlim(nIntervals, 0);
@@ -556,8 +575,9 @@ void CubicSpline::integrate(const int nIntervals,
     // Check the intervals
     if (intervalMin < xmin || intervalMax > xmax)
     {
-        RTSEIS_THROW_IA("At least one interval is out of bounds [%lf,%lf]",
-                        xmin, xmax);
+        throw std::runtime_error(
+            "At least one interval is out of bounds [" + std::to_string(xmin)
+          + "," + std::to_string(xmax) + "]");
     }
     // Integrate
     auto ierr = pImpl->integrate(nIntervals, llim.data(), rlim.data(),
@@ -565,7 +585,7 @@ void CubicSpline::integrate(const int nIntervals,
 #ifdef DEBUG
     assert(ierr == 0):
 #else
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Integration failed");}
+    if (ierr != 0){throw std::runtime_error("Integration failed");}
 #endif
     // When the integrand limits this manifests as the integral being off by
     // a sign factor.  This loop fixes that.
