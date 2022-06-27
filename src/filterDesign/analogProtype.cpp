@@ -1,13 +1,9 @@
-#include <cstdio>
-#include <cstdlib>
+#include <string>
 #include <vector>
 #include <cassert>
 #include <cmath>
-#define RTSEIS_LOGGING 1
 #include "rtseis/filterRepresentations/zpk.hpp"
 #include "rtseis/filterDesign/analogPrototype.hpp"
-#include "private/throw.hpp"
-#include "rtseis/log.h"
 
 using namespace RTSeis::FilterDesign::IIR;
 using namespace RTSeis::FilterRepresentations;
@@ -16,16 +12,20 @@ ZPK AnalogPrototype::butter(const int n)
 {
     if (n < 1 || n > 25)
     {
-        if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
-        if (n > 25){RTSEIS_THROW_IA("Order=%d must be less than 26", n);}
-        RTSEIS_THROW_IA("Order=%d is invalid", n);
+        if (n < 1)
+        {
+            throw std::invalid_argument("order = " + std::to_string(n)
+                                      + " must be positive");
+        }
+        throw std::invalid_argument("order = " + std::to_string(n)
+                                  + " must be less than 26");
     }
     size_t npoles = n;
     size_t nzeros = 0;
     std::vector<std::complex<double>> poles(npoles, 0);
     std::vector<std::complex<double>> zeros(nzeros, 0);
     double pi_twoni = M_PI/(2.0*static_cast<double> (n));
-    for (int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         double xm = static_cast<double> (-n + 1 + 2*i);
         std::complex<double> arg(0.0, pi_twoni*xm);
@@ -38,8 +38,16 @@ ZPK AnalogPrototype::butter(const int n)
 
 ZPK AnalogPrototype::cheb1ap(const int n, const double rp)
 {
-    if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
-    if (rp <= 0){RTSEIS_THROW_IA("rp=%lf must be positive", rp);}
+    if (n < 1)
+    {
+        throw std::invalid_argument("order = " + std::to_string(n)
+                                 + " must be positive");
+    }
+    if (rp <= 0)
+    {
+        throw std::invalid_argument("rp = " + std::to_string(rp)
+                                  + " must be positive");
+    }
     double rpdb = std::pow(10.0, 0.1*rp);
 #ifdef DEBUG
     assert(rpdb > 1.0);
@@ -56,7 +64,7 @@ ZPK AnalogPrototype::cheb1ap(const int n, const double rp)
     std::complex<double> zone(1, 0);
     std::complex<double> zprod = zone; // Initialize product
     double twoni = 1.0/(2.0*static_cast<double> (n));
-    for (int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         double xm = static_cast<double> (-n + 1 + 2*i);
         double theta = (M_PI*xm)*twoni;
@@ -72,8 +80,16 @@ ZPK AnalogPrototype::cheb1ap(const int n, const double rp)
 
 ZPK AnalogPrototype::cheb2ap(const int n, const double rs)
 {
-    if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
-    if (rs <= 0){RTSEIS_THROW_IA("rs=%lf must be positive", rs);}
+    if (n < 1)
+    {
+        throw std::invalid_argument("order = " + std::to_string(n)
+                                 + " must be positive");
+    }
+    if (rs <= 0)
+    {
+        throw std::invalid_argument("rs = " + std::to_string(rs)
+                                  + " must be positive");
+    }
     // Figure out size
     int ntarg = n;
     if (n%2 == 1){ntarg = n - 1;}
@@ -98,14 +114,14 @@ ZPK AnalogPrototype::cheb2ap(const int n, const double rs)
     // Odd
     if (n%2 == 1)
     {
-        for (int i=0; i<n/2; i++)
+        for (int i = 0; i <n/2; i++)
         {
             double xm = static_cast<double> (-n + 1 + 2*i);
             zeros[j] = std::complex<double> (0.0, 1.0/(std::sin(xm*M_PI*twoni)));
             zden = (-zeros[j])*zden;
             j = j + 1;
         }
-        for (int i=0; i<n/2; i++)
+        for (int i = 0; i <n/2; i++)
         {
             double xm = static_cast<double> (2 + 2*i);
             zeros[j] = std::complex<double> (0.0, 1.0/(sin(xm*M_PI*twoni)));
@@ -116,7 +132,7 @@ ZPK AnalogPrototype::cheb2ap(const int n, const double rs)
     // Even
     else
     {
-        for (int i=0; i<n; i++)
+        for (int i = 0; i < n; i++)
         {
             double xm = static_cast<double> (-n + 1 + 2*i);
             zeros[j] = std::complex<double> (0.0, 1.0/(std::sin(xm*M_PI*twoni)));
@@ -128,7 +144,7 @@ ZPK AnalogPrototype::cheb2ap(const int n, const double rs)
     double sinhmu = 0.5*(std::exp(xmu) - std::exp(-xmu));
     double coshmu = 0.5*(std::exp(xmu) + std::exp(-xmu));
     std::complex<double> znum = zone;
-    for (int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
        //arg = 0.0 + (M_PI*((double)(-n + 1 + 2*i))*twoni)*_Complex_I;
        double temp = M_PI*static_cast<double> (-n + 1 + 2*i)*twoni;
@@ -147,7 +163,11 @@ ZPK AnalogPrototype::cheb2ap(const int n, const double rs)
 
 ZPK AnalogPrototype::bessel(const int n)
 {
-    if (n < 1){RTSEIS_THROW_IA("Order=%d must be positive", n);}
+    if (n < 1)
+    {
+        throw std::invalid_argument("order = " + std::to_string(n)
+                                 + " must be positive");
+    }
     size_t npoles = static_cast<size_t> (n);
     size_t nzeros = 0;
     std::vector<std::complex<double>> poles(npoles, 0);
@@ -556,7 +576,8 @@ ZPK AnalogPrototype::bessel(const int n)
     }
     else
     {
-        RTSEIS_THROW_IA("%s", "Unsupported filter order");
+        throw std::invalid_argument("unsupported filter order = "
+                                  + std::to_string(n));
     }
     ZPK zpk(zeros, poles, k);
     return zpk;
