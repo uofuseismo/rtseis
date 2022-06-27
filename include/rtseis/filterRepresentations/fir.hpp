@@ -1,6 +1,7 @@
 #ifndef RTSEIS_FILTERREPRESENTATIONS_FIR_HPP
 #define RTSEIS_FILTERREPRESENTATIONS_FIR_HPP 1
 #include <vector>
+#include <ostream>
 #include <memory>
 namespace RTSeis::FilterRepresentations
 {
@@ -96,5 +97,6 @@ private:
     class FIRImpl;
     std::unique_ptr<FIRImpl> pImpl;
 };
+std::ostream& operator<<(std::ostream &os, const FIR &fir);
 }
 #endif

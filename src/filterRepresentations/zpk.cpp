@@ -1,4 +1,6 @@
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <cmath>
 #include <algorithm>
 #include "rtseis/filterRepresentations/zpk.hpp"
@@ -251,4 +253,26 @@ void ZPK::setEqualityTolerance(const double tol)
 {
     if (tol < 0){std::cerr << "Tolerance is negative" << std::endl;}
     pImpl->tol = tol;
+}
+
+std::ostream& RTSeis::FilterRepresentations::operator<<(
+    std::ostream &os, const ZPK &zpk)
+{
+    std::stringstream result;
+    result << "Gain: " << std::setprecision(16) << zpk.getGain() << std::endl;
+    result << "Zeros:" << std::endl;
+    auto zeros = zpk.getZeros();
+    for (const auto &zi : zeros)
+    {
+        result << std::setprecision(16) << std::real(zi) << ","
+               << std::imag(zi) << std::endl;
+    }
+    auto poles = zpk.getPoles();
+    result << "Poles:" << std::endl;
+    for (const auto &pi : poles)
+    {
+        result << std::setprecision(16) << std::real(pi) << ","
+               << std::imag(pi) << std::endl;
+    }
+    return os << result.str();
 }

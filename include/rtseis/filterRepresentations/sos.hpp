@@ -15,6 +15,7 @@ class SOS
 public:
     /// @name Constructor
     /// @{
+
     /// @brief Default constructor. 
     SOS();
     /// @brief Copy constructor.
@@ -43,6 +44,7 @@ public:
 
     /// @name Operators
     /// @{
+
     /// @brief Assignement operator.
     /// @param[in] sos  SOS class to copy.
     /// @result A deep copy of the input class.
@@ -66,6 +68,7 @@ public:
 
     /// @name Destructors
     /// @{
+
     /// @brief Default destructor.
     ~SOS();
     /// @brief Clears the class.

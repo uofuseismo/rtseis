@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <cmath>
 #include "rtseis/filterRepresentations/ba.hpp"
 
@@ -211,3 +213,25 @@ bool BA::isFIR(void) const
     return isFIR_;
 }
 */
+
+std::ostream& RTSeis::FilterRepresentations::operator<<(
+    std::ostream &os, const BA &ba)
+{
+    std::stringstream result;
+    auto b = ba.getNumeratorCoefficients();
+    result << "Numerator Coefficients:" << std::endl;
+    for (const auto &bi : b)
+    {
+        result << std::setprecision(16) << bi << std::endl;
+    }   
+    auto a = ba.getDenominatorCoefficients();
+    if (!a.empty())
+    {   
+        result << "Denominator Coefficients:" << std::endl;
+        for (const auto &ai : a)
+        {
+            result << std::setprecision(16) << ai << std::endl;
+        }
+    }
+    return os << result.str();
+}

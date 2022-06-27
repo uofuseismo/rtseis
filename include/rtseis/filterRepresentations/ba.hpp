@@ -1,7 +1,9 @@
 #ifndef RTSEIS_FILTERREPRESENTATIONS_BA_HPP
 #define RTSEIS_FILTERREPRESENTATIONS_BA_HPP 1
 #include <vector>
+#include <ostream>
 #include <cstdio>
+#include <ostream>
 #include <memory>
 namespace RTSeis::FilterRepresentations
 {
@@ -15,6 +17,7 @@ class BA
 public:
     /// @name Constructors
     /// @{
+
     /// @brief Default constructor.
     BA();
     /// @brief Constructs a transfer function class from the given numerator
@@ -57,6 +60,7 @@ public:
 
     /// @name Destructors
     /// @{
+
     /// @brief Default destructor.
     ~BA();
     /// @brief Clears the structure.
@@ -113,5 +117,6 @@ private:
     class BAImpl;
     std::unique_ptr<BAImpl> pImpl;
 }; // End BA
+std::ostream& operator<<(std::ostream &os, const BA &ba);
 }
 #endif

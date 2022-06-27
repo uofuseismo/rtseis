@@ -1,4 +1,6 @@
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <cmath>
 #include "rtseis/filterRepresentations/fir.hpp"
 
@@ -137,4 +139,17 @@ void FIR::setEqualityTolerance(const double tol)
         std::cerr << "Tolerance is negative" << std::endl;
     }
     pImpl->tol = tol;
+}
+
+std::ostream& RTSeis::FilterRepresentations::operator<<(
+    std::ostream &os, const FIR &fir)
+{
+    std::stringstream result;
+    result << "Filter coefficients:" << std::endl;
+    auto b = fir.getFilterTaps();
+    for (const auto &bi : b)
+    {
+        result << std::setprecision(16) << bi << std::endl;
+    }
+    return os << result.str();
 }

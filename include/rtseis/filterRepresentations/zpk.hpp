@@ -1,9 +1,9 @@
 #ifndef RTSEIS_FILTERREPRESENTATIONS_ZPK_HPP
 #define RTSEIS_FILTERREPRESENTATIONS_ZPK_HPP 1
 #include <complex>
+#include <ostream>
 #include <vector>
 #include <memory>
-
 namespace RTSeis::FilterRepresentations
 {
 /// @class ZPK zpk.hpp "include/rtseis/filterRepresentations/zpk.hpp"
@@ -16,6 +16,7 @@ class ZPK
 public:
     /// @name Constructors.
     /// @{
+
     /// @brief Default constructor.
     ZPK();
     /// @brief Constructs a ZPK class from the given zeros, poles, and gain.
@@ -36,6 +37,7 @@ public:
     
     /// @name Operators
     /// @{
+
     /// @brief Copy assignment operator.
     /// @param[in] zpk   ZPK class to copy.
     /// @result A deep copy of the input ZPK class.
@@ -59,6 +61,7 @@ public:
 
     /// @name Destructors
     /// @{
+
     /// @brief Default destructor.
     ~ZPK();
     /// @brief Clears the class.
@@ -90,6 +93,7 @@ public:
     [[nodiscard]] int getNumberOfPoles() const;
     /// @result The number of zeros in the transfer function.
     [[nodiscard]] int getNumberOfZeros() const;
+
     /// @{
     /// @brief Sets the poles in the transfer function.
     /// @param[in] n      The number of poles.
@@ -99,6 +103,7 @@ public:
     /// @param[in] poles  The poles to set on the transfer function.
     void setPoles(const std::vector<std::complex<double>> &poles);
     /// @}
+
     /// @{
     /// @brief Sets the zeros in the transfer function.
     /// @param[in] n      The number of zeros.
@@ -109,6 +114,7 @@ public:
     /// @param[in] zeros  The zeros to set on the transfer function.
     void setZeros(const std::vector<std::complex<double>> &zeros);
     //// @}
+
     /// @result A vector containing the poles.
     [[nodiscard]] std::vector<std::complex<double>> getPoles() const;
     /// @result A vector containing the zeros.
@@ -121,5 +127,6 @@ public:
     class ZPKImpl;
     std::unique_ptr<ZPKImpl> pImpl;
 }; // End ZPK
+std::ostream& operator<<(std::ostream &os, const ZPK &zpk);
 }
 #endif
