@@ -5,6 +5,7 @@
 namespace RTSeis::FilterRepresentations
 {
 class SOS;
+class BA;
 }
 namespace RTSeis::Amplitude
 {
@@ -82,22 +83,22 @@ public:
     /// @{
 
     /// @brief Stable integration requires the removal of long-period signals. 
-    /// @param[in] sos  The (likely highpass) filter to apply to the
-    ///                 signal prior. 
+    /// @param[in] ba  The (likely highpass) filter to apply to the
+    ///                signal prior. 
     /// @note When the sampling rate is set this will default to a 
     ///       Butterworth 4-pole lowpass filter with corner at 0.075 Hz.
     ///       Initially, a 2-pole filter was suggested, however, 
     ///       Shieh, Wu, and Allen suggest a 4, 5, or 6 pole filter lowers
     ///       the variance in the max(tau_p) estimates.
-    void setAccelerationFilter(const FilterRepresentations::SOS &sos);
+    void setAccelerationFilter(const FilterRepresentations::BA &ba);
     /// @result The (highpass) acceleration filter.
-    [[nodiscard]] FilterRepresentations::SOS getAccelerationFilter() const noexcept;
+    [[nodiscard]] FilterRepresentations::BA getAccelerationFilter() const noexcept;
 
     /// @brief Prior to computing tauP a causal 3 Hz low-pass Butterworth
     ///        filter with 2 poles is applied. 
-    void setVelocityFilter(const FilterRepresentations::SOS &sos);
+    void setVelocityFilter(const FilterRepresentations::BA &ba);
     /// @result The (lowpass) velocity filter representation.
-    [[nodiscard]] FilterRepresentations::SOS getVelocityFilter() const noexcept;
+    [[nodiscard]] FilterRepresentations::BA getVelocityFilter() const noexcept;
 
     /// @brief Sets the smoothing constant for updating the squared
     ///        velocity and acceleration signals:

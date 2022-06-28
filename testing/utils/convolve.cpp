@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <cmath>
+#include <complex>
 #include <stdexcept>
 #include <ipps.h>
 #include "rtseis/utilities/math/convolve.hpp"
@@ -9,6 +11,27 @@
 
 namespace
 {
+
+void ippsNormDiff_Inf(const std::complex<double> *a,
+                      const std::complex<double> *b,
+                      const int n,
+                      double *error)
+{
+    *error = 0;
+    for (int i = 0; i < n; ++i)
+    {
+        auto resid = std::abs(a[i] - b[i]);
+        *error = std::max(*error, resid);
+    }
+}
+
+void ippsNormDiff_Inf(const double *a, 
+                      const double *b, 
+                      const int n,
+                      double *error)
+{
+    ippsNormDiff_Inf_64f(a, b, n, error);
+}
 
 using namespace RTSeis::Utilities::Math;
 
@@ -38,10 +61,9 @@ int rtseis_test_utils_convolve(void)
 }
 */
 //============================================================================//
-//int convolve_convolve_test(void)
 TEST(UtilitiesConvolve, Convolve)
 {
-    for (auto imp=0; imp<2; imp++)
+    for (auto imp = 0; imp < 2; imp++)
     {
         Convolve::Implementation implementation;
         if (imp == 0)
@@ -62,13 +84,13 @@ TEST(UtilitiesConvolve, Convolve)
                                                implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 5);
         double emax;
-        ippsNormDiff_Inf_64f(c.data(), r1.data(), c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r1.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 2 - interchange 1
         EXPECT_NO_THROW(c = Convolve::convolve(b1, a1,
                                    Convolve::Mode::FULL, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 5);
-        ippsNormDiff_Inf_64f(c.data(), r1.data(), c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r1.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 3
         EXPECT_NO_THROW(c = Convolve::convolve(a1, b1,
@@ -86,14 +108,14 @@ TEST(UtilitiesConvolve, Convolve)
             c = Convolve::convolve(a1, b1,
                                    Convolve::Mode::SAME, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 3);
-        ippsNormDiff_Inf_64f(c.data(), r1.data()+1, c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r1.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 6 - interchange 5
         EXPECT_NO_THROW(
             c = Convolve::convolve(b1, a1,
                                    Convolve::Mode::SAME, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 3);
-        ippsNormDiff_Inf_64f(c.data(), r1.data()+1, c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r1.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         //--------------------------------------------------------------------//
         //                            Unequal Lengths                         //
@@ -106,42 +128,42 @@ TEST(UtilitiesConvolve, Convolve)
             c = Convolve::convolve(a2, b2,
                                    Convolve::Mode::FULL, implementation));
         EXPECT_EQ(c.size(), r2.size());
-        ippsNormDiff_Inf_64f(c.data(), r2.data(), c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r2.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10); 
         // Test 8 - interchange 7
         EXPECT_NO_THROW(
             c = Convolve::convolve(b2, a2,
                                    Convolve::Mode::FULL, implementation));
         EXPECT_EQ(c.size(), r2.size());
-        ippsNormDiff_Inf_64f(c.data(), r2.data(), c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r2.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 9
         EXPECT_NO_THROW(
             c = Convolve::convolve(a2, b2,
                                    Convolve::Mode::VALID, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 4);
-        ippsNormDiff_Inf_64f(c.data(), r2.data()+2, c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r2.data()+2, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 10 - interchange 9
         EXPECT_NO_THROW(
             c = Convolve::convolve(b2, a2,
                                    Convolve::Mode::VALID, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 4);
-        ippsNormDiff_Inf_64f(c.data(), r2.data()+2, c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r2.data()+2, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 11 - different sizes
         EXPECT_NO_THROW(
             c = Convolve::convolve(a2, b2,
                                    Convolve::Mode::SAME, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 6);
-        ippsNormDiff_Inf_64f(c.data(), r2.data()+1, c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r2.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 12 - interchange 11
         EXPECT_NO_THROW(
             c = Convolve::convolve(b2, a2,
                                    Convolve::Mode::SAME, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 6);
-        ippsNormDiff_Inf_64f(c.data(), r2.data()+1, c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), r2.data()+1, c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         //--------------------------------------------------------------------//
         //                   Do some extra tests on SAME and VALID            //
@@ -154,14 +176,14 @@ TEST(UtilitiesConvolve, Convolve)
             c = Convolve::convolve(aSame4, bSame2,
                                    Convolve::Mode::SAME, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 4);
-        ippsNormDiff_Inf_64f(c.data(), cSameRef1.data(), c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), cSameRef1.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 14 - Same, Even but unequal sizes reversed
         EXPECT_NO_THROW(
             c = Convolve::convolve(bSame2, aSame4,
                                    Convolve::Mode::SAME, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 4);
-        ippsNormDiff_Inf_64f(c.data(), cSameRef1.data(), c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), cSameRef1.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
 
         // Test 15 - Same, Even and equal size
@@ -171,7 +193,7 @@ TEST(UtilitiesConvolve, Convolve)
             c = Convolve::convolve(aSame4, bSame4,
                                    Convolve::Mode::SAME, implementation));
         EXPECT_EQ(static_cast<int> (c.size()), 4);
-        ippsNormDiff_Inf_64f(c.data(), cSameRef2.data(), c.size(), &emax);
+        ippsNormDiff_Inf(c.data(), cSameRef2.data(), c.size(), &emax);
         EXPECT_LE(emax, 1.e-10);
         // Test 16 - Valid - Even and unequal sizes
         EXPECT_NO_THROW(
@@ -187,6 +209,66 @@ TEST(UtilitiesConvolve, Convolve)
         EXPECT_NEAR(c[0], 4, 1.e-10);
     }
 }
+
+TEST(UtilitiesConvolve, ConvolveComplex)
+{
+    for (auto imp = 0; imp < 2; imp++)
+    {
+        Convolve::Implementation implementation;
+        if (imp == 0)
+        {
+            implementation = Convolve::Implementation::DIRECT;
+        }
+        else
+        {
+            implementation = Convolve::Implementation::FFT;
+        }
+        std::vector<std::complex<double>> a1({1, 3, 2});
+        std::vector<std::complex<double>> b1({-1, 1, 0.5});
+        std::vector<std::complex<double>> r1({-1, -2,   1.5,   3.5,   1});
+        std::vector<std::complex<double>> c;
+        // Test 1
+        EXPECT_NO_THROW(c = Convolve::convolve(a1, b1, 
+                                               Convolve::Mode::FULL,
+                                               implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 5); 
+        double emax = 0;
+        ippsNormDiff_Inf(c.data(), r1.data(), c.size(), &emax);
+        EXPECT_LE(emax, 1.e-10);
+        // Test 2 - interchange 1
+        EXPECT_NO_THROW(c = Convolve::convolve(b1, a1, 
+                                   Convolve::Mode::FULL, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 5); 
+        ippsNormDiff_Inf(c.data(), r1.data(), c.size(), &emax);
+        EXPECT_LE(emax, 1.e-10);
+        // Test 3
+        EXPECT_NO_THROW(c = Convolve::convolve(a1, b1, 
+                                   Convolve::Mode::VALID, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 1); 
+        EXPECT_NEAR(std::abs(r1[2] - c[0]), 0, 1.e-10);
+        // Test 4 - interchange 3
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(b1, a1, 
+                                   Convolve::Mode::VALID, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 1); 
+        EXPECT_NEAR(std::abs(r1[2] - c[0]), 0, 1.e-10);
+        // Test 5
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(a1, b1, 
+                                   Convolve::Mode::SAME, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 3); 
+        ippsNormDiff_Inf(c.data(), r1.data()+1, c.size(), &emax);
+        EXPECT_LE(emax, 1.e-10);
+        // Test 6 - interchange 5
+        EXPECT_NO_THROW(
+            c = Convolve::convolve(b1, a1, 
+                                   Convolve::Mode::SAME, implementation));
+        EXPECT_EQ(static_cast<int> (c.size()), 3); 
+        ippsNormDiff_Inf(c.data(), r1.data()+1, c.size(), &emax);
+        EXPECT_LE(emax, 1.e-10);
+    }
+}
+
 //============================================================================//
 //int convolve_correlate_test(void)
 TEST(UtilitiesConvolve, correlate)

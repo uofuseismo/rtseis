@@ -1,20 +1,32 @@
 #include <stdexcept>
+#include <vector>
 #include "rtseis/amplitude/tauP.hpp"
 #include "rtseis/amplitude/tauPParameters.hpp"
+#include "rtseis/filterDesign/iir.hpp"
 #include "rtseis/filterImplementations/detrend.hpp"
+#include "rtseis/filterImplementations/iirFilter.hpp"
 #include "rtseis/filterImplementations/taper.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
 #include "rtseis/filterRepresentations/sos.hpp"
+#include "rtseis/filterRepresentations/zpk.hpp"
 #include "rtseis/filterImplementations/sosFilter.hpp"
+#include "rtseis/utilities/math/convolve.hpp"
 
 using namespace RTSeis::Amplitude;
+namespace RConvolve = RTSeis::Utilities::Math::Convolve;
 
 template<RTSeis::ProcessingMode E, class T>
 class TauP<E, T>::TauPImpl
 {
 public:
-    RTSeis::FilterImplementations::SOSFilter<E, T> mAccelerationFilter;
+    // Optionally highpass then integrate to velocity with trapezoid rule 
+    // convolved with a RC filter
+    RTSeis::FilterImplementations::SOSFilter<E, T> mIntegratorFilter;
+    // Lowpass filter the velocity signals
     RTSeis::FilterImplementations::SOSFilter<E, T> mVelocityFilter;
+    // Detrend (post-processing)
     RTSeis::FilterImplementations::Detrend<T> mDetrender;
+    // Taper (post-processing)
     RTSeis::FilterImplementations::Taper<T> mTaperer;
     TauPParameters mParameters;
     double mGain{1};
@@ -62,13 +74,55 @@ void TauP<E, T>::initialize(const TauPParameters &parameters)
     pImpl->mGain = parameters.getSimpleResponse();
     pImpl->mGainInverse = 1./pImpl->mGain; 
     auto velocityFilter = parameters.getVelocityFilter();    
-    pImpl->mVelocityFilter.initialize(velocityFilter);
+    auto samplingRate = parameters.getSamplingRate();
+    auto samplingPeriod = 1./samplingRate;
+    constexpr RTSeis::FilterDesign::SOSPairing pairing
+        = RTSeis::FilterDesign::SOSPairing::NEAREST;
+    if (velocityFilter.getNumberOfNumeratorCoefficients() > 0 &&
+        velocityFilter.getNumberOfDenominatorCoefficients() > 0)
+    {
+        auto sos = RTSeis::FilterDesign::IIR::tf2sos(velocityFilter,
+                                                     pairing);
+        pImpl->mVelocityFilter.initialize(sos);
+    }
     // Setup acceleration filters
     if (parameters.getInputUnits() == InputUnits::Acceleration)
     {
+        // IIR integrator (trapezoid rule)
+        auto q = parameters.getFilterConstantQ();
+        auto b = 2/(1 + q);
+        auto bg = samplingPeriod/(b*pImpl->mGain);
+        std::vector<double> bIntegrator{bg, bg};
+        std::vector<double> aIntegrator{1, -q}; 
+ 
+/*
+        RTSeis::FilterRepresentations::BA baIntegrator;
         auto accelerationFilter = parameters.getAccelerationFilter();
-        pImpl->mAccelerationFilter.initialize(accelerationFilter);
+        if (accelerationFilter.getNumberOfNumeratorCoefficients() > 0 &&
+            accelerationFilter.getNumberOfDenominatorCoefficients() > 0)
+        {
+            auto bHighPass = accelerationFilter.getNumeratorCoefficients();
+            auto aHighPass = accelerationFilter.getDenominatorCoefficients();
+            // Convolve filters
+            auto bWork = RConvolve::convolve(bHighPass, bIntegrator,
+                                             RConvolve::FULL,
+                                             RConvolve::Implementation::DIRECT);
+            auto aWork = RConvolve::convolve(aHighPass, aIntegrator,
+                                             RConvolve::FULL,
+                                             RConvolve::Implementation::DIRECT);
+            baIntegrator.setNumeratorCoefficients(bWork);
+            baIntegrator.setDenominatorCoefficients(aWork);
+        }
+        else
+        {
+            baIntegrator.setNumeratorCoefficients(bIntegrator);
+            baIntegrator.setDenominatorCoefficients(aIntegrator);
+        }
+        auto sosIntegrator = RTSeis::FilterDesign::IIR::tf2sos(baIntegrator,
+                                                               pairing);
+        pImpl->mIntegratorFilter.initialize(sosIntegrator);
         pImpl->mVelocity = false;
+*/
     }
     else
     {

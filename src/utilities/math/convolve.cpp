@@ -1,8 +1,11 @@
+#include <iostream>
 #include <string>
 #include <cmath>
 #include <vector>
 #include <cassert>
 #include <ipps.h>
+#include <mkl.h>
+#include <mkl_vsl.h>
 #include "rtseis/utilities/math/convolve.hpp"
 #include "private/convolve.hpp"
 
@@ -33,6 +36,22 @@ IppEnum getImplementation(const Convolve::Implementation implementation)
         return ippAlgAuto;
     }
 }
+MKL_INT getMKLImplementationConvolution(
+    const Convolve::Implementation implementation)
+{
+    if (implementation == Convolve::Implementation::FFT)
+    {
+        return VSL_CONV_MODE_FFT;
+    }   
+    else if (implementation == Convolve::Implementation::DIRECT)
+    {   
+        return VSL_CONV_MODE_DIRECT;
+    }   
+    else
+    {   
+        return VSL_CONV_MODE_AUTO;
+    }   
+}
 }
 
 std::vector<double>
@@ -55,6 +74,34 @@ Convolve::convolve(const std::vector<double> &a,
     int nc;
     c.resize(len);
     double *cdata = c.data();
+    convolve(src1Len, a.data(), src2Len, b.data(),
+             len, &nc, &cdata, mode, implementation);
+#ifdef DEBUG
+    assert(nc == static_cast<int> (c.size()));
+#endif
+    return c;
+}
+
+std::vector<std::complex<double>>
+Convolve::convolve(const std::vector<std::complex<double>> &a, 
+                   const std::vector<std::complex<double>> &b, 
+                   const Convolve::Mode mode,
+                   const Convolve::Implementation implementation)
+{
+    std::vector<std::complex<double>> c;
+    int src1Len = static_cast<size_t> (a.size());
+    int src2Len = static_cast<size_t> (b.size());
+    c.resize(0);
+    if (src1Len < 1 || src2Len < 1)
+    {
+        if (src1Len < 1){throw std::invalid_argument("No points in a");}
+        throw std::invalid_argument("No points in b");
+    }
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
+    int len = indexes.second - indexes.first;
+    int nc;
+    c.resize(len, 0);
+    std::complex<double> *cdata = c.data();
     convolve(src1Len, a.data(), src2Len, b.data(),
              len, &nc, &cdata, mode, implementation);
 #ifdef DEBUG
@@ -131,6 +178,81 @@ void Convolve::convolve(const int src1Len, const double a[],
     len = i2 - i1;
     ippsCopy_64f(&pDst[i1], c, len);
     ippsFree(pDst);
+}
+
+void Convolve::convolve(const int src1Len, const std::complex<double> a[],
+                        const int src2Len, const std::complex<double> b[],
+                        const int maxc, int *nc, std::complex<double> *cIn[],
+                        const Convolve::Mode mode,
+                        const Convolve::Implementation implementation)
+{
+    // Check the inputs
+    *nc = 0;
+    if (src1Len < 1 || a == nullptr || src2Len < 1 || b == nullptr)
+    {
+        if (src1Len < 1){throw std::invalid_argument("No points in a");}
+        if (src2Len < 1){throw std::invalid_argument("No points in b");}
+        if (a == nullptr){throw std::invalid_argument("a is NULL");}
+        throw std::invalid_argument("b is NULL");
+    }
+    // Get indices
+    std::pair<int,int> indexes = computeTrimIndices(mode, src1Len, src2Len);
+    int outputLen = indexes.second - indexes.first;
+    // Check output size is okay
+    if (maxc < outputLen || *cIn == nullptr)
+    {
+       if (maxc < outputLen)
+       {
+           throw std::invalid_argument("maxc = " + std::to_string(maxc)
+                                     + " must be at "
+                                     + std::to_string(outputLen));
+       }
+       throw std::invalid_argument("c is NULL");
+    }
+    int fullLen = src1Len + src2Len - 1;
+    // Setup for VSL
+    VSLConvTaskPtr task;
+    auto mklImplementation = getMKLImplementationConvolution(implementation);
+    auto status = vslzConvNewTask1D(&task, mklImplementation,
+                                    src1Len, src2Len, fullLen);
+    if (status != VSL_STATUS_OK)
+    {
+        throw std::runtime_error("Failed to create convolution task");
+    }
+    auto aMKL = reinterpret_cast<const MKL_Complex16 *> (a);
+    auto bMKL = reinterpret_cast<const MKL_Complex16 *> (b);
+    MKL_Complex16 *cMKL{nullptr};
+    if (mode == Mode::FULL)
+    {
+        cMKL = reinterpret_cast<MKL_Complex16 *> (*cIn);
+    }
+    else
+    {
+        cMKL = reinterpret_cast<MKL_Complex16 *>
+               (mkl_calloc(fullLen, sizeof(MKL_Complex16), 64));
+    }
+    status = vslzConvExec1D(task, aMKL, 1, bMKL, 1, cMKL, 1);
+    if (status != 0)
+    {
+        if (mode != Mode::FULL){mkl_free(cMKL);}
+        throw std::runtime_error("Failed to compute convolution");
+    }
+    auto error = vslConvDeleteTask(&task);
+    if (error != 0)
+    {
+        if (mode != Mode::FULL){mkl_free(cMKL);}
+        throw std::runtime_error("Failed to delete task");
+    }
+    // The full convolution is desired
+    *nc = outputLen;
+    if (mode == Mode::FULL){return;}
+    // Trim the full convolution
+    int i1 = indexes.first;
+    int i2 = indexes.second;
+    auto pDst = reinterpret_cast<const std::complex<double> *> (cMKL);
+    auto cOut = *cIn;
+    std::copy(pDst + i1, pDst + i2, cOut + 0);
+    mkl_free(cMKL);
 }
 
 //============================================================================//

@@ -150,6 +150,35 @@ TEST(UtilitiesDesignIIR, zpk2tf)
         EXPECT_TRUE(lfound);
     }
 }
+TEST(UtilitiesDesignIIR, tf2sos)
+{
+    std::vector<double> b{0.9877613892768257,
+                         -3.9510455571073027,
+                          5.926568335660954,
+                         -3.9510455571073027,
+                          0.9877613892768257};
+    std::vector<double> a{1.0,
+                         -3.97537191256092,
+                          5.926418555965423,
+                         -3.926719197756784,
+                          0.975672562146085};
+    BA ba;
+    ba.setNumeratorCoefficients(b);
+    ba.setDenominatorCoefficients(a);
+    auto sos = IIR::tf2sos(ba,  SOSPairing::NEAREST);
+
+    std::vector<double> bRef{//0.98776139, -1.97552278,  0.98776139,
+                             0.9877613892768257, 
+                            -1.9755228135715934,
+                             0.987761379675909,
+                             1.        , -1.9999999645481794,  1.000000009719877};
+    std::vector<double> aRef{1.0, -1.982647799569223, 0.9827358586551028,
+                             1.0, -1.9927241129916946,0.9928126195387987};
+    SOS sosRef;
+    sosRef.setSecondOrderSections(2, bRef, aRef);
+    EXPECT_EQ(sosRef, sos);
+}
+
 //============================================================================//
 //int rtseis_test_utils_design_iir(void)
 TEST(UtilitiesDesignIIR, butterworth)
