@@ -1,17 +1,14 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 #include <cstring>
+#include <string>
 #include <cmath>
 #include <algorithm>
 #include <exception>
 #include <stdexcept>
 #include <mkl.h>
 #include <ipps.h>
-#define RTSEIS_LOGGING 1
-#include "private/throw.hpp"
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
-#include "rtseis/log.h"
 
 namespace VM = RTSeis::Utilities::Math::VectorMath;
 using namespace RTSeis::Utilities;
@@ -22,10 +19,10 @@ Interpolation::interpft(const std::vector<double> &x, const int npnew)
 {
     if (npnew < 1)
     {
-        RTSEIS_THROW_IA("%s", "No points at which to intepolate");
+        throw std::invalid_argument("No points at which to intepolate");
     }
     auto npts = static_cast<int> (x.size());
-    if (npts < 1){RTSEIS_THROW_IA("%s", "x is empty");}
+    if (npts < 1){throw std::invalid_argument("x is empty");}
     std::vector<double> yint(npnew);
     double *yptr = yint.data();
     interpft(npts, x.data(), npnew, &yptr);
@@ -45,13 +42,17 @@ void Interpolation::interpft<>(const int nx, const double x[],
     double *yint = *yIn; 
     if (npnew < 1 || nx < 1 || x == nullptr || yint == nullptr)
     {
-        if (nx < 1){RTSEIS_THROW_IA("nx = %d must be positive", nx);}
+        if (nx < 1)
+        {
+            throw std::invalid_argument("nx = " + std::to_string(nx)
+                                      + " must be positive");
+        }
         if (npnew < 1)
         {
-            RTSEIS_THROW_IA("%s", "No points at which to interpolate");
+            throw std::invalid_argument("No points at which to interpolate");
         }
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Straight copy case
     if (nx == npnew)
@@ -79,18 +80,21 @@ void Interpolation::interpft<>(const int nx, const double x[],
         std::string errmsg;
         if (status == ippStsNullPtrErr)
         {
-            RTSEIS_THROW_RTE("%s", "Null pointer in transform inquiry");
+            throw std::runtime_error("Null pointer in transform inquiry");
         }
         if (status == ippStsSizeErr)
         {
-            RTSEIS_THROW_RTE("Forward transform inquiry failed for nx = %d",
-                              nx);
+            throw std::runtime_error(
+               "Forward transform inquiry failed for nx = "
+                + std::to_string(nx));
         }
         if (status == ippStsFftOrderErr)
         {
-            RTSEIS_THROW_RTE("Insufficient memory for nx = %d", nx);
+            throw std::runtime_error("Insufficient memory for nx = "
+                                   + std::to_string(nx));
         }
-        RTSEIS_THROW_RTE("Forward transform inquiry failed with %d", status);
+        throw std::runtime_error("Forward transform inquiry failed with "
+                               + std::to_string(status));
     }
     status = ippsDFTGetSize_R_64f(npnew,
                                   IPP_FFT_DIV_INV_BY_N,
@@ -100,7 +104,7 @@ void Interpolation::interpft<>(const int nx, const double x[],
                                   &bufferSizeI);
     if (status != ippStsNoErr)
     {   
-        RTSEIS_THROW_RTE("%s", "Inverse transform inquiry failed");
+        throw std::runtime_error("Inverse transform inquiry failed");
     }
     // Initialize the forward transform
     auto *pDFTForwardSpec = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeF);
@@ -114,7 +118,7 @@ void Interpolation::interpft<>(const int nx, const double x[],
     {
         ippsFree(pDFTForwardSpec);
         ippsFree(pDFTInitBuf);
-        RTSEIS_THROW_RTE("%s", "Forward transform init failed");
+        throw std::runtime_error("Forward transform init failed");
     }
     // Initialize the inverse transform
     auto *pDFTInverseSpec = (IppsDFTSpec_R_64f *) ippsMalloc_8u(specSizeI);
@@ -129,7 +133,7 @@ void Interpolation::interpft<>(const int nx, const double x[],
         ippsFree(pDFTForwardSpec);
         ippsFree(pDFTInverseSpec);
         ippsFree(pDFTInitBuf);
-        RTSEIS_THROW_RTE("%s", "Inverse transform init failed");
+        throw std::runtime_error("Inverse transform init failed");
     }
     // Set the workspace
     Ipp8u *pBuf = ippsMalloc_8u(std::max(bufferSizeF, bufferSizeI));
@@ -155,13 +159,17 @@ void Interpolation::interpft<>(const int nx, const float x[],
     float *yint = *yIn;
     if (npnew < 1 || nx < 1 || x == nullptr || yint == nullptr)
     {
-        if (nx < 2){RTSEIS_THROW_IA("nx = %d must be positive", nx);}
+        if (nx < 2)
+        {
+            throw std::invalid_argument("nx = " + std::to_string(nx)
+                                      + " must at least 2");
+        }
         if (npnew < 1)
         {
-            RTSEIS_THROW_IA("%s", "No points at which to interpolate");
+            throw std::invalid_argument("No points at which to interpolate");
         }
-        if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        if (x == nullptr){throw std::invalid_argument("x is NULL");}
+        throw std::invalid_argument("y is NULL");
     }
     // Straight copy case
     if (nx == npnew)
@@ -186,7 +194,7 @@ void Interpolation::interpft<>(const int nx, const float x[],
                                   &bufferSizeF);
     if (status != ippStsNoErr)
     {
-        RTSEIS_THROW_RTE("%s", "Forward transform inquiry failed");
+        throw std::runtime_error("Forward transform inquiry failed");
     }
     status = ippsDFTGetSize_R_32f(npnew,
                                   IPP_FFT_DIV_INV_BY_N,
@@ -196,7 +204,7 @@ void Interpolation::interpft<>(const int nx, const float x[],
                                   &bufferSizeI);
     if (status != ippStsNoErr)
     {
-        RTSEIS_THROW_RTE("%s", "Inverse transform inquiry failed");
+        throw std::runtime_error("Inverse transform inquiry failed");
     }
     // Initialize the forward transform
     auto *pDFTForwardSpec = (IppsDFTSpec_R_32f *) ippsMalloc_8u(specSizeF);
@@ -210,7 +218,7 @@ void Interpolation::interpft<>(const int nx, const float x[],
     {
         ippsFree(pDFTForwardSpec);
         ippsFree(pDFTInitBuf);
-        RTSEIS_THROW_RTE("%s", "Forward transform init failed");
+        throw std::runtime_error("Forward transform init failed");
     }
     // Initialize the inverse transform
     auto *pDFTInverseSpec = (IppsDFTSpec_R_32f *) ippsMalloc_8u(specSizeI);
@@ -225,7 +233,7 @@ void Interpolation::interpft<>(const int nx, const float x[],
         ippsFree(pDFTForwardSpec);
         ippsFree(pDFTInverseSpec);
         ippsFree(pDFTInitBuf);
-        RTSEIS_THROW_RTE("%s", "Inverse transform init failed");
+        throw std::runtime_error("Inverse transform init failed");
     }
     // Set the workspace
     Ipp8u *pBuf = ippsMalloc_8u(std::max(bufferSizeF, bufferSizeI));
@@ -248,10 +256,10 @@ Interpolation::interpft(const std::vector<double> &x, const int npnew)
 {
     if (npnew < 1)
     {
-        RTSEIS_THROW_IA("%s", "No points at which to intepolate");
+        throw std::invalid_argument("No points at which to intepolate");
     }
     auto npts = static_cast<int> (x.size());
-    if (npts < 1){RTSEIS_THROW_IA("%s", "x is empty");}
+    if (npts < 1){throw std::invalid_argument("x is empty");}
     std::vector<double> yint(npnew);
     double *yptr = yint.data();
     interpft(npts, x.data(), npnew, &yptr);
@@ -322,7 +330,7 @@ class Interp1D::Interp1DImpl
             lhaveTask = true;
             if (status != DF_STATUS_OK)
             {
-                RTSEIS_ERRMSG("%s", "Failed to create task");
+                std::cerr << "Failed to create task" << std::endl;
                 clear();
                 return -1;
             }
@@ -343,7 +351,7 @@ class Interp1D::Interp1DImpl
                 status = dfdConstruct1D(task, DF_PP_SPLINE, DF_METHOD_STD);
                 if (status != DF_STATUS_OK)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to compute spline");
+                    std::cerr << "Failed to compute spline" << std::endl;
                     clear();
                     return -1;
                 }
@@ -377,7 +385,7 @@ class Interp1D::Interp1DImpl
             lhaveTask = true;
             if (status != DF_STATUS_OK)
             {
-                RTSEIS_ERRMSG("%s", "Failed to create task");
+                std::cerr << "Failed to create task" << std::endl;
                 clear();
                 return -1; 
             }
@@ -398,7 +406,7 @@ class Interp1D::Interp1DImpl
                 status = dfdConstruct1D(task, DF_PP_SPLINE, DF_METHOD_STD);
                 if (status != DF_STATUS_OK)
                 {
-                    RTSEIS_ERRMSG("%s", "Failed to compute spline");
+                    std::cerr <<  "Failed to compute spline" << std::endl;
                     clear();
                     return -1; 
                 }
@@ -514,7 +522,7 @@ class Interp1D::Interp1DImpl
            if (status != DF_STATUS_OK)
            {
                delete[] cell;
-               RTSEIS_ERRMSG("%s", "Failed searching cells");
+               std::cerr << "Failed searching cells" << std::endl;
                return -1;
            }
            // Interpolate
@@ -541,7 +549,7 @@ class Interp1D::Interp1DImpl
                }
                if (status != 0)
                {
-                   RTSEIS_ERRMSG("%s", "Interpolation failed");
+                   std::cerr << "Interpolation failed" << std::endl;
                    ierr = 1; 
                }
            }
@@ -643,7 +651,7 @@ void Interp1D::initialize(const std::vector<double> &x,
     int ierr = pImpl->initialize(x, v, method);
     if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Initialization failed");
+        std::cerr << "Initialization failed" << std::endl;
         throw std::invalid_argument("Initialization failed");
     }
 }
@@ -699,7 +707,7 @@ void Interp1D::initialize(const int npts,
     int ierr = pImpl->initialize(npts, x, v, method);
     if (ierr != 0)
     {   
-        RTSEIS_ERRMSG("%s", "Initialization failed");
+        std::cerr << "Initialization failed" << std::endl;
         throw std::invalid_argument("Initialization failed");
     }   
 }

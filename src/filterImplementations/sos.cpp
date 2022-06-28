@@ -196,7 +196,7 @@ public:
         int nzRef = getInitialConditionLength();
 #ifndef NDEBUG
         assert(nz == nzRef);
-        //if (nz != nzRef){RTSEIS_WARNMSG("%s", "Shouldn't be here");}
+        //if (nz != nzRef){std::cerr << "Shouldn't be here" << std::endl;}
 #endif
         ippsCopy_64f(zi, zi_, nzRef);
         if (mPrecision == RTSeis::Precision::DOUBLE)
@@ -466,20 +466,20 @@ void SOSFilter<float>::initialize(const int ns,
     // Checks
     if (ns < 1 || bs == nullptr || as == nullptr)
     {
-        if (ns < 1){RTSEIS_THROW_IA("%s", "No sections");}
-        if (bs == nullptr){RTSEIS_THROW_IA("%s", "bs is NULL");}
-        RTSEIS_THROW_IA("%s", "as is NULL");
+        if (ns < 1){throw std::invalid_argument("No sections");}
+        if (bs == nullptr){throw std::invalid_argument("bs is NULL");}
+        throw std::invalid_argument("as is NULL");
     }
     // Verify the highest order coefficients make sense
     for (auto i=0; i<ns; i++)
     {
         if (bs[3*i] == 0.0)
         {
-            RTSEIS_THROW_IA("Leading bs coefficient of section %d is zero", i);
+            throw std::invalid_argument("Leading bs coefficient of section " + std::to_string(i) + " is zero");
         }
         if (as[3*i] == 0.0)
         {
-            RTSEIS_THROW_IA("Leading as coefficient of section %d is zero", i);
+            throw std::invalid_argument("Leading as coefficient of section " + std::to_string(i) + " is zero");
         }
     }
     auto ierr = pImpl->initialize(ns, bs, as, mode, RTSeis::Precision::FLOAT);
@@ -489,7 +489,7 @@ void SOSFilter<float>::initialize(const int ns,
     if (ierr != 0)
     {
         clear();
-        RTSEIS_THROW_RTE("%s", "Failed to initialize sos filter");
+        throw std::runtime_error("Failed to initialize sos filter");
     }
 }
 */
@@ -553,13 +553,13 @@ void SOSFilter<float>::apply(const int n, const float x[], float *yIn[])
     if (n <= 0){return;}
     if (!isInitialized())
     {
-        RTSEIS_THROW_RTE("%s", "Class not initialized");
+        throw std::runtime_error("Class not initialized");
     }
     float *y = *yIn;
     if (x == nullptr || y == nullptr)
     {
-        if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
-        RTSEIS_THROW_RTE("%s", "y is NULL");
+        if (x == nullptr){throw std::runtime_error("x is NULL");}
+        throw std::runtime_error("y is NULL");
     }
 #ifdef DEBUG
     int ierr = pImpl->apply(n, x, y);

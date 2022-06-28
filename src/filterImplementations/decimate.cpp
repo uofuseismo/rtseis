@@ -309,7 +309,7 @@ void Decimate<E, T>::initialize(const int downFactor,
 #ifndef NDEBUG
         assert(!lfail);
 #endif
-        if (lfail){RTSEIS_THROW_RTE("%s", "Algorithmic failure");}
+        if (lfail){throw std::runtime_error("Algorithmic failure");}
         pImpl->mGroupDelay = nfir/2;
         pImpl->mRemovePhaseShift = true;
     }
@@ -359,8 +359,8 @@ int Decimate<E, T>::estimateSpace(const int n) const
 /* TODO - when lashing in a more performant multirate fir filter use this fn
 int Decimate::estimateSpace(const int n) const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    if (n < 0){RTSEIS_THROW_IA("n=%d cannot be negative", n);}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    if (n < 0){throw std::invalid_argument("n cannot be negative");}
     if (pImpl->mRemovePhaseShift)
     {
         int npad = n + pImpl->mGroupDelay;
@@ -476,14 +476,14 @@ void Decimate<E, float>::apply(const int nx, const float x[],
 {
     *nyDown = 0;
     if (nx <= 0){return;}
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    if (x == nullptr){throw std::invalid_argumnet("x is NULL");}
     int nyref = estimateSpace(nx);
-    if (ny < nyref){RTSEIS_THROW_IA("ny = %d must be at least %d", ny, nyref);}
+    if (ny < nyref){throw std::invalid_argument("ny = " + std:::to_string(ny) + " must be at least " + std::to_string(nyref));}
     float *y = *yIn;
     if (y == nullptr)
     {
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        throw std::invalid_argument("y is NULL");
     }
     // Special case
     if (pImpl->mRemovePhaseShift)
@@ -524,14 +524,14 @@ void Decimate::apply(const int nx, const double x[],
 {
     *nyDown = 0;
     if (nx <= 0){return;}
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
-    if (x == nullptr){RTSEIS_THROW_IA("%s", "x is NULL");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
     int nyref = estimateSpace(nx);
-    if (ny < nyref){RTSEIS_THROW_IA("ny = %d must be at least %d", ny, nyref);}
+    if (ny < nyref){throw std::invalid_argument("ny = " + std::to_string(ny) + " must be at least " + std::to_string(nyref));}
     double *y = *yIn;
     if (y == nullptr)
     {
-        RTSEIS_THROW_IA("%s", "y is NULL");
+        throw std::invalid_argument("y is NULL");
     }
     // Special case
     if (pImpl->mRemovePhaseShift)

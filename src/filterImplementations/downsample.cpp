@@ -5,7 +5,6 @@
 #endif
 #include <ipps.h>
 #include "rtseis/enums.hpp"
-#include "private/throw.hpp"
 #include "rtseis/filterImplementations/downsample.hpp"
 
 using namespace RTSeis::FilterImplementations;
@@ -240,7 +239,7 @@ void Downsample<float>::initialize(const int downFactor,
     clear();
     if (downFactor < 1)
     {
-        RTSEIS_THROW_IA("Downsampling factor=%d must be positive", downFactor);
+        throw std::invalid_argument("Downsampling factor=%d must be positive", downFactor);
     }
     pImpl->initialize(downFactor, mode);//, RTSeis::Precision::FLOAT);
 }
@@ -328,7 +327,7 @@ template<RTSeis::ProcessingMode E, class T>
 [[maybe_unused]]
 int Downsample<E, T>::getDownsampleFactor() const noexcept
 {
-    //if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class is not initialized");}
+    //if (!isInitialized()){throw std::runtime_error("Class is not initialized");}
     return pImpl->getDownsampleFactor();
 }
 

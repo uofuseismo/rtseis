@@ -954,30 +954,25 @@ int MultiRateFIRFilter::apply(const int n, const float x[],
     if (n <= 0){return 0;} // Nothing to do
     if (x == nullptr)
     {
-        RTSEIS_ERRMSG("%s", "x is NULL");
-        return -1; 
+        throw std::invalid_argument("x is NULL");
     }
     if (!pFIR_->isInitialized())
     {
-        RTSEIS_ERRMSG("%s", "Module is not initialized");
-        return -1; 
+        throw std::invalid_argument("Module is not initialized");
     }
     int nworkEst = pFIR_->estimateSpace(n);
     if (nywork < nworkEst)
     {
-        RTSEIS_WARNMSG("May have insufficient space %d %d", nywork, nworkEst);
+        std::cerr << "May have insufficient space " << nywork << " " << nworkEst << std::endl;
     }
     if (y == nullptr)
     {
-        RTSEIS_ERRMSG("%s", "y is NULL");
-        return -1; 
+        throw std::invalid_argument("y is NULL");
     }
     int ierr = pFIR_->apply(n, x, nywork, ny, y); 
     if (ierr != 0)
     {
-        RTSEIS_ERRMSG("%s", "Failed to apply filter");
-        *ny = 0;
-        return -1;
+        throw std::runtime_error("Failed to apply filter");
     }
     return 0;
 }

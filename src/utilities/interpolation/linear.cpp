@@ -1,5 +1,5 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
+#include <string>
 #include <cstring>
 #include <limits>
 #include <cmath>
@@ -12,7 +12,6 @@
 #include "private/throw.hpp"
 #include "rtseis/utilities/interpolation/linear.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
-#include "rtseis/log.h"
 
 using namespace RTSeis::Utilities::Interpolation;
 
@@ -237,47 +236,50 @@ void Linear::initialize(const int npts,
     clear();
     if (npts < 2)
     {
-        RTSEIS_THROW_IA("npts = %d must be at least 2", npts);
+        throw std::invalid_argument("npts = " + std::to_string(npts)
+                                  + " must be at least 2");
     }
-    if (y == nullptr){RTSEIS_THROW_RTE("%s", "y is NULL");}
+    if (y == nullptr){throw std::invalid_argument("y is NULL");}
     if (xInterval.first >= xInterval.second)
     {
-        RTSEIS_THROW_IA("x.first = %lf must be less than x.second = %lf",
-                        xInterval.first, xInterval.second); 
+        throw std::invalid_argument("x.first = " + std::to_string(xInterval.first)
+                                  + " must be less than x.second = "
+                                  + std::to_string(xInterval.second));
     }
     // Initialize
     auto ierr = pImpl->initialize(npts, xInterval, y);
     if (ierr != 0)
     {
-        RTSEIS_THROW_RTE("%s", "Failed to initialize interpolator");
+        throw std::runtime_error("Failed to initialize interpolator");
     }
 }
 
 /// Initialize the linear interpolant for irregularly spaced points
 void Linear::initialize(const int npts,
-                        const double x[],
+                        const double *__restrict__ x,
                         const double y[])
 {
     clear();
     if (npts < 2)
     {   
-        RTSEIS_THROW_IA("npts = %d must be at least 2", npts);
+        throw std::invalid_argument("npts = " + std::to_string(npts)
+                                  + " must be at least 2");
     }   
-    if (x == nullptr){RTSEIS_THROW_RTE("%s", "x is NULL");}
-    if (y == nullptr){RTSEIS_THROW_RTE("%s", "y is NULL");}
+    if (x == nullptr){throw std::invalid_argument("x is NULL");}
+    if (y == nullptr){throw std::invalid_argument("y is NULL");}
     // Assert that the data is increasing order
     int isInvalid = 0;
     #pragma omp simd reduction(+:isInvalid)
-    for (auto i=0; i<npts-1; ++i)
+    for (int i = 0; i < npts - 1; ++i)
     {   
         if (x[i+1] <= x[i]){isInvalid = isInvalid + 1;} 
     }   
     if (isInvalid > 0)
     {   
-        RTSEIS_THROW_RTE("%s", "At least one x[i+1] <= x[i]\n");
+        throw std::invalid_argument("At least one x[i+1] <= x[i]\n");
     }    
     auto ierr = pImpl->initialize(npts, x, y);
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Interpolation failed\n");} 
+    if (ierr != 0){throw std::runtime_error("Interpolation failed\n");}
 }
 
 /// Interpolate on regularly spaced points
@@ -290,19 +292,24 @@ void Linear::interpolate(const int nq,
     auto xmin = getMinimumX(); // Throws on uninitialized
     auto xmax = getMaximumX();
     double *yq = *yqIn;
-    if (yq == nullptr){RTSEIS_THROW_IA("%s", "yq is NULL");}
+    if (yq == nullptr){throw std::invalid_argument("yq is NULL");}
     if (xq.first >= xq.second)
     {
-        RTSEIS_THROW_IA("xq.first = %lf must be less than xq.second  %lf\n",
-                        xq.first, xq.second);
+        throw std::invalid_argument("xq.first = " + std::to_string(xq.first)
+                                  + "f must be less than xq.second = "
+                                  + std::to_string(xq.second));
     }
     if (xq.first < xmin || xq.second > xmax)
     {
-       RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
-                       xq.first, xq.second, xmin, xmax);
+       throw std::invalid_argument("Min/max of xq = ("
+                                 + std::to_string(xq.first) + ","
+                                 + std::to_string(xq.second) + ")"
+                                 + " must be in range ["
+                                 + std::to_string(xmin) + ","
+                                 + std::to_string(xmax) + "]");
     }
     auto ierr = pImpl->interpolate(nq, xq, yq);
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Interpolation failed\n");}
+    if (ierr != 0){throw std::runtime_error("Interpolation failed");}
 }
 
 /// Interpolate at a bunch of points
@@ -316,29 +323,33 @@ void Linear::interpolate(const int nq, const double xq[],
     double *yq = *yqIn;
     if (xq == nullptr || yq == nullptr)
     {
-        if (xq == nullptr){RTSEIS_THROW_IA("%s", "xq is NULL");}
-        RTSEIS_THROW_IA("%s", "yq is NULL");
+        if (xq == nullptr){throw std::invalid_argument("xq is NULL");}
+        throw std::invalid_argument("yq is NULL");
     }
     double xqMin, xqMax;
     ippsMinMax_64f(xq, nq, &xqMin, &xqMax);
     if (xqMin < xmin || xqMax > xmax)
     {
-       RTSEIS_THROW_IA("Min/max of xq = (%lf,%lf) must be in range [%lf,%lf]",
-                       xqMin, xqMax, xmin, xmax);
+       throw std::invalid_argument("Min/max of xq = ("
+                                 + std::to_string(xqMin) + "," 
+                                 + std::to_string(xqMax) + ")" 
+                                 + " must be in range ["
+                                 + std::to_string(xmin) + "," 
+                                 + std::to_string(xmax) + "]");
     }
     auto ierr = pImpl->interpolate(nq, xq, yq);
-    if (ierr != 0){RTSEIS_THROW_RTE("%s", "Interpolation failed\n");}
+    if (ierr != 0){throw std::runtime_error("Interpolation failed\n");}
 }
 /// Get minimum x for interpolation
 double Linear::getMinimumX() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mXMin;
 }
 
 /// Get maximum x for interpolation
 double Linear::getMaximumX() const
 {
-    if (!isInitialized()){RTSEIS_THROW_RTE("%s", "Class not initialized");}
+    if (!isInitialized()){throw std::runtime_error("Class not initialized");}
     return pImpl->mXMax;
 }

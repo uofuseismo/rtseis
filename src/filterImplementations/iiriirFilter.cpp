@@ -200,7 +200,7 @@ public:
         int nzRef = getInitialConditionLength();
 #ifndef NDEBUG
         assert(nz == nzRef);
-        //if (nz != nzRef){RTSEIS_WARNMSG("%s", "Shouldn't happen");}
+        //if (nz != nzRef){std::cerr << "Shouldn't happen" << std::endl;}
 #endif
         ippsCopy_64f(zi, zi_, nzRef);
         if (mPrecision == RTSeis::Precision::DOUBLE)
@@ -445,9 +445,9 @@ void IIRIIRFilter<float>::initialize(const int nb, const double b[],
     // Check inputs
     if (nb < 1 || na < 1 || b == nullptr || a == nullptr)
     {
-        if (nb < 1){RTSEIS_THROW_IA("%s", "No b coefficients");}
-        if (na < 1){RTSEIS_THROW_IA("%s", "No a coefficients");}
-        if (b == nullptr){RTSEIS_THROW_IA("%s", "b is NULL");}
+        if (nb < 1){throw std::invalid_argument("No b coefficients");}
+        if (na < 1){throw std::invalid_argument("No a coefficients");}
+        if (b == nullptr){throw std::invalid_argument("b is NULL");}
         throw std::invalid_argument("a is NULL");
     }
     if (a[0] == 0)
