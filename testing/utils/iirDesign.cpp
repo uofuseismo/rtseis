@@ -176,6 +176,9 @@ TEST(UtilitiesDesignIIR, tf2sos)
                              1.0, -1.9927241129916946,0.9928126195387987};
     SOS sosRef;
     sosRef.setSecondOrderSections(2, bRef, aRef);
+
+    sosRef.setEqualityTolerance(1.e-7);
+    sos.setEqualityTolerance(1.e-7);
     EXPECT_EQ(sosRef, sos);
 }
 
