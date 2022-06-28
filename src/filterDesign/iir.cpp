@@ -202,6 +202,13 @@ ZPK IIR::designZPKIIRFilter(const int n, const double *W,
     return zpk;
 }
 
+SOS IIR::tf2sos(const RTSeis::FilterRepresentations::BA &ba,
+                const SOSPairing pairing)
+{
+    auto zpk = tf2zpk(ba);
+    return zpk2sos(zpk, pairing);
+}
+
 SOS IIR::zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
                  const SOSPairing pairing)
 {

@@ -107,6 +107,18 @@ designSOSIIRFilter(int n, const double *W, double rp, double rs,
 [[nodiscard]] RTSeis::FilterRepresentations::SOS
 zpk2sos(const RTSeis::FilterRepresentations::ZPK &zpk,
         SOSPairing pairing = SOSPairing::NEAREST);
+/// @brief Computes the cascaded second order sections filter from
+///        a polynomial transfer function.
+/// @param[in] ba   BA filter to convert to second order sections.
+/// @param[in] pairing  The pairing strategy.
+/// @result The corresponding IIR filter stored as a cascade of second
+///         order sections.
+/// @throws std::invalid_argument if there are no numerator or denominator
+///         coefficients.
+/// @ingroup rtseis_filterdesign_iir
+[[nodiscard]] RTSeis::FilterRepresentations::SOS
+tf2sos(const RTSeis::FilterRepresentations::BA &ba,
+       SOSPairing pairing = SOSPairing::NEAREST);
 /// @brief Computes the pole-zero representation from a polynomial
 ///        transfer function.
 /// @param[in] ba    The transfer function to convert to zeros, poles, and
