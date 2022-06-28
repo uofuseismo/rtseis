@@ -3,6 +3,10 @@
 #include <memory>
 #include "rtseis/enums.hpp"
 #include "rtseis/filterImplementations/enums.hpp"
+namespace RTSeis::FilterRepresentations
+{
+class FIR;
+}
 namespace RTSeis::FilterImplementations
 {
 /// @class FIRFilter firFilter.hpp "rtseis/filterImplementations/firFilter.hpp"
@@ -46,6 +50,11 @@ public:
     ~FIRFilter();
     /// @}
 
+    /// @brief Initializes the FIR filter.
+    /// @param[in] fir   The FIR filter.
+    /// @throws std::invalid_argument if the FIR filter is invalid.
+    void initialize(const RTSeis::FilterRepresentations::FIR &fir,
+                    FIRImplementation implementation = FIRImplementation::DIRECT);
     /// @brief Initializes the FIR filter.
     /// @param[in] nb    Number of numerator coefficients.
     /// @param[in] b     Numerator coefficients.  This is an array of

@@ -3,6 +3,10 @@
 #include <memory>
 #include "rtseis/enums.hpp"
 #include "rtseis/filterImplementations/enums.hpp"
+namespace RTSeis::FilterRepresentations
+{
+class BA;
+}
 namespace RTSeis::FilterImplementations
 {
 /// @class IIRFilter iirFilter.hpp "rtseis/filterImplementations/iirFilter.hpp"
@@ -46,6 +50,12 @@ public:
     ~IIRFilter();
     /// @}
 
+    /// @brief Initializes the IIR filter.
+    /// @param[in] ba  The IIR filter.
+    /// @param[in] implementation  The filter implementation.
+    /// @throws std::invalid_argument if the IIR filter is invalid.
+    void initialize(const RTSeis::FilterRepresentations::BA &ba,
+                    IIRDFImplementation implementation = IIRDFImplementation::DF2_FAST);
     /// @brief Initializes the IIR filter.
     /// @param[in] nb     Number of numerator coefficients.
     /// @param[in] b      The numerator coefficients.  This has

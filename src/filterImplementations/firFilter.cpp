@@ -8,6 +8,7 @@
 #include "rtseis/enums.hpp"
 #include "private/throw.hpp"
 #include "rtseis/filterImplementations/firFilter.hpp"
+#include "rtseis/filterRepresentations/fir.hpp"
 
 using namespace RTSeis::FilterImplementations;
 
@@ -389,6 +390,16 @@ FIRFilter<E, T>& FIRFilter<E, T>::operator=(FIRFilter &&fir) noexcept
     if (pImpl){pImpl->clear();}
     pImpl = std::move(fir.pImpl);
     return *this;
+}
+
+/// Initialization
+template<RTSeis::ProcessingMode E, class T>
+void FIRFilter<E, T>::initialize(const RTSeis::FilterRepresentations::FIR &fir,
+                                 FIRImplementation implementation)
+{
+    auto b = fir.getFilterTaps();
+    if (b.empty()){throw std::invalid_argument("No filter taps");}
+    initialize(b.size(), b.data(), implementation);
 }
 
 /// Initialization

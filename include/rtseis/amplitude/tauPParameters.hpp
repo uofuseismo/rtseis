@@ -137,6 +137,21 @@ public:
     void setDetrendType(DetrendType detrendType);
     /// @result The detrend 
     [[nodiscard]] DetrendType getDetrendType() const noexcept;
+
+    /// @brief Sets the taper to apply to the signal after detrending and
+    ///        prior to filtering.
+    /// @param[in] percentage  The percentage of the signal to which the taper
+    ///                        will be applied.  For example, if 5 percent then
+    ///                        the initial 2.5 percent and final 2.5 percent of 
+    ///                        the signal will be tapered with the given window.
+    ///                        This must be in the range [0,100].
+    /// @param[in] window      The window to apply.  If this is WindowType::None
+    ///                        then no filtering will be performed.
+    void setTaper(double percentage = 5, WindowType window = WindowType::Sine);
+    /// @result The percentage to taper the signal prior to filtering.
+    [[nodiscard]] double getTaperPercentage() const noexcept;
+    /// @result The window type.
+    [[nodiscard]] WindowType getWindowType() const noexcept;
     /// @}
 
     /// @name Destructors

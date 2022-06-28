@@ -298,7 +298,6 @@ void TimeDomainWoodAndersonParameters::setTaper(
     pImpl->mWindow = window;
 }
 
-/// Taper pct
 double TimeDomainWoodAndersonParameters::getTaperPercentage() const noexcept
 {
     return pImpl->mTaperPct;

@@ -10,6 +10,7 @@
 #include <ipptypes.h>
 #include "rtseis/enums.hpp"
 #include "rtseis/filterImplementations/iirFilter.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
 
 using namespace RTSeis::FilterImplementations;
 
@@ -630,6 +631,20 @@ template<RTSeis::ProcessingMode E, class T>
 void IIRFilter<E, T>::clear() noexcept
 {
     pImpl->clear();
+}
+
+/// Initialization
+template<RTSeis::ProcessingMode E, class T>
+void IIRFilter<E, T>::initialize(const RTSeis::FilterRepresentations::BA &ba,
+                                 const IIRDFImplementation implementation)
+{
+    auto b = ba.getNumeratorCoefficients();
+    if (b.empty()){throw std::invalid_argument("No numerator coefficients");}
+    auto a = ba.getDenominatorCoefficients();
+    if (a.empty()){throw std::invalid_argument("No denominator coefficients");}
+    initialize(b.size(), b.data(),
+               a.size(), a.data(),
+               implementation);
 }
 
 /// Initialization

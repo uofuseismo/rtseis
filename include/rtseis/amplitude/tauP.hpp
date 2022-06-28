@@ -34,11 +34,22 @@ public:
     void initialize(const TauPParameters &parameters);
     /// @result True indicates that the class is initialized.
     [[nodiscard]] bool isInitialized() const noexcept;
+    /// @result True indicates this is configured for processing signals
+    ///         that are proportional to ground velocity.
+    ///         False indicates this is configured for pcoessing signals
+    ///         that are proportional to ground acceleration.
+    [[nodiscard]] bool isVelocityFilter() const;
     /// @}
+
+    /// @brief Applies the filter to the signal.
+    /// @throws std::runtime_error if \c isInitialized() is false.
+    void apply(int n, const T x[], T *y[]);
 
     /// @name Destructors
     /// @{
 
+    /// @brief Resets the class and releases memory.
+    void clear() noexcept;
     /// @brief Destructor.
     ~TauP();
     /// @}

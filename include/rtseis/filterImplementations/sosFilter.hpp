@@ -2,6 +2,10 @@
 #define RTSEIS_FILTERIMPLEMENTATIONS_SOSFILTER_HPP 1
 #include <memory>
 #include "rtseis/enums.hpp"
+namespace RTSeis::FilterRepresentations
+{
+class SOS;
+}
 namespace RTSeis::FilterImplementations
 {
 /// @class SOSFilter sosFilter.hpp "rtseis/filterImplementations/sosFilter.hpp"
@@ -45,6 +49,9 @@ public:
     ~SOSFilter();
     /// @}
 
+    /// @brief Initializes the second order section filter.
+    /// @throws std::invalid_argument if the filter is invalid.
+    void initialize(const RTSeis::FilterRepresentations::SOS &sos);
     /// @brief Initializes the second order section filter.
     /// @param[in] ns    The number of second order sections.
     /// @param[in] bs    Numerator coefficients.  This is an array of

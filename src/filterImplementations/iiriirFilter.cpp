@@ -8,6 +8,7 @@
 #include <ipps.h>
 #include "rtseis/enums.hpp"
 #include "rtseis/filterImplementations/iiriirFilter.hpp"
+#include "rtseis/filterRepresentations/ba.hpp"
 
 using namespace RTSeis::FilterImplementations;
 
@@ -411,10 +412,23 @@ void IIRIIRFilter<T>::clear() noexcept
     pIIRIIR_->clear();
 }
 
+/// Initialization
+template<class T>
+void IIRIIRFilter<T>::initialize(const RTSeis::FilterRepresentations::BA &ba)
+{
+    auto b = ba.getNumeratorCoefficients();
+    if (b.empty()){throw std::invalid_argument("No numerator coefficients");}
+    auto a = ba.getDenominatorCoefficients();
+    if (a.empty()){throw std::invalid_argument("No denominator coefficients");}
+    initialize(b.size(), b.data(),
+               a.size(), a.data());
+}
+
+
 /// Initialize the filter
-template<>
-void IIRIIRFilter<double>::initialize(const int nb, const double b[],
-                                      const int na, const double a[])
+template<class T>
+void IIRIIRFilter<T>::initialize(const int nb, const double b[],
+                                 const int na, const double a[])
 {
     clear();
     // Check inputs

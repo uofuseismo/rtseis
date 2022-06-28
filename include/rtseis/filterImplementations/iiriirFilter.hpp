@@ -1,6 +1,10 @@
 #ifndef RTSEIS_FILTERIMPLEMENTATIONS_IIRIIRFILTER_HPP
 #define RTSEIS_FILTERIMPLEMENTATIONS_IIRIIRFILTER_HPP 1
 #include <memory>
+namespace RTSeis::FilterRepresentations
+{
+class BA;
+}
 namespace RTSeis::FilterImplementations
 {
 /// @class IIRIIRFilter iiriirFilter.hpp "rtseis/filterImplementations/iiriirFilter.hpp"
@@ -40,6 +44,11 @@ public:
 
     /// @brief Default destructor.
     ~IIRIIRFilter();
+
+    /// @brief Initializes the zero-phase IIR filter.
+    /// @param[in] ba  The IIR filter.
+    /// @throws std::invalid_argument if the IIR filter is invalid.
+    void initialize(const RTSeis::FilterRepresentations::BA &ba);
     /// @brief Initializes the zero-phase IIR filter.
     /// @param[in] nb   The number of numerator coefficients.  This must
     ///                 be positive.

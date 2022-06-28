@@ -227,6 +227,8 @@ TEST(Amplitude, TauPParameters)
     const double q = 0.8;
     const InputUnits units = InputUnits::Acceleration;
     const DetrendType detrendType = DetrendType::RemoveTrend;
+    const WindowType taperType = WindowType::None;
+    const double pct = 8;
     EXPECT_NO_THROW(parameters.setSamplingRate(samplingRate));
     parameters.setInputUnits(units);
     EXPECT_NO_THROW(parameters.setSimpleResponse(gain));
@@ -235,6 +237,7 @@ TEST(Amplitude, TauPParameters)
     EXPECT_NO_THROW(parameters.setSmoothingParameter(alpha));
     EXPECT_NO_THROW(parameters.setFilterConstantQ(q));
     parameters.setDetrendType(detrendType);
+    EXPECT_NO_THROW(parameters.setTaper(pct, taperType));
     
 
     TauPParameters copy(parameters);
@@ -244,6 +247,9 @@ TEST(Amplitude, TauPParameters)
     EXPECT_NEAR(copy.getSmoothingParameter(), alpha, 1.e-10);
     EXPECT_NEAR(copy.getSimpleResponse(), gain, 1.e-10);
     EXPECT_NEAR(copy.getFilterConstantQ(), q, 1.e-10);
+    EXPECT_EQ(copy.getWindowType(), taperType);
+    EXPECT_NEAR(copy.getTaperPercentage(), pct, 1.e-10);
+
     auto sos = copy.getVelocityFilter();
     EXPECT_EQ(sos.getNumberOfSections(), 1);
     std::vector<double> bRef{0.02785977,  0.05571953,  0.02785977};

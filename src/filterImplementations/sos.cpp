@@ -8,6 +8,7 @@
 #include <ipps.h>
 #include "rtseis/enums.hpp"
 #include "rtseis/filterImplementations/sosFilter.hpp"
+#include "rtseis/filterRepresentations/sos.hpp"
 
 using namespace RTSeis::FilterImplementations;
 
@@ -414,6 +415,22 @@ SOSFilter<E, T>& SOSFilter<E, T>::operator=(SOSFilter &&sos) noexcept
     if (&sos == this){return *this;}
     pImpl = std::move(sos.pImpl);
     return *this;
+}
+
+/// Initialization
+template<RTSeis::ProcessingMode E, class T>
+void SOSFilter<E, T>::initialize(const RTSeis::FilterRepresentations::SOS &sos)
+{
+    auto nSections = sos.getNumberOfSections();
+    if (nSections < 1)
+    {
+        throw std::invalid_argument("Number of sections must be positive");
+    }
+    auto bs = sos.getNumeratorCoefficients();
+    if (bs.empty()){throw std::invalid_argument("No numerator coefficients");}
+    auto as = sos.getDenominatorCoefficients();
+    if (as.empty()){throw std::invalid_argument("No denominator coefficients");}
+    initialize(nSections, bs.data(), as.data());
 }
 
 /// Initialization

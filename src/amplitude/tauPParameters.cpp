@@ -76,7 +76,9 @@ public:
     double mFilterQ{0.994};
     double mSmoothing{0.99}; //1. - 1./mSamplingRate;
     double mSimpleResponse{0}; // For scaling to units of cm to avoid overlflow
+    double mTaperPct{5};
     InputUnits mInputUnits{InputUnits::Velocity};
+    WindowType mWindow{WindowType::Sine};
     DetrendType mDetrendType{DetrendType::RemoveMean};
     bool mHaveInputUnits{false};
     bool mHaveSimpleResponse{false};
@@ -254,3 +256,28 @@ DetrendType TauPParameters::getDetrendType() const noexcept
 {
     return pImpl->mDetrendType;
 }
+
+/// Taper pct
+void TauPParameters::setTaper(
+    const double pct, const WindowType window)
+{
+    if (pct < 0 || pct > 100)
+    {
+        throw std::invalid_argument("Percentage = " + std::to_string(pct)
+                                  + " must be in range [0,100]");
+    }
+    pImpl->mTaperPct = pct;
+    pImpl->mWindow = window;
+}
+
+double TauPParameters::getTaperPercentage() const noexcept
+{
+    return pImpl->mTaperPct;
+}
+
+WindowType TauPParameters::getWindowType() const noexcept
+{
+    return pImpl->mWindow;
+}
+
+
