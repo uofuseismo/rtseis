@@ -149,6 +149,8 @@ public:
                 return -1;
             }
         }
+        // Actually a problem with order 0 filters and IPP
+        if (std::max(nb, na) - 1 == 0){impUse = IIRDFImplementation::DF2_SLOW;}
         if (impUse != implementation)
         {
             std::cout << "Overriding IIR implementation to DF2_SLOW"
