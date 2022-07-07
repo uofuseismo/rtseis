@@ -13,28 +13,34 @@ enum class FIRImplementation
                  i.e., when \f$ \log_2 L < N \f$ where
                  \f$ L \f$ is the signal length \f$ N \f$ is
                  the number of taps. */
-    AUTO    /*!< The implementation will decide
+    AUTO,   /*!< The implementation will decide
                  between DIRECT or FFT based. */
+    Direct = DIRECT,
+    Auto = AUTO
 };
 
 /// @brief Defines the IIR direct-form implementation.
 /// @ingroup rtseis_filterImplemenations
-enum IIRDFImplementation
+enum class IIRDFImplementation
 {
     DF2_FAST, /*!< A fast IPP implementation.  For high order
                    filters where poles get close to the unit
                    circle this can generate results that are much
                    different than Matlab.  */
-    DF2_SLOW  /*!< A slow implementation that is consistent
+    DF2_SLOW, /*!< A slow implementation that is consistent
                    with Matlab. */
+    DF2Fast = DF2_FAST,
+    DF2Slow = DF2_SLOW
 };
 
 /// @brief Defines the detrend strategy.
 /// @ingroup rtseis_filterImplemenations
-enum DetrendType
+enum class DetrendType
 {
     CONSTANT, /*!< Removes the mean from the time series. */
-    LINEAR    /*!< Removes a best fitting line from the time series. */
+    LINEAR,   /*!< Removes a best fitting line from the time series. */
+    Constant = CONSTANT,
+    Linear = LINEAR
 };
 
 }

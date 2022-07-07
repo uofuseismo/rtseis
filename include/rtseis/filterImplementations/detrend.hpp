@@ -14,6 +14,7 @@ class Detrend
 public:
     /// @name Constructors
     /// @{
+
     /// @brief Default constructor.
     Detrend();
     /// @brief Copy constructor.
@@ -24,6 +25,9 @@ public:
     ///                         class.  On exit, detrend's behavior is
     ///                         undefined.
     Detrend(Detrend &&detrend) noexcept;
+    /// @brief Constructs and initializes the detrend class.
+    /// @param[in] type  The detrend type.
+    explicit Detrend(DetrendType type);
     /// @}
 
     /// @name Operators
@@ -42,6 +46,7 @@ public:
 
     /// @name Destructors
     /// @{
+
     /// @brief Destructor
     ~Detrend();
     /// @brief Resets the class.

@@ -39,6 +39,14 @@ Detrend<T>::Detrend(Detrend &&detrend) noexcept
     *this = std::move(detrend);
 }
 
+/// C'tor + initialization
+template<class T>
+Detrend<T>::Detrend(const DetrendType type) :
+    pImpl(std::make_unique<DetrendImpl> ())
+{
+    initialize(type);
+}
+
 /// Copy constructor
 template<class T>
 Detrend<T>& Detrend<T>::operator=(const Detrend &detrend)
