@@ -22,14 +22,14 @@ public:
     void designIntegratorAndConvolve()
     {
         // Design a trapezoid-rule integrator (in frequency domain)
-        auto dt = 1./mSamplingRate;
-        auto b = 2/(1 + mFilterQ);
+        //auto dt = 1./mSamplingRate;
+        //auto b = 2/(1 + mFilterQ);
         //std::vector<double> bIntegrator{dt/(2*b), dt/(2*b)};
         //std::vector<double> aIntegrator{1, mFilterQ};
         std::vector<std::complex<double>> zIntegrator{-1};
         std::vector<std::complex<double>> pIntegrator{-mFilterQ};
         //
-        auto k = mAccelerationFilter.getGain();
+        //auto k = mAccelerationFilter.getGain();
         auto zHighPass = mAccelerationFilter.getZeros();
         auto pHighPass = mAccelerationFilter.getPoles();
         // Convolve filters
