@@ -1,0 +1,12 @@
+/*!
+\mainpage
+
+This is the API documentation for <a href="https://uofuseismo.github.io/rtseis.html">RTSeis</a>.
+
+Those looking to build from source should read the \ref TopicInstallation_page install document.
+
+Initial examples demonstrating RTSeis usage are found at .
+
+The main documentation is organized into \em chapters that detail key concepts and library capabilities.
+
+*/

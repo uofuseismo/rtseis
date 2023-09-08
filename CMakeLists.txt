@@ -104,9 +104,9 @@ set_target_properties(rtseis PROPERTIES
 #########################################################################################
 
 ADD_EXECUTABLE(coreTests
-               testing/utils/main.cpp
-               testing/utils/demean.cpp
-               testing/utils/window.cpp
+               testing/utilities/main.cpp
+               testing/utilities/demean.cpp
+               testing/utilities/window.cpp
 )
 target_link_libraries(coreTests PRIVATE rtseis ${GTEST_BOTH_LIBRARIES})
 target_include_directories(coreTests
