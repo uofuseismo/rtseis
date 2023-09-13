@@ -4,7 +4,16 @@
 #include <rtseis/vector.hpp>
 namespace RTSeis
 {
-template<class T>
+enum class WindowType
+{
+    Bartlett, /*!< Barlett (triangle) window */
+    Blackman, /*!< Standard Blackman */
+    Hamming,  /*!< Hamming window */
+    Hanning,  /*!< Hann(int) window */
+    Kaiser,   /*!< Kaiser window.  This requires specification of \f$ \beta \f$. */
+    Sine      /*!< Sine window. */
+};
+template<class T = double>
 /// @class Window 
 /// @brief Defines a window function to a signal.
 /// @copyright Ben Baker (University of Utah) distributed under the MIT license.
@@ -44,12 +53,12 @@ public:
     ///                    numerical stability.
     /// @throws std::invalid_argument if the length is not positive or,
     ///         for Kaiser window design, beta is negative. 
-    void initialize(int length, Window<T>::Type type, double beta = 0.5);
+    void initialize(int length, WindowType type, double beta = 0.5);
     /// @result True indicates the class is initialized.
     [[nodiscard]] bool isInitialized() const noexcept;
     /// @result The window type.
     /// @throw std::runtime_error if \c isInitialized() is false.
-    [[nodiscard]] Type getType() const;
+    [[nodiscard]] WindowType getType() const;
 
     /// @result The window.
     /// @throws std::runtime_error \c isInitialized() is false.

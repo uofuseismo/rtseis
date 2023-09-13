@@ -79,6 +79,7 @@ SET(UTILS_SRCS
     src/system.cpp
     src/vector.cpp
     src/demean.cpp
+    src/taper.cpp
     src/window.cpp
     src/utilities/version.cpp)
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
@@ -103,10 +104,11 @@ set_target_properties(rtseis PROPERTIES
 #                                        Unit Tests                                     #
 #########################################################################################
 
-ADD_EXECUTABLE(coreTests
+add_executable(coreTests
                testing/utilities/main.cpp
                testing/utilities/demean.cpp
                testing/utilities/window.cpp
+               testing/utilities/taper.cpp
 )
 target_link_libraries(coreTests PRIVATE rtseis ${GTEST_BOTH_LIBRARIES})
 target_include_directories(coreTests
@@ -118,7 +120,7 @@ add_test(NAME coreTests
 
 # Need to copy the answers to the test directory
 file(COPY ${CMAKE_SOURCE_DIR}/testing/data DESTINATION .)
-file(COPY ${CMAKE_SOURCE_DIR}/python/benchmarks.py DESTINATION .)
+#file(COPY ${CMAKE_SOURCE_DIR}/python/benchmarks.py DESTINATION .)
 
 #========================================================================================#
 #                                      Installation                                      #

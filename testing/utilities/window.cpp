@@ -133,12 +133,12 @@ public:
     Vector<T> x20;
     Vector<T> y;
     const T epsilon{std::numeric_limits<T>::epsilon()*10};
-    typename Window<T>::Type mBartlett{Window<T>::Type::Bartlett};
-    typename Window<T>::Type mBlackman{Window<T>::Type::Blackman};
-    typename Window<T>::Type mSine{Window<T>::Type::Sine};
-    typename Window<T>::Type mHanning{Window<T>::Type::Hanning};
-    typename Window<T>::Type mHamming{Window<T>::Type::Hamming};
-    typename Window<T>::Type mKaiser{Window<T>::Type::Kaiser};
+    WindowType mBartlett{WindowType::Bartlett};
+    WindowType mBlackman{WindowType::Blackman};
+    WindowType mSine{WindowType::Sine};
+    WindowType mHanning{WindowType::Hanning};
+    WindowType mHamming{WindowType::Hamming};
+    WindowType mKaiser{WindowType::Kaiser};
 };
 
 TYPED_TEST_SUITE(WindowTest, MyTypes);

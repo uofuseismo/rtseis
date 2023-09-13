@@ -4,7 +4,7 @@
 #include <rtseis/system/system.hpp>
 namespace RTSeis
 {
-template<class T>
+template<class T = double>
 /// @class Detrend
 /// @brief Removes the linear trend from a signal.
 /// @copyright Ben Baker (University of Utah) distributed under the MIT license.

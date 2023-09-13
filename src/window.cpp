@@ -21,27 +21,27 @@ public:
         {
             mWindow.resize(mLength, 0);
             T *window = mWindow.data();
-            if (mType == Window<T>::Type::Hanning)
+            if (mType == WindowType::Hanning)
             {
                 ::hann(mLength, &window);
             }
-            else if (mType == Window<T>::Type::Blackman)
+            else if (mType == WindowType::Blackman)
             {
                 ::blackman(mLength, &window);
             }
-            else if (mType == Window<T>::Type::Hamming)
+            else if (mType == WindowType::Hamming)
             {
                 ::hamming(mLength, &window);
             }
-            else if (mType == Window<T>::Type::Kaiser)
+            else if (mType == WindowType::Kaiser)
             {
                 ::kaiser(mLength, &window, static_cast<T> (mBeta));
             }
-            else if (mType == Window<T>::Type::Bartlett)
+            else if (mType == WindowType::Bartlett)
             {
                 ::bartlett(mLength, &window);
             }
-            else if (mType == Window<T>::Type::Sine)
+            else if (mType == WindowType::Sine)
             {
                 ::sine(mLength, &window);
             }
@@ -59,7 +59,7 @@ public:
         }
     }
     Vector<T> mWindow;
-    Window::Type mType{Window::Type::Hanning};
+    WindowType mType{WindowType::Hanning};
     double mBeta{0.5};
     int mLength{0};
     bool mInitialized{false};
@@ -114,7 +114,7 @@ bool Window<T>::isInitialized() const noexcept
 
 /// Window type
 template<class T>
-Window<T>::Type Window<T>::getType() const
+WindowType Window<T>::getType() const
 {
     if (!isInitialized()){throw std::runtime_error("Window not initialized");}
     return pImpl->mType;
@@ -123,7 +123,7 @@ Window<T>::Type Window<T>::getType() const
 /// Initialize class
 template<class T>
 void Window<T>::initialize(const int length,
-                           const Window<T>::Type type,
+                           const WindowType type,
                            const double beta)
 {
     if (length < 1)
@@ -132,7 +132,7 @@ void Window<T>::initialize(const int length,
                                   + std::to_string(length)
                                   + "  must be positive");
     }
-    if (type == Window<T>::Type::Kaiser)
+    if (type == WindowType::Kaiser)
     {
         if (beta < 0)
         {
