@@ -3,7 +3,11 @@
 #include <complex>
 #include <string>
 #include <vector>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/utilities/math/polynomial.hpp"
 #include <gtest/gtest.h>
 

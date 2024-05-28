@@ -2,7 +2,11 @@
 #include <cstdlib>
 #include <array>
 #include <string>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/transforms/firEnvelope.hpp"
 #include "rtseis/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"

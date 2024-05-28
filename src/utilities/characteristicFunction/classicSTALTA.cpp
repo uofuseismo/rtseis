@@ -3,7 +3,11 @@
 #include <cmath>
 #include <limits>
 #include <vector>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "private/throw.hpp"
 #include "rtseis/enums.hpp"
 #include "rtseis/utilities/characteristicFunction/classicSTALTA.hpp"

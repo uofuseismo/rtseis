@@ -4,7 +4,6 @@
 #include <cmath>
 #include <string>
 #include <vector>
-#include <ipps.h>
 #include "rtseis/trigger/waterLevel.hpp"
 #include <gtest/gtest.h>
 

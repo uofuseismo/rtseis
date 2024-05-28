@@ -1,7 +1,11 @@
 #include <string>
 #include <cmath>
 #include <stdexcept>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/utilities/windowFunctions.hpp"
 
 using namespace RTSeis::Utilities;

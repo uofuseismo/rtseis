@@ -4,7 +4,11 @@
 #include <cassert>
 #include <complex> // Put this before fftw
 #include <fftw/fftw3.h>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "private/pad.hpp"
 #include "rtseis/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"

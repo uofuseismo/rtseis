@@ -7,7 +7,11 @@
 #include <stdexcept>
 #include <vector>
 #include <chrono>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 //include<mkl.h>
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/interpolation/cubicSpline.hpp"

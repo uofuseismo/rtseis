@@ -129,7 +129,7 @@ public:
     /// @name Step 3: Get Results
     /// @{
     /// @result The amplitude spectrogram.  This is an 
-    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencie) ]
+    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencies) ]
     ///         matrix with leading dimension \c getNumberOfFrequencies().
     /// @throws std::runtime_error if \c haveTransform() is false.
     std::vector<T> getAmplitude() const;
@@ -139,7 +139,7 @@ public:
     /// @throws std::runtime_error if \c haveTransform() is false.
     const T *getAmplitudePointer() const;
     /// @result The phase spectrogram in radians.  This is an 
-    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencie) ]
+    ///         [\c getNumberOfTransformWindows x \c getNumberOfFrequencies) ]
     ///         matrix with leading dimension \c getNumberOfFrequencies().
     /// @throws std::runtime_error if \c haveTransform() is false.
     std::vector<T> getPhase() const;

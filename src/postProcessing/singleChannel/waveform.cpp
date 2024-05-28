@@ -9,8 +9,12 @@
 #endif
 #include <memory>
 #include <algorithm>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
 #include <ippcore.h>
+#endif
 #ifdef __INTEL_COMPILER
 #include <pstl/execution>
 #include <pstl/algorithm>

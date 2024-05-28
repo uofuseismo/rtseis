@@ -3,9 +3,13 @@
 #include <cmath>
 #include <vector>
 #include <cassert>
-#include <ipps.h>
 #include <mkl.h>
 #include <mkl_vsl.h>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
+#include <ipps.h>
+#endif
 #include "rtseis/utilities/math/convolve.hpp"
 #include "private/convolve.hpp"
 

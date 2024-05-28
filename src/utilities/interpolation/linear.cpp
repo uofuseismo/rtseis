@@ -8,7 +8,11 @@
 #include <cassert>
 #include <stdexcept>
 #include <mkl.h>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "private/throw.hpp"
 #include "rtseis/utilities/interpolation/linear.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"

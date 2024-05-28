@@ -5,7 +5,11 @@
 #include <cmath>
 #include <algorithm>
 #include <memory>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/postProcessing/singleChannel/taper.hpp"
 #include "rtseis/filterImplementations/taper.hpp"
 #include "rtseis/utilities/windowFunctions.hpp"

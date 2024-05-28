@@ -4,7 +4,11 @@
 #include <string>
 #include <cmath>
 #include <fstream>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/utilities/polarization/eigenPolarizer.hpp"
 #include "rtseis/utilities/polarization/svdPolarizer.hpp"
 #include "rtseis/rotate/utilities.hpp"

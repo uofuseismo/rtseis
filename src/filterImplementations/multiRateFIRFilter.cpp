@@ -2,7 +2,11 @@
 #include <string>
 #include <cstdio>
 #include <cassert>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/enums.hpp"
 #include "rtseis/filterImplementations/multiRateFIRFilter.hpp"
 

@@ -4,10 +4,14 @@
 #include <string>
 #include <cmath>
 #include <algorithm>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
+#include <ipps.h>
+#endif
 #include "rtseis/transforms/enums.hpp"
 #include "rtseis/transforms/dftRealToComplex.hpp"
 #include "rtseis/log.h"
-#include <ipps.h>
 
 using namespace RTSeis::Transforms;
 

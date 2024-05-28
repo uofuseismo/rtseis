@@ -2,7 +2,11 @@
 #include <cstdlib>
 #include <cassert>
 #include <cmath>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include <gtest/gtest.h>

@@ -1,7 +1,11 @@
 #include <stdexcept>
 #include <string>
 #include <cmath>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/filterImplementations/detrend.hpp"
 
 using namespace RTSeis::FilterImplementations;

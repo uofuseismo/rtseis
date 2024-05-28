@@ -6,7 +6,11 @@
 #include <exception>
 #include <stdexcept>
 #include <mkl.h>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/utilities/interpolation/interpolate.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
 

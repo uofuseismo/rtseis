@@ -11,7 +11,11 @@
 #include <algorithm>
 #include <complex>
 #include <vector>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include <fftw/fftw3.h>
 #include "rtseis/transforms/enums.hpp"
 #include "rtseis/transforms/dftRealToComplex.hpp"

@@ -1,6 +1,10 @@
 #include <stdexcept>
 #include <string>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/utilities/normalization/zscore.hpp"
 
 using namespace RTSeis::Utilities::Normalization;

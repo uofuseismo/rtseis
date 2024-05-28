@@ -4,7 +4,6 @@
 #include <cmath>
 #include <exception>
 #include <vector>
-#include <ipps.h>
 //#include "rtseis/utilities/transforms/wavelets/derivativeOfGaussian.hpp"
 #include "rtseis/transforms/wavelets/morlet.hpp"
 //#include "rtseis/utilities/transforms/wavelets/ricker.hpp"

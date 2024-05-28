@@ -8,7 +8,11 @@
 #include <algorithm>
 #include <complex>
 #include <vector>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/filterDesign/fir.hpp"
 #include "rtseis/filterRepresentations/fir.hpp"
 #include "rtseis/filterImplementations/decimate.hpp"

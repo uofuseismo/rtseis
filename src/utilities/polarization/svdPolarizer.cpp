@@ -3,7 +3,6 @@
 #include <cmath>
 #include <limits>
 #include <array>
-#include <ipps.h>
 #include <mkl.h>
 #define RTSEIS_LOGGING 1
 #include "rtseis/enums.hpp"

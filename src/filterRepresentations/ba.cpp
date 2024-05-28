@@ -158,7 +158,7 @@ void BA::setDenominatorCoefficients(const size_t n, const double a[])
 {
     if (n < 1)
     {
-        pImpl->b.resize(0);
+        pImpl->a.resize(0);
         throw std::invalid_argument("a is empty");
     }
     if (n > 0 && a == nullptr)

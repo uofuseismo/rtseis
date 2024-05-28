@@ -1,7 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/filterDesign/response.hpp"
 #include "rtseis/filterRepresentations/ba.hpp"
 #include <gtest/gtest.h>

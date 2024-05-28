@@ -14,8 +14,14 @@ endif()
    set(CORE "ippcore")
 #endif()
 
-find_path(IPP_INCLUDE_DIR
+find_path(IPP_CLASSIC_INCLUDE_DIR
           NAMES ipps.h
+          HINTS $ENV{IPP_INC_DIR}
+                $ENV{IPP_ROOT}/include
+                /opt/intel/ipp/include
+                /opt/intel/oneapi/ipp/latest/include)
+find_path(IPP_2024_INCLUDE_DIR
+          NAMES ipp.h
           HINTS $ENV{IPP_INC_DIR}
                 $ENV{IPP_ROOT}/include
                 /opt/intel/ipp/include
@@ -45,10 +51,19 @@ find_library(IPP_CORE_LIBRARY
                    /opt/intel/ipp/lib
                    /opt/intel/oneapi/ipp/latest/lib/intel64)
 
+if (IPP_CLASSIC_INCLUDE_DIR)
+   message("Using classic IPP library")
+   set(IPP_INCLUDE_DIR ${IPP_CLASSIC_INCLUDE_DIR})
+   set(IPP_2024 OFF)
+elseif (IPP_2024_INCLUDE_DIR)
+   message("Using 2024 IPP library")
+   set(IPP_INCLUDE_DIR ${IPP_2024_INCLUDE_DIR})
+   set(IPP_2024 ON)
+endif()
 set(IPP_LIBRARY ${IPP_IPPS_LIBRARY} ${IPP_VM_LIBRARY} ${IPP_CORE_LIBRARY})
 
 # Handle the QUIETLY and REQUIRED arguments and set MKL_FOUND to TRUE if
 # all listed variables are TRUE.
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FindIPP DEFAULT_MSG IPP_LIBRARY IPP_INCLUDE_DIR IPP_IPPS_LIBRARY IPP_VM_LIBRARY IPP_CORE_LIBRARY)
-mark_as_advanced(IPP_INCLUDE_DIR IPP_LIBRARY IPP_IPPS_LIBRARY IPP_VM_LIBRARY IPP_CORE_LIBRARY)
+mark_as_advanced(IPP_INCLUDE_DIR IPP_LIBRARY IPP_IPPS_LIBRARY IPP_VM_LIBRARY IPP_CORE_LIBRARY IPP_2024)

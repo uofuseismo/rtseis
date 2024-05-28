@@ -5,7 +5,11 @@
 #include <cmath>
 #include <complex>
 #include <stdexcept>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/utilities/math/convolve.hpp"
 #include <gtest/gtest.h>
 

@@ -7,10 +7,14 @@
 #include <algorithm>
 #include <cfloat>
 #include <mkl.h>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
+#include <ipps.h>
+#endif
 #include "rtseis/enums.hpp"
 #include "rtseis/utilities/interpolation/weightedAverageSlopes.hpp"
 #include "rtseis/utilities/math/vectorMath.hpp"
-#include <ipps.h>
 
 using namespace RTSeis::Utilities::Interpolation;
 

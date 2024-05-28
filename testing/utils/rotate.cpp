@@ -4,7 +4,11 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/rotate/utilities.hpp"
 #include <gtest/gtest.h>
 

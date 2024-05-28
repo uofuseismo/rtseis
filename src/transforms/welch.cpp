@@ -1,7 +1,11 @@
 #include <iostream>
 #include <complex>
 #include <cassert>
+#ifdef WITH_IPP_2024
+#include <ipp.h>
+#else
 #include <ipps.h>
+#endif
 #include "rtseis/transforms/welch.hpp"
 #include "rtseis/transforms/slidingWindowRealDFT.hpp"
 #include "rtseis/transforms/slidingWindowRealDFTParameters.hpp"
