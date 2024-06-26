@@ -847,8 +847,8 @@ int testDownsample(const std::vector<double> &x)
         double dtTarg = static_cast<double> (iq)*dt;
         if (std::abs(dtNew - dtTarg) > 1.e-12)
         {
-            RTSEIS_ERRMSG("Failed to update sampling period %lf %lf",
-                          dtTarg, dtNew);
+            std::cerr << "Failed to update sampling period "
+                      << dtTarg << " " << dtNew << std::endl;
             return EXIT_FAILURE;
         }
     }
@@ -875,7 +875,8 @@ int testDecimate(const std::vector<double> &x)
         }
         catch (std::exception &e)
         {
-            RTSEIS_ERRMSG("Error in downsampling %d %s", iq, e.what());
+            std::cerr << "Error in downsampling "
+                      << iq << " " << e.what() << std::endl;
             return EXIT_FAILURE;
         }
         // Verify
@@ -888,22 +889,22 @@ int testDecimate(const std::vector<double> &x)
         decim.apply(x.size(), x.data(), npts, &lenRef, &yRefPtr); 
         if (lenRef != static_cast<int> (y.size()))
         {
-             RTSEIS_ERRMSG("%s", "Inconsistent sizes");
+             std::cerr << "Inconsistent sizes" << std::endl;
              return EXIT_FAILURE;
         }
         double error;
         ippsNormDiff_L1_64f(yref.data(), y.data(), lenRef, &error);
         if (error > 1.e-12)
         {
-            RTSEIS_ERRMSG("decimation failed with error %e\n", error);
+            std::cerr << "decimation failed with error " << error << std::endl;
             return EXIT_FAILURE;
         }
         double dtNew = waveform.getSamplingPeriod();
         double dtTarg = static_cast<double> (iq)*dt;
         if (std::abs(dtNew - dtTarg) > 1.e-12)
         {
-            RTSEIS_ERRMSG("Failed to update sampling period %lf %lf",
-                          dtTarg, dtNew);
+            std::cerr << "Failed to update sampling period " << dtTarg 
+                      << " " << dtNew << std::endl;
             return EXIT_FAILURE;
         }
     }
@@ -944,7 +945,8 @@ int testInterpolate(const std::vector<double> &x)
         // Basically on the same order b/c max is 1000 
         if (error > 1.e-1)
         {
-            RTSEIS_ERRMSG("Failed interfpt on iteration %d, %e\n", ic, error);
+            std::cerr << "Failed interfpt on iteration "
+                      << ic << " " << error << std::endl;
             return EXIT_FAILURE; 
         }
      }
@@ -982,14 +984,15 @@ int testDemean()
     // Verify
     if (y.size() != x.size())
     {
-        RTSEIS_ERRMSG("%s", "Inconsistent sizes");
+        std::cerr << "Inconsistent sizes" << std::endl;
         return EXIT_FAILURE;
     }
     double maxAbs = 0;
     ippsMaxAbs_64f(y.data(), npts, &maxAbs);
     if (maxAbs > 1.e-13)
     {
-        RTSEIS_ERRMSG("Demean failed %e", maxAbs);
+        std::cerr << "Demean failed " << maxAbs << std::endl;
+        return EXIT_FAILURE;
     }
     } // Loop on passes
 
@@ -1025,7 +1028,7 @@ int testDetrend()
     // ~50,000 points loses about 5 digits which is sensible 
     if (maxAbs > 1.e-8)
     {
-        RTSEIS_ERRMSG("Demean failed %e", maxAbs);
+        std::cerr << "Demean failed " << maxAbs << std::endl;
         return EXIT_FAILURE;
     }
     }; // Loop on npts
@@ -1063,7 +1066,7 @@ int testNormalization()
     }
     catch (const std::exception &e)
     {
-        RTSEIS_ERRMSG("%s", e.what());
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
     double error = 0;
@@ -1075,7 +1078,7 @@ int testNormalization()
     }
     if (error > 1.e-14)
     {
-        RTSEIS_ERRMSG("signBit normalization failed %e", error);
+        std::cerr << "signBit normalization failed " << error << std::endl;
         return EXIT_FAILURE;
     }
     // z-score normalization
@@ -1087,7 +1090,7 @@ int testNormalization()
     }
     catch (const std::exception &e)
     {
-        RTSEIS_ERRMSG("%s", e.what());
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
     error = 0;
@@ -1097,7 +1100,7 @@ int testNormalization()
     }
     if (error >= 1.e-14)
     {
-        RTSEIS_ERRMSG("zscore normalization failed: %e\n", error);
+        std::cerr << "zscore normalization failed: " << error << std::endl;
         return EXIT_FAILURE;
     }
     // transform to [-1,1]
@@ -1110,7 +1113,7 @@ int testNormalization()
     }
     catch (const std::exception &e)
     {
-        RTSEIS_ERRMSG("%s", e.what());
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
     error = 0;
@@ -1121,7 +1124,7 @@ int testNormalization()
     }
     if (error >= 1.e-14)
     {
-        RTSEIS_ERRMSG("minMax normalization failed: %e\n", error);
+        std::cerr << "minMax normalization failed: " << error << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
@@ -1143,16 +1146,16 @@ int testTaper()
     {
         if (!std::getline(taper100File, line100))
         {
-            RTSEIS_ERRMSG("Premature end of file %s\n",
-                          taperSolns100FileName.c_str());
+            std::cerr << "Premature end of file " << taperSolns100FileName
+                      << std::endl;
             return EXIT_FAILURE;
         }
         std::sscanf(line100.c_str(), "%lf, %lf, %lf\n",
                     &yHamming100Ref[i], &yHanning100Ref[i], &ySine100Ref[i]);
         if (!std::getline(taper101File, line101))
         {
-            RTSEIS_ERRMSG("Premature end of file %s\n",
-                          taperSolns101FileName.c_str());
+            std::cerr << "Premature end of file "
+                      << taperSolns101FileName << std::endl;
             return EXIT_FAILURE;
         }
         std::sscanf(line101.c_str(), "%lf, %lf, %lf\n",
@@ -1160,8 +1163,8 @@ int testTaper()
     }
     if (!std::getline(taper101File, line101))
     {
-        RTSEIS_ERRMSG("Premature end of file %s\n",
-                      taperSolns101FileName.c_str());
+        std::cerr << "Premature end of file "
+                  << taperSolns101FileName << std::endl;
         return EXIT_FAILURE;
     }
     std::sscanf(line101.c_str(), "%lf, %lf, %lf\n",
@@ -1195,7 +1198,7 @@ int testTaper()
     }
     catch (const std::invalid_argument &ia)
     {
-        RTSEIS_ERRMSG("Taper 100 failed %s", ia.what());
+        std::cerr << "Taper 100 failed " << ia.what() << std::endl;
         return EXIT_FAILURE;
     }
     // Compare
@@ -1244,7 +1247,7 @@ int testTaper()
     }   
     catch (const std::invalid_argument &ia)
     {   
-        RTSEIS_ERRMSG("Taper 101 failed %s", ia.what());
+        std::cerr << "Taper 101 failed " << ia.what() << std::endl;
         return EXIT_FAILURE;
     }
     for (size_t i=0; i<101; i++)
