@@ -56,97 +56,97 @@ int main(void)
     readData(gse2FileName, gse2);
     if (gse2.size() < 1)
     {
-        RTSEIS_ERRMSG("%s", "No data");
+        std::cerr << "No data" << std::endl;
         return EXIT_FAILURE;
     }
     int ierr;
     ierr = testDemean();
     if (ierr != EXIT_SUCCESS)
     { 
-        RTSEIS_ERRMSG("%s", "Failed demean test");
+        std::cerr << "Failed demean test" << std::endl;
         return EXIT_FAILURE;
     } 
-    RTSEIS_INFOMSG("%s", "Passed demean test");
+    std::cout << "Passed demean test" << std::endl;
 
     ierr = testDetrend();
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed detrend test");
+        std::cout << "Failed detrend test" << std::endl;
         return EXIT_FAILURE;
     } 
-    RTSEIS_INFOMSG("%s", "Passed detrend test");
+    std::cout << "Passed detrend test" << std::endl;
 
     ierr = testDownsample(gse2);
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed downsample test");
+        std::cerr << "Failed downsample test" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed downsample test");
+    std::cout << "Passed downsample test" << std::endl;
 
     ierr = testDecimate(gse2);
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed decimate test");
+        std::cerr << "Failed decimate test" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed decimation test");
+    std::cout << "Passed decimation test" << std::endl;
 
     ierr = testInterpolate(gse2);
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed interp dft test");
+        std::cerr << "Failed interp dft test" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed interp dft test");
+    std::cout << "Passed interp dft test" << std::endl;
 
     ierr = testFilter(gse2);
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed detrend test");
+        std::cerr << "Failed filter test" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed generic filter test");
+    std::cout << "Passed generic filter test" << std::endl;
 
     ierr = testBandSpecificSOSFilters(gse2);
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed sos band-specific tests");
+        std::cerr << "Failed sos band-specific tests" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed SOS band-specific filter tests");
+    std::cerr << "Passed SOS band-specific filter tests" << std::endl;
 
     ierr = testBandSpecificIIRFilters(gse2);
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed iir band-specific tests");
+        std::cerr << "Failed iir band-specific tests" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed IIR band-specific filter tests");
+    std::cout << "Passed IIR band-specific filter tests" << std::endl;
 
     ierr = testBandSpecificFIRFilters(gse2);
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed fir band-specific tests");
+        std::cerr << "Failed fir band-specific tests" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed FIR band-specific filter tests");
+    std::cout << "Passed FIR band-specific filter tests" << std::endl;
 
     ierr = testNormalization();
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed normalization tests");
+        std::cerr << "Failed normalization tests" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed normalization tests");
+    std::cout << "Passed normalization tests" << std::endl;
 
     ierr = testTaper();
     if (ierr != EXIT_SUCCESS)
     {
-        RTSEIS_ERRMSG("%s", "Failed taper test");
+        std::cerr << "Failed taper test" << std::endl;
         return EXIT_FAILURE;
     }
-    RTSEIS_INFOMSG("%s", "Passed window test");
+    std::cerr << "Passed taper test" << std::endl;
     return EXIT_SUCCESS; 
 }
 
@@ -182,7 +182,7 @@ int testFilter(const std::vector<double> &x)
     ippsNormDiff_L1_64f(yref.data(), y.data(), len, &l1Norm);
     if (l1Norm > 1.e-8)
     {
-        RTSEIS_ERRMSG("%s", "Failed to print fir filter");
+        std::cerr << "Failed to print fir filter" << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
@@ -248,7 +248,8 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed sos filter test with error=%e", l1Norm);
+        std::cerr << "Failed sos filter test with error="
+                  <<  l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -297,7 +298,8 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed sos filter test with error=%e", l1Norm);
+        std::cerr << "Failed sos filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -345,7 +347,8 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed sos bp filter test with error=%e", l1Norm);
+        std::cerr << "Failed sos bp filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -389,7 +392,8 @@ int testBandSpecificSOSFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ysosRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed sos bs filter test with error=%e", l1Norm);
+        std::cerr << "Failed sos bs filter test with error=" 
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS; 
@@ -454,7 +458,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(yiirRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed iir filter test with error=%e", l1Norm);
+        std::cerr << "Failed iir filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -500,7 +505,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed iiriir filter test with error=%e", l1Norm);
+        std::cerr << "Failed iiriir filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -545,7 +551,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed iir bp filter test with error=%e", l1Norm);
+        std::cerr << "Failed iir bp filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -590,7 +597,8 @@ int testBandSpecificIIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed sos bs filter test with error=%e", l1Norm);
+        std::cerr << "Failed sos bs filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS; 
@@ -649,7 +657,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(yfirRef.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed filter test with error=%e", l1Norm);
+        std::cerr << "Failed filter test with error=" << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -696,7 +704,7 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(&ycomp[nextra], y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed fir filter test with error=%e", l1Norm);
+        std::cerr << "Failed fir filter test with error=" << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -744,7 +752,8 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(&ycomp[nextra], y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {    
-        RTSEIS_ERRMSG("Failed fir filter test with error=%e", l1Norm);
+        std::cerr << "Failed fir filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     //------------------------------------------------------------------------//
@@ -786,7 +795,8 @@ int testBandSpecificFIRFilters(const std::vector<double> &x)
     ippsNormDiff_L1_64f(ytemp.data(), y.data(), npts, &l1Norm);
     if (l1Norm > tol)
     {
-        RTSEIS_ERRMSG("Failed fir filter test with error=%e", l1Norm);
+        std::cerr << "Failed fir filter test with error="
+                  << l1Norm << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS; 
@@ -812,7 +822,8 @@ int testDownsample(const std::vector<double> &x)
         }
         catch (std::exception &e)
         {
-            RTSEIS_ERRMSG("Error in downsampling %d %s", iq, e.what());
+            std::cerr << "Error in downsampling "
+                      << iq << " " << e.what() << std::endl;
             return EXIT_FAILURE;
         }
         // Verify
@@ -829,7 +840,7 @@ int testDownsample(const std::vector<double> &x)
         }
         if (j != static_cast<int> (y.size()))
         {
-            RTSEIS_ERRMSG("%s", "Size mismatch");
+            std::cerr << "Size mismatch" << std::endl;
             return EXIT_FAILURE;
         }
         double dtNew = waveform.getSamplingPeriod();
