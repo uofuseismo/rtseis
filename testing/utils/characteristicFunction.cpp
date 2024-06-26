@@ -164,8 +164,14 @@ std::vector<double> readTextFile(const std::string &fileName)
     for (int i=0; i<npts; i++) 
     {
         memset(line, 0, 64*sizeof(char));
-        fgets(line, 64, fl);
-        sscanf(line, "%lf\n", &x[i]);
+        if (fgets(line, 64, fl) != NULL)
+        {
+            sscanf(line, "%lf\n", &x[i]);
+        }
+        else
+        {
+            throw std::runtime_error("Premature end of file");
+        }
     }
     fclose(fl);
     return x;
