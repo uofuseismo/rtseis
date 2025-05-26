@@ -1,4 +1,5 @@
 #include <numeric>
+#include <algorithm>
 #include "rtseis/demean.hpp"
 #include "rtseis/vector.hpp"
 
@@ -90,8 +91,11 @@ void Demean<T>::apply()
     y.resize(n);
     // Remove mean: y = x - \bar{x}
     T *__attribute__((aligned(64))) __restrict__ yPtr = y.data();
-    std::transform(xPtr, xPtr + n, yPtr,
-                   std::bind2nd(std::minus<T> (), mean));
+    std::transform(xPtr, xPtr + n, yPtr, 
+                   [mean](const auto x)
+                   {
+                       return x - mean;
+                   });
     this->setOutput(std::move(y));
     pImpl->mMean = mean; 
 }

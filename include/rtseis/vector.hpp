@@ -27,6 +27,10 @@ public:
     Vector(Vector &&v) noexcept;
     /// @brief Constructs from a given vector.
     explicit Vector(const std::vector<T> &vector); 
+    /// @brief Constructs a vector of a given size.
+    explicit Vector(size_t n);
+    /// @brief Constructs a vector of a given size and fills with default values.
+    Vector(size_t n, const T value);
     /// @}
 
     /// @name Operators

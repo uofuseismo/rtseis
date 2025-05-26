@@ -2,16 +2,16 @@
 #include <limits>
 #include "rtseis/vector.hpp"
 #include "rtseis/window.hpp"
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/benchmark/catch_benchmark.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-namespace
-{
 using namespace RTSeis;
 
-using MyTypes = ::testing::Types<double, float>;
-
 template<class T>
-class WindowTest : public testing::Test
+class WindowReference
 {
 public:
     std::vector<T> bartlett20{0,
@@ -119,191 +119,191 @@ public:
                             0.436709600995736, 0.288508741610676,
                             0.166678217276960, 0.078225306346850,
                             0.023422141030647};
-
-protected:
-    WindowTest()
-    {   
-        x19.resize(19, 1);
-        x20.resize(20, 1);
-    }   
-    ~WindowTest() = default;
-public:
-    Window<T> window;
-    Vector<T> x19;
-    Vector<T> x20;
-    Vector<T> y;
-    const T epsilon{std::numeric_limits<T>::epsilon()*10};
-    WindowType mBartlett{WindowType::Bartlett};
-    WindowType mBlackman{WindowType::Blackman};
-    WindowType mSine{WindowType::Sine};
-    WindowType mHanning{WindowType::Hanning};
-    WindowType mHamming{WindowType::Hamming};
-    WindowType mKaiser{WindowType::Kaiser};
 };
 
-TYPED_TEST_SUITE(WindowTest, MyTypes);
-
-TYPED_TEST(WindowTest, SineDesignWindow)
+TEMPLATE_TEST_CASE("CoreTest::Window", "[TypeName][template]", float, double)
 {
-    const auto type = this->mSine;
-    auto epsilon = this->epsilon;
-    auto x19 = this->x19;
-    auto x20 = this->x20;
-    auto yRef19 = this->sine19;
-    auto yRef20 = this->sine20;
-    this->window.initialize(yRef19.size(), this->mSine);
-    EXPECT_TRUE(this->window.isInitialized());
-    EXPECT_EQ(this->window.getType(), type);
-    auto window19 = this->window;
-    const auto &y = window19.getWindowReference();
-    EXPECT_EQ(y.size(), yRef19.size());
-    for (int i = 0; i < y.size(); ++i)
+    WindowReference<TestType> windowReference;
+
+    Window<TestType> window;
+
+    SECTION("BartlettSize19")
+    {   
+        auto yRef = windowReference.bartlett19;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Bartlett));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Bartlett); 
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+
+        SECTION("Copy")
+        {
+            auto windowCopy = window;
+            auto yCopy = windowCopy.getWindowReference();
+            REQUIRE(yCopy.size() == yRef.size());
+            for (int i = 0; i < static_cast<int> (yCopy.size()); ++i)
+            {
+                CHECK(yCopy.at(i) == Catch::Approx(yRef.at(i)));
+            }
+        }
+    }
+
+    SECTION("BartlettSize20")
     {
-        EXPECT_NEAR(std::abs(y.at(i) - yRef19.at(i)), 0, epsilon);
+        auto yRef = windowReference.bartlett20;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Bartlett));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Bartlett);
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size());
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
     }
- 
-    EXPECT_NO_THROW(this->window.initialize(yRef20.size(), type));
-    auto y20 = this->window.getWindowReference(); 
-    EXPECT_EQ(y20.size(), yRef20.size());
-    for (int i = 0; i < y20.size(); ++i)
+
+    SECTION("BlackmanSize19")
     {
-        EXPECT_NEAR(std::abs(y20.at(i) - yRef20.at(i)), 0, epsilon);
+        auto yRef = windowReference.blackman19;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Blackman));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Blackman); 
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }   
     }
-}
 
-TYPED_TEST(WindowTest, HanningDesignWindow)
-{
-    const auto type = this->mHanning;
-    auto epsilon = this->epsilon;
-    auto x19 = this->x19;
-    auto x20 = this->x20;
-    auto yRef19 = this->hanning19;
-    auto yRef20 = this->hanning20;
-    this->window.initialize(yRef19.size(), type);
-    EXPECT_TRUE(this->window.isInitialized());
-    EXPECT_EQ(this->window.getType(), type);
-    auto y = this->window.getWindow();
-    EXPECT_EQ(y.size(), yRef19.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef19.at(i)), 0, epsilon);
-    }   
- 
-    EXPECT_NO_THROW(this->window.initialize(yRef20.size(), type));
-    y = this->window.getWindowReference(); 
-    EXPECT_EQ(y.size(), yRef20.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef20.at(i)), 0, epsilon);
-    }   
-}
-
-TYPED_TEST(WindowTest, HammingDesignWindow)
-{
-    const auto type = this->mHamming;
-    auto epsilon = this->epsilon;
-    auto x19 = this->x19;
-    auto x20 = this->x20;
-    auto yRef19 = this->hamming19;
-    auto yRef20 = this->hamming20;
-    this->window.initialize(yRef19.size(), type);
-    EXPECT_TRUE(this->window.isInitialized());
-    EXPECT_EQ(this->window.getType(), type);
-    auto y = this->window.getWindow();
-    EXPECT_EQ(y.size(), yRef19.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef19.at(i)), 0, epsilon);
-    }   
- 
-    EXPECT_NO_THROW(this->window.initialize(yRef20.size(), type));
-    y = this->window.getWindowReference(); 
-    EXPECT_EQ(y.size(), yRef20.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef20.at(i)), 0, epsilon);
-    }
-}
-
-TYPED_TEST(WindowTest, BlackmanDesignWindow)
-{
-    const auto type = this->mBlackman;
-    auto epsilon = this->epsilon;
-    auto x19 = this->x19;
-    auto x20 = this->x20;
-    auto yRef19 = this->blackman19;
-    auto yRef20 = this->blackman20;
-    this->window.initialize(yRef19.size(), type);
-    EXPECT_TRUE(this->window.isInitialized());
-    EXPECT_EQ(this->window.getType(), type);
-    auto y = this->window.getWindow();
-    EXPECT_EQ(y.size(), yRef19.size());
-    for (int i = 0; i < y.size(); ++i)
+    SECTION("BlackmanSize20")
     {
-        EXPECT_NEAR(std::abs(y.at(i) - yRef19.at(i)), 0, epsilon);
+        auto yRef = windowReference.blackman20;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Blackman));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Blackman); 
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {   
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }   
     }
 
-    EXPECT_NO_THROW(this->window.initialize(yRef20.size(), type));
-    y = this->window.getWindowReference();
-    EXPECT_EQ(y.size(), yRef20.size());
-    for (int i = 0; i < y.size(); ++i)
+    SECTION("HammingSize19")
+    {   
+        auto yRef = windowReference.hamming19;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Hamming));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Hamming); 
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }   
+
+    SECTION("HammingSize20")
+    {   
+        auto yRef = windowReference.hamming20;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Hamming));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Hamming); 
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("HanningSize19")
+    {   
+        auto yRef = windowReference.hanning19;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Hanning));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Hanning);
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }   
+
+    SECTION("HanningSize20")
+    {   
+        auto yRef = windowReference.hanning20;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Hanning));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Hanning);
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size());
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("KaiserSize19")
+    {   
+        auto yRef = windowReference.kaiser19;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Kaiser, 5.5));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Kaiser);
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }   
+
+    SECTION("KaiserSize20")
+    {   
+        auto yRef = windowReference.kaiser20;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Kaiser, 2.5));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Kaiser);
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size());
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("SineSize19")
     {
-        EXPECT_NEAR(std::abs(y.at(i) - yRef20.at(i)), 0, epsilon);
+        auto yRef = windowReference.sine19;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Sine));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Sine);
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size()); 
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {   
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("SineSize20")
+    {
+        auto yRef = windowReference.sine20;
+        REQUIRE_NOTHROW(window.initialize(yRef.size(), WindowType::Sine));
+        REQUIRE(window.isInitialized());
+        REQUIRE(window.getType() == WindowType::Sine);
+        auto y = window.getWindowReference();
+        REQUIRE(y.size() == yRef.size());
+        for (int i = 0; i < static_cast<int> (y.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
     }
 }
 
-TYPED_TEST(WindowTest, BartlettDesignWindow)
-{
-    const auto type = this->mBartlett;
-    auto epsilon = this->epsilon;
-    auto x19 = this->x19;
-    auto x20 = this->x20;
-    auto yRef19 = this->bartlett19;
-    auto yRef20 = this->bartlett20;
-    this->window.initialize(yRef19.size(), type);
-    EXPECT_TRUE(this->window.isInitialized());
-    EXPECT_EQ(this->window.getType(), type);
-    auto y = this->window.getWindow();
-    EXPECT_EQ(y.size(), yRef19.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef19.at(i)), 0, epsilon);
-    }   
- 
-    EXPECT_NO_THROW(this->window.initialize(yRef20.size(), type));
-    y = this->window.getWindowReference(); 
-    EXPECT_EQ(y.size(), yRef20.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef20.at(i)), 0, epsilon);
-    }   
-}
-
-TYPED_TEST(WindowTest, KaiserDesignWindow)
-{
-    const auto type = this->mKaiser;
-    auto epsilon = this->epsilon;
-    auto x19 = this->x19;
-    auto x20 = this->x20;
-    auto yRef19 = this->kaiser19;
-    auto yRef20 = this->kaiser20;
-    this->window.initialize(yRef19.size(), type, 5.5);
-    EXPECT_TRUE(this->window.isInitialized());
-    EXPECT_EQ(this->window.getType(), type);
-    auto y = this->window.getWindow();
-    EXPECT_EQ(y.size(), yRef19.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef19.at(i)), 0, epsilon);
-    }   
- 
-    EXPECT_NO_THROW(this->window.initialize(yRef20.size(), type, 2.5));
-    y = this->window.getWindowReference(); 
-    EXPECT_EQ(y.size(), yRef20.size());
-    for (int i = 0; i < y.size(); ++i)
-    {   
-        EXPECT_NEAR(std::abs(y.at(i) - yRef20.at(i)), 0, epsilon);
-    }   
-}
-
-}

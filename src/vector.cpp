@@ -10,6 +10,15 @@ template<class T>
 class Vector<T>::VectorImpl
 {
 public:
+    VectorImpl() = default;
+    explicit VectorImpl(size_t n) :
+        mX(n)
+    {
+    }
+    VectorImpl(size_t n, T value) :
+        mX(n, value)
+    {
+    }
     std::vector<T, boost::alignment::aligned_allocator<T, 64>> mX;
     //std::vector<double, boost::alignment::aligned_allocator<double, 64> > vector;
 };
@@ -42,6 +51,20 @@ Vector<T>::Vector(const std::vector<T> &v) :
 {
     pImpl->mX.resize(v.size());
     std::copy(v.begin(), v.end(), pImpl->mX.begin()); 
+}
+
+/// Construct vector of a given size
+template<class T>
+Vector<T>::Vector(const size_t n) :
+    pImpl(std::make_unique<VectorImpl> (n))
+{
+}
+
+/// Construct vector of a given size with default values
+template<class T>
+Vector<T>::Vector(const size_t n, const T value) :
+    pImpl(std::make_unique<VectorImpl> (n, value))
+{
 }
 
 /// Copy assignment

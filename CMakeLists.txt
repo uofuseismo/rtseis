@@ -13,7 +13,7 @@ if (${WRAP_PYTHON})
 endif()
 #set(FindIPP_DIR ${CMAKE_SOURCE_DIR}/cmake)
 #set(FindMKL_DIR ${CMAKE_SOURCE_DIR}/cmake)
-find_package(GTest REQUIRED)
+find_package(Catch2 3 REQUIRED)
 #find_package(FindIPP REQUIRED)
 #find_package(FindMKL REQUIRED)
 
@@ -53,7 +53,7 @@ if (WRAP_PYTHON)
 #               python/transforms.cpp
 #               python/waveform.cpp
    )
-   target_link_libraries(pyrtseis PRIVATE pybind11::module rtseis)
+   target_link_libraries(pyrtseis PRIVATE pybind11::pybind11 pybind11::lto rtseis)
    set_target_properties(pyrtseis PROPERTIES
                          PREFIX ""
                          CXX_STANDARD 20
@@ -105,15 +105,14 @@ set_target_properties(rtseis PROPERTIES
 #########################################################################################
 
 add_executable(coreTests
-               testing/utilities/main.cpp
+               #testing/utilities/main.cpp
                testing/utilities/demean.cpp
                testing/utilities/window.cpp
                testing/utilities/taper.cpp
 )
-target_link_libraries(coreTests PRIVATE rtseis ${GTEST_BOTH_LIBRARIES})
+target_link_libraries(coreTests PRIVATE rtseis Catch2::Catch2 Catch2::Catch2WithMain)
 target_include_directories(coreTests
-                           PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-                           PRIVATE ${GTEST_INCLUDE_DIRS})
+                           PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>)
 add_test(NAME coreTests
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND coreTests)

@@ -4,20 +4,20 @@
 #include <limits>
 #include "rtseis/vector.hpp"
 #include "rtseis/taper.hpp"
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_template_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/benchmark/catch_benchmark.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-namespace
-{
 using namespace RTSeis;
 
 std::filesystem::path dataDirectory{"data"};
 std::filesystem::path taperSolutions100FileName{dataDirectory/"taper100.all.txt"};
 std::filesystem::path taperSolutions101FileName{dataDirectory/"taper101.all.txt"};
 
-using MyTypes = ::testing::Types<double, float>;
-
 template<class T>
-class TaperTest : public testing::Test
+class DataLoader
 {
 public:
     void load(const bool is100 = true)
@@ -66,35 +66,203 @@ public:
                 throw std::runtime_error("Should be 101 lines in file");
             }
         }
-        ones.resize(mSineReference.size(), 1);
     }
-
-protected:
-    TaperTest()
-    {
-    }
-    ~TaperTest() = default;
 public:
-    Taper<T> taper;
-    Vector<T> ones;
+    //Taper<T> taper;
+    //Vector<T> ones;
     std::vector<T> mHammingReference;
     std::vector<T> mHanningReference;
     std::vector<T> mSineReference;
     double mHammingPercentage100{40};
     double mHanningPercentage100{20};
-    double mSinePercentage100{30};
+    double mSinePercentage100{60};
     double mHammingPercentage101{10};
     double mHanningPercentage101{20};
     double mSinePercentage101{30};
-    const T eps{std::numeric_limits<T>::epsilon()};
-    typename Taper<T>::Window mHamming{Taper<T>::Window::Hamming};
-    typename Taper<T>::Window mHanning{Taper<T>::Window::Hanning};
-    typename Taper<T>::Window mSine{Taper<T>::Window::Sine};
-    typename Taper<T>::Window mBoxcar{Taper<T>::Window::Boxcar};
+    //const T eps{std::numeric_limits<T>::epsilon()};
+    //typename Taper<T>::Window mHamming{Taper<T>::Window::Hamming};
+    //typename Taper<T>::Window mHanning{Taper<T>::Window::Hanning};
+    //typename Taper<T>::Window mSine{Taper<T>::Window::Sine};
+    //typename Taper<T>::Window mBoxcar{Taper<T>::Window::Boxcar};
 };
 
-TYPED_TEST_SUITE(TaperTest, MyTypes);
+TEMPLATE_TEST_CASE("CoreTest::Taper", "[TypeName][template]", float, double)
+{
+    DataLoader<TestType> dataLoader100;
+    REQUIRE_NOTHROW(dataLoader100.load(true));
+    DataLoader<TestType> dataLoader101;
+    REQUIRE_NOTHROW(dataLoader101.load(false));
 
+    Taper<TestType> taper;
+    SECTION("Hamming100")
+    {
+        constexpr int nSamples{100}; 
+        constexpr TestType one{1};
+        constexpr double hammingPercentage100{40};
+        auto window = Taper<TestType>::Window::Hamming;
+        Vector<TestType> x;
+        x.resize(nSamples, one);
+
+        auto yRef = dataLoader100.mHammingReference;
+        
+        REQUIRE_NOTHROW(taper.initialize(window, hammingPercentage100));
+        REQUIRE(taper.isInitialized());
+        REQUIRE_NOTHROW(taper.setInput(x));
+        REQUIRE_NOTHROW(taper.apply());
+        auto y = taper.getOutput(); 
+        REQUIRE(yRef.size() == y.size()); 
+        for (int i = 0; i < static_cast<int> (yRef.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("Hanning100")
+    {
+        constexpr int nSamples{100};
+        constexpr TestType one{1};
+        constexpr double hanningPercentage100{20};
+        auto window = Taper<TestType>::Window::Hanning;
+        Vector<TestType> x;
+        x.resize(nSamples, one);
+
+        auto yRef = dataLoader100.mHanningReference;
+
+        REQUIRE_NOTHROW(taper.initialize(window, hanningPercentage100));
+        REQUIRE(taper.isInitialized());
+        REQUIRE_NOTHROW(taper.setInput(x));
+        REQUIRE_NOTHROW(taper.apply());
+        auto y = taper.getOutput(); 
+        REQUIRE(yRef.size() == y.size()); 
+        for (int i = 0; i < static_cast<int> (yRef.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("Sine100")
+    {
+        constexpr int nSamples{100};
+        constexpr TestType one{1};
+        constexpr double sinePercentage100{60};
+        auto window = Taper<TestType>::Window::Sine;
+        Vector<TestType> x;
+        x.resize(nSamples, one);
+
+        auto yRef = dataLoader100.mSineReference;
+
+        REQUIRE_NOTHROW(taper.initialize(window, sinePercentage100));
+        REQUIRE(taper.isInitialized());
+        REQUIRE_NOTHROW(taper.setInput(x));
+        REQUIRE_NOTHROW(taper.apply());
+        auto y = taper.getOutput(); 
+        REQUIRE(yRef.size() == y.size()); 
+        for (int i = 0; i < static_cast<int> (yRef.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }   
+
+    SECTION("Boxcar100")
+    {
+        constexpr int nSamples{100};
+        constexpr TestType one{1};
+        constexpr TestType zero{0};
+        constexpr double boxcarPercentage100{10};
+        auto window = Taper<TestType>::Window::Boxcar;
+        Vector<TestType> x{nSamples, one};
+        //x.resize(nSamples, one);
+
+        REQUIRE_NOTHROW(taper.initialize(window, boxcarPercentage100));
+        REQUIRE(taper.isInitialized());
+        REQUIRE_NOTHROW(taper.setInput(x));
+        REQUIRE_NOTHROW(taper.apply());
+        auto y = taper.getOutput();
+        REQUIRE(nSamples == static_cast<int> (y.size()));
+
+        for (int i = 0; i < nSamples; ++i)
+        {
+            if (i < 5 || i >= 95)
+            {
+                CHECK(y.at(i) == Catch::Approx(zero));
+            }
+            else
+            {
+                CHECK(y.at(i) == Catch::Approx(one));
+            }
+        }
+    }
+
+    SECTION("Hamming101")
+    {
+        constexpr int nSamples{101}; 
+        constexpr TestType one{1};
+        constexpr double hammingPercentage101{10};
+        auto window = Taper<TestType>::Window::Hamming;
+        Vector<TestType> x;
+        x.resize(nSamples, one);
+
+        auto yRef = dataLoader101.mHammingReference;
+    
+        REQUIRE_NOTHROW(taper.initialize(window, hammingPercentage101));
+        REQUIRE(taper.isInitialized());
+        REQUIRE_NOTHROW(taper.setInput(x));
+        REQUIRE_NOTHROW(taper.apply());
+        auto y = taper.getOutputReference(); 
+        REQUIRE(yRef.size() == y.size()); 
+        for (int i = 0; i < static_cast<int> (yRef.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("Hanning101")
+    {
+        constexpr int nSamples{101};
+        constexpr TestType one{1};
+        constexpr double hanningPercentage101{20};
+        auto window = Taper<TestType>::Window::Hanning;
+        Vector<TestType> x;
+        x.resize(nSamples, one);
+
+        auto yRef = dataLoader101.mHanningReference;
+
+        REQUIRE_NOTHROW(taper.initialize(window, hanningPercentage101));
+        REQUIRE(taper.isInitialized());
+        REQUIRE_NOTHROW(taper.setInput(x));
+        REQUIRE_NOTHROW(taper.apply());
+        auto y = taper.getOutput(); 
+        REQUIRE(yRef.size() == y.size()); 
+        for (int i = 0; i < static_cast<int> (yRef.size()); ++i)
+        {   
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+
+    SECTION("Sine101")
+    {
+        constexpr int nSamples{101};
+        constexpr TestType one{1};
+        constexpr double sinePercentage101{30};
+        auto window = Taper<TestType>::Window::Sine;
+        Vector<TestType> x;
+        x.resize(nSamples, one);
+
+        auto yRef = dataLoader101.mSineReference;
+
+        REQUIRE_NOTHROW(taper.initialize(window, sinePercentage101));
+        REQUIRE(taper.isInitialized());
+        REQUIRE_NOTHROW(taper.setInput(x));
+        REQUIRE_NOTHROW(taper.apply());
+        auto y = taper.getOutput(); 
+        REQUIRE(yRef.size() == y.size()); 
+        for (int i = 0; i < static_cast<int> (yRef.size()); ++i)
+        {
+            CHECK(y.at(i) == Catch::Approx(yRef.at(i)));
+        }
+    }
+}
+/*
 TYPED_TEST(TaperTest, HammingTaper100)
 {
     constexpr bool is100{true};
@@ -234,6 +402,4 @@ TYPED_TEST(TaperTest, Boxcar100)
         } 
     }   
 }
-
-
-}
+*/
