@@ -8,6 +8,7 @@ namespace RTSeis
 template<class T = double>
 /// @brief Defines a vector for use in RTSeis.  This a bit more general
 ///        than standard C++ vectors and provides simple functions.
+/// @copyright Ben Baker (University of Utah) distributed under the MIT license.
 class Vector
 {
 private:
@@ -56,6 +57,10 @@ public:
     [[nodiscard]] T *data() noexcept;
     /// @result A pointer to the internal memory array.
     [[nodiscard]] const T *data() const noexcept;
+    /// @brief Removes the last element in the vector.
+    void pop_back();
+    /// @brief Adds a new element at the end of the vector.
+    void push_back(T value);
 
     static int getAlignment() noexcept;
 

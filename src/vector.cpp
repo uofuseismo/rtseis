@@ -139,6 +139,20 @@ bool Vector<T>::empty() const noexcept
     return pImpl->mX.empty();
 }
 
+/// Pop back
+template<class T>
+void Vector<T>::pop_back()
+{
+    pImpl->mX.pop_back();
+}
+
+/// Push back
+template<class T>
+void Vector<T>::push_back(const T value)
+{
+    pImpl->mX.push_back(value);
+}
+
 /// Destructor
 template<class T>
 Vector<T>::~Vector() = default;

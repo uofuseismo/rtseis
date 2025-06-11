@@ -81,7 +81,8 @@ SET(UTILS_SRCS
     src/demean.cpp
     src/taper.cpp
     src/window.cpp
-    src/utilities/version.cpp)
+    src/utilities/version.cpp
+    src/filterRepresentations/finiteImpulseResponse.cpp)
 SET(SRCS ${DATA_SRCS} ${IPPS_SRCS} ${UTILS_SRCS} ${MODULES_SRCS} ${PROCESSING_SRCS})
 
 set(BUILD_SHARED_LIBS YES)
@@ -106,6 +107,7 @@ set_target_properties(rtseis PROPERTIES
 
 add_executable(coreTests
                #testing/utilities/main.cpp
+               testing/filterRepresentations/finiteImpulseResponse.cpp
                testing/utilities/demean.cpp
                testing/utilities/window.cpp
                testing/utilities/taper.cpp
