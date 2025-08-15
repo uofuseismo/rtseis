@@ -108,13 +108,15 @@ set_target_properties(rtseis PROPERTIES
 add_executable(coreTests
                #testing/utilities/main.cpp
                testing/filterRepresentations/finiteImpulseResponse.cpp
+               testing/utilities/math.cpp
                testing/utilities/demean.cpp
                testing/utilities/window.cpp
                testing/utilities/taper.cpp
 )
 target_link_libraries(coreTests PRIVATE rtseis Catch2::Catch2 Catch2::Catch2WithMain)
 target_include_directories(coreTests
-                           PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>)
+                           PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+                           PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>)
 add_test(NAME coreTests
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testing
          COMMAND coreTests)
