@@ -14,16 +14,19 @@ endif()
 #set(FindIPP_DIR ${CMAKE_SOURCE_DIR}/cmake)
 #set(FindMKL_DIR ${CMAKE_SOURCE_DIR}/cmake)
 find_package(Catch2 3 REQUIRED)
+find_package(IPP)
 #find_package(FindIPP REQUIRED)
-#find_package(FindMKL REQUIRED)
+#set(MKL_INTERFACE lp64)
+#set(MKL_LINK intel64)
+find_package(MKL)
 
-if (${FindIPP_FOUND})
+if (${IPP_FOUND})
    message("IPP found")
    add_compile_definitions(WITH_IPP)
 else()
    message("Using native filter implementations")
 endif()
-if (${FindMKL_FOUND})
+if (${MKL_FOUND})
    message("MKL found")
    add_compile_definitions(WITH_MKL)
 else()
@@ -46,20 +49,20 @@ endif()
 ##########################################################################################
 #                                        Sort Out Python Wrappers                        #
 ##########################################################################################
-if (WRAP_PYTHON)
-   add_library(pyrtseis MODULE
-               python/pyrtseis.cpp
-#               python/filterRepresentations.cpp
-#               python/transforms.cpp
-#               python/waveform.cpp
-   )
-   target_link_libraries(pyrtseis PRIVATE pybind11::pybind11 pybind11::lto rtseis)
-   set_target_properties(pyrtseis PROPERTIES
-                         PREFIX ""
-                         CXX_STANDARD 20
-                         CXX_STANDARD_REQUIRED YES
-                         CXX_EXTENSIONS NO)
-endif()
+#if (WRAP_PYTHON)
+#   add_library(pyrtseis MODULE
+#               python/pyrtseis.cpp
+##               python/filterRepresentations.cpp
+##               python/transforms.cpp
+##               python/waveform.cpp
+#   )
+#   target_link_libraries(pyrtseis PRIVATE pybind11::pybind11 pybind11::lto rtseis)
+#   set_target_properties(pyrtseis PROPERTIES
+#                         PREFIX ""
+#                         CXX_STANDARD 20
+#                         CXX_STANDARD_REQUIRED YES
+#                         CXX_EXTENSIONS NO)
+#endif()
 
 ##########################################################################################
 #                                      Define Library Dependencies                       #
@@ -71,7 +74,7 @@ configure_file(${CMAKE_SOURCE_DIR}/include/private/version.hpp.in
 #    ${CMAKE_SOURCE_DIR}/include/rtseis)
 #set(PRIVATE_HEADER_DIRECTORIES
 #    ${CMAKE_SOURCE_DIR}/include/private)
-set(LIBALL ${MKL_LIBRARY} ${IPP_LIBRARY})
+set(LIBALL MKL::MKL ${IPP_LIBRARIES})
 set(LIBALL_PYTHON rtseis ${LIBALL} ${PYTHON_LIBRARIES})
 
 #SET(PYTHON_SRC src/modules/wrap.cpp)
@@ -95,7 +98,7 @@ target_include_directories(rtseis
                            #PRIVATE ${PRIVATE_INCLUDE_DEPENDS})
 )
 target_link_libraries(rtseis
-                      PRIVATE ${MKL_LIBRARY} ${IPP_LIBRARY})
+                      PRIVATE MKL::MKL ${IPP_LIBRARIES})
 set_target_properties(rtseis PROPERTIES
                       CXX_STANDARD 20
                       CXX_STANDARD_REQUIRED YES 
@@ -113,7 +116,11 @@ add_executable(coreTests
                testing/utilities/window.cpp
                testing/utilities/taper.cpp
 )
-target_link_libraries(coreTests PRIVATE rtseis Catch2::Catch2 Catch2::Catch2WithMain)
+set_target_properties(coreTests PROPERTIES
+                      CXX_STANDARD 20
+                      CXX_STANDARD_REQUIRED YES 
+                      CXX_EXTENSIONS NO)
+target_link_libraries(coreTests PRIVATE rtseis MKL::MKL Catch2::Catch2 Catch2::Catch2WithMain)
 target_include_directories(coreTests
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>)
@@ -139,7 +146,7 @@ write_basic_package_version_file(
     COMPATIBILITY AnyNewerVersion
 )
 if (${WRAP_PYTHON})
-   install(TARGETS rtseis pyrtseis
+   install(TARGETS rtseis #pyrtseis
            EXPORT ${PROJECT_NAME}-targets
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}

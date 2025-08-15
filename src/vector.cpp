@@ -1,8 +1,11 @@
 #include <iostream>
+#include <algorithm>
 #include <complex>
+#include <cmath>
 #include <vector>
 #include <boost/align.hpp>
 #include "rtseis/vector.hpp"
+#include "alignment.hpp"
 
 using namespace RTSeis;
 
@@ -19,8 +22,8 @@ public:
         mX(n, value)
     {
     }
-    std::vector<T, boost::alignment::aligned_allocator<T, 64>> mX;
-    //std::vector<double, boost::alignment::aligned_allocator<double, 64> > vector;
+    std::vector<T, boost::alignment::aligned_allocator<T, ALIGNMENT>> mX;
+    //std::vector<double, boost::alignment::aligned_allocator<double, ALIGNMENT> > vector;
 };
 
 /// Constructor
@@ -206,8 +209,63 @@ T& Vector<T>::at(const size_t index) const
     return pImpl->mX.at(index);
 }
 
+template<typename T>
+RTSeis::Vector<T> 
+RTSeis::operator+(const T a, const Vector<T> &x)
+{
+    auto n = static_cast<int> (x.size());
+    RTSeis::Vector<T> y;
+    if (n == 0){return y;}
+    y.resize(x.size());
+    const auto xPtr = std::assume_aligned<ALIGNMENT> (x.data());
+    auto yPtr = std::assume_aligned<ALIGNMENT> (y.data());
+    std::transform(xPtr, xPtr + n, yPtr,
+                   [=](const auto xi)
+                   {
+                       return a + xi;
+                   });
+    return y;
+}
+
+template<typename T>
+RTSeis::Vector<T> 
+RTSeis::operator+(const Vector<T> &x, const T a) 
+{
+    return a + x;
+}
+
+template<typename T>
+RTSeis::Vector<T> 
+RTSeis::operator*(const T a, const Vector<T> &x) 
+{
+    auto n = static_cast<int> (x.size());
+    RTSeis::Vector<T> y;
+    if (n == 0){return y;} 
+    y.resize(x.size());
+    const auto xPtr = std::assume_aligned<ALIGNMENT> (x.data());
+    auto yPtr = std::assume_aligned<ALIGNMENT> (y.data());
+    std::transform(xPtr, xPtr + n, yPtr,
+                   [=](const auto xi)
+                   {
+                       return a*xi;
+                   });
+    return y;
+}
+
+template<typename T>
+RTSeis::Vector<T> 
+RTSeis::operator*(const Vector<T> &x, const T a)
+{   
+    return a*x;
+}   
+
 template class RTSeis::Vector<double>;
 template class RTSeis::Vector<float>;
 template class RTSeis::Vector<int>;
 template class RTSeis::Vector<std::complex<double>>;
 template class RTSeis::Vector<std::complex<float>>;
+ 
+template RTSeis::Vector<double> RTSeis::operator+(const RTSeis::Vector<double> &x, double a);
+template RTSeis::Vector<float> RTSeis::operator+(const RTSeis::Vector<float> &x, float a);
+
+

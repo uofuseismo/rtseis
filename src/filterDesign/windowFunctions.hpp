@@ -4,7 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 #ifdef WITH_IPP
-#include <ipps.h>
+#include <ipp/ipps.h>
 #endif
 
 namespace

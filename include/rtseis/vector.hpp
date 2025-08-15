@@ -86,5 +86,13 @@ private:
     class VectorImpl;
     std::unique_ptr<VectorImpl> pImpl;
 };
+/// @result a + \textbf{x}
+template<typename T> Vector<T> operator+(T a, const Vector<T> &x);
+/// @result \textbf{x} + a
+template<typename T> Vector<T> operator+(const Vector<T> &x, T a);
+/// @result a \textbf{x}
+template<typename T> Vector<T> operator*(T a, const Vector<T> &x);
+/// @result \textbf{x} a
+template<typename T> Vector<T> operator*(const Vector<T> &x, T a); 
 }
 #endif
